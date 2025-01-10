@@ -1,0 +1,32 @@
+﻿@model EnrichcousBackOffice.Models.Vendor
+<tbody>
+    <tr id="vendor_@Model.Id" class="hover" onclick="vendor_edit('@Model.Id')">
+        <td>
+            <b style="color:green">@Model.CompanyName</b><br />
+            -Phone: @Model.Phone<br />
+            -Email: @Model.Email<br />
+            -Fax: @Model.Fax<br />
+            -Website: @Model.Website <br />
+            -Address: @(Model.Address + ", " + Model.State + ", " + Model.City + ", " + Model.Zipcode + ", " + Model.Country)
+        </td>
+        <td>
+            <strong style="text-blue">@Model.ContactFirstName @Model.ContactLastName</strong>
+            -Phone: @Model.Phone<br />
+            -Email: @Model.Email<br />
+        </td>
+        @*<td>@Model.VendorType</td>*@
+        <td>
+            @if (Model.Active == true)
+            {
+                <b class="label label-success">Active</b>
+            }
+            else
+            {
+                <b class="label label-danger">Inactive</b>
+            }
+        </td>
+    </tr>
+    <tr>
+        <td id="vendor_edit_@Model.Id" colspan="3" style="padding:0"></td>
+    </tr>
+</tbody>

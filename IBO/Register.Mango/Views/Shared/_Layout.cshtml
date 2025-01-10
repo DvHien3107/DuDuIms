@@ -1,0 +1,71 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title</title>
+    @*Bootstrap 3.3.7*@
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    @*Font Awesome*@
+    <link rel="stylesheet" href="/content/font-awesome/css/font-awesome.min.css">
+    @*Ionicons*@
+    <link rel="stylesheet" href="/content/Ionicons/css/ionicons.min.css" />
+    <link href="/Content/noty/jquery.noty.css" rel="stylesheet" />
+    <link href="/Content/noty/noty_theme_default.css" rel="stylesheet" />
+    <link href="/Content/select2/dist/css/select2.min.css" rel="stylesheet" />
+    @*Fonts*@
+    <link rel="stylesheet" href="/fonts/Montserrat/Montserrat.css">
+    <style>
+        .logo img {
+            cursor: pointer;
+        }
+    </style>
+    @RenderSection("css", required: false)
+</head>
+<body>
+
+
+    <!-- Facebook Pixel Code -->
+    <script>
+        !function (f, b, e, v, n, t, s) {
+            if (f.fbq) return; n = f.fbq = function () {
+                n.callMethod ?
+                    n.callMethod.apply(n, arguments) : n.queue.push(arguments)
+            };
+            if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0';
+            n.queue = []; t = b.createElement(e); t.async = !0;
+            t.src = v; s = b.getElementsByTagName(e)[0];
+            s.parentNode.insertBefore(t, s)
+        }(window, document, 'script',
+            'https://connect.facebook.net/en_US/fbevents.js');
+        fbq('init', '811735933025317');
+        fbq('track', 'PageView');
+    </script>
+    <noscript>
+        <img height="1" width="1" style="display:none"
+             src="https://www.facebook.com/tr?id=811735933025317&ev=PageView&noscript=1" />
+    </noscript>
+    <!-- End Facebook Pixel Code -->
+
+
+
+    @RenderBody()
+    @*jQuery 3*@
+    <script src="/Content/jquery/dist/jquery.min.js"></script>
+    <script src="~/Content/jquery-ui/jquery-ui.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/3.3.4/jquery.inputmask.bundle.min.js"></script>
+    @*Bootstrap 3.3.7*@
+    <script src="/content/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="~/Scripts/jquery.validate.min.js"></script>
+    <script src="/Content/noty/jquery.noty.js"></script>
+    <script src="/content/noty-cfg.js"></script>
+    <script src="/content/select2/dist/js/select2.full.min.js"></script>
+    <script src="~/Scripts/jquery.form.min.js"></script>
+    <script>
+        $('.logo>img').click(function () {
+            window.location.href = '/';
+        })
+    </script>
+    @RenderSection("scripts", required: false)
+</body>
+</html>

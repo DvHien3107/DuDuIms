@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<root>
+    <terminals>
+        <terminal name="A" id="33001" currency="USD" secret="SandboxSecret001"/>
+        <terminal name="B" id="33002" currency="CAD" secret="SandboxSecret002"/>
+        <terminal name="C" id="33003" currency="EUR" secret="SandboxSecret003"/>
+        <terminal name="D" id="33004" currency="GBP" secret="SandboxSecret004"/>
+        <terminal name="E" id="36001" currency="MCP" secret="SandboxSecret001"/>
+    </terminals>
+</root>

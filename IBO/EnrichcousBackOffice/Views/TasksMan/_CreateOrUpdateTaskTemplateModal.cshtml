@@ -1,0 +1,188 @@
+﻿@model EnrichcousBackOffice.Models.CustomizeModel.Task.TaskTemplateModel
+<style>
+    .number-item-task-template td{
+        
+    }
+</style>
+<div id="cru_task_template_modal" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <!-- Modal content-->
+        <form id="cru_task_template_form" action="/TasksMan/TaskTemplateSave" method="post" class="modal-content" enctype="multipart/form-data">
+          @Html.HiddenFor(x=>x.Id)
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">@(Model.Id>0? "Update Task Template" : "Add Task Template")</h4>
+            </div>
+            <div class="modal-body">
+
+                <div class="row">
+
+                    <div class="col-md-12">
+
+                        <div class="panel panel-default product-info-panel">
+                            <div class="panel-heading">
+                                <span>Task Template Information</span>
+                            </div>
+                            <div class="panel-body">
+                                <div class="form-group">
+                                    <label class="control-label">Name<span style="color:red">*</span></label>
+                                    <input class="form-control" name="Name" value="@Model.Name" required />
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label">Category<span style="color:red">*</span></label>
+                                    <select class="form-control" name="TicketGroup" required>
+                                        <option value="">N/A</option>
+                                        <option value="DeploymentTicket" @(Model.TicketGroup == "DeploymentTicket" ? "selected" : "")>Deployment</option>
+                                        <option value="SupportTicket" @(Model.TicketGroup == "SupportTicket" ? "selected" : "")>Support</option>
+                                        <option value="DevelopmentsTicket" @(Model.TicketGroup == "DevelopmentsTicket" ? "selected" : "")>Developments</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label">Description</label>
+                                    <textarea rows="3" class="form-control" name="Description">@Model.Description</textarea>
+                                </div>
+                                <div class="row">
+                                    @*<div class="col-md-6" style="padding-bottom:10px">
+                                        <div class="form-group row" style="margin:0px">
+                                            <label for="Status" class="col-sm-2 col-form-label" style="padding:0px;margin-bottom:0px">Active :</label>
+                                            <div class="col-sm-10" style="padding:0px;">
+
+                                                <input id="Status" name="Status" value="true" type="checkbox" @(Model.Status == true ? "checked" : "")>
+
+                                            </div>
+                                        </div>
+                                    </div>*@
+
+                                    <div class="col-md-6">
+                                        <div class="form-group row" style="margin:0px">
+                                            <label for="Requirement" class="col-sm-3 col-form-label" style="padding:0px;margin-bottom:0px">Requirement :</label>
+                                            <div class="col-sm-9" style="padding:0px;">
+
+                                                <input id="Requirement" name="Requirement" value="true" type="checkbox" class="minimal" @(Model.Requirement == true ? "checked" : "")>
+
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+
+                        <div class="panel panel-default product-info-panel">
+                            <div class="panel-heading">
+                                <span>SubTask Template </span>
+                                <span style="transform:translateY(-5px)" class="btn btn-success pull-right btn-sm" onclick="addSubTaskTemplate()"><i class="fa fa-plus"></i> Add</span>
+                            </div>
+                            <div class="panel-body">
+                                <table class="table table-bordered table-striped" style="margin-bottom:0">
+                                    <thead>
+                                        <tr>
+                                            <th>
+                                                <label style="line-height:29px;">Name<span style="color:red">*</span></label>
+                                            </th>
+                                          
+
+                                            <th style="width: 50px"><label></label></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="subtasktemplate_body">
+                                        @if (Model.SubTaskTemplateList != null && Model.SubTaskTemplateList.Count() > 0)
+                                        {
+                                            int i = 0;
+                                            foreach (var item in Model.SubTaskTemplateList)
+                                            {
+                                                <tr class="number-item-task-template">
+                                                    <td>
+                                                        <input type="hidden" class="form-control SubTaskTemplateList_Id" name="SubTaskTemplateList[@i].Id" value="@item.Id" />
+                                                        <input type="text" class="form-control SubTaskTemplateList_Name" name="SubTaskTemplateList[@i].Name" value="@item.Name" required />
+                                                    </td>
+                                                    @*<td>
+                                                        <textarea class="form-control SubTaskTemplateList_Description" name="SubTaskTemplateList[@i].Description">@item.Description</textarea>
+                                                    </td>
+                                                    <td>
+                                                        <input type="number" class="form-control SubTaskTemplateList_DisplayOrder" name="SubTaskTemplateList[@i].DisplayOrder" value="@item.DisplayOrder" />
+                                                    </td>*@
+                                                    <td>
+                                                        <button type="button" class="btn btn-sm btn-danger" title="Delete" onclick="detete_subtask_template(this)"><i class="fa fa-trash-o"></i></button>
+                                                    </td>
+                                                </tr>
+                                                i++;
+                                            }
+                                        }
+
+                                    </tbody>
+                                </table>
+
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+
+
+                <button type="submit" class="btn btn-primary">Save</button>
+
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    function addSubTaskTemplate() {
+        var length = $('.number-item-task-template').length || 0;
+        let html = `<tr class="number-item-task-template">
+                                                    <td>
+                                                        <input type="hidden" class="form-control SubTaskTemplateList_Id" name="SubTaskTemplateList[${length}].Id" value="" />
+                                                        <input type="text" class="form-control SubTaskTemplateList_Name" name="SubTaskTemplateList[${length}].Name" value="" required />
+                                                    </td>
+                                                  
+                                                    <td>
+                                                        <button type="button" class="btn btn-sm btn-danger" title="Delete" onclick="detete_subtask_template(this)"><i class="fa fa-trash-o"></i></button>
+                                                    </td>
+                                                </tr>`;
+        $("#subtasktemplate_body").append(html);
+    }
+    function detete_subtask_template(el) {
+        $(el).parents('tr').remove();
+        $('.number-item-task-template').each(function (i, obj) {
+            $(this).find('.SubTaskTemplateList_Id').attr('name', `SubTaskTemplateList[${i}].Id`);
+            $(this).find('.SubTaskTemplateList_Name').attr('name', `SubTaskTemplateList[${i}].Name`);
+            $(this).find('.SubTaskTemplateList_Description').attr('name', `SubTaskTemplateList[${i}].Description`);
+            $(this).find('.SubTaskTemplateList_DisplayOrder').attr('name', `SubTaskTemplateList[${i}].DisplayOrder`);
+        });
+    }
+    $("#cru_task_template_form").submit(function (e) {
+        e.preventDefault(); // avoid to execute the actual submit of the form.
+        overlayOn();
+        var form = $(this);
+        var url = form.attr('action');
+        let dataForm = form.serialize();
+
+        $.ajax({
+            type: "POST",
+            url: url,
+            data: dataForm, // serializes the form's elements.
+            success: function (data) {
+                if (data.status) {
+                    success(data.message);
+                    $("#taskTemplateTable").DataTable().ajax.reload();
+                    $("#cru_task_template_modal").modal('hide');
+                }
+                else
+                {
+                    error(data.message);
+                }
+            },
+            error: function (xhr) {
+                alert("Error occured.please try again");
+            },
+            complete: function () {
+                overlayOff();
+            },
+        });
+    })
+</script>

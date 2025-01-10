@@ -1,0 +1,726 @@
+﻿@model IEnumerable<HistoryListItemDto>
+@using EnrichcousBackOffice.Models
+@using Enrich.DataTransfer.EnrichSMSService
+@using EnrichcousBackOffice.Utils
+@using EnrichcousBackOffice.Utils.IEnums
+@using EnrichcousBackOffice.AppLB
+@{
+    var customer = ViewBag.Customer as C_Customer;
+
+    string FormatDateRemain(DateTime dt)
+    {
+        string time = dt > DateTime.UtcNow ? "later" : "ago";
+        TimeSpan ts = dt > DateTime.UtcNow ? dt - DateTime.UtcNow : DateTime.UtcNow - dt;
+
+        if (ts.Days == 0 && ts.Hours == 0 && ts.Minutes == 0)
+        {
+            return "a few seconds " + time;
+        }
+        else if (ts.Days == 0 && ts.Hours == 0)
+        {
+            return ts.Minutes + " minutes " + time;
+        }
+        else if (ts.Days == 0)
+        {
+            return ts.Hours + " hours " + ts.Minutes + " minutes " + time;
+        }
+        else if (ts.Days > 365)
+        {
+            return Math.Round((decimal)(ts.Days / 365), 0, MidpointRounding.ToEven).ToString() + " years " + time;
+        }
+        else if (ts.Days > 30)
+        {
+            return Math.Round((decimal)(ts.Days / 30), 0, MidpointRounding.ToEven).ToString() + " months " + time;
+        }
+        return ts.Days + " days " + time;// +ts.Hours + " hours " + ts.Minutes + " minutes ago";
+    }
+}
+<style>
+    .prd_his .fa {
+        cursor: pointer;
+    }
+
+        .prd_his .fa.fa-plus {
+            display: inherit;
+        }
+
+        .prd_his .fa.fa-minus {
+            display: none;
+        }
+
+    .prd_his.active .fa.fa-plus {
+        display: none;
+    }
+
+    .prd_his.active .fa.fa-minus {
+        display: inherit;
+    }
+
+    .timeline:before {
+        left: 50%;
+    }
+
+    .timeline > .list-item-log {
+        width: 50%;
+    }
+
+    .timeline .time-label {
+        text-align: center;
+    }
+
+        .timeline .time-label > span {
+            margin-left: 10px;
+        }
+
+    .timeline .list-item-log-right {
+        left: 50%;
+    }
+
+        .timeline .list-item-log-right .item-icon-log {
+            left: -13px;
+        }
+
+        .timeline .list-item-log-right .timeline-item {
+            margin-left: 30px;
+            margin-right: 0px;
+        }
+
+    .timeline .list-item-log-left .item-icon-log {
+        right: -16px;
+        left: unset;
+    }
+
+    .timeline .list-item-log-left .timeline-item {
+        margin-left: 0px;
+        margin-right: 30px;
+    }
+
+    .timeline .list-item-log-left .entry-time {
+        position: absolute;
+        right: -100px;
+        top: 6px;
+    }
+
+    .timeline .list-item-log-right .entry-time {
+        position: absolute;
+        left: -100px;
+        top: 6px;
+    }
+</style>
+<br />
+<div class="row">
+    <div class="col col-md-12">
+        @if (Model == null || Model.Count() == 0)
+        {
+        <div class="col-md-12">
+            <div class="alert alert-warning">
+                <span><i class="icon fa fa-warning"></i> No data</span>
+            </div>
+        </div>
+        }
+        else
+        {
+        <ul class="timeline timeline-inverse">
+            @{
+                    string LastMonth = "";
+                    string LastDate = Model.First().CreatedDate.Value.ToString("MMM dd");
+            }
+            @foreach (var itemd in Model)
+                {
+                    string y = itemd.CreatedDate.Value.ToString("yyyy");
+                    string m = itemd.CreatedDate.Value.ToString("MMM");
+
+                    <!-- timeline time label -->
+                    if (y + m != LastMonth)
+                    {
+                        LastMonth = y + m;
+            <text>
+                <li class="time-label">
+                    <span class="bg-green">
+                        @AppFunc.ParseTimeToUtc(itemd.CreatedDate.Value.ToString("MMM dd, yyyy hh:mm tt")).UtcToIMSDateTime().ToString("MMMM yyyy")
+                    </span>
+                </li>
+            </text>
+                    }
+
+                    string dateago = FormatDateRemain(itemd.CreatedDate.Value);
+ <!-- timeline item -->
+                    if (itemd.Type == (int)HistorySMSTypeEnum.BuySMSPackage
+                    || itemd.Type == (int)HistorySMSTypeEnum.RefundSMS
+                    || itemd.Type == (int)HistorySMSTypeEnum.CancelCampaign)
+                    {
+            <li class="list-item-log list-item-log-left">
+                <i class="fa fa-shopping-cart bg-green item-icon-log"></i>
+                <span class="entry-time">
+                    @{
+                                    string dateShow = AppFunc.ParseTimeToUtc(itemd.CreatedDate.Value.ToString("MMM dd, yyyy hh:mm tt")).UtcToIMSDateTime().ToString("MMM dd, yyyy");
+                                    if (dateShow != LastDate)
+                                    {
+                                        LastDate = dateShow;
+                        <text>@dateShow</text>
+                                    }
+                    }
+                </span>
+                <div class="timeline-item">
+                    <div class="timeline-header">
+                        <table style="width:100%">
+                            <tr>
+                                <td>
+                                    <h5 class="title-log" style="margin:0">
+                                        @Html.Raw($"{itemd.Caller} {itemd.Description}")
+                                    </h5>
+                                </td>
+                                <td style="text-align:right">
+                                    <span style="color: #999;font-size:12px"><i class="fa fa-clock-o"></i>&nbsp;@dateago</span>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="timeline-body timeline-@itemd.Id" style="max-width:100%; overflow-x:auto">
+                        <div class="noi-dung-log">
+                            <span>Added SMS: <b class="text-green">+ @Math.Abs(itemd.TotalSegment)</b></span><br />
+                            <span>Remaining SMS: <b>@itemd.RemainingSMS</b></span>
+                        </div>
+                    </div>
+                </div>
+            </li>
+                    }
+                    else
+                    {
+            <li class="list-item-log list-item-log-right">
+                @if (itemd.Type == (int)HistorySMSTypeEnum.DeactiveSMS)
+                            {
+                <i class="fa fa-times-circle-o bg-red item-icon-log"></i>
+                            }
+                            else
+                            {
+                <i class="fa fa-comment bg-yellow item-icon-log"></i>
+                            }
+                <span class="entry-time">
+                    @{
+                                    string dateShow = AppFunc.ParseTimeToUtc(itemd.CreatedDate.Value.ToString("MMM dd, yyyy hh:mm tt")).UtcToIMSDateTime().ToString("MMM dd, yyyy");
+                                    if (dateShow != LastDate)
+                                    {
+                                        LastDate = dateShow;
+                        <text>@dateShow</text>
+                                    }
+                    }
+                </span>
+                <div class="timeline-item">
+                    <div class="timeline-header">
+                        <table style="width:100%">
+                            <tr>
+                                <td>
+                                    <h5 class="title-log" style="margin:0">
+                                        @Html.Raw($"{itemd.Caller} {itemd.Description}")
+                                    </h5>
+                                </td>
+                                <td style="text-align:right">
+                                    <span style="color: #999;font-size:12px"><i class="fa fa-clock-o"></i>&nbsp;@dateago</span>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="timeline-body timeline-@itemd.Id" style="max-width:100%; overflow-x:auto">
+                        <div class="noi-dung-log">
+                            @if (itemd.Type == (int)HistorySMSTypeEnum.DeactiveSMS)
+                                        {
+                            <span>Deactived: <b class="text-red">- @Math.Abs(itemd.TotalSegment)</b></span><br />
+                                        }
+                                        else
+                                        {
+                            <span>Used SMS: <b class="text-orange">- @Math.Abs(itemd.TotalSegment)</b></span><br />
+                                        }
+                            <span>Remaining SMS: <b>@itemd.RemainingSMS</b></span>
+                        </div>
+                    </div>
+                </div>
+            </li>
+                    }
+                }
+            <!-- END timeline item -->
+            <li>
+                <i class="fa fa-clock-o bg-gray" style="left:50%;margin-left:-8px"></i>
+            </li>
+        </ul>
+        }
+    </div>
+</div>
+
+<div class="modal fade" id="modal-planning" tabindex="0" role="dialog" data-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title"></h4>
+            </div>
+            <div class="modal-body">
+                <form method="post" action="/StoreReport/SaveRecurringPlan" id="form-planning" onsubmit="overlayOn()">
+                    <input type="hidden" value="" name="Id" />
+                    <input type="hidden" value="" name="ApplyDiscountAsRecurring" />
+                    <input type="hidden" value="" name="DiscountPercent" />
+                    <input type="hidden" value="" name="Discount" />
+                    <input type="hidden" value="" name="Status" />
+                    <input type="hidden" value="" name="TotalRecurringPrice" id="TotalRecurringPrice" />
+                    <div class="row">
+                        <div class="col-md-12" style="padding-bottom:20px">
+                            <label>Store: <i id="data_store"></i></label>
+                        </div>
+                        <div class="col-md-12" style="padding-bottom:20px">
+                            <label>Subscription: <i id="data_subscription"></i></label>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6" style="padding-bottom:20px">
+                            <label>Recurring price <span style="color:red">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-addon">$</span>
+                                <input id="Price" name="Price" min="0" class="form-control prd_price" onchange="changeDiscount()" type="number" required />
+                            </div>
+                        </div>
+                        <div class="col-md-6" style="padding-bottom:20px">
+                            <label>Recurring date <span style="color:red">*</span></label>
+                            <input id="RecurringDate" name="RecurringDate" class="form-control datepicker" required />
+                        </div>
+                        <div class="col-md-12" style="padding-bottom:20px">
+                            <label>Discount</label>
+                            <div class="input-group discount-group">
+                                <input type="number" step="0.01" class="form-control disable-enter" name="DiscountValue" id="DiscountValue" onchange="changeDiscount()"
+                                       value="" style="text-align: right;" />
+                                <div class="input-group-addon">
+                                    <input type="radio" id="discount-amount" name="discount" value="discount-amount" class="disable-enter" style="display:none" />
+                                    <label for="discount-amount" class="discount-amount active" style="margin: 0" onclick="changeDiscount('amount')">
+                                        <i class="fa fa-dollar" data-toggle="tooltip" title="Amount"></i>
+                                    </label>
+                                </div>
+                                <div class="input-group-addon">
+                                    <input type="radio" id="discount-rate" name="discount" value="discount-rate" class="disable-enter" style="display:none" />
+                                    <label for="discount-rate" class="discount-rate" style="margin: 0" onclick="changeDiscount('rate')">
+                                        <i class="fa fa-percent" data-toggle="tooltip" title="Rate"></i>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12" style="padding-bottom:20px">
+                            <label>
+                                <input type="checkbox" name="ApplyDiscount" id="ApplyDiscount" class="flat-red card_type"> Apply discount as recurring
+                            </label>
+                        </div>
+                        <div class="col-md-12" style="padding-bottom:20px">
+                            <label>
+                                <input type="checkbox" name="recurringStatus" id="recurringStatus" class="flat-red card_type"> Active recurring
+                            </label>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12" style="padding-bottom:20px">
+                            <label>Total recurring: <i id="data_total" style="font-size:20px"></i></label>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <button type="submit" class="btn btn-primary pull-right" onsubmit="overlayOn()" id="btn-save-cam">Save</button>
+                            <button type="button" class="btn btn-danger pull-left" onclick="deleteRecurring()">Delete</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modal-histories" tabindex="0" role="dialog" data-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title"></h4>
+            </div>
+            <div class="modal-body">
+                <table style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>Order</th>
+                            <th>Recurring date</th>
+                            <th>Grand total</th>
+                            <th>Message</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="content-histories">
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script src="~/Content/Admin/bower_components/bootstrap-daterangepicker/daterangepicker.js"></script>
+<script src="/content/admin/plugins/iCheck/icheck.min.js"></script>
+<script src="http://malsup.github.com/jquery.form.js"></script>
+
+<script>
+    var _dataPlanning = null;
+    var planning = null;
+    $(function () {
+        var t = $("#table-service").DataTable({
+            "language": {
+                "processing": '<img src="/Content/ajax-loaders/loading2.gif" width="60px" />',
+                "paginate": {
+                    "first": '<i class="fa fa-angle-double-left" aria-hidden="true"></i>',
+                    "last": '<i class="fa fa-angle-double-right" aria-hidden="true"></i>',
+                    "next": '<i class="fa fa-angle-right" aria-hidden="true"></i>',
+                    "previous": '<i class="fa fa-angle-left" aria-hidden="true"></i>'
+                },
+            },
+            //"columnDefs": [{
+            //    "targets": 'no-sort',
+            //    "orderable": false,
+            //}],
+            'paging': true,
+            "pageLength": 10,
+            "serverSide": true, // for process server side
+            "processing": true, // for show progress bar
+            'lengthChange': true,
+            'searching': false,
+            //'ordering': false,
+            'stateSave': false,
+            'info': false,
+            "scrollX": true,
+            'autoWidth': true,
+            "order": [[3, "desc"]],
+            "ajax": {
+                "url": "/storereport/LoadRecurringPlan",
+                "type": "POST",
+                "datatype": "json",
+                data: function (data) {
+                    data.searchText = $("#s_searchText").val();
+                    data.status = $("#s_recurringStatus").val();
+                    data.slicense = $("#s_subcription").val();
+                    data.storeCode = '@customer.StoreCode';
+                    //data.fromDate = $('.daterange').data('daterangepicker').startDate.format('YYYY-MM-DD');
+                    //data.toDate = $('.daterange').data('daterangepicker').endDate.format('YYYY-MM-DD');
+                    return data;
+                },
+                'dataSrc': function (data) {
+                    _dataPlanning = data.data;
+                    return data.data;
+                },
+                "complete": function (json) { }
+            },
+            'fnCreatedRow': function (nRow, aData, iDataIndex) {
+                $(nRow).hover(
+                    function () {
+                        $(this).find('.btn_group').css({ opacity: 0.0, visibility: "visible" }).animate({ opacity: 1.0 });
+                    },
+                    function () {
+                        $(this).find('.btn_group').css({ opacity: 0.0, visibility: "hidden" }).animate({ opacity: 1.0 });
+                    }
+                )
+            },
+            "columns": [
+                {
+                    name: 'Id',
+                    render: function (data, type, row, meta) {
+                        return `<b>#${row['planning'].Id}</b>`;
+                    },
+                },
+                //{
+                //    name: 'CustomerCode',
+                //    render: function (data, type, row, meta) {
+                //        let html = '';
+                //        html += `<a target="_blank" href="/merchantman/detail/${row['customer']?.Id}"><b class="text-success">${row['customer'].BusinessName} </b></a>`;
+                //        if (row['customer']?.PartnerCode != null && row['customer']?.PartnerCode != '')
+                //            html += `<span class="label label-default"> #${row['customer']?.PartnerCode}</span>`;
+                //        html += `<br/><i>Store Code: <b>${row['customer']?.StoreCode}</b></i>`
+                //        html += `<br/><i>Phone: ${row['customer']?.SalonPhone ?? 'N/A'}</i>`;
+                //        html += `<br/><i>Email: ${row['customer']?.SalonEmail ?? 'N/A'}</i>`;
+                //        return html;
+                //    },
+                //},
+                {
+                    name: 'ProductCode',
+                    render: function (data, type, row, meta) {
+                        let html = '';
+                        html += `<b>${row['license']?.Name}</b></br>`;
+                        html += `Quantity: <b>${row['planning'].SubscriptionQuantity ?? 1}</b></br>`;
+                        html += 'Price: ' + Math.abs(row['planning'].Price).toLocaleString('en-US', {
+                            style: 'currency',
+                            currency: 'USD',
+                        });
+                        if (row['planning'].ApplyDiscountAsRecurring == true) {
+                            if (row['planning'].DiscountPercent != null && row['planning'].DiscountPercent != 0) {
+                                html += '<br>Discount: ' + Math.abs(row['planning'].DiscountPercent) + '%';
+                            }
+                            else if (row['planning'].Discount != null && row['planning'].Discount != 0) {
+                                html += '<br>Discount: ' + Math.abs(row['planning'].Discount).toLocaleString('en-US', {
+                                    style: 'currency',
+                                    currency: 'USD',
+                                });
+                            }
+                        }
+
+                        return html;
+                    },
+                },
+                {
+                    name: 'Recurring',
+                    render: function (data, type, row, meta) {
+                        let html = '';
+                        let offset = moment().utcOffset();
+                        if (row['planning']?.RecurringDate != null) {
+                            let local = moment.utc(row['planning']?.RecurringDate).utcOffset(offset).format("MMM DD, YYYY");
+                            html += `Next recurring: <b>${local}</b>`;
+                        }
+                        else {
+                            html += 'N/A';
+                        }
+                        if (row['planning'].TotalRecurringPrice == null)
+                            row['planning'].TotalRecurringPrice = row['planning'].Price * (row['planning'].SubscriptionQuantity ?? 1)
+                                - (row['planning'].ApplyDiscountAsRecurring == true ? (row['planning'].Discount ?? 0) : 0)
+                        html += '<br>Recurring price: <b>' + Math.abs(row['planning'].TotalRecurringPrice).toLocaleString('en-US', {
+                            style: 'currency',
+                            currency: 'USD',
+                        }) + '</b>';
+                        html += `<br>Recurring with: ${row['planning'].RecurringType ?? "None"}`;
+                        return html;
+                    },
+                },
+                {
+                    name: 'RecurringStatus',
+                    render: function (data, type, row, meta) {
+                        let html = '';
+                        if (row['planning']?.Status == 1)
+                            html += `<span class="label label-success">ON</span>`;
+                        else if (row['planning']?.Status == 0)
+                            html += `<span class="label label-warning">OFF</span>`;
+                        else
+                            html += `<span class="label label-danger">Removed</span>`;
+                        return html;
+                    },
+                },
+                {
+                    name: 'History',
+                    render: function (data, type, row, meta) {
+                        let html = '';
+                        if (row['histories'].length > 0) {
+                            let history = row['histories'][row['histories'].length - 1];
+                            if (history.Status == 0) {
+                                html = `<td><span class='label label-warning'>Incomplete</span></td>`
+                            }
+                            else {
+                                html = `<td><span class='label label-success'>Complete</span></td>`
+                            }
+                        }
+                        else
+                            html = `<td><span class='label label-default'>Waiting</span></td>`
+                        return html;
+                    },
+                },
+                {
+                    name: 'OrderStatus',
+                    render: function (data, type, row, meta) {
+                        let html = '';
+                        if (row['histories'].length > 0) {
+                            if (row['order'].Status == "Open") html = `<span class='label label-default'>Open</span>`;
+                            else if (row['order'].Status == "Paid_Wait") html = `<span class='label label-primary'>Paid Wait</span>`;
+                            else if (row['order'].Status == "PaymentLater") html = `<span class='label label-primary'>Payment Later</span>`;
+                            else if (row['order'].Status == "Closed") html = `<span class='label label-success'>Complete</span>`;
+                        }
+                        else html = `<span class='label label-default'>N/A</span>`
+                        return html;
+                    },
+                },
+                {
+                    name: 'Action',
+                    render: function (data, type, row, meta) {
+                        let html = '<div class="btn_group" style="visibility:hidden;">';
+                        if (row['planning']?.Status >= 0) {
+                            html += `<button type="button" class="btn btn-warning btn-sm pull-right btn-edit" onclick="popupPlanning('${row['planning'].Id}')"><i class="fa fa-pencil-square-o" aria-hidden="true"></i> Edit</button>`;
+                        }
+                        html += `<button type="button" class="btn btn-info btn-sm pull-right" onclick="popupHistories('${row['planning'].Id}')" style="margin-right:5px"><i class="fa fa-history" aria-hidden="true"></i> Histories</button></div>`;
+                        return html;
+                    },
+                },
+            ]
+        });
+        $(".search-change").change(function () {
+            t.draw();
+        });
+        $("#RecurringDate").datepicker({
+            showAnim: 'slideDown',
+            showButtonPanel: true,
+            changeMonth: true,
+            changeYear: true,
+            yearRange: '2000:2050',
+            dateFormat: 'M dd, yy'
+        });
+        $('input[type="checkbox"].flat-red, input[type="radio"].flat-red').iCheck({
+            checkboxClass: 'icheckbox_flat-blue',
+            radioClass: 'iradio_flat-blue'
+        });
+        $("#modal-planning #ApplyDiscount").on('ifChanged', function () {
+            changeDiscount();
+        });
+
+        $("#modal-planning #recurringStatus").on('ifChanged', function () {
+            $("input[name='Status']").val($("#modal-planning #recurringStatus").is(":checked") ? 1 : 0);
+        });
+
+        $('#form-planning').ajaxForm(function (data) {
+            if (data[0]) {
+                noty({ "text": data[1], "layout": "topRight", "type": "success" });
+                t.draw();
+                $("#modal-planning").modal("hide");
+            } else {
+                noty({ "text": data[1], "layout": "topRight", "type": "error" });
+            }
+            overlayOff();
+        });
+    })
+
+    function popupPlanning(id) {
+        planning = _dataPlanning.find(c => c.planning.Id == id);
+
+        if (planning.planning.ApplyDiscountAsRecurring == true) {
+            $('#modal-planning #ApplyDiscount').iCheck('check').iCheck('update');
+        }
+        else {
+            $('#modal-planning #ApplyDiscount').iCheck('uncheck').iCheck('update');
+        }
+
+        $('#modal-planning .modal-title').html('Edit recurring planning #' + planning.planning.Id)
+        $('#modal-planning #data_store').html(planning.customer.BusinessName);
+        $('#modal-planning #data_subscription').html(`${planning.license.Name} <b>x${planning.planning.SubscriptionQuantity ?? 1}</b>`);
+        $('#modal-planning #Price').val(planning.planning.Price.toFixed(2));
+        $('#modal-planning #data_total').text("$" + planning.planning.TotalRecurringPrice);
+        $('#modal-planning #TotalRecurringPrice').val(planning.planning.TotalRecurringPrice);
+        $('#modal-planning #RecurringDate').val(moment(planning.planning.RecurringDate).format('MMM DD, YYYY'));
+
+        if (planning.planning.Status == true) {
+            $('#modal-planning #recurringStatus').iCheck('check').iCheck('update');
+        }
+        else {
+            $('#modal-planning #recurringStatus').iCheck('uncheck').iCheck('update');
+        }
+        if (planning.planning.DiscountPercent != null && planning.planning.DiscountPercent != 0) {
+            $('#modal-planning #DiscountValue').val(planning.planning.DiscountPercent.toFixed(2));
+            $('#modal-planning .discount-amount').removeClass('active');
+            $('#modal-planning .discount-rate').addClass('active');
+            $('#modal-planning #discount-amount').prop("checked", false);
+            $('#modal-planning #discount-rate').prop("checked", true);
+        }
+        else if (planning.planning.Discount != null && planning.planning.Discount != 0) {
+            $('#modal-planning #DiscountValue').val(planning.planning.Discount.toFixed(2));
+            $('#modal-planning .discount-amount').addClass('active');
+            $('#modal-planning .discount-rate').removeClass('active');
+            $('#modal-planning #discount-amount').prop("checked", true);
+            $('#modal-planning #discount-rate').prop("checked", false);
+        }
+        else {
+            $('#modal-planning #DiscountValue').val('0.00');
+            $('#modal-planning .discount-amount').addClass('active');
+            $('#modal-planning .discount-rate').removeClass('active');
+            $('#modal-planning #discount-amount').prop("checked", true);
+            $('#modal-planning #discount-rate').prop("checked", false);
+        }
+        $('#modal-planning').modal();
+        $("input[name='Id']").val(planning.planning.Id);
+        $("input[name='ApplyDiscountAsRecurring']").val(planning.planning.ApplyDiscountAsRecurring);
+        $("input[name='DiscountPercent']").val(planning.planning.DiscountPercent);
+        $("input[name='Discount']").val(planning.planning.Discount);
+        $("input[name='Status']").val(planning.planning.Status);
+        $("input[name='TotalRecurringPrice']").val(planning.planning.TotalRecurringPrice);
+
+    }
+    function changeDiscount(type) {
+        if (type == 'rate') {
+            $('#modal-planning .discount-amount').removeClass('active');
+            $('#modal-planning .discount-rate').addClass('active');
+            $('#modal-planning #discount-amount').prop("checked", false);
+            $('#modal-planning #discount-rate').prop("checked", true);
+        }
+        else if (type == 'amount') {
+            $('#modal-planning .discount-amount').addClass('active');
+            $('#modal-planning .discount-rate').removeClass('active');
+            $('#modal-planning #discount-amount').prop("checked", true);
+            $('#modal-planning #discount-rate').prop("checked", false);
+        }
+        //else return;
+        var applyDiscount = $("#modal-planning #ApplyDiscount").is(":checked");
+        var discountType = $("input[name='discount']:checked").val();
+        var price = $('#modal-planning #Price').val() ?? 0;
+        var quantity = planning.planning.SubscriptionQuantity ?? 1;
+        var discountValue = applyDiscount == true ? ($('#modal-planning #DiscountValue').val() ?? 0) : 0;
+        var total = calculatorTotal(price, quantity, discountValue, discountType, applyDiscount);
+        $('#modal-planning #data_total').html("$" + total);
+        $('#modal-planning #TotalRecurringPrice').val(total);
+    }
+    function calculatorTotal(price, quantity, discountValue, discountType, applyDiscount) {
+        $("input[name='ApplyDiscountAsRecurring']").val(applyDiscount);
+        var total = price * quantity;
+        if (discountType == 'discount-rate') {
+            discountValue = discountValue > 100 ? 100 : discountValue;
+            $("input[name='DiscountPercent']").val(discountValue);
+            $("input[name='Discount']").val(total * discountValue / 100);
+            total = total * (100 - discountValue) / 100;
+        }
+        else {
+            discountValue = discountValue > total ? total : discountValue;
+            $("input[name='DiscountPercent']").val(0);
+            $("input[name='Discount']").val(discountValue);
+            total -= discountValue
+        }
+        $("input[name='TotalRecurringPrice']").val(total.toFixed(2));
+        return total.toFixed(2);
+    }
+    function popupHistories(id) {
+        planning = _dataPlanning.find(c => c.planning.Id == id);
+        $('#modal-histories .content-histories').html('');
+        if (planning.histories.length == 0) $('#modal-histories .content-histories').append('<tr><td colspan="4" style="text-align: center;margin: 10px">No data</td></tr>');
+        planning.histories.forEach(item => {
+            var content = `<tr><td><a href="/order/estimatesdetail/?code=${item.RecurringOrder}" target="_blank">#${item.RecurringOrder}</a></td>
+                            <td>${moment(item.CreatedAt).format("MMM DD, YYYY")}<br/>By: ${item.CreatedBy}</td>
+                            <td><b>${item.TotalPrice == null ? "N/A" : ("$" + item.TotalPrice.toFixed(2))}</b></td>
+                            <td>`;
+            content += (item.Message?.replaceAll('|', '<br/>') ?? "");
+            content += '</td>';
+            if (item.Status == 0) {
+                content += `<td><span class='label label-warning'>Incomplete</span></td>`
+            }
+            else {
+                content += `<td><span class='label label-success'>Complete</span></td>`
+            }
+            content += '</tr>';
+            $('#modal-histories .content-histories').append(content);
+        })
+        $('#modal-histories .modal-title').html(`Recurring histories <b>#${planning.planning.Id}</b>`);
+        $('#modal-histories').modal();
+    }
+    function deleteRecurring(id) {
+        if (confirm("Are you sure you want to delete this Recurring?") == true) {
+            overlayOn();
+            $.ajax({
+                url: `/StoreReport/RemoveRecurringPlan?id=${planning.planning.Id}`,
+                type: "get",
+                success: function (data) {
+                    if (data[0]) {
+                        noty({ "text": data[1], "layout": "topRight", "type": "success" });
+                        $("#table-service").DataTable().draw();
+                        $("#modal-planning").modal("hide");
+                    }
+                    else {
+                        noty({ "text": data[1], "layout": "topRight", "type": "error" });
+                    }
+                    overlayOff();
+                },
+            })
+        }
+    }
+</script>

@@ -1,0 +1,51 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.Order_Subcription_License>
+@using EnrichcousBackOffice.Models
+
+@{
+    WebDataModel db = new WebDataModel();
+}
+
+
+@if (ViewBag.ErrMsg != null)
+{
+    <input type="hidden" id="err_msg" value="@ViewBag.ErrMsg" />
+}
+else
+{
+    <div style="border: 1px solid royalblue; overflow: auto; max-height:400px">
+        <input type="hidden" id="err_msg" value="" />
+        <table class="table table-bordered table-hover" style="margin:0">
+            <thead style="background-color: #AAD3EA">
+                <tr>
+                    <th>License</th>
+                    @*<th>Price</th>*@
+                    <th>Period</th>
+                </tr>
+            </thead>
+            <tbody>
+                @*@foreach (var item in Model)
+                {
+                    var license_product_item = db.License_Product_Item.Where(x => x.License_Item_Code == item.License_Item_Code).FirstOrDefault();
+
+                    <tr class="hover">
+                        <td>
+                            <span><b style="color: green">@item.License_Items_Name</b></span>
+                            @if (license_product_item.CountLimit > 0)
+                            {
+                                <br /><span>Count Limit: <b>@(license_product_item.CountLimit)</b></span>
+                            }
+
+                            @if (license_product_item.CountWarning > 0)
+                            {
+                                <br /><span>Count Warning: <b>@(license_product_item.CountWarning)</b></span>
+                            }
+                        </td>
+
+                        <td>@(string.IsNullOrEmpty(license_product_item.Period) ? "ONE TIME" : license_product_item.Period)</td>
+                    </tr>
+                }*@
+            </tbody>
+        </table>
+    </div>
+}
+

@@ -1,0 +1,131 @@
+﻿@using Inner.Libs.Helpful;
+@using EnrichcousBackOffice.Utils.IEnums
+@model EnrichcousBackOffice.Models.CustomizeModel.DetailEmployeePayrollCustomizeModel
+<div class="modal fade" id="payroll-details-paid">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Payment Detail</h4>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="panel">
+                    
+                        <div class="panel-body">
+                            <div class="panel panel-default sub-panel" style="border:none;box-shadow: none;">
+                                <div style="display:flex;align-items:center;float:right">
+                                    <div style="padding: 0 25px;width:300px">
+                                        <table class="table table-bordered">
+                                            <tbody>
+                                                <tr style="border:1px solid #f4f4f4">
+                                                    <td>
+                                                        <strong>Base Salary :</strong>
+                                                        <span style="float:right">@Model.BaseSalary.Value.ToString("$#,##0.##")</span>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    @*<div class="col-sm-6">
+                <span style="font-weight: 600;display: block;padding-bottom: 10px;">Deductions</span>
+                <table class="table table-bordered">
+                    <tbody>
+                        <tr style="border:1px solid #f4f4f4">
+                            <td>
+                                <strong>Tax :</strong>
+                                <span style="float:right">$0</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>*@
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                    @{
+                        var gpscomm = Model.ListEmployeeComission.GroupBy(x => x.Type).ToList();
+                        }
+                        @if (Model.IsSalesPerson.Value)
+                        {
+
+                            if (gpscomm.Count() > 0)
+                            {
+                            <div class="panel panel-default">
+                                <div class="panel-heading">Commission</div>
+                                <div class="panel-body">
+                                    @foreach (var cmm in gpscomm)
+                                    {
+
+                                        <div class="list_groups custom-scroll" style="margin:20px 10px; border: 1px solid var(--main-color-1); background-color: #ffffff">
+                                            @{
+                                                var customeNameClass = (Model.EmployeeId + cmm.Key).ToString();
+                                            }
+                                            <b style="padding: 0px 20px; font-size: 1em; margin: -10px 20px; display:inline-block;transform:translateY(-9px); background-color: #ffffff; color:#076aa4">@cmm.Key Commission</b>
+                                            <table class="table table-bordered table-hover table-striped" style="margin-bottom:0px; margin-top:20px">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Order Code</th>
+                                                          @*<th>Order Note</th>*@
+                                                        <th>Customer Name</th>
+                                                        <th>Sales Person</th>
+                                                        <th>Transaction Amount</th>
+                                                        <th>Commission</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach (var item in cmm)
+                                                    {
+                                                    <tr>
+                                                        <td>
+                                                            <span>#@item.OrderCode</span>
+                                                            <span style="cursor:pointer;border-radius:2px;margin-left:3px" class="label label-primary" onclick="show_invoice('@item.OrderCode')"> View Receipt</span>
+                                                        </td>
+                                                        @*<td>
+                                                            <span>@item.TypeOfInvoice</span>
+                                                        </td>*@
+                                                        <td>
+                                                            <span>@item.CustomerName</span>
+                                                        </td>
+                                                        <td>
+                                                            <span>@item.SalesPersonName<span class="btn btn-warning" style="color:white;padding: 0px 5px; font-size: 12px; margin-left: 8px;" onclick="viewdetailemp('@item.SalesPersonNumber')"><i class="glyphicon glyphicon-search"></i> View</span></span>
+                                                        </td>
+                                                        <td>
+                                                            <span>$@item.Amount</span>
+                                                        </td>
+                                                        <td>
+                                                            <span>@item.Comisssion.Value.ToString("$#,##0.##")</span>
+                                                        </td>
+                                                    </tr>
+                                                    }
+                                                </tbody>
+                                                <tfoot>
+                                                    <tr>
+                                                        <th></th>
+                                                        <th></th>
+                                                        <th></th>
+                                                        <th class="text-right">Total</th>
+                                                        <th>@((cmm.Sum(x=>x.Comisssion).Value.ToString("$#,##0.##")))</th>
+
+                                                    </tr>
+                                                </tfoot>
+                                            </table>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    }
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>

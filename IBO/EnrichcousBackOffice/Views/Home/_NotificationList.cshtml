@@ -1,0 +1,11 @@
+﻿@model List<EnrichcousBackOffice.Models.CustomizeModel.Nofitication.NotificationModel>
+
+@foreach (var item in Model)
+{
+    if (!string.IsNullOrEmpty(item.GroupTitle))
+    {
+        <h3 class="notifications-groups @item.GroupTitle">@item.GroupTitle</h3>
+    }
+
+    @Html.Partial("_NotificationItem", item)
+}

@@ -1,0 +1,389 @@
+﻿@using EnrichcousBackOffice.Models
+@model List<C_SalesLead>
+@{
+    var access = EnrichcousBackOffice.AppLB.Authority.GetAccessAuthority();
+}
+
+@section title{
+    New Register
+}
+@section style{
+    <style>
+        .dataTables_processing {
+            z-index: 9999;
+            background: #ff000000;
+            border: none;
+            outline: 0;
+            box-shadow: none;
+        }
+    </style>
+}
+<section class="content-header">
+    <h1>
+        Manage New Register
+        <small>New Register</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li>
+            <a href="/home"><i class="fa fa-dashboard"></i> Home</a>
+        </li>
+        <li><i class="fa fa-credit-card"></i> Sale</li>
+        <li><i class="fa fa-file-o"></i> New Register</li>
+    </ol>
+</section>
+
+<section class="content">
+    <div class="row">
+        @if (TempData["e"] != null)
+        {
+            <div class="alert alert-warning alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+            </div>
+        }
+        else if (TempData["s"] != null)
+        {
+            <div class="alert alert-success alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+            </div>
+        }
+        <div class="col-md-12">
+            <div class="box box-primary">
+                <div class="box-body salelead-list">
+                    <div class="row">
+                        <form id="search_form" method="get" action="/newregisteraccount">
+                            <div class="col-md-12 form-inline filter-group">
+                                <div class="input-group col-md-2 pull-left">
+                                    <div class="input-group-addon">
+                                        <i class="fa fa-calendar"></i> From
+                                    </div>
+                                    <input type="text" id="FromDate" name="FromDate" class="form-control datepicker" value="@(ViewBag.FromDate?.ToString("MM/dd/yyyy"))" />
+                                </div>
+                                <div class="input-group  col-md-2 pull-left">
+                                    <div class="input-group-addon">
+                                        <i class="fa fa-calendar"></i> To
+                                    </div>
+                                    <input type="text" id="ToDate" name="ToDate" class="form-control datepicker" value="@(ViewBag.ToDate?.ToString("MM/dd/yyyy"))" />
+                                </div>
+
+                                <div class="col-md-2 input-group pull-left">
+                                    <input type="text" class="form-control" id="SearchText" name="SearchText" placeholder="search by name, phone, email, merchant ..." value="" />
+                                </div>
+                                <button type="button" class="btn btn-default btn-flat" id="search_submit" name="search_submit">
+                                    <i class="fa fa-search"></i>
+                                    <img id="search_loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    <br />
+                    <div id="List_Account">
+                        <table id="dataTable" style="width: 100%;border-collapse: collapse;" class="table table-hover table-striped dataTable sale-lead">
+                            <thead>
+                                <tr>
+                                    <th class="no-sort" width="10px">#</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Name</th>
+                                    <th>Salon Name</th>
+                                    <th>Created On</th>
+                                    <th></th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <!-- /.box -->
+        </div>
+    </div>
+</section>
+<div id="partial_detail">
+
+</div>
+
+
+@*notification confirm verify modal*@
+<div id="verify-action-confirmation" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="verify-action-confirmation-title">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="verify-action-confirmation-title">Are you sure ?</h4>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to verify this account?
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="verify-action-confirmation-submit-button" class="btn btn-primary pull-right btn-yes">
+                    Yes
+                </button>
+                <span class="btn btn-default pull-right margin-r-5" data-dismiss="modal">Cancel</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+@*notification confirm not yet full information*@
+<div id="addinfo-action-confirmation" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="addinfo-action-confirmation-title">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addinfo-action-confirmation-title">Unable to verify</h4>
+            </div>
+            <div class="modal-body">
+
+                This registration does not have salon information, Would you like to add the full details before verifying?
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="addinfo-action-confirmation-submit-button" class="btn btn-primary pull-right btn-yes">
+                    Yes
+                </button>
+                <span class="btn btn-default pull-right margin-r-5" data-dismiss="modal">Cancel</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section script {
+    <script>
+        $(".datepicker").datepicker({
+            changeMonth: true,
+            changeYear: true,
+            yearRange: '1950:2050'
+        });
+        //load data
+        var t = $(".dataTable").DataTable({
+            "language": {
+                "processing": '<img src="/Content/ajax-loaders/loading2.gif" width="60px" />',
+            },
+            "columnDefs": [{
+                "targets": 'no-sort',
+                "orderable": false,
+            }],
+            'paging': true,
+            "pageLength": 10,
+            "serverSide": true, // for process server side
+            "processing": true, // for show progress bar
+            'lengthChange': false,
+            'searching': false,
+            'ordering': false,
+            'info': false,
+            'autoWidth': true,
+            "order": [[4, "desc"]],
+            "ajax": {
+                "url": "/NewRegisterAccount/LoadList",
+                "type": "POST",
+                "datatype": "json",
+                data: function (data) {
+                    data.ToDate = $('#ToDate').val();
+                    data.FromDate = $('#FromDate').val();
+                    data.SearchText = $('#SearchText').val();
+                    return data;
+                }
+            },
+            "columns": [
+                {
+                    "className": 'text-center',
+                    "data": function () { return "" },
+                    "width": '10',
+                },
+                {
+                    "data": "L_Email",
+                    "name": "L_Email"
+                },
+                {
+                    "data": "L_Phone",
+                    "name": "L_Phone"
+                },
+                { "data": "L_ContactName" },
+                { "data": "L_SalonName" },
+                {
+                    "data": "CreateAt",
+                    "type": "date",
+                },
+                {
+                    "data": function () {
+                        return "<span class='btn btn-warning' style='color: white;padding: 3px 5px;'>waiting for verification</span>"
+                    },
+                },
+                {
+                    "render": function (data, type, row) {
+                        if (row["StatusVerify"]) {
+                            return '@if (access.Any(k => k.Key.Equals("customer_mango_control")) == true && access["customer_mango_control"] == true) {<text><a id="verify" data-id="'+row["Id"]+'" data-toggle="modal" data-target="#verify-action-confirmation" data-check="'+row["StatusVerify"]+'" data-url="'+row["VerifyUrl"]+'" class="btn btn-success" style="margin-bottom: 5px;padding: 4px 11px;margin-right: 3px;" >Xác thực</a></text>}<a class="btn btn-warning" style="margin-bottom: 5px;padding: 4px 11px;" onclick="open_account_popup(' + row["Id"] + ')"><i class="fa fa-edit"></i> Sửa <img id="img_load_' + row["Id"] + '" src="/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" /></a> <a class="btn btn-danger btn-sm" style="margin-bottom:5px" onclick="delete_account(' + row["Id"] + ',this)"> Xóa <img id="img_load_delete_' + row["Id"] + '" src="/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" /></a><br />'
+                        }
+                        else {
+                             return '<a class="btn btn-warning" style="margin-bottom: 5px;padding: 4px 11px;" onclick="open_account_popup(' + row["Id"] + ')"><i class="fa fa-edit"></i> Sửa <img id="img_load_' + row["Id"] + '" src="/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" /></a> <a class="btn btn-danger btn-sm" style="margin-bottom:5px" onclick="delete_account(' + row["Id"] + ',this)"> Xóa <img id="img_load_delete_' + row["Id"] + '" src="/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" /></a><br />'
+                        }
+                    },
+                    "className": 'text-center',
+                    "width": '250',
+                }
+            ]
+
+        });
+        t.on('draw.dt', function () {
+            var PageInfo = $('#dataTable').DataTable().page.info();
+            t.column(0, { page: 'current' }).nodes().each(function (cell, i) {
+                cell.innerHTML = i + 1 + PageInfo.start;
+            });
+        });
+
+
+        // search click
+        $('#search_submit').click(function () {
+            $('#search_loading').show()
+            $('#dataTable').DataTable().ajax.reload();
+            $('#search_loading').hide()
+        })
+        function open_account_popup(Id) {
+            $("#img_load_" + (Id || "newlead")).show();
+            $.ajax({
+                method: "POST",
+                url: "/newregisteraccount/ViewDetail",
+                data: { "id": Id }
+            })
+                .done(function (data) {
+                    $("#partial_detail").html(data);
+                    $('#update-new-register').modal('show');
+                })
+                .fail(function () {
+                    alert("fail");
+                })
+                .always(function () {
+                    $("#img_load_" + (Id || "newlead")).hide();
+                });
+        }
+        function delete_account(Id, row_index) {
+            var confirmation = confirm("Are you sure ? !");
+
+            if (confirmation) {
+                $("#img_load_delete_" + (Id || "newlead")).show();
+                $.ajax({
+                    method: "POST",
+                    url: "/newregisteraccount/Delete",
+                    data: { "id": Id },
+                    dataType: "html"
+                }).done(function (data) {
+                    if (data.status = true) {
+                        var i = row_index.parentNode.parentNode.rowIndex;
+                        document.getElementById('dataTable').deleteRow(i);
+                        noty({ "text": "Success !", "layout": "topRight", "type": "success" });
+                    }
+                    else {
+                        error(data.message)
+                    }
+                })
+                    .fail(function () {
+                        alert("fail");
+                    })
+                    .always(function () {
+                        $("#img_load_delete_" + (Id || "newlead")).hide();
+                    });
+            }
+        }
+        function verify(element) {
+            debugger;
+            debugger;
+            var check = $(element).attr("data-check")
+            if (check === 'true') {
+            var url = $(element).attr("data-url");
+            var w = 900;
+            var h = 500;
+            var dualScreenLeft = window.screenLeft != undefined ? window.screenLeft : screen.left;
+            var dualScreenTop = window.screenTop != undefined ? window.screenTop : screen.top;
+
+            width = window.innerWidth ? window.innerWidth : document.documentElement.clientWidth ? document.documentElement.clientWidth : screen.width;
+            height = window.innerHeight ? window.innerHeight : document.documentElement.clientHeight ? document.documentElement.clientHeight : screen.height;
+
+            var left = ((width / 2) - (w / 2)) + dualScreenLeft;
+            var top = ((height / 2) - (h / 2)) + dualScreenTop;
+            var newWindow = window.open(url, '', 'scrollbars=yes, width=' + w + ', height=' + h + ', top=' + top + ', left=' + left);
+
+            // Puts focus on the newWindow
+            if (window.focus) {
+                newWindow.focus();
+            }
+            var timer = setInterval(function () {
+                if (newWindow.closed) {
+                    clearInterval(timer);
+                    $('#dataTable').DataTable().ajax.reload();
+                }
+            }, 500);
+            }
+            else {
+                var confirmation = confirm("This registration does not have salon information, please update full details before verification !");
+                if (confirmation) {
+                    open_account_popup($(element).attr("data-id"))
+                }
+            }
+        }
+
+
+        // verify function
+
+        $('#verify-action-confirmation').on('show.bs.modal', function (e) {
+            debugger;
+            var data = $(e.relatedTarget).data();
+            $(this).attr('data-id', data.id);
+            $(this).attr('data-check', data.check);
+            $(this).attr('data-url', data.url);
+        });
+
+        $('#verify-action-confirmation').on('click', '.btn-yes', function (e) {
+            debugger;
+            var elModal = $(e.delegateTarget);
+            elModal.modal('hide');
+            var check = $(elModal).attr("data-check")
+            if (check === 'true') {
+                var url = $(elModal).attr("data-url");
+                verifyOpenWindow(url);
+            }
+            else {
+                $('#addinfo-action-confirmation').modal("show");
+                $('#addinfo-action-confirmation').attr('data-id', $(elModal).attr('data-id'));
+            }
+        });
+
+        $('#addinfo-action-confirmation').on('click', '.btn-yes', function (e) {
+            var elModal = $(e.delegateTarget);
+            open_account_popup($(elModal).attr('data-id'));
+            elModal.modal('hide');
+        })
+
+
+
+        function verifyOpenWindow(url) {
+            debugger;
+            var w = 900;
+            var h = 500;
+            var dualScreenLeft = window.screenLeft != undefined ? window.screenLeft : screen.left;
+            var dualScreenTop = window.screenTop != undefined ? window.screenTop : screen.top;
+
+            width = window.innerWidth ? window.innerWidth : document.documentElement.clientWidth ? document.documentElement.clientWidth : screen.width;
+            height = window.innerHeight ? window.innerHeight : document.documentElement.clientHeight ? document.documentElement.clientHeight : screen.height;
+
+            var left = ((width / 2) - (w / 2)) + dualScreenLeft;
+            var top = ((height / 2) - (h / 2)) + dualScreenTop;
+            var newWindow = window.open(url, 'Verify', 'scrollbars=yes, width=' + w + ', height=' + h + ', top=' + top + ', left=' + left);
+
+            // Puts focus on the newWindow
+            if (window.focus) {
+                newWindow.focus();
+            }
+            var timer = setInterval(function () {
+                if (newWindow.closed) {
+                    clearInterval(timer);
+                    $('#dataTable').DataTable().ajax.reload();
+                }
+            }, 500);
+        }
+    </script>
+}
+
+

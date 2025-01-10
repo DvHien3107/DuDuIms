@@ -1,0 +1,288 @@
+﻿@using EnrichcousBackOffice.Models
+@{
+    ViewBag.Title = "SMS Report";
+
+}
+<link href="~/Content/Admin/plugins/jqueryconfirm/jquery-confirm.min.css" rel="stylesheet" />
+<style>
+    .ico-help {
+        display: inline-block;
+        transform: translateY(1px);
+        color: var(--main-color-1);
+        font-size: 1em;
+        padding-left: 1px;
+    }
+
+    .total-div {
+        display: inline-block;
+        border: 1px dotted green;
+        padding: 5px 10px;
+        margin-right: 3px;
+    }
+
+    .dt-buttons {
+        text-align: right;
+    }
+
+    .circular {
+        animation: rotate 2s linear infinite;
+        height: 50px;
+        transform-origin: center center;
+        width: 50px;
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        margin: auto;
+    }
+
+    .path {
+        stroke-dasharray: 1, 200;
+        stroke-dashoffset: 0;
+        animation: dash 1.5s ease-in-out infinite, color 6s ease-in-out infinite;
+        stroke-linecap: round;
+    }
+
+    @@keyframes rotate {
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    @@keyframes dash {
+        0% {
+            stroke-dasharray: 1, 200;
+            stroke-dashoffset: 0;
+        }
+
+        50% {
+            stroke-dasharray: 89, 200;
+            stroke-dashoffset: -35px;
+        }
+
+        100% {
+            stroke-dasharray: 89, 200;
+            stroke-dashoffset: -124px;
+        }
+    }
+
+    @@keyframes color {
+        100%, 0% {
+            stroke: #d62d20;
+        }
+
+        40% {
+            stroke: #0057e7;
+        }
+
+        66% {
+            stroke: #008744;
+        }
+
+        80%, 90% {
+            stroke: #ffa700;
+        }
+    }
+
+    div.dataTables_wrapper div.dataTables_processing {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 100%;
+        height: 100%;
+        margin-left: 0;
+        margin-top: 0;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        padding: 1em 0;
+        border: none;
+        background-color: #fffdfd80;
+    }
+</style>
+
+
+<section class="content">
+    @if (TempData["e"] != null)
+    {
+        <div class="alert alert-warning alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+        </div>
+    }
+    else if (TempData["s"] != null)
+    {
+        <div class="alert alert-success alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+        </div>
+    }
+
+
+    <div class="nav-tabs-custom-ticket nav-tabs-custom">
+        <ul class="nav nav-tabs">
+            <li class="tab-nav-item">
+                <a href="/otherreport/smsreport">
+                    SMS REPORT
+                </a>
+            </li>
+            <li class="tab-nav-item">
+                <a href="/otherreport/SMSUsedReport">
+                    SMS POS REPORT
+                </a>
+            </li>
+            <li class="tab-nav-item active">
+                <a href="/otherreport/smsexport">
+                    SMS EXPORT FILES
+                </a>
+            </li>
+        </ul>
+        <div class="tab-content">
+            <div>
+              <h1 class="text-center" style="font-size:19px">SMS Export Excel Files</h1>
+              
+                <table id="tableExport" class="display table table-bordered" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Create At</th>
+                            <th>Create By</th>
+                            <th>Download</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- /.tab-content -->
+    </div>
+
+
+
+
+</section>
+
+<script src="~/Content/Admin/plugins/jqueryconfirm/jquery-confirm.min.js"></script>
+@section script{
+    <script>
+      
+        $('.datepicker').datepicker({
+            changeMonth: true,
+            changeYear: true,
+            yearRange: '1950:2050'
+        });
+
+        $(document).ready(function () {
+            $('.ico-help').tooltip();
+        });
+      
+        var t = $("#tableExport").DataTable({
+          
+            "paging": true,
+            "language": {
+                "processing": '<svg class="circular" viewBox="25 25 50 50"><circle class="path" cx="50" cy="50" r="20" fill="none" stroke-width="2" stroke-miterlimit="10"></circle></svg>'
+            },
+            "serverSide": true, // for process server side
+            "processing": true, // for show progress bar
+            'searching': false,
+            "orderable": false,
+            "ajax": {
+                "url": "/OtherReport/LoadExportFiles",
+                "type": "Post",
+                "datatype": "json",
+            },
+            "columns": [
+                {
+                    "name": "File Name",
+                    'data': "Name",
+                    "orderable": false,
+                },
+               
+                {
+                    "name": "Create At",
+                    'data': "CreateAt",
+                    "orderable": false,
+                    "render": function (data, type, row) {
+                     
+                        return moment(row['CreateAt']).format('lll');
+                    },
+                },
+                {
+                    "name": "Create By",
+                    'data': "CreateBy",
+                    "orderable": false,
+                },
+                {
+                    "name": "Download",
+                    'data': "Done",
+                    "orderable": false,
+                    "render": function (data, type, row) {
+                        var html = '<div>';
+                        if (row["Done"]) {
+                            html += '<a class="btn btn-success btn-xs" href="' + row["Path"]+'"><i class="fa fa-download" aria-hidden="true"></i></a>';
+                            html += `<button class="btn btn-danger btn-xs" onclick="deleteSMSExportFiles(${row['Id']})" style="margin-left:5px"><i class="fa fa-trash"  aria-hidden="true"></i></button>`;
+
+                        }
+                        else {
+                            html += '<i style="font-size:16px" class="fa fa-circle-o-notch fa-spin fa-fw"></i>'
+                        }
+                        html += '</div>';
+                        return html;
+                    },
+                },
+               
+            ]
+
+        });
+        function deleteSMSExportFiles(Id) {
+            $.confirm({
+                title: 'Confirmation !',
+                content: 'Are you sure delete this file ? ',
+                buttons: {
+                    Continue: {
+                        text: 'Confirm',
+                        btnClass: 'btn-warning',
+                        action: function () {
+                            $.ajax({
+                                type: "Post",
+                                url: "/OtherReport/DeleteSmsReportFile",
+                                data: {'Id':Id},
+                                success: function (data) {
+                                    if (data.status) {
+                                        success(data.message);
+                                        $("#tableExport").DataTable().ajax.reload();
+                                    }
+                                    else {
+                                        error(data.message);
+                                    }
+                                },
+                                error: function (xhr, ajaxOptions, thrownError) {
+                                    alert('fail');
+                                }
+                            });
+                        }
+                    },
+                    Cancel: function () {
+                        // do nothing.
+                    }
+                }
+            });
+        }
+
+        $(function () {
+            // Reference the hub.
+            var hubNotif = $.connection.smsexportfileHub;
+            $.connection.hub.start();
+            $.connection.hub.start().done(function () {
+           
+            });
+            // Notify while anyChanges.
+            hubNotif.client.completeProcessSMSExportFiles = function () {
+                $("#tableExport").DataTable().ajax.reload();
+            };
+        });
+
+    </script>
+}

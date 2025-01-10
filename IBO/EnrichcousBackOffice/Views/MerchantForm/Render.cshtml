@@ -1,0 +1,205 @@
+﻿@*@model EnrichcousBackOffice.Models.C_MerchantFormData*@
+@{Layout = "";}
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Simply Pos</title>
+    <!-- Tell the browser to be responsive to screen width -->
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+    <!-- Font: family=Roboto -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap" rel="stylesheet">
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="~/Areas/PaymentGate/Content/plugins/bootstrap/bootstrap.min.css">
+    <!-- font-awesome -->
+    <link rel="stylesheet" href="~/Areas/PaymentGate/Content/plugins/font-awesome/css/font-awesome.min.css" />
+    <!-- Noty -->
+    <link rel="stylesheet" href="~/Content/noty/jquery.noty.css" />
+    <link rel="stylesheet" href="~/Content/noty/noty_theme_default.css" />
+
+    <!-- Layout MasterPage css -->
+    <link rel="stylesheet" href="~/Areas/PaymentGate/Content/page/_layout.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.css">
+    <link rel="stylesheet" href="https://cdn.form.io/formiojs/formio.full.min.css">
+    <!-- Layout ContentPage css -->
+    @*@RenderSection("content_page_style", false)*@
+</head>
+<body style="overflow-x: auto;background-color: aliceblue;">
+    <div id="overlay">
+        <img src="~/Content/ajax-loaders/loading2.gif" />
+    </div>
+    <h3 style="padding: 20px 0;width: 100%;text-align: center;margin-bottom: 0;">
+        <img src="~/Content/Img/logo_enrich.png" width="160" />
+    </h3>
+    <div style="margin: auto; max-width:100%;width:@(ViewBag.page_width ?? "1000px")">
+        <div class="alert alert-warning alert-dismissible alert-di" style="display:none">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <span><i class="icon fa fa-warning"></i><span id="msg_content"></span></span>
+        </div>
+    </div>
+    <div class="row container" style="margin: auto; width:@(ViewBag.page_width ?? "1000px");background-color: white;padding: 15px;">
+        <div class="col col-12">
+            @if (!string.IsNullOrEmpty((TempData["e"] ?? "").ToString()))
+            {
+                <text>
+                    <div class="alert alert-warning alert-dismissible alert-di">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                        <span><i class="icon fa fa-warning"></i> @TempData["e"].ToString()</span>
+                    </div>
+
+                </text>
+                TempData["e"] = null;
+            }
+            @if (!string.IsNullOrEmpty((TempData["s"] ?? "").ToString()))
+            {
+                <text>
+                    <div class="alert alert-success alert-dismissible alert-di">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                        <span><i class="icon fa fa-check"></i> @TempData["s"].ToString()</span>
+                    </div>
+                </text>
+                TempData["s"] = null;
+            }
+
+            <div id="render"></div>
+        </div>
+    </div>
+
+    <div style="text-align: center;margin-top: 20px;">
+        <p style="color: rgb(154, 154, 152);font-family: sans-serif;font-size: 15px;">
+            ©2020 SIMPLY POWERED BY <img src="/Areas/PaymentGate/Content/Images/logo.png" height="20" style="margin-top: -5px;margin-left: 10px; display:inline-block">
+        </p>
+    </div>
+
+
+    <div class="modal fade" id="submit_member_modal" role="dialog" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-content">
+            <div class="modal-header">
+                <div class="modal-title pull-left"><h6>Enter your information</h6></div>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="display: none">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning alert-dismissible" style="display: @((ViewBag.Error ?? "") == "" ? "none" : "unset")">
+                    @*<button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>*@
+                    <span><i class="icon fa fa-warning"></i><span class="msg-login">@(ViewBag.Error ?? "")</span></span>
+                </div>
+                <link rel="stylesheet" type="text/css" href="/content/login/css/util.css">
+                <link rel="stylesheet" type="text/css" href="/content/login/css/main.css">
+
+                <div class="wrap-input100 validate-input m-b-26" data-validate="Email is required">
+                    <span class="label-input100"></span>
+                    <input class="input100" type="text" id="submit_name" placeholder="Full name">
+                    <span class="focus-input100"></span>
+                </div>
+
+                <div class="wrap-input100 validate-input m-b-18" data-validate="Password is required">
+                    <span class="label-input100"></span>
+                    <input class="input100" type="email" id="submit_email" placeholder="Email">
+                    <span class="focus-input100"></span>
+                </div>
+
+                <div class="container-login100-form-btn">
+                    <button class="login100-form-btn payment-login" style="margin-left:150px" onclick="submissionMember()" type="button">
+                        Submit <img id="login_img_load" style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/Areas/PaymentGate/Content/plugins/jquery/jquery-3.5.1.min.js"></script>
+    <script src="~/Areas/PaymentGate/Content/plugins/bootstrap/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.js"></script>
+        @*<script src="~/Areas/PaymentGate/Content/js/card.js"></script>*@
+        <script src="~/Content/noty/jquery.noty.js"></script>
+
+    <script src="https://cdn.form.io/formiojs/formio.full.min.js"></script>
+
+    <script>
+        $(function () {
+            var data_component = '@Html.Raw(HttpUtility.JavaScriptStringEncode(Model?.ContentData))';
+            data_component = data_component.replaceAll("&quot;", '\"');
+            Formio.createForm(document.getElementById('render'), JSON.parse(data_component)).then(function (form) {
+                form.on('submit', function (submission) {
+                    var dataSave = JSON.parse(data_component);
+                    dataSave.components.forEach(elem => {
+                        if (elem.columns) {
+                            elem.columns.forEach(item => {
+                                item.components.forEach(i => {
+                                    i.defaultValue = submission.data[i.key];
+                                })
+                            });
+                        }
+                        else {
+                            elem.defaultValue = submission.data[elem.key];
+                        }
+                    });
+
+                    $.ajax({
+                        method: "post",
+                        url: `/merchantform/submissionformdata`,
+                        data: {
+                            Id: '@(ViewBag.viewAction == true ? "" : Model?.Id)',
+                            ContentData: JSON.stringify(dataSave),
+                            SubmitMember: $('#submit_name').val(),
+                            SubmitEmail: $('#submit_email').val(),
+                        }
+                    }).done(function (data) {
+                        if (data[0]) {
+                            form.emit('submitDone', submission);
+                            $("button").prop('disabled', true);
+                        }
+                        else {
+                            $('.alert-di').show();
+                            $('#msg_content').html(data[1]);
+                        }
+                    }).fail(function (data) {
+                        $('.alert-di').show();
+                        $('#msg_content').html("Error!");
+                    }).always(function () {
+                    });
+                });
+            });
+
+            @if (ViewBag.viewAction != true)
+            {
+                <text>
+                var submit_name = localStorage.getItem("submit_name");
+                var submit_email = localStorage.getItem("submit_email");
+
+                if (!submit_name || !submit_email) {
+                    $('#submit_member_modal').modal();
+                }
+                else {
+                    $('#submit_name').val(submit_name);
+                    $('#submit_email').val(submit_email);
+                }
+                </text>
+            }
+
+        })
+
+        function submissionMember() {
+            if ($('#submit_name').val() == '') {
+                $("#submit_member_modal div.alert-dismissible").show();
+                $("span.msg-login").text(" Please input your full name!");
+                return;
+            }
+            if ($('#submit_email').val() == '') {
+                $("#submit_member_modal div.alert-dismissible").show();
+                $("span.msg-login").text(" Please input your email!");
+                return;
+            }
+
+            localStorage.setItem("submit_name", $('#submit_name').val());
+            localStorage.setItem("submit_email", $('#submit_email').val());
+            $("#submit_member_modal div.alert-dismissible").hide();
+            $("#submit_member_modal").modal('hide');
+        }
+    </script>
+
+</body>
+</html>

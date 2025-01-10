@@ -1,0 +1,244 @@
+﻿@model EnrichcousBackOffice.Areas.Page.Models.GiftCardsOrderingFormModel
+
+@{
+    Layout = "~/Areas/Page/Views/Shared/_Questionare_Layout.cshtml";
+    ViewBag.Title = "Gift Cards Ordering Form";
+}
+
+<div class="container forms-form">
+    <div class="logo">
+        <img src="~/Areas/Page/Content/img/logo.png" />
+    </div>
+    <h1>Gift Cards Ordering Form</h1>
+    <span style="font-style:italic;margin-bottom:1rem;display:inline-block;">This form is used for ordering gift cards.</span>
+    @if (TempData["error"] != null)
+    {
+        <div class="alert alert-warning alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <span><i class="icon fa fa-warning"></i> @TempData["error"]</span>
+        </div>
+    }
+    else if (TempData["success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <span><i class="icon fa fa-check"></i> @TempData["success"]</span>
+        </div>
+    }
+    <style>
+        .img-paking {
+            height: 250px;
+            width: 250px;
+        }
+
+        .img-display img {
+            object-fit: contain;
+            display: block;
+            max-width: 250px;
+            max-height: 250px;
+        }
+
+
+        .custom-file-upload {
+            margin-top: 15px;
+            background: #2b97e6;
+            color: white;
+            padding: 7px 10px;
+            font-size: 14px;
+        }
+
+            .custom-file-upload i {
+                padding-right: 7px;
+            }
+
+        .view-name-img {
+            width: 200px !important;
+            height: 28px !important;
+        }
+    </style>
+
+    <div id="GiftCardsOrderingForm" class="form-item">
+        @Html.HiddenFor(m => m.CustomerId)
+        <div class="row">
+            <div class="form-group col-md-5 col-xs-5">
+                <label for="ContactName">Point of contact:</label>
+                <div>
+                    @Html.DisplayFor(x => x.ContactName)
+                </div>
+
+            </div>
+            <div class="form-group col-md-3 col-xs-3">
+                <label for="ContactPhone">Phone number:</label>
+                <div>
+                    @Html.DisplayFor(x => x.ContactPhone)
+                </div>
+            </div>
+            <div class="form-group col-md-4 col-xs-4">
+                <label for="ContactEmail">Email:</label>
+                <div>
+                    @Html.DisplayFor(x => x.ContactEmail)
+                </div>
+
+            </div>
+            <div class="col-md-12 col-xs-12">
+                <span style="font-style:italic;">Final decision maker on giftcards</span>
+            </div>
+        </div>
+        <div class="row">
+            <div class="form-group col-md-6 col-xs-12">
+                <label for="BusinessName">Business Name (shown on gift card):</label>
+                <div>
+                    @Html.DisplayFor(x => x.BusinessName)
+                </div>
+
+            </div>
+        </div>
+        <div class="row">
+            <div class="form-group col-md-12 col-xs-12">
+                <label for="SalonAddress1">
+                    Business Address (shown on gift card):
+                </label>
+                <div>
+                    @Html.DisplayFor(x => x.SalonAddress)
+                </div>
+            </div>
+        </div>
+
+       
+        <div class="row">
+            @if (!string.IsNullOrEmpty(Model.SalonHours))
+            {
+                <div class="form-group col-md-6 col-xs-6">
+                    <label for="SalonAddress1">
+                        Salon Hours :
+                    </label>
+                    <div>
+                        @Html.DisplayFor(x => x.SalonHours)
+                    </div>
+                </div>
+            }
+                <div class="form-group col-md-6 col-xs-6">
+                    <label for="ProductCode">Quantity:</label>
+                    <div>
+                        @Html.DisplayFor(x => x.ProductName)
+                    </div>
+                </div>
+            </div>
+        <div class="row">
+            <div class="col-md-5 col-xs-5">
+                <div class="row">
+                    <div class="col-md-6 col-xs-6 form-group">
+                        <label for="FrontDesign">Front Design:</label>
+                        <div>
+                            @Html.DisplayFor(x => x.FrontDesign)
+                        </div>
+
+                    </div>
+                    <div class="col-md-6 col-xs-6 form-group">
+                        <label for="BackDesign">Back Design:</label>
+                        <div>
+                            @Html.DisplayFor(x => x.BackDesign)
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-7 col-xs-7">
+                <div class="row">
+                    <div class="form-group col-md-6 col-xs-6">
+                        <label for="FrontDesignFiles">Front Design (optional from catalog)</label>
+                        @if (!string.IsNullOrEmpty(Model.FrontDesignFiles))
+                        {
+                            if (Model.FrontDesignFiles.ToLower().EndsWith(".png") || Model.FrontDesignFiles.ToLower().EndsWith(".jpg"))
+                            {
+                                <img class="type_img" src="@Model.FrontDesignFiles" width="100" />
+                                <span class="type_file" style="display:none">
+                                    <i class="fas fa-file" style="font-size:30px;color:#6c6c6c;vertical-align:sub;"></i>
+                                </span>
+                            }
+                            else
+                            {
+                                <img class="type_img" src="" width="100" />
+                                <span class="type_file">
+                                    <i class="fas fa-file" style="font-size:30px;color:#6c6c6c;vertical-align:sub;"></i>
+                                </span>
+                            }
+
+
+                            <div id="file_name_FrontDesignFiles" style="display:inline-block">
+                                @(!string.IsNullOrEmpty(Model.FrontDesignFiles) ? Model.FrontDesignFiles.Substring(Model.FrontDesignFiles.LastIndexOf('/')+1):"")
+                            </div>
+                            <a class="download-frontfiles" href="/Upload/DownloadFile_?file=@Model.FrontDesignFiles"><i class="fas fa-download"></i> </a>
+                        }
+                    </div>
+                    <div class="form-group col-md-6 col-xs-6">
+                        <label for="BackDesignFiles">Back Design (optional from catalog)</label>
+                        @if (!string.IsNullOrEmpty(Model.BackDesignFiles))
+                        {
+                            if (Model.BackDesignFiles.ToLower().EndsWith(".png") || Model.BackDesignFiles.ToLower().EndsWith(".jpg"))
+                            {
+                                <img class="type_img" src="@Model.BackDesignFiles" width="100" />
+                                <span class="type_file" style="display:none">
+                                    <i class="fas fa-file" style="font-size:30px;color:#6c6c6c;vertical-align:sub;"></i>
+                                </span>
+                            }
+                            else
+                            {
+                                <img class="type_img" src="" width="100" />
+                                <span class="type_file">
+                                    <i class="fas fa-file" style="font-size:30px;color:#6c6c6c;vertical-align:sub;"></i>
+                                </span>
+                            }
+
+
+                            <div id="file_name_BackDesignFiles" style="display:inline-block">
+                                @(!string.IsNullOrEmpty(Model.BackDesignFiles)? Model.BackDesignFiles.Substring(Model.BackDesignFiles.LastIndexOf('/')+1):"")
+                            </div>
+                            <a class="download-backfiles" href="/Upload/DownloadFile_?file=@Model.BackDesignFiles"><i class="fas fa-download"></i> </a>
+                        }
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="form-group col-md-12 col-xs-12">
+                <label for="Note">Comment and/or notes for Sales:</label>
+                <div>
+                    @Html.DisplayFor(x => x.Note)
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row" style="padding-top:15px;">
+        <div class="form-group col-md-12">
+            <a  class="btn btn-primary" style="width: 100px;" href="/Page/Salon/GiftCardsOrderingForm?Key=@ViewBag.Key&isUpdate=true"><i class="fas fa-edit"></i> Update</a>
+            <button type="button" class="btn btn-warning" onclick="window.print()" style="width: 100px;"><i class="fas fa-print"></i> Print</button>
+        </div>
+    </div>
+</div>
+<style type="text/css">
+    .ui-autocomplete {
+        max-height: 145px;
+        overflow-y: auto;
+        background-color: white;
+        border: 1px solid #cccccc;
+        width: 251px !important;
+    }
+
+    .select2-container .select2-selection--single {
+        height: 34px;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 34px;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__arrow b {
+        margin-top: 1px;
+    }
+</style>
+
+@section script{
+}
+

@@ -1,0 +1,20 @@
+﻿@using EnrichcousBackOffice.Models
+@{
+    bool upload = true;
+    bool.TryParse(ViewData["upload"]?.ToString() ?? "true", out upload);
+}
+<tr id="div_subtask_@Model">
+    <td>
+        <input type="hidden" name="subtask_id" value="@Model" />
+        <input type="text" id="submit-subtask" class="form-control" name="sub_name_@Model" required />
+        @Html.Partial("_UploadAttachments", new List<UploadMoreFile>(), new ViewDataDictionary { { "upload", upload }, { "unique", Model } })
+    </td>
+
+    <td>
+        <center><input type="checkbox" id="chk_@Model" name="chk_@Model" onclick="changeComplete()"  class="check_completed" style="cursor:pointer" /></center>
+    </td>
+    <td>
+        @*<button type="button" class="btn btn-sm btn-default" id="btn_add_@Model" onclick="save_subtask('addnew', '@Model')">+ Add</button>*@
+        <button type="button" class="btn btn-sm btn-danger" id="btn_del_@Model" title="Delete" onclick="detete_sub('@Model')"><i class="fa fa-trash-o"></i></button>
+    </td>
+</tr>

@@ -1,0 +1,97 @@
+﻿@using EnrichcousBackOffice.Models;
+<!--
+    HDSD
+    - Insert partial: Html.Partial("_EditPO_modal")
+    - Add Script: <script src="~/Scripts/_EditPO_modal.js"></script>
+    - Call modal: open_request(request_code)
+    - Get result:
+        $('#request_modal').ajaxForm(function (data) {
+            if (data[0]) {
+                noty({ "text": data[1], "layout": "topRight", "type": "success" });
+
+            }
+            else {
+                noty({ "text": data[1], "layout": "topRight", "type": "error" });
+            }
+            $('#request_modal').modal('hide');
+        });
+
+-->
+
+
+
+
+<form method="post" action="/po/requestsave" id="request_modal" class="modal" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title pull-left">New request</h3>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="request_code" name="request_code" />
+                <div class="input-group" style="padding-bottom:20px">
+                    <span class="input-group-addon"><b>Product </b></span>
+
+                    @*<input readonly class="form-control" id="select_product" name="select_product" style="width:100%" onchange="load_model_image()">*@
+                    <select class="select2" id="select_product" name="select_product" style="width:100%" onchange="load_model_select($(this).val())">
+                        <option value="">All</option>
+                        @foreach (O_Product p in ViewBag.product)
+                        {
+                            <option value="@p.Code">@p.Name</option>
+                        }
+                    </select>
+
+                </div>
+                <div class="input-group">
+                    <div class="input-group-addon">
+                        <b>Model <span class="text-red">*</span></b>
+                    </div>
+
+                    <select class="select2" onchange="load_model(this.value)" id="select_model" name="select_model" style="width:100%" required>
+                        <option value="">Please select</option>
+                        @foreach (O_Product_Model m in ViewBag.product_model)
+                        {
+                            <option value="@m.ModelCode">#@m.ModelName</option>
+                        }
+                    </select>
+                </div>
+                <table class="table table-striped">
+                    <tbody>
+                        <tr>
+                            <td colspan="2" style="text-align:center;padding:20px">
+                                <img id="model_image" src="/Upload/Img/no_image.jpg" height="200" style="border:1px solid lightgray"/><br />
+                                <div id="model_color" style="display:none; padding-top:10px"><label>Color: </label> <label id="request_color" style="font-size:16px" class="label label-success"></label></div>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <th>QTY <span style="color:red">*</span></th>
+                            <td><input required type="number" min="1" id="request_qty" name="request_qty" class="form-control" /></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <label>Note</label>
+                            </td>
+                            <td>
+                                <input class="form-control" id="request_note" name="request_note"/>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="submit" class="btn btn-primary">
+                    Save changes
+                    <img id="request_save_img_load" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none"/>
+                </button>
+            </div>
+        </div>
+    </div>
+</form>
+<script>$("#request_modal").submit(function () {
+    $("#request_save_img_load").show();
+})</script>

@@ -1,0 +1,321 @@
+﻿@{
+    var access = EnrichcousBackOffice.AppLB.Authority.GetAccessAuthority();
+}
+<style>
+    .select2 {
+        width: 100% !important;
+    }
+
+    .dataTables_processing {
+        z-index: 1;
+        background: #ff000000;
+        border: none;
+        outline: 0;
+        box-shadow: none;
+    }
+    .open-detail{
+        cursor:pointer;
+    }
+    table.table-bordered > tbody > tr > td {
+        border: 1px solid lightgray;
+    }
+    .table-striped > tbody > tr.odd {
+        background-color: #eee;
+    }
+    table.table-bordered > thead > tr > th {
+        border: 1px solid lightgray;
+    }
+    table.table-bordered > thead {
+        background-color: #aad3ea;
+    }
+    table.table-bordered {
+        border: 1px solid lightgray;
+    }
+</style>
+<section class="content-header">
+    <h1>
+        Payroll Management
+        <small>Payroll</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i>  Home</a></li>
+        <li><i class="fa fa-file-o"></i> PayRoll</li>
+    </ol>
+</section>
+<section class="content">
+    <div class="row">
+        @if (TempData["e"] != null)
+        {
+            <div class="alert alert-warning alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+            </div>
+        }
+        else if (TempData["s"] != null)
+        {
+            <div class="alert alert-success alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+            </div>
+        }
+        <div class="box-body">
+            <div class="nav-tabs-custom">
+                <ul class="nav nav-tabs" id="main_tab" style="margin:10px 0px">
+                    <li id="payment-payslip" class="active"><a style="cursor: pointer;" class="tabs" data-toggle="tab" data-tab='payment-payslip'>Payslip</a></li>
+                    <li id="payment-pending"><a style="cursor: pointer;" class="tabs" data-toggle="tab" data-tab='payment-pending'>Payment Pending</a></li>
+                    <li id="payment-paid"><a style="cursor: pointer;" class="tabs" data-toggle="tab" data-tab='payment-paid'>Salary Paid</a></li>
+                </ul>
+                <div class="tab-content">
+                    <!--<div class="tab-pane active">
+                        <div style="text-align:center">
+                            <img id="load_partial_tab" src="~/Content/ajax-loaders/loading-partial.gif" style="display:none" />
+                        </div>
+                        <div class="content-tab-load">
+                            <div id="partial_tab">
+                                <div class="box box-primary">
+                                    <div class="box-header with-border">
+                                        <h3 class="box-title"></h3>
+                                        <div class="box-tools pull-right">
+                                            <a class="btn btn-sm btn-info btn-header-lead" onclick="export_excel()" style="font-size:12px; margin-left:5px">
+                                                <i class="fa fa-file-excel-o"></i> Export excel <img id="img_load_excel" src="/Content/ajax-loaders/ajax-loader-1.gif" style="display:none">
+                                            </a>
+                                            <a class="btn btn-sm btn-primary btn-header-lead" id="newlead" onclick="open_lead_popup('',this)" style="font-size:12px; margin-left:5px">
+                                                <i class="fa fa-plus"></i> Add Employee <img id="img_load_newlead" src="/Content/ajax-loaders/ajax-loader-1.gif" style="display:none">
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div class="box-body">
+                                        <div class="row">
+                                            <div class="input-group col-sm-2 pull-left" style="padding: 2px">
+                                                <label class="input-group-addon" style="min-width:100px">
+                                                    Name
+                                                </label>
+                                                <input type="text" id="Name" name="Name" placeholder="Name" class="form-control" value="">
+                                            </div>
+                                            <div class="input-group col-sm-2 pull-left" style="padding: 2px">
+                                                <label class="input-group-addon" style="min-width:100px">
+                                                    Phone
+                                                </label>
+                                                <input type="text" id="Phone" name="Phone" placeholder="Phone" class="form-control" value="">
+                                            </div>
+                                            <div class="input-group col-sm-2 pull-left" style="padding: 2px">
+                                                <label class="input-group-addon" style="min-width:100px">
+                                                    Department
+                                                </label>
+                                                <select id="DepartMentId" name="DepartMentId" class="form-control">
+                                                </select>
+                                                <div class="loading-dropdown-dep" style="position: absolute;top: 8px;right: 7px;z-index: 999;background: white;font-size:17px">
+                                                    <i class="fa fa-spinner fa-spin"></i>
+                                                </div>
+                                            </div>-->
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!--<form class="modal fade" id="modal-set-as-paid" role="dialog">
+    <div class="modal-dialog modal-content">
+        <div class="modal-header">
+            <div class="modal-title pull-left"><h4 style="margin:0" id="title-setaspaid-modal">Set As Paid</h4></div>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">×</span>
+            </button>
+        </div>
+        <div class="modal-body" style="padding:1rem">
+            <div class="col-12">
+                <input type="hidden" class="MemberNumber" name="MemberNumber" id="MemberNumber-SetAsPaid" />
+                <div class="form-group col-12">
+                    <label class="control-label">Payment method</label>
+                    <select class="form-control" name="PaymentMethod" onchange="change_method()" required>
+                        <option value="Wire transfer">Wire transfer</option>
+                        <option value="Deposit">Deposit</option>
+                        <option value="Paypal">Paypal</option>
+                        <option value="Cash">Cash</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group col-12" id="form-bank-name">
+                    <label class="control-label">Paid Number</label>
+                    <input type="text" class="form-control" name="PaidNumber" maxlength="50" style="max-width: 100%" required>
+                </div>
+                <div class="form-group col-12" id="form-card-number">
+                    <label class="control-label">Card number (4 last digits)</label>
+                    <input type="text" class="form-control" name="CardNumber" maxlength="4" style="max-width: 100%" required>
+                </div>
+                <div class="form-group col-12">
+                    <label class="control-label">Descriptions</label>
+                    <textarea type="text" class="form-control" name="Description" maxlength="200" style="max-width: 100%"></textarea>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <span class="btn btn-default pull-left margin-r-5" data-dismiss="modal">Close</span>
+            <button class="btn btn-success pull-right margin-r-5" type="submit">Submit</button>
+        </div>
+    </div>
+</form>
+<form class="modal fade" id="modal-set-as-paid-multi-emp" role="dialog">
+    <div class="modal-dialog modal-content">
+        <div class="modal-header">
+            <div class="modal-title pull-left"><h4 style="margin:0" id="title-setaspaid-modal">Set As Paid</h4></div>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">×</span>
+            </button>
+        </div>
+        <div class="modal-body" style="padding:1rem">
+            <div class="col-12">
+                <div class="form-group col-12">
+                    <label class="control-label">Payment method</label>
+                    <select class="form-control" name="PaymentMethod" onchange="change_method()" required>
+                        <option value="Wire transfer">Wire transfer</option>
+                        <option value="Deposit">Deposit</option>
+                        <option value="Paypal">Paypal</option>
+                        <option value="Cash">Cash</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>-->
+@*<div class="form-group col-12" id="form-bank-name">
+        <label class="control-label">Paid Number</label>
+        <input type="text" class="form-control" name="PaidNumber" maxlength="50" style="max-width: 100%" required>
+    </div>*@
+<!--<div class="form-group col-12" id="form-card-number">
+                    <label class="control-label">Card number (4 last digits)</label>
+                    <input type="text" class="form-control" name="CardNumber" maxlength="4" style="max-width: 100%" required>
+                </div>
+                <div class="form-group col-12">
+                    <label class="control-label">Descriptions</label>
+                    <textarea type="text" class="form-control" name="Description" maxlength="200" style="max-width: 100%"></textarea>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <span class="btn btn-default pull-left margin-r-5" data-dismiss="modal">Close</span>
+            <button class="btn btn-success pull-right margin-r-5" type="submit">Submit</button>
+        </div>
+    </div>
+</form>-->
+<!--Xem chi tiet thong tin nhan vien-->
+<!--<div class="modal fade" id="modal-default">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Member profile</h4>
+            </div>
+            <div class="modal-body">
+                <p id="loading"><img src="~/Content/ajax-loaders/ajax-loader-1.gif" /></p>
+                <div id="modal-content">-->
+<!--_MemberProfileSimplePartial Partial-->
+<!--</div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+    </div>
+</div>-->
+<!-- /.modal-content -->
+<!--</div>-->
+<!-- /.modal-dialog -->
+<!--</div>
+
+@{
+    var host = $"{HttpContext.Current.Request.Url.Scheme}://{HttpContext.Current.Request.Url.Authority}";
+}
+<div class="modal fade" id="Invoice" role="dialog" style="display: none;">
+    <div class="modal-dialog modal-content" style="min-width:900px">
+        <div class="modal-header">
+            <div class="modal-title pull-left"><h3 style="margin:0">View Invoice</h3></div>
+            <button type="button" class="btn btn-sm btn-warning" style="float:left; margin-left:20px" onclick="document.getElementById('invoice-view').contentWindow.print()"><i class="fa fa-print"></i> Print</button>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">×</span>
+            </button>
+        </div>
+        <div class="modal-body" style="padding:1px;height: 77vh;">
+            <iframe width="100%" height="100%" style="border: none;" id="invoice-view" data-src="@host/order/ImportInvoiceToPDF?_code=%code%&amp;flag=Invoice"></iframe>
+        </div>
+    </div>
+</div>
+
+<div class="loading" style="display:none;position: fixed;top: 50%;left: 50%;transform: translate(-50%, -50%);"><img src="/Content/ajax-loaders/loading2.gif" width="60"></div>-->
+
+@section script{
+    <script>
+        $('#main_tab li a').on("click", function (e) {
+            var TabName = $(this).attr('data-tab');
+            var CurrentTab = localStorage.getItem('lastTabPayroll');
+            if (TabName !== CurrentTab) {
+                localStorage.setItem('lastTabPayroll', TabName);
+                LoadTabContent();
+            }
+        })
+        function LoadTabContent() {
+            $(".tab-content").html('')
+            $('.loadding-tab').show();
+            var CurrentTab = localStorage.getItem('lastTabPayroll');
+            if (!($('#main_tab').find('#' + CurrentTab)[0])) {
+                CurrentTab = $('#main_tab').find('li').first().attr('id');
+            }
+            $('#' + CurrentTab).tab('show');
+            $.ajax({
+                url: '/Payroll/ChangeTab',
+                type: 'POST',
+                dataType: 'html',
+                data: { "TabName": CurrentTab },
+                success: function (data) {
+                    $(".tab-content").html(data)
+                },
+                error: function (data) {
+                    console.log(data.text);
+                },
+                complete: function () {
+                    $('.loadding-tab').hide();
+                }
+            });
+        }
+        LoadTabContent();
+        //change month
+        const monthNames = ["January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+        ];
+         function LoadPaymentMethod_Date() {
+        $('.loading-payment-method').show();
+        $.ajax({
+            type: "Post",
+            url: "/Payroll/LoadDropDownListPaidNumber",
+            data: { "Year": $("#Date").attr("data-year") },
+            success: function (data) {
+                $('.payment-method-search').html('');
+                  @if ((access.Any(k => k.Key.Equals("payroll_accounting")) == true && access["payroll_accounting"] == true))
+                  {
+                      <text>
+                        $('.payment-method-search').append($('<option></option>').val("").html("All"));
+                      </text>
+                  }
+                $.each(data, function (id, option) {
+                    $('.payment-method-search').append($('<option></option>').val(option.Value).html(option.Text));
+                      });
+                  },
+            error: function (xhr, ajaxOptions, thrownError) {
+                alert('fail');
+            },
+            complete: function () {
+                $('.loading-payment-method').hide();
+            }
+        });
+    }
+        $(document).on("click", "table#pending_payment .open-detail", function (e) {
+            e.preventDefault();
+            if ($(e.target).closest(".on_rows").length == 0) {
+                showDetail($(this).parent("tr").data("empid"));
+            }
+        });
+        $(document).on("click", "table#paid_payment .open-detail", function (e) {
+            e.preventDefault();
+            if ($(e.target).closest(".on_rows").length == 0) {
+                showDetailPaidNumber($(this).parent("tr").data("paidnumber"));
+            }
+        });
+      
+    </script>
+}

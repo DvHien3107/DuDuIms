@@ -1,0 +1,68 @@
+﻿@model EnrichcousBackOffice.Models.T_SupportTicket
+@using EnrichcousBackOffice.Models
+
+@{
+    var list_tags = ViewBag.TagsData as List<T_Tags>;
+}
+
+
+<style type="text/css">
+    .tags-style {
+        padding: 4px 10px;
+        font-weight: 700;
+        color: white;
+        cursor: pointer;
+        display: inline-block;
+        margin-bottom: 5px;
+    }
+</style>
+
+
+<input type="hidden" id="listTagsSelected" name="listTagsSelected" value="@(Model.Tags ?? "")" />
+<div id="divTagsSelected" style="border:1px solid #CCC; min-height:44px; padding:10px 7px; background-color:#fff">
+    @if (!string.IsNullOrEmpty(Model.Tags))
+    {
+        foreach (var item in Model.Tags?.Split('|'))
+        {
+            if (!string.IsNullOrEmpty(item))
+            {
+                var tag = list_tags.Where(t => t.Name == item.Split(new string[] { "::" }, StringSplitOptions.RemoveEmptyEntries)[0]).FirstOrDefault();
+                <span class="tags-style" style="background-color:@(tag?.Color ?? "grey")" onclick="ChooseTags()">
+                    @(tag?.Name?.Replace("[", "").Replace("]", ""))
+                </span>
+                @Html.Raw("&nbsp;")
+            }
+        }
+    }
+</div>
+
+<script type="text/javascript">
+    function ChooseTags() {
+        event.stopPropagation();
+        //console.log("choose tags");
+
+        $("#choose_tags_loading").show();
+        let Page = $("#Page").val();
+        let listTagsSelected = $("#listTagsSelected").val();
+
+        $.post("/Ticket_New/SelectTags", { lstTags: listTagsSelected, Page }, function (data) {
+            //data: html_partial
+            $("#choose_tags_loading").hide();
+            $("#tags_popup_modal").html(data);
+
+            let error_msg = $("#tags_popup_error").val()
+            if (error_msg != "" && error_msg != null) {
+                let optionsErr = $.parseJSON('{"text":"Error: ' + error_msg + '","layout":"topRight","type":"warning"}');
+                noty(optionsErr);
+            }
+            else {
+                //$("#tags_popup").modal("show");
+                $("#tags_popup").modal({ backdrop: 'static', keyboard: false });
+            }
+
+        }).fail(function () {
+            alert("Oops! Something went wrong");
+            $("#choose_tags_loading").hide();
+        });
+    }
+</script>

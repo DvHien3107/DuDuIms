@@ -1,0 +1,110 @@
+
+.main-container.main-container-fixed {
+    top: 0;
+    height: 100svh;
+    position: absolute;
+    z-index: 1041;
+}
+
+.scrollable {
+    overflow-y: auto;
+    background: var(--gauzy-sidebar-background-1);;
+    overflow-x: hidden;
+    flex: 1;
+    padding: 0.625rem;
+    height: 100%;
+    position: fixed;
+    right: 1px;
+}
+
+.img-container .ng-star-inserted {
+    position: absolute;
+    width: 12px;
+    height: 13px;
+    background-color: #00d060;
+    border-radius: 8px;
+    border: 2px solid #ebebeb;
+    right: 0;
+    top: 0;
+}
+
+.img-container img {
+    height: 40px;
+    border-radius: 25px;
+    width: 40px;
+}
+
+.img-container {
+    border: 6px solid rgba(126, 126, 143, 0.5);
+    /* mix-blend-mode: multiply; */
+    position: relative;
+    border-radius: 34px;
+}
+
+body#_body {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.wrapper {
+    width: calc(100% - 65px);
+    position: absolute;
+    left: 0;
+}
+
+.skin-blue .sidebar-menu > li.header {
+    color: var(--gauzy-text-color-2);
+    background-color: var(--gauzy-sidebar-background-3);
+}
+.skin-blue .wrapper, .skin-blue .main-sidebar, .skin-blue .left-side {
+    background-color: var(--sidebar-background-color);
+}
+
+.sidebar-menu > li.active > a, .skin-blue .sidebar-menu > li.menu-open > a {
+    color: var(--gauzy-text-color-2);
+    color:var(--accordion-item-text-color);
+    background-color: var(--gauzy-sidebar-background-3);
+}
+
+.skin-blue .sidebar-menu > li > .treeview-menu {
+    margin: 0 1px;
+    color:var(--accordion-item-text-color);
+    background-color: var(--gauzy-sidebar-background-4);
+    border-radius: 0 0 var(--border-radius) var(--border-radius);
+}
+.skin-blue .sidebar-menu .treeview-menu > li.active > a, .skin-blue .sidebar-menu .treeview-menu > li > a:hover {
+    color:var(--accordion-item-text-color);
+    background-color: var(--gauzy-sidebar-background-4);
+    border-radius: 0 0 var(--border-radius) var(--border-radius);
+}
+
+.skin-blue .user-panel > .info, .skin-blue .user-panel > .info > a {
+    color: #817e7e;
+}
+
+
+.image-outer-wrapper.ng-star-inserted {
+    justify-content: flex-end;
+}
+
+.profile-img {
+    position: relative;
+    bottom: 0px;
+    left: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.profile-img .pull-left {
+    display: block!important;
+    position: absolute;
+    bottom: -40px;
+}
+
+.chatable.lst-chat {
+    position: relative;
+    top: 0;
+    right: 0;
+    height: 95%;
+}

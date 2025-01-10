@@ -1,0 +1,383 @@
+﻿@using EnrichcousBackOffice.Models
+@using EnrichcousBackOffice.AppLB
+@model P_Department
+@{
+    WebDataModel db = new WebDataModel();
+    Dictionary<string, bool> p = ViewBag.p;
+    var projectDevelopment = ViewBag.ProjectDevelopment as List<EnrichcousBackOffice.Models.T_Project_Milestone>;   
+}
+
+<!--div Department Info-->
+<h3 style="text-align:center;font-size:16px;margin:0px;font-weight:600">-- @Model.Name.ToUpper() --</h3>
+<div>
+    @if (Model.Active == true)
+    {
+        <span style="float:right" class="label label-success">Active</span>
+    }
+    else
+    {
+        <span style="float:right" class="label label-danger">InActive</span>
+    }
+
+    @if (string.IsNullOrEmpty(Model.LeaderName) == false)
+    {
+        <span><i class="fa fa-user" style="color:gray"></i> Director: @(Model.LeaderName)</span><br />
+    }
+    else
+    {
+        <span><i class="fa fa-user" style="color:gray"></i> Director: ---</span><br />
+    }
+    <span>
+        <i class="fa fa-calendar-plus-o" style="color:gray"></i> Created by:
+        <span id="localtime-@Model.Id">
+            @Model.CreateBy
+        </span><br />
+    </span>
+    <span>
+        <i class="fa fa-calendar-check-o" style="color:gray"></i>Update Date:
+        <span>
+           @((Model.UpdateAt??Model.CreateAt)?.UtcToIMSDateTime().ToString("MMM dd, yyyy hh:mm tt"))
+        </span><br />
+    </span>
+</div>
+<div class="clearfix"></div>
+@if (Model.Type == "DEVELOPMENT")
+{
+<div class="panel panel-default project-info-panel" style="margin-top:20px;">
+    <div class="panel-heading">
+        <span>Project Information</span>
+        <button class="btn btn-sm btn-info btn-flat pull-right" style="transform:translateY(-5px)" onclick="new_project()">
+            <i class="fa fa-plus"></i> Add project
+        </button>
+    </div>
+    <div class="panel-body">
+        <div class="project-wrapper">
+            <table class="table table-bordered table-hover table-striped" style="margin-bottom:0px">
+                <thead>
+                    <tr>
+                        <th>Project Name</th>
+                        <th>Description</th>
+                        <th>Manager</th>
+                        <th>Leader</th>
+
+                        <th>Last Update</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (projectDevelopment.Count() > 0)
+                    {
+                        foreach (var project in projectDevelopment)
+                        {
+                    <tr>
+                        <td>
+                            <a href="javascript:void(0)" onclick="detail_project('@project.Id')" style="cursor:pointer" data-toggle="tooltip"> <b>- @(project.Name)</b></a>
+                        </td>
+
+                        <td>
+                            @((project.Description!=null&& project.Description.Length>100)? project.Description.Substring(0,100)+"...": project.Description)
+                        </td>
+                        <td>@project.ManagerName</td>
+                        <td>@project.LeaderName</td>
+
+                        <td>
+                            @if (project.UpdateAt != null)
+                            {
+                                <span>
+                                    <i class="fa fa-calendar-check-o" style="color:gray"></i>
+                                    <span class="entry-time">
+                                        @string.Format("{0:r}", project.UpdateAt)
+                                    </span>
+                                </span>
+                                @(string.IsNullOrEmpty(project.UpdateByNumber) ? "" : "- " + db.P_Member.Where(x=>x.MemberNumber==project.UpdateByNumber).FirstOrDefault()?.FullName)
+                            }
+                        </td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <div class="dots-menu btn-group">
+                                    <div class="dropdown-dot" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></div>
+                                    <ul class="dropdown-menu dropdown-menu-right">
+                                        <li> <a href="javascript:void(0)" style="margin-right:5px;" onclick="detail_project('@project.Id')"><i class="fa fa-search"></i>Detail</a></li>
+                                        <li> <a href="javascript:void(0)" style="margin-right:5px;" onclick="edit_project('@project.Id')"><i class="fa fa-pencil"></i>Edit</a></li>
+                                        <li><a href="javascript:void(0)" style="margin-right:5px;" onclick="delete_project('@project.Id')"><i class="fa fa-trash"></i>Delete</a></li>
+                                    </ul>
+                                </div>
+
+                            </div>
+                        </td>
+                    </tr>
+                    }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5">
+                                <center><span>No project</span></center>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    //project
+    $("#project_form_modal").ajaxForm(function (data) {
+
+        if (data.status) {
+
+            success(data.message);
+              loadDepartment(@Model.Id)
+            $("#project_form_modal").modal("hide");
+
+        } else {
+            error(data.message);
+        }
+    })
+    //project detail
+    function detail_project(id) {
+        overlayOn();
+        $.ajax({
+            method: "POST",
+            url: "/departmentman/DetailProject",
+            data: { "projectId":id },
+            dataType: "html"
+        })
+            .done(function (data) {
+                $("#project-detail-content").html(data);
+                $("#project-detail").modal("show");
+            })
+            .fail(function () {
+                alert("load detail project fail!");
+            })
+            .always(function () {
+                overlayOff();
+            });
+    }
+    function new_project() {
+        $("#project_form_modal .modal-title").html("NEW PROJECT");
+        $('#project_form_modal [name=Id]').val("");
+        $('#project_form_modal input:text').val("");
+        $('#project_form_modal [name=Member]').val("").trigger('change');
+        $('#project_form_modal [name="ManagerNumber"]').val("").trigger('change');
+        $('#project_form_modal [name="LeaderNumber"]').val("").trigger('change');
+        $('#project_form_modal textarea').val("");
+        $('#project_form_modal input:checkbox').prop("checked", "checked");
+        $('#project_form_modal').modal("show");
+    }
+    function edit_project(id) {
+        overlayOn();
+        $.ajax({
+            method: "POST",
+            url: "/ProjectManagement/getProject",
+            data: { id },
+            dataType: "json"
+        })
+            .done(function (data) {
+                if (data.status) {
+                    $("#project_form_modal .modal-title").html("EDIT PROJECT");
+                    $('#project_form_modal [name="Id"]').val(data.Id);
+                    $('#project_form_modal [name="Name"]').val(data.Name);
+                    $('#project_form_modal [name="Description"]').val(data.Description);
+                    
+                  //  if (data[1].T_Project_Milestone_Member.length) {
+                    let members = data.MemberNumbers.map(function (mem) { return mem.toString() });
+                    console.log(members);
+                    $('#project_form_modal [name="Member"]').val(members).trigger('change');
+                    $('#project_form_modal [name="ManagerNumber"]').val(data.ManagerNumber).trigger('change');
+                    $('#project_form_modal [name="LeaderNumber"]').val(data.LeaderNumber).trigger('change');
+                    //}
+                    //else {
+                    //    $('#project_form_modal [name="Member"]').val("").trigger('change');
+                    //}
+                    $('#project_form_modal [name="Order"]').val(data.Order);
+                    $('#project_form_modal [name="Active"]').prop("checked", data.Active || false);
+                    $('#project_form_modal').modal("show");
+                } else {
+                    error(data.message);
+                    
+                }
+            })
+            .fail(function () {
+                alert("edit project fail!");
+            })
+            .always(function () {
+                overlayOff();
+            });
+    }
+    function delete_project(id) {
+        if (confirm("Deleting the project will also delete all of its stages and its related information. Are you sure?")) {
+            overlayOn();
+            $.ajax({
+                method: "POST",
+                url: "/ProjectManagement/Project_delete",
+                data: { id },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    if (data[0]) {
+                        success("Delete Project completed");
+                        loadDepartment(@Model.Id)
+                        //$(`#project_${data[1].Id}`).remove();
+                        //$(`#stage_table [data-project=${data[1].Id}]`).remove();
+                    } else {
+                        error(data[1]);
+                        console.log(data);
+                    }
+                })
+                .fail(function () {
+                    alert("project_delete fail!");
+                })
+                .always(function () {
+                    overlayOff();
+                });
+        }
+    }
+</script>
+}
+
+<div class="clearfix"></div>
+<!--/.End div Department Info-->
+<!--div list group-->
+<div>
+    <div class="panel panel-default group-info-panel" style="margin-top:15px">
+        <div class="panel-heading">
+            <span>Group Information</span>
+            <button class="btn btn-sm btn-info btn-flat pull-right" style="transform:translateY(-5px)" onclick="add_group('@Model.Id', '@Model.Name', '@Model.Type')">
+                <i class="fa fa-plus"></i> Add group
+            </button>
+        </div>
+        @{
+            var list_group = db.P_Department.Where(d => d.ParentDepartmentId == Model.Id).ToList();
+        }
+
+        @if (list_group.Count > 0)
+        {
+            foreach (var group in list_group.GroupBy(x => x.SupervisorNumber))
+            {
+
+                <div class="panel-body">
+                    <div class="list_groups custom-scroll" style="margin-top:10px;border: 1px solid var(--main-color-1); background-color: #ffffff">
+                        <b style="padding: 0px 20px; font-size: 1em; display:inline-block;transform:translateY(-9px); background-color: #ffffff; color:#076aa4">@(group.FirstOrDefault().SupervisorName??"N/A")</b>
+                        <table class="table table-bordered table-hover table-striped table-group" style="margin-bottom:0px">
+                            <thead>
+                                <tr>
+                                    <th>Group Name</th>
+                                    <th>Type</th>
+                                    @*@if (group.FirstOrDefault().Type == "DEPLOYMENT" || group.FirstOrDefault().Type == "ONBOARDING" || group.FirstOrDefault().Type == "SUPPORT")
+                                    {
+                                        <th>Partner</th>
+                                    }*@
+                                    <th>Manager</th>
+                                    <th>Leader</th>
+
+                                    <th>Total Member</th>
+                                    <th>Last Update</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (group.Count() > 0)
+                                {
+                                    foreach (var group_item in group)
+                                    {
+                                        <tr data-id="@group_item.Id">
+                                            <td class="td_click_detail">
+                                                <a style="cursor:pointer" onclick="GroupDetail(@group_item.Id);"><b>- @(group_item.Name)</b></a>
+                                            </td>
+                                            <td class="td_click_detail">@group_item.Type</td>
+                                            @*@if (group_item.Type == "DEPLOYMENT" || group_item.Type == "ONBOARDING" || group_item.Type == "SUPPORT")
+                                            {
+                                                <td>@(group_item.PartnerName??"Simply Pos")</td>
+                                            }*@
+                                            <td class="td_click_detail">
+                                                @if (!string.IsNullOrEmpty(group_item.SupervisorName))
+                                                {
+                                                    <span>@group_item.SupervisorName - #@(group_item.SupervisorNumber) </span>
+                                                }
+                                                else
+                                                {
+                                                    <span>N/A</span>
+                                                }
+                                            </td>
+                                            <td class="td_click_detail">
+                                                @if (!string.IsNullOrEmpty(group_item.LeaderName))
+                                                {
+                                                    <span>@group_item.LeaderName</span>
+                                                }
+                                                else
+                                                {
+                                                    <span>N/A</span>
+                                                }
+                                            </td>
+                                            <td class="td_click_detail">@(group_item.GroupMemberNumber?.Split(',').Count())</td>
+                                            <td class="td_click_detail">
+                                                @if (!string.IsNullOrEmpty(group_item.UpdateAt.ToString()))
+                                                {
+                                                    <span>
+                                                        <i class="fa fa-calendar-check-o" style="color:gray"></i>
+                                                        <span class="entry-time">
+                                                            @string.Format("{0:r}", group_item.UpdateAt)
+                                                        </span>
+                                                    </span>
+                                                    @(string.IsNullOrEmpty(group_item.UpdateBy) ? "" : "- " + group_item.UpdateBy)
+                                                }
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="btn-group">
+                                                    <div class="dots-menu btn-group">
+                                                        <div class="dropdown-dot" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></div>
+                                                        <ul class="dropdown-menu dropdown-menu-right">
+                                                            <li> <a href="javascript:void(0)" style="margin-right:5px;" onclick="GroupDetail(@group_item.Id)"><i class="fa fa-search"></i>Detail</a></li>
+                                                            <li> <a href="javascript:void(0)" style="margin-right:5px;" onclick="edit_group('@group_item.Id')"><i class="fa fa-pencil"></i>Edit</a></li>
+                                                            <li><a href="javascript:void(0)" style="margin-right:5px;" onclick="delete_group('@group_item.Id')"><i class="fa fa-trash"></i>Delete</a></li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="3">
+                                            <center><span>No group</span></center>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+    <span style="
+    text-align: center;
+    display: block;
+    padding: 14px;
+">No Groups</span>
+        }
+
+
+
+    </div>
+    </div>
+    <!--/.End div list group-->
+    
+    @*</div>*@
+    @*</div>*@
+<script>
+    //$(".td_click_detail").on("click", function () {
+    //    let groupId = $(this).parent().attr("data-id");
+    //    GroupDetail(groupId);
+    //})
+    $(".entry-time").html(function (index, value) {
+        $(".entry-time").removeClass("entry-time");
+        return moment.utc(value).local().format('lll');
+    });
+</script>

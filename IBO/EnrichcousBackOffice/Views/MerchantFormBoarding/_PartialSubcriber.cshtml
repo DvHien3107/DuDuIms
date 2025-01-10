@@ -1,0 +1,792 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.CustomizeModel.MerchantProcessingCustomizeModel>
+@{
+    var _access = EnrichcousBackOffice.AppLB.Authority.GetAccessAuthority();
+    var access = (_access.Any(k => k.Key.Equals("customer_update_merchantprocessing")) == true && _access["customer_update_merchantprocessing"] == true);
+}
+<style type="text/css">
+    .fa-eye, .fa-eye-slash {
+        color: #258e4f;
+        cursor: pointer;
+    }
+
+    .field-icon {
+        float: right;
+        margin-top: -25px;
+        position: relative;
+        z-index: 2;
+    }
+
+
+
+    #datepicker {
+        width: 180px;
+        margin: 0 20px 20px 20px;
+    }
+
+        #datepicker > span:hover {
+            cursor: pointer;
+        }
+
+    .tpns {
+        display: inline-flex;
+        flex-wrap: wrap;
+        width: 100%;
+    }
+
+    .item-child {
+        display: inline-block;
+        width: 80%;
+        border-radius: 3px;
+        background: #ffffff;
+        margin-bottom: 20px;
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+
+        .item-child .content-item {
+            width: 100%;
+            position: relative;
+            display: inline-block;
+            padding: 1rem;
+            border-top: 25px solid var(--main-color-1);
+            border-right: 1px solid var(--main-color-1);
+            border-left: 1px solid var(--main-color-1);
+            border-bottom: 1px solid var(--main-color-1);
+        }
+
+    .delete-tpn {
+        position: absolute;
+        right: -3px;
+        top: -27px;
+        color: #c50303;
+        font-size: 19px;
+        background: transparent;
+        border: 0px;
+    }
+    .error {
+        color: red;
+    }
+
+    label.error {
+        display: none !important;
+    }
+
+    input.error {
+        border: 1px solid red !important;
+    }
+</style>
+
+<div class="row" id="content_subscribe_partial">
+
+    <div class="col-md-12">
+        <h3 style="padding:5px;color:green;font-weight:bold;text-align:center;font-size:22px;">
+            @ViewBag.BusinessName
+        </h3>
+    </div>
+    <div class="col-md-12">
+
+        <table class="table table-bordered table-hover data_processing">
+            <thead>
+                <tr style="background-color: var(--main-color-1)">
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Count() > 0)
+                {
+                    foreach (var sub in Model)
+                    {
+                        <tr>
+                            <td style="padding: 0">
+                                <form id="form_data_process_@sub.Id" method="post" class="panel panel-default sub-panel form_data_process" style="border:none">
+                                    <input type="hidden" name="Id" value="@sub.Id" />
+                                    <div style="margin:20px 0px; border: 1px solid var(--main-color-1); background-color: #ffffff">
+                                        <div style="padding: 0px 20px; font-size: 1em; margin: -10px 20px; display:inline-block;transform:translateY(-9px); background-color: #ffffff; color:#076aa4">
+                                            <span class="box-title" id="title_processing_@sub.Id">
+                                                @sub.ProcessorName
+                                                @if ("active".Equals(sub.Status))
+                                                {
+                                                    <label class="label label-success" style="margin-left: 10px;">Active</label>
+                                                }
+                                                else if ("inactive".Equals(sub.Status))
+                                                {
+                                                    <label class="label label-warning" style="margin-left: 10px;">Inactive</label>
+                                                }
+                                                else
+                                                {
+                                                    <label class="label label-info" style="margin-left: 10px;">Closed</label>
+                                                }
+                                            </span>
+                                        </div>
+                                        <div class="panel-body" id="data_proc_@sub.Id">
+                                            <div class="form-group col-sm-4">
+                                                <label class="control-label" style="margin: 0">MID</label>
+                                                <input type="text" placeholder="Merchant ID..." class="form-control" id="MerchantID_@sub.Id" name="MerchantID" value="@sub.MerchantID" disabled style="cursor: text; width: 100%" required />
+                                            </div>
+                                            <div class="form-group col-sm-4">
+                                                <label class="control-label" for="DbaName" style="margin: 0">Processor Name</label><br />
+                                                <input type="text" placeholder="Processor Name..." class="form-control" id="ProcessorName_@sub.Id" name="ProcessorName" value="@sub.ProcessorName" disabled style="cursor: text; width: 100%" required />
+                                            </div>
+                                            <div class="form-group col-sm-4" style="height:56px">
+                                            </div>
+                                            <div class="form-group col-sm-4">
+                                                <label class="control-label" style="margin: 0" for="DbaName">Start date</label><br />
+                                                <input type="text" id="StartDate_@sub.Id" name="StartDate" class="form-control datepicker"
+                                                       value="@(sub.StartDate?.ToString("MMM dd, yyyy"))" readonly disabled style="cursor: text; width: 100%" required />
+                                                <script type="text/javascript">
+                                            $(function () {
+                                                $("#StartDate_@sub.Id").datepicker({
+                                                    dateFormat: "M dd, yy",
+                                                    changeMonth: true,
+                                                    changeYear: true,
+                                                });
+                                            });
+                                                </script>
+                                            </div>
+                                            <div class="form-group col-sm-4">
+                                                <label class="control-label" style="margin: 0" for="DbaName">End date</label><br />
+                                                <input type="text" id="EndDate_@sub.Id" name="EndDate" class="form-control datepicker"
+                                                       value="@(sub.EndDate?.ToString("MMM dd, yyyy"))" readonly disabled style="cursor: text; width: 100%" required />
+                                                <script type="text/javascript">
+                                            $(function () {
+                                                $("#EndDate_@sub.Id").datepicker({
+                                                    dateFormat: "M dd, yy",
+                                                    changeMonth: true,
+                                                    changeYear: true,
+                                                });
+                                            });
+                                                </script>
+                                            </div>
+                                            <div class="form-group col-sm-4">
+                                                <label class="control-label" style="margin: 0">Status</label><br />
+                                                <select class="form-control" value="@sub.Status" name="Status" id="Status_@sub.Id" style="width: 100%" disabled>
+                                                    <option value="active" @("active".Equals(sub.Status) ? Html.Raw("selected") : Html.Raw(""))>Active</option>
+                                                    <option value="inactive" @("inactive".Equals(sub.Status) ? Html.Raw("selected") : Html.Raw(""))>Inactive</option>
+                                                    <option value="closed" @("closed".Equals(sub.Status) ? Html.Raw("selected") : Html.Raw(""))>Closed</option>
+                                                </select>
+                                            </div>
+                                            <div class="form-group col-sm-12">
+                                                <div class="row">
+                                                    <div class="form-group col-sm-12" style="margin: 10px 0">
+                                                        <a id="col_tab_@sub.Id" onclick="col_tab('@sub.Id')">
+                                                            <i class="fa fa-plus" style="margin-right: 5px"></i><b>Show more</b>
+                                                        </a>
+                                                    </div>
+                                                    <div id="tab_terminal_@sub.Id" hidden>
+                                                        <div class="form-group col-sm-12">
+                                                            <label style="font-weight:unset; margin: 0">
+                                                                <input type="checkbox" name="CardTypeAccept" value="visa" class="flat-red card_type" disabled
+                                                                       @(sub.CardTypeAccept?.Contains("visa") == true ? Html.Raw("checked='true'") : Html.Raw(""))>
+                                                                Visa
+                                                            </label>
+                                                            <label style="font-weight:unset;">
+                                                                <input type="checkbox" name="CardTypeAccept" value="mastercard" class="flat-red card_type" disabled
+                                                                       @(sub.CardTypeAccept?.Contains("mastercard") == true ? Html.Raw("checked='true'") : Html.Raw(""))>
+                                                                Master card
+                                                            </label>
+                                                            <label style="font-weight:unset;">
+                                                                <input type="checkbox" name="CardTypeAccept" value="discover" class="flat-red card_type" disabled
+                                                                       @(sub.CardTypeAccept?.Contains("discover") == true ? Html.Raw("checked='true'") : Html.Raw(""))>
+                                                                Discover
+                                                            </label>
+                                                            <label style="font-weight:unset;">
+                                                                <input type="checkbox" name="CardTypeAccept" value="amex" class="flat-red card_type" disabled
+                                                                       @(sub.CardTypeAccept?.Contains("amex") == true ? Html.Raw("checked='true'") : Html.Raw(""))>
+                                                                Amex
+                                                            </label>
+                                                            <label style="font-weight:unset;">
+                                                                <input type="checkbox" name="CardTypeAccept" value="pindebit" class="flat-red card_type" disabled
+                                                                       @(sub.CardTypeAccept?.Contains("pindebit") == true ? Html.Raw("checked='true'") : Html.Raw(""))>
+                                                                Pin debit
+                                                            </label>
+                                                        </div>
+                                                        <div id="tpns_@sub.Id" class="tpns">
+                                                            @{
+                                                                int countItemProcess = 0;
+                                                            }
+                                                            @if (sub.ListMerchantProcess.Count() > 0)
+                                                            {
+                                                                foreach (var m in sub.ListMerchantProcess)
+                                                                {
+                                                                    <div class="item-child">
+                                                                        <div class="content-item">
+                                                                            <button onclick="remove_tpn(this);" type="button" class="delete-tpn delete-tpn_@(sub.Id)" disabled><i class="fa fa-remove"></i></button>
+                                                                            <div class="form-group col-sm-4">
+                                                                                <label class="control-label" style="margin: 0" for="TPN_@(sub.Id+"_"+countItemProcess)">TPN</label><br />
+                                                                                <input type="password" placeholder="TPN..." class="form-control input" id="TPN_@(sub.Id+"_"+countItemProcess)" name="ListMerchantProcess[@countItemProcess].TPN" value="@m.TPN" disabled style="cursor: text; width: 100%">
+                                                                                @if (access)
+                                                                                {
+                                                                                    <span toggle="#TPN_@(sub.Id+"_"+countItemProcess)" class="fa fa-fw fa-eye field-icon toggle-password"></span>
+                                                                                }
+                                                                            </div>
+                                                                            <div class="form-group col-sm-4">
+                                                                                <label class="control-label" style="margin: 0" for="RegisterID_@(sub.Id+"_"+countItemProcess)">Register ID</label><br />
+                                                                                <input type="password" placeholder="Register ID..." class="form-control input" id="RegisterID_@(sub.Id+"_"+countItemProcess)" name="ListMerchantProcess[@countItemProcess].RegisterID" value="@m.RegisterID" disabled style="cursor: text; width: 100%" />
+                                                                                @if (access)
+                                                                                {
+                                                                                    <span toggle="#RegisterID_@(sub.Id+"_"+countItemProcess)" class="fa fa-fw fa-eye field-icon toggle-password"></span>
+                                                                                }
+                                                                            </div>
+                                                                            <div class="form-group col-sm-4">
+                                                                                <label class="control-label" style="margin: 0" for="Auth_@(sub.Id+"_"+countItemProcess)">Auth</label><br />
+                                                                                <input type="password" placeholder="Auth..." class="form-control input" id="Auth_@(sub.Id+"_"+countItemProcess)" name="ListMerchantProcess[@countItemProcess].Auth" value="@m.Auth" disabled style="cursor: text; width: 100%" />
+                                                                                @if (access)
+                                                                                {
+                                                                                    <span toggle="#Auth_@(sub.Id+"_"+countItemProcess)" class="fa fa-fw fa-eye field-icon toggle-password"></span>
+                                                                                }
+                                                                            </div>
+                                                                            <div class="form-group col-sm-12">
+                                                                                <label class="control-label" style="margin: 0" for="Note_@(sub.Id+"_"+countItemProcess)">Note</label><br />
+                                                                                <textarea type="text" placeholder="Note..." class="form-control input" id="Note_@(sub.Id+"_"+countItemProcess)" name="ListMerchantProcess[@countItemProcess].Note" value="@m.Note" disabled style="cursor: text; width: 100%; resize: vertical; min-height: 50px">@m.Note</textarea>
+                                                                            </div>
+                                                                        </div>
+
+                                                                    </div>
+                                                                    countItemProcess++;
+                                                                }
+                                                            }
+                                                            else
+                                                            {
+                                                                <div class="item-child">
+                                                                    <div class="content-item">
+                                                                        <button onclick="remove_tpn(this);" type="button" class="delete-tpn delete-tpn_@(sub.Id)" disabled><i class="fa fa-remove"></i></button>
+                                                                        <div class="form-group col-sm-4">
+                                                                            <label class="control-label" style="margin: 0" for="TPN_@(sub.Id+"_"+countItemProcess)">TPN</label><br />
+                                                                            <input type="password" placeholder="TPN..." class="form-control input" id="TPN_@(sub.Id+"_"+countItemProcess)" name="ListMerchantProcess[@countItemProcess].TPN" value="" disabled style="cursor: text; width: 100%">
+                                                                            @if (access)
+                                                                            {
+                                                                                <span toggle="#TPN_@(sub.Id+"_"+countItemProcess)" class="fa fa-fw fa-eye field-icon toggle-password"></span>
+                                                                            }
+                                                                        </div>
+                                                                        <div class="form-group col-sm-4">
+                                                                            <label class="control-label" style="margin: 0" for="RegisterID_@(sub.Id+"_"+countItemProcess)">Register ID</label><br />
+                                                                            <input type="password" placeholder="Register ID..." class="form-control input" id="RegisterID_@(sub.Id+"_"+countItemProcess)" name="ListMerchantProcess[@countItemProcess].RegisterID" value="" disabled style="cursor: text; width: 100%" />
+                                                                            @if (access)
+                                                                            {
+                                                                                <span toggle="#RegisterID_@(sub.Id+"_"+countItemProcess)" class="fa fa-fw fa-eye field-icon toggle-password"></span>
+                                                                            }
+                                                                        </div>
+                                                                        <div class="form-group col-sm-4">
+                                                                            <label class="control-label" style="margin: 0" for="Auth_@(sub.Id+"_"+countItemProcess)">Auth</label><br />
+                                                                            <input type="password" placeholder="Auth..." class="form-control input" id="Auth_@(sub.Id+"_"+countItemProcess)" name="ListMerchantProcess[@countItemProcess].Auth" value="" disabled style="cursor: text; width: 100%" />
+                                                                            @if (access)
+                                                                            {
+                                                                                <span toggle="#Auth_@(sub.Id+"_"+countItemProcess)" class="fa fa-fw fa-eye field-icon toggle-password"></span>
+                                                                            }
+                                                                        </div>
+                                                                        <div class="form-group col-sm-12">
+                                                                            <label class="control-label" style="margin: 0" for="Note_@(sub.Id+"_"+countItemProcess)">Note</label><br />
+                                                                            <textarea type="text" placeholder="Note..." class="form-control input" id="Note_@(sub.Id+"_"+countItemProcess)" name="ListMerchantProcess[@countItemProcess].Note" value="" disabled style="cursor: text; width: 100%; resize: vertical; min-height: 50px"></textarea>
+                                                                        </div>
+                                                                    </div>
+
+                                                                </div>
+                                                            }
+
+                                                        </div>
+                                                        <div class="col-sm-12" style="margin-top:10px">
+                                                            @if (access)
+                                                            {
+                                                                <button type="button" id="add_more_tpn_@sub.Id" onclick="add_more_tpn('@sub.Id')" class="btn bg-purple" style="display:none">+ Add Another TPN</button>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group col-sm-12">
+                                                @if (access)
+                                                {
+                                                    <div class="pull-right" id="btn_save_proc_@sub.Id" hidden>
+                                                        <button type="button" onclick="save_processing('@sub.Id')" class="btn btn-info btn-sm" style="border-color:var(--main-color-2); margin:5px">
+                                                            <i class="fa fa-check"></i> Save
+                                                        </button>
+                                                    </div>
+                                                    <div class="pull-right" id="btn_cancel_proc_@sub.Id" hidden>
+                                                        <button type="button" onclick="cancel_processing('@sub.Id')" class="btn btn-default btn-sm" style="border-color:var(--main-color-2); margin:5px">
+                                                            <i class="fa fa-close"></i> Cancel
+                                                        </button>
+                                                    </div>
+                                                    <div class="pull-right btn_group" style="visibility:hidden">
+                                                        <div class="pull-right" id="btn_edit_proc_@sub.Id">
+                                                            <button type="button" onclick="edit_processing('@sub.Id')" class="btn btn-warning btn-sm" style="border-color:var(--main-color-2); margin:5px">
+                                                                <i class="fa fa-pencil"></i> Update
+                                                            </button>
+                                                        </div>
+                                                        <div class="pull-right" id="btn_remove_proc_@sub.Id">
+                                                            <button type="button" onclick="remove_processing('@sub.Id')" class="btn btn-danger btn-sm" style="border-color:var(--main-color-2); margin:5px">
+                                                                <i class="fa fa-trash"></i> Remove
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                }
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+            @if (access)
+            {
+                <tfoot>
+                    <tr>
+                        <td style="padding: 0">
+                            <form id="form-add-new" class="panel panel-default sub-panel" style="border:none" hidden>
+                                <div style="margin:20px 0px; border: 1px solid var(--main-color-1); background-color: #ffffff">
+                                    <input type="hidden" name="CustomerCode" value="@ViewBag.CustomerCode" />
+                                    <div style="padding: 0px 20px; font-size: 1em; margin: -10px 20px; display:inline-block;transform:translateY(-9px); background-color: #ffffff; color:#076aa4">
+                                        <span class="box-title">
+                                            Add new Merchant Process
+                                        </span>
+
+                                    </div>
+                                    <div class="panel-body" id="data_proc">
+                                        <div class="form-group col-sm-4">
+                                            <label class="control-label" style="margin: 0">MID</label>
+                                            <input type="text" placeholder="Merchant ID..." class="form-control" id="MerchantID" name="MerchantID" value="" style="cursor: text; width: 100%" required />
+                                        </div>
+                                        <div class="form-group col-sm-4">
+                                            <label class="control-label" style="margin: 0" for="DbaName">Processor Name</label><br />
+                                            <input type="text" placeholder="Processor Name..." class="form-control" id="ProcessorName" name="ProcessorName" value="" style="cursor: text; width: 100%" required />
+                                        </div>
+                                        <div class="form-group col-sm-4">
+                                            <label class="control-label" style="margin: 0">Status</label><br />
+                                            <select class="form-control" name="Status" id="Status" style="width: 100%" required>
+                                                <option value="active" selected>Active</option>
+                                                <option value="inactive">Inactive</option>
+                                                <option value="closed">Closed</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group col-sm-4">
+                                            <label class="control-label" style="margin: 0" for="DbaName">Start date</label><br />
+                                            <input type="text" id="StartDate" name="StartDate" class="form-control datepicker "
+                                                   value="" readonly style="cursor: text; width: 100%" required />
+                                            <script type="text/javascript">
+                                                $(function () {
+                                                    $("#StartDate").datepicker({
+                                                        dateFormat: "M dd, yy",
+                                                        changeMonth: true,
+                                                        changeYear: true,
+                                                    });
+                                                });
+                                            </script>
+
+                                        </div>
+                                        <div class="form-group col-sm-4">
+                                            <label class="control-label" style="margin: 0" for="DbaName">End date</label><br />
+                                            <input type="text" id="EndDate" name="EndDate" class="form-control datepicker"
+                                                   value="" readonly style="cursor: text; width: 100%" required />
+                                            <script type="text/javascript">
+                                                $(function () {
+                                                    $("#EndDate").datepicker({
+                                                        dateFormat: "M dd, yy",
+                                                        changeMonth: true,
+                                                        changeYear: true,
+                                                    });
+                                                });
+                                            </script>
+                                        </div>
+                                        <div class="form-group col-sm-12">
+                                            <div class="row">
+                                                <div class="form-group col-sm-12" style="margin: 10px 0">
+                                                    <a id="col_tab">
+                                                        <i class="fa fa-minus" style="margin-right: 5px"></i><b>Show more</b>
+                                                    </a>
+                                                </div>
+                                                <div>
+                                                    <div class="form-group col-sm-12">
+                                                        <label style="font-weight:unset; margin: 0">
+                                                            <input type="checkbox" name="CardTypeAccept" value="visa" class="flat-red card_type">
+                                                            Visa
+                                                        </label>
+                                                        <label style="font-weight:unset;">
+                                                            <input type="checkbox" name="CardTypeAccept" value="mastercard" class="flat-red card_type">
+                                                            Master card
+                                                        </label>
+                                                        <label style="font-weight:unset;">
+                                                            <input type="checkbox" name="CardTypeAccept" value="discover" class="flat-red card_type">
+                                                            Discover
+                                                        </label>
+                                                        <label style="font-weight:unset;">
+                                                            <input type="checkbox" name="CardTypeAccept" value="amex" class="flat-red card_type">
+                                                            Amex
+                                                        </label>
+                                                        <label style="font-weight:unset;">
+                                                            <input type="checkbox" name="CardTypeAccept" value="pindebit" class="flat-red card_type">
+                                                            Pin debit
+                                                        </label>
+                                                    </div>
+                                                    <div id="tpns_" class="tpns">
+                                                        <div class="item-child">
+                                                            <div class="content-item">
+                                                                <button onclick="remove_tpn(this);" type="button" class="delete-tpn delete-tpn_"><i class="fa fa-remove"></i></button>
+                                                                <div class="form-group col-sm-4">
+                                                                    <label class="control-label" style="margin: 0" for="TPN">TPN</label><br />
+                                                                    <input type="password" placeholder="TPN..." class="form-control input" id="TPN" name="ListMerchantProcess[0].TPN" value="" style="cursor: text; width: 100%">
+                                                                    @if (access)
+                                                                    {
+                                                                        <span toggle="#TPN" class="fa fa-fw fa-eye field-icon toggle-password"></span>
+                                                                    }
+                                                                </div>
+                                                                <div class="form-group col-sm-4">
+                                                                    <label class="control-label" style="margin: 0" for="RegisterID)">Register ID</label><br />
+                                                                    <input type="password" placeholder="Register ID..." class="form-control input" id="RegisterID)" name="ListMerchantProcess[0].RegisterID" value="" style="cursor: text; width: 100%" />
+                                                                    @if (access)
+                                                                    {
+                                                                        <span toggle="#RegisterID" class="fa fa-fw fa-eye field-icon toggle-password"></span>
+                                                                    }
+                                                                </div>
+                                                                <div class="form-group col-sm-4">
+                                                                    <label class="control-label" style="margin: 0" for="Auth">Auth</label><br />
+                                                                    <input type="password" placeholder="Auth..." class="form-control input" id="Auth" name="ListMerchantProcess[0].Auth" value="" style="cursor: text; width: 100%" />
+                                                                    @if (access)
+                                                                    {
+                                                                        <span toggle="#Auth" class="fa fa-fw fa-eye field-icon toggle-password"></span>
+                                                                    }
+                                                                </div>
+                                                                <div class="form-group col-sm-12">
+                                                                    <label class="control-label" style="margin: 0" for="Note">Note</label><br />
+                                                                    <textarea type="text" placeholder="Note..." class="form-control input" id="Note" name="ListMerchantProcess[0].Note" value="" style="cursor: text; width: 100%; resize: vertical; min-height: 50px"></textarea>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-sm-12" style="margin-top:10px">
+                                                        @if (access)
+                                                        {
+                                                            <button type="button" id="add_more_tpn_" onclick="add_more_tpn('')" class="btn bg-purple">+ Add Another TPN</button>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+
+                            <input type="text" class="form-control" id="CustomerCode" name="CustomerCode" value="@ViewBag.CustomerCode" style="display: none" />
+
+                            <button type="button" class="btn btn-success center-block" id="pull_form_add" style="width:200px">
+                                <span class="fa fa-plus"></span> New merchant process
+                            </button>
+                            <p id="group_add_process" class="text-center" hidden>
+                                <button type="button" class="btn btn-default" id="close_form_add">
+                                    <span class="fa fa-close"></span> Cancel
+                                </button>
+                                <button type="button" onclick="create_processing()" class="btn btn-info">
+                                    <i class="fa fa-check"></i> Save
+                                </button>
+                            </p>
+                        </td>
+                    </tr>
+                </tfoot>
+            }
+        </table>
+    </div>
+
+</div>
+
+<!--icheck-->
+<link rel="stylesheet" href="/content/admin/plugins/iCheck/all.css" />
+<link rel="stylesheet" href="~/content/admin/bower_components/datatables.net-bs/css/dataTables.bootstrap.min.css">
+<!-- DataTables -->
+<script src="~/content/admin/bower_components/datatables.net/js/jquery.dataTables.min.js"></script>
+<script src="~/content/admin/bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js"></script>
+<!--icheck-->
+<script src="/content/admin/plugins/iCheck/icheck.min.js"></script>
+<script src="~/Scripts/jquery.validate.min.js"></script>
+<script src="~/Scripts/jquery.validate.unobtrusive.min.js"></script>
+<script>
+    $(function () {
+        $('input[type="checkbox"].flat-red, input[type="radio"].flat-red').iCheck({
+            checkboxClass: 'icheckbox_polaris',
+            radioClass: 'iradio_polaris'
+        })
+        var t = $(".data_processing").DataTable({
+            'paging': true,
+            'lengthChange': true,
+            'searching': true,
+            'ordering': false,
+            'info': false,
+            'autoWidth': true
+        });
+        $("tr").hover(
+            function () {
+                $(this).find(".btn_group").css({ opacity: 0.0, visibility: "visible" }).animate({ opacity: 1.0 });
+            },
+            function () {
+                $(this).find(".btn_group").css({ opacity: 0.0, visibility: "hidden" }).animate({ opacity: 1.0 });
+            }
+        )
+    })
+    var dataOld = null;
+    $(".toggle-password").click(function () {
+        $(this).toggleClass("fa-eye fa-eye-slash");
+        var input = $($(this).attr("toggle"));
+        if (input.attr("type") == "password") {
+            input.attr("type", "text");
+        } else {
+            input.attr("type", "password");
+        }
+    });
+
+    $("#pull_form_add").click(function () {
+        $("#group_add_process").show();
+        $("#pull_form_add").hide();
+        $("#form-add-new").fadeToggle();
+    })
+    $("#close_form_add").click(function () {
+        $("#pull_form_add").show();
+        $("#group_add_process").hide();
+        $("#form-add-new").fadeToggle();
+    })
+
+    function col_tab(id) {
+        $("#col_tab_" + id + " .fa").toggleClass("fa-minus fa-plus");
+        $("#tab_terminal_" + id).fadeToggle();
+    }
+    function BindData(id) {
+        var x = localStorage.getItem("form-data_" + id);
+        result = jQuery.parseJSON(x);
+        result.forEach(function (data, index) {
+            $('input[name=\'' + data.name + '\']').val(data.value);
+        });
+    }
+    function edit_processing(id) {
+        var html = $('#form_data_process_' + id).html();
+        localStorage.setItem("oldHtmlForm" + id, html)
+        $("#btn_save_proc_" + id).show();
+        $("#btn_cancel_proc_" + id).show();
+        $("#btn_edit_proc_" + id).hide();
+        $("#btn_remove_proc_" + id).hide();
+        $("#add_more_tpn_" + id).show();
+        $(".delete-tpn_" + id).prop("disabled", false);
+        $('#form_data_process_' + id + ' input,#form_data_process_' + id + ' select,#form_data_process_' + id +' textarea').each(
+            function (index) {
+                var input = $(this);
+                $(input).prop("disabled", false);
+            }
+        );
+        var values = $('#form_data_process_' + id).serializeArray();
+        localStorage.setItem("form-data_" + id, JSON.stringify(values))
+        $('#tab_terminal_' + id).fadeIn();
+        $("#col_tab_" + id + " .fa").removeClass("fa-plus").addClass("fa-minus");
+        $("#tab_terminal_" + id + " input[type='password']").attr("type", "text");
+    }
+
+    function cancel_processing(id) {
+        var html = localStorage.getItem("oldHtmlForm" + id);
+        $('#form_data_process_' + id).html(html);
+        $("#btn_save_proc_" + id).hide();
+        $("#btn_cancel_proc_" + id).hide();
+        $("#btn_edit_proc_" + id).show();
+        $("#btn_remove_proc_" + id).show();
+        $("#add_more_tpn_" + id).hide();
+        $(".delete-tpn_" + id).prop("disabled", true);
+        BindData(id);
+        $('#form_data_process_' + id + ' input,#form_data_process_' + id + ' select,#form_data_process_' + id + ' textarea').each(
+            function (index) {
+                var input = $(this);
+                $(input).prop("disabled", true);
+            }
+        );
+
+    }
+
+    function save_processing(id) {
+        $("#form_data_process_" + id).validate();
+        if (!$("#form_data_process_" + id).valid()) {
+            return false;
+        }
+        overlayOn();
+        $.ajax({
+            method: "POST",
+            url: "/merchantman/savemerchantprocessing",
+            data: $("#form_data_process_" + id).serialize(),
+            dataType: "json"
+        })
+            .done(function (data) {
+
+
+                overlayOff();
+
+                if (data[0]) {
+                    $("#btn_save_proc_" + id).hide();
+                    $("#btn_cancel_proc_" + id).hide();
+                    $("#btn_edit_proc_" + id).show();
+                    $("#btn_remove_proc_" + id).show();
+                    let Success = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"success"}');
+                    noty(Success);
+                    let html = $('#ProcessorName_'+id).val();
+                    if ($('#Status_' + id).val() == 'active')
+                        html += '<label class="label label-success" style="margin-left: 10px;">Active</label>';
+                    else if ($('#Status_' + id).val() == 'inactive')
+                        html += '<label class="label label-warning" style="margin-left: 10px;">Inactive</label>';
+                    else
+                        html += '<label class="label label-info" style="margin-left: 10px;">Closed</label>';
+                    $('#title_processing_' + id).html(html);
+                    $('#add_more_tpn_' + id).hide();
+                    $(".delete-tpn_" + id).prop("disabled", true);
+                    $('#form_data_process_' + id + ' input,#form_data_process_' + id + ' select,#form_data_process_' + id + ' textarea').each(
+                        function (index) {
+                            var input = $(this);
+                            $(input).prop("disabled", true);
+                        }
+                    );
+                }
+                else {
+                    let Error = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"error"}');
+                    noty(Error);
+                }
+            })
+            .fail(function () {
+                overlayOff();
+                alert("Oops! Something went wrong");
+            })
+            .always(function () {
+                $("#loading").hide();
+                filter("", "");
+            });
+    }
+
+    function remove_processing(id) {
+        if (confirm("Are you sure you want to REMOVE this process?") == true) {
+            overlayOn();
+        $.ajax({
+            method: "get",
+            url: "/merchantman/removemerchantprocess?key=" + id,
+            dataType: "html"
+        })
+            .done(function (data) {
+                overlayOff();
+                data = JSON.parse(data);
+                if (data[0]) {
+                    let Success = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"success"}');
+                    noty(Success);
+                    SelectMerchant('@ViewBag.MerchantID');
+                    filter("", "");
+                }
+                else {
+                    let Error = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"error"}');
+                    noty(Error);
+                }
+            })
+            .fail(function () {
+                overlayOff();
+                alert("Oops! Something went wrong");
+            })
+            .always(function () {
+                $("#loading").hide();
+            });
+        }
+    }
+
+    function create_processing() {
+        $("#form-add-new").validate();
+        if (!$("#form-add-new").valid()) {
+            return false;
+        }
+        overlayOn();
+        $.ajax({
+            method: "POST",
+            url: "/merchantman/createmerchantprocess",
+            data: $('#form-add-new').serialize(),
+            dataType: "json"
+        })
+            .done(function (data) {
+                overlayOff();
+                if (data[0] == true) {
+                    var mess = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"success"}');
+                    noty(mess);
+                    SelectMerchant('@ViewBag.MerchantID');
+                    filter("", "");
+                }
+                else {
+                    var Error = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"error"}');
+                    noty(Error);
+                }
+            })
+            .fail(function () {
+                overlayOff();
+                alert("Oops! Something went wrong");
+            })
+            .always(function () {
+                $("#loading").hide();
+            });
+    }
+
+    function remove_tpn(el) {
+        var tpns = $(el).parents('.tpns');
+
+        var itemCount = tpns.find('.item-child').length;
+        if (itemCount == 1) {
+            noty({ "text": "Can\'t remove ! must exist at least one TPN !", "layout": "topRight", "type": "error" });
+            return false;
+        }
+        else {
+            $(el).parents('.item-child').slideUp("normal", function () {
+                $(this).remove();
+                var i = 0;
+                tpns.find('.item-child').each(function (index) {
+                    $(this).find('.input').each(function (index2) {
+                        var currentname = $(this).attr("name");
+                        var name = currentname.substr(currentname.indexOf(".") + 1);
+                        $(this).attr("name", 'ListMerchantProcess[' + i + '].' + name);
+                    })
+                    i++;
+                })
+                noty({ "text": "remove success !", "layout": "topRight", "type": "success" });
+            });
+        }
+    }
+      function add_more_tpn(Id) {
+        var itemCount = $('#tpns_' + Id).find('.item-child').length;
+        var html = '';
+        html += '<div class="item-child" id="item-child_' + Id + '_' + itemCount + '" style="display:none;">';
+        html += '<div class="content-item">';
+        html += '<button onclick="remove_tpn(this);" type="button" class="delete-tpn delete-tpn_' + Id + '"><i class="fa fa-remove"></i></button>';
+        html += '<div class="form-group col-sm-4">';
+        html += '<label class="control-label" style="margin: 0" for="TPN_' + Id + '_' + itemCount + '">TPN</label><br />';
+          html += '<input type="password" placeholder="TPN..." class="form-control input" id="TPN_' + Id + '_' + itemCount + '" name="ListMerchantProcess[' +itemCount+'].TPN" value=""  style="cursor: text; width: 100%">';
+        @if (access)
+        {
+            <text>
+            html +=  '<span toggle="#TPN_' + Id + '_' + itemCount + '" class="fa fa-fw fa-eye field-icon toggle-password"></span>';
+            </text>
+            }
+        html += '</div>';
+        html += '<div class="form-group col-sm-4">';
+        html += '<label class="control-label" style="margin: 0" for="RegisterID_' + Id + '_' + itemCount + '">Register ID</label><br />';
+          html += '   <input type="password" placeholder="Register ID..." class="form-control input" id="RegisterID_' + Id + '_' + itemCount + '" name="ListMerchantProcess[' + itemCount +'].RegisterID" value=""  style="cursor: text; width: 100%" />';
+        @if (access)
+        {
+        <text>
+        html += '<span toggle="#RegisterID_' + Id + '_' + itemCount + '" class="fa fa-fw fa-eye field-icon toggle-password"></span>';
+        </text>
+        }
+        html += '  </div>';
+        html += ' <div class="form-group col-sm-4">';
+        html += '     <label class="control-label" style="margin: 0" for="Auth_' + Id + '_' + itemCount + '">Auth</label><br />';
+          html += '     <input type="password" placeholder="Auth..." class="form-control input" id="Auth_' + Id + '_' + itemCount + '" name="ListMerchantProcess[' + itemCount +'].Auth" value=""  style="cursor: text; width: 100%" />';
+            @if (access)
+            {
+                <text>
+                html += '  <span toggle="#Auth_' + Id + '_' + itemCount + '" class="fa fa-fw fa-eye field-icon toggle-password"></span>';
+            </text>
+            }
+        html += '  </div>';
+        html += '  <div class="form-group col-sm-12">';
+        html += '  <label class="control-label" style="margin: 0" for="Note_' + Id + '_' + itemCount + '">Note</label><br />';
+          html += '    <textarea type="text" placeholder="Note..." class="form-control input" id="Note_' + Id + '_' + itemCount + '" name="ListMerchantProcess[' + itemCount +'].Note" value=""  style="cursor: text; width: 100%; resize: vertical; min-height: 50px"></textarea>'
+        html += '  </div>';
+        html += '  </div>';
+        html += '  </div>';
+          $('#tpns_' + Id).append(html);
+          $('#item-child_' + Id + '_' + itemCount).slideDown()
+    }
+</script>
+

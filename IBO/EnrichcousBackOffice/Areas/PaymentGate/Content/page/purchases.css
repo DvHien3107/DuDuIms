@@ -1,0 +1,95 @@
+table.selected-items *{
+    border: none ;
+}
+.item:hover, .package-table tbody:hover{
+    background-color: #d5eafc !important;
+}
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: #f0f8ff;
+}
+
+.package-table tbody+tbody{
+    border-top: 0;
+}
+.package-table tbody:nth-of-type(odd){
+    background-color: #f0f8ff;
+}
+
+table.selected-items tr:nth-child(1) > td {
+    border-top: none;
+}
+table.selected-items td {
+    padding: 0.5em;
+    vertical-align: middle;
+}
+table.selected-items td:nth-child(1) {
+    display: flex;
+    align-items: center;
+}
+
+table.selected-items tr:hover button.select-remove {
+    display: initial;
+}
+table.selected-items td:nth-child(2) {
+    width: 80px;
+    max-width: 80px;
+    padding: 0 20px 0 0;
+}
+table.selected-items input.select-quantity.value {
+    border: 1px solid #ced4da;
+}
+table.selected-items tr {
+    border-bottom: 1px dashed #ced4da;
+}
+
+b.item-name {
+    color: green;
+    font-size: 14px;
+}
+table.selected-items b.item-name {
+    width: calc(100% - 25px);
+}
+
+.content-left table td {
+    vertical-align: middle;
+}
+.content-left table img {
+    width: 80px;
+    height: 80px;
+    float: left;
+    border: 1px solid #ddd;
+}
+
+table td.item-price {
+    font-weight:bold;
+    width: 100px;
+    text-align: right;
+}
+.pkg-item-group {
+    height: 80px;
+    line-height: 19px;
+    width: auto;
+    padding-left: 85px
+}
+.pkg-item {
+    color:gray;
+    padding-right:10px;
+    font-size:11px;
+    float:left;
+    display:block;
+}
+.select-item-row {
+    
+}
+.select-remove {
+    display: none;
+    height: 22px;
+    padding: 0 5px;
+}
+table.selected-items td:nth-child(3) {
+    padding: 0;
+    width: 20px;
+}
+.select-quantity.value-group:hover ~ .select-remove {
+    display: none;
+}

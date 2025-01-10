@@ -1,0 +1,79 @@
+﻿@using Enrich.DataTransfer.EnrichUniversal.Ticket
+@using Enrich.DataTransfer.JiraConnector
+@{
+     var imsProjects = ViewBag.IMSProjects as List<ProjectMilestoneDto>;
+     var jiraProjects = ViewBag.JiraProjects as List<JiraProjectDto>;
+ 
+}
+
+<div class="modal fade" id="project-mapping-popup" role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-content">
+        <form action="/JiraConfigurationMapping/CreateOrUpdateProjectMapping" method="post" id="create-or-update-project-mapping-form">
+            <div class="modal-header">
+                <div class="modal-title pull-left">Create Jira Project Mapping</div>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div style="display: flex; align-items: center; justify-content: center; vertical-align: middle;">
+                    <div>
+                        <label>IMS Project</label>
+                        <select class="form-control select2" name="IMSId" style="width: 100%;">
+                            <option value="">N/A</option>
+                            @foreach (var imsProject in imsProjects)
+                            {
+                                <option value="@imsProject.Id">@imsProject.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <span style="padding: 0px 20px;transform: translateY(10px);"><i class="fa fa-angle-double-right" aria-hidden="true"></i></span>
+                    <div>
+                        <label>Jira Project</label>
+                        <select class="form-control select2" name="JiraId" style="width: 100%;">
+                            <option value="">N/A</option>
+                            @foreach (var jiraProject in jiraProjects)
+                            {
+                                <option value="@jiraProject.Id">@jiraProject.Name</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary" onsubmit="overlayOn()">Create</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    $("#create-or-update-project-mapping-form").on('submit', function (e) {
+        e.preventDefault();
+        overlayOn();
+        var form = $(this);
+        var actionUrl = form.attr('action');
+        $.ajax({
+            type: "post",
+            url: actionUrl,
+            data: form.serialize(),
+            success: function (data) {
+                if (data.status) {
+                    $("#project-mapping-popup").modal("hide");
+                    $('#main-table').DataTable().ajax.reload();
+                    success(data.message)
+                }
+                else {
+                    error(data.message)
+                }
+            },
+            error: function (data) {
+                Error('An error occurred.')
+            },
+            complete: function (data) {
+                overlayOff();
+            }
+        
+        });
+
+    });
+</script>

@@ -1,0 +1,481 @@
+﻿@model EnrichcousBackOffice.Models.T_SupportTicket
+@using EnrichcousBackOffice.Models
+@using EnrichcousBackOffice.Utils.IEnums
+@{
+    Layout = "~/Views/Ticket_New/_TicketLayout.cshtml";
+    T_Project_Stage stage = ViewBag.stage;
+    var Page = ViewBag.Page as string;
+    string PageDeployment = "19120001";
+    string PageSupportTicket = "19120003";
+    string PageDevelopmentsTicket = "19120002";
+}
+
+@section style{
+    <!--Thu vien de chay _TagsPopupPartial-->
+    <link href="~/Content/Scrollbar/style_Scrollbar.css" rel="stylesheet" />
+    <link href="~/Content/Admin/plugins/iCheck/all.css" rel="stylesheet" />
+    <link href="~/Content/Admin/bower_components/bootstrap-colorpicker/dist/css/bootstrap-colorpicker.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.min.css" rel="stylesheet" />
+    <style>
+        .tab-content section {
+            background: #ecf0f5 !important;
+        }
+    </style>
+}
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li>@(Page == PageDeployment ? "Delivery Ticket" : Page == PageSupportTicket ? "Support Ticket" : "Developments Ticket")</li>
+        <li class="active">@ViewBag.Title</li>
+    </ol>
+}
+
+<section class="content-header">
+    <h1>
+        @ViewBag.Title
+
+
+    </h1>
+    <div class="box-tools" style="position:absolute;top:10px;right:10px;">
+        <a href="@ViewBag.urlback" class="btn btn-sm btn-default" data-toggle="tooltip" title="" data-original-title="Go back">
+            <i class="fa fa-arrow-left"></i> Go back
+        </a>
+    </div>
+</section>
+
+
+<section class="content">
+    @*<form role="form" action="/ticket/saveticket" method="post" enctype="multipart/form-data" class="form-horizontal">*@
+
+    @using (Ajax.BeginForm("saveticket", "Ticket_New", null,
+    new AjaxOptions
+    {
+        HttpMethod = "POST",
+        OnBegin = "OnBegin",
+        OnSuccess = "updateTicketSuccess",
+        Url = "/Ticket_New/saveticket/"
+    }, new { enctype = "multipart/form-data", @class = "", @id = "MainFormTicket" }))
+    {
+        <input type="hidden" name="hdTicketId" value="@Model.Id" />
+        <input type="hidden" name="urlback" value="@ViewBag.urlback" />
+
+        <div class="row">
+            <div class="col-md-8">
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Ticket content</h3>
+
+                    </div>
+
+                    <div class="box-body">
+                        <div class="form-group">
+                            <label>Ticket name <span style="color:red">*</span></label>
+                            <input type="text" name="name" class="form-control disable-enter" required value="@Model.Name" />
+                        </div>
+
+                        <div class="form-group">
+                            <label>Content</label>
+                            <textarea name="comment" id="comment">@Html.Raw(Model.Description)</textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Attachment</label>
+
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-10">
+                                @Html.Partial("_UploadMoreFilesPartial", ViewBag.attachments as List<UploadMoreFile>, new ViewDataDictionary() { { "upload", true } })
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4 pull-right">
+
+                @Html.Partial("_TicketInfoPartial", Model)
+
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="box">
+                <div class="box-body">
+                    <a @*href="@ViewBag.urlback"*@ onclick="window.history.back()" class="btn"><i class="fa fa-chevron-left"></i> Go back</a>
+                    <button id="btTicketSubmit" type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </div>
+        </div>
+
+    }
+    @*</form>*@
+</section>
+<div class="modal fade" id="stage_status">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Stage status</h4>
+            </div>
+            <form action="/Ticket_New/SaveStageStatus" method="post">
+                <div class="modal-body">
+                    <input type="hidden" name="Id" />
+                    <input type="hidden" name="projectId" />
+                    <input type="hidden" name="versionId" />
+                    <div class="form-group">
+                        <label>Project</label>
+                        <input class="form-control" name="projectName" readonly />
+                    </div>
+                    <div class="form-group">
+                        <label>Status name</label>
+                        <input class="form-control" name="Name" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Order</label>
+                        <input class="form-control" type="number" name="Order" />
+                        <small class="form-text text-muted" style="display:block;padding-top:5px">The sort order will be by precedence as type > order</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Status type</label>
+                        <select class="form-control" name="Type">
+                            <option value="open">Open</option>
+                            <option value="closed">Close</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary pull-right">Save</button>
+                    <button type="button" id="status-delete-button" style="display:none;" onclick="delete_status_ticket()" class="btn btn-danger pull-right">Delete</button>
+                </div>
+            </form>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+<div class="modal fade" id="subversion_modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title"></h4>
+            </div>
+            <form action="/Ticket_New/SaveSubversion" method="post">
+                <div class="modal-body">
+                    <input type="hidden" name="Id" />
+                    <input type="hidden" name="SubversionSelected" />
+                    <div class="form-group">
+                        <label>Name:</label>
+                        <input type="text" class="form-control" name="Name" required />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary pull-right">Save</button>
+                    <button type="button" id="subversion-delete-button" style="display:none;" onclick="delete_stage_version()" class="btn btn-danger pull-right">Delete</button>
+                </div>
+            </form>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+<div class="modal fade" id="CreateOrUpdate_Type">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="/Ticket_New/SaveStageType" method="post">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title">Type</h4>
+                </div>
+                <div class="modal-body">
+
+                    <input type="hidden" name="Id" />
+                    <input type="hidden" name="ProjectId" />
+                    <input type="hidden" name="Page" value="@Page" />
+                    <div class="form-group">
+                        <label>Project Name</label>
+                        <input class="form-control" name="ProjectName" readonly />
+                    </div>
+                    <div class="form-group">
+                        <label>Type Name</label>
+                        <input class="form-control" name="TypeName" required />
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary pull-right">Save</button>
+                    <button type="button" onclick="delete_type()" class="btn btn-danger pull-right delete-button" style="display:none">Delete</button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+
+</div>
+<div id="option_ticket_info_list_render">
+</div>
+@section script
+{
+    @*<script src="/content/admin/bower_components/ckeditor/ckeditor.js"></script>*@
+    <script src="~/Content/Admin/bower_components/ckeditor2/ckeditor.js"></script>
+    <!--Thu vien de chay _TagsPopupPartial-->
+    <script src="~/Content/Admin/plugins/iCheck/icheck.min.js"></script>
+    <script src="~/Content/Admin/bower_components/bootstrap-colorpicker/dist/js/bootstrap-colorpicker.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"></script>
+    @*<script src="~/Scripts/jquery.unobtrusive-ajax.min.js"></script>*@
+
+    <!--upload and review-->
+    <script src="~/Scripts/upload_and_review.js"></script>
+    <script src="~/Scripts/ticket/Detail.js"></script>
+
+    <script type="text/javascript">
+        $(function () {
+
+
+            $(".datepicker").datepicker({
+                dateFormat: "mm/dd/yy",
+                changeMonth: true,
+                changeYear: true,
+                yearRange: '-10:+10'
+            });
+        })
+
+
+
+        function OnBegin() {
+            //console.log("ticket:onbegin sumit");
+            // noti mentions
+
+            event.preventDefault();
+            $("#btTicketSubmit").attr("disabled", true);
+            $("#btTicketSubmit").html("Saving...");
+            overlayOn();
+        }
+
+        /**
+         * sau khi create/update ticket thanh cong
+         * */
+        function updateTicketSuccess(result) {
+            //     console.log("ticket:submit alway");
+            overlayOff();
+            //alert(result[0]);
+
+            if (result[0] == false) {
+                //alert("failure");
+                var optionsErr = $.parseJSON('{"text":"Opp!save failure.' + result[1] + '","layout":"topRight","type":"warning"}');
+                noty(optionsErr);
+
+                $("#btTicketSubmit").removeAttr("disabled");
+                $("#btTicketSubmit").html("Save Changes");
+
+                return;
+            }
+            else {
+                //alert("ok");
+                var optionsErr = $.parseJSON('{"text":"' + result[1] + '","layout":"topRight","type":"success"}');
+                noty(optionsErr);
+                var comment = CKEDITOR.instances.comment.getData();
+                var usersMentions = JSON.parse(localStorage.getItem("usersMentions"));
+                var listMention = [];
+                $.each(usersMentions, function (i, item) {
+                    if (comment.includes('#Mentions_' + item.MemberNumber)) {
+                        listMention.push(item.MemberNumber);
+                    }
+                });
+                if (listMention.length) {
+                    $.ajax({
+                        url: "/Ticket_New/NotificationMentions",
+                        method: "post",
+                        data: {
+                            MemberNumbers: listMention,
+                            TicketId: result[2]
+                        }
+                    })
+                }
+
+                setTimeout(redirect, 1500);
+            }
+        }
+
+        function redirect() {
+            location.href = $("input[name=urlback]").val();
+        }
+
+    </script>
+
+
+}
+<script>
+    // load table status
+    function getListStatus() {
+        $("#loading_status").show();
+        $.ajax({
+            method: "POST",
+            url: "/ticket_new/GetListStatusUpdate",
+            data: { "ProjectId": $("#Project_select").val() },
+            dataType: "html"
+        })
+            .done(function (data) {
+                $("#option_ticket_info_list_render").html(data);
+                $("#status_list_modal").modal("show");
+            })
+            .fail(function () {
+                alert("Oops! Something went wrong");
+            })
+            .always(function () {
+                $("#loading_status").hide();
+            });
+    }
+    // load table priority
+    function getListPriority() {
+        $("#loading_priority").show();
+        $.ajax({
+            method: "POST",
+            url: "/ticket_new/GetListPriorityUpdate",
+            dataType: "html"
+        })
+            .done(function (data) {
+                $("#option_ticket_info_list_render").html(data);
+                $("#priority_list_modal").modal("show");
+            })
+            .fail(function () {
+                alert("Oops! Something went wrong");
+            })
+            .always(function () {
+                $("#loading_priority").hide();
+            });
+    }
+
+    // load table type
+    function getListType() {
+        $("#loading_type").show();
+        $.ajax({
+            method: "POST",
+            url: "/ticket_new/GetListTypeUpdate",
+            data: { "ProjectId": $("#Project_select").val() },
+            dataType: "html"
+        })
+            .done(function (data) {
+                $("#option_ticket_info_list_render").html(data);
+                $("#type_list_modal").modal("show");
+            })
+            .fail(function () {
+                alert("Oops! Something went wrong");
+            })
+            .always(function () {
+                $("#loading_type").hide();
+            });
+    }
+
+
+    // load table subversion
+    function getListFixedSubversion(fixedSubversion = true) {
+        if (fixedSubversion == true) {
+            $("#loading_fixedversion").show();
+        }
+        else {
+            $("#loading_affectedversion").show();
+        }
+
+        $.ajax({
+            method: "POST",
+            url: "/ticket_new/GetListVersionUpdate",
+            data: { "VersionId": $("#project_versions").val() },
+            dataType: "html"
+        })
+            .done(function (data) {
+                $("#option_ticket_info_list_render").html(data);
+                $("#version_list_modal").modal("show");
+            })
+            .fail(function () {
+                alert("Oops! Something went wrong");
+            })
+            .always(function () {
+                if (fixedSubversion == true) {
+                    $("#loading_fixedversion").hide();
+                }
+                else {
+                    $("#loading_affectedversion").hide();
+                }
+            });
+    }
+
+    $("#subversion_modal form").submit(function (e) {
+
+        e.preventDefault(); // avoid to execute the actual submit of the form.
+        overlayOn();
+        var form = $(this);
+        var url = form.attr('action');
+        let projectVerId = $("#project_versions").val();
+        $.ajax({
+            type: "POST",
+            url: url,
+            data: form.serialize() + '&projectVerId=' + projectVerId, // serializes the form's elements.
+            success: function (data) {
+                if (data.status) {
+
+                    if ($("#subversion_modal [name='Id']").val()) {
+                        $("#available_versions option[value=" + data.version.Id + "]").html(data.version.Name);
+                        $("#fixed_versions option[value=" + data.version.Id + "]").html(data.version.Name);
+                    }
+                    else {
+                        $("#available_versions,#fixed_versions").append($('<option/>')
+                            .val(data.version.Id)
+                            .text(data.version.Name)
+                            .attr("data-p_ver", data.version.ParentId)
+                        );
+                        let fixed = $("#subversion_modal [name='SubversionSelected']").val() == "fixed";
+                        if (fixed) { $('#fixed_versions').val(data.version.Id) }
+                        else { $('#available_versions').val(data.version.Id) }
+                    }
+
+                    success(data.message);
+                    $("#subversion_modal").modal("hide");
+                }
+                else {
+                    error(data.message);
+                }
+            },
+            error: function (xhr) {
+                alert("Error occured.please try again");
+            },
+            complete: function () {
+                overlayOff();
+            },
+        });
+
+
+    });
+    $("#CreateOrUpdate_Type form").ajaxForm(function (data) {
+        overlayOn();
+        if (data[0]) {
+            success(data[1]);
+            var e = $("#type option[value=" + data[2].Id + "]");
+            if (e.length == 0) {
+                //let opt = new Option(data[2].Name, data[2].Id, false, true).attr("data-stg_ver", data[2].StageId + "|" + data[2].ProjectVersionId);
+                $("#type").append($('<option />')
+                    .val(data[2].Id)
+                    .text(data[2].TypeName)
+                    .attr({ "selected": true }));
+
+            } else {
+                e.html(data[2].TypeName);
+            }
+            $("#CreateOrUpdate_Type").modal("hide");
+        } else {
+            error(data[1]);
+        }
+        overlayOff();
+    })
+</script>

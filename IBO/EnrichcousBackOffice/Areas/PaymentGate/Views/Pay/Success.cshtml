@@ -1,0 +1,93 @@
+﻿
+@model EnrichcousBackOffice.Areas.PaymentGate.ModelsView.OrderRequest
+@using Newtonsoft.Json;
+@using EnrichcousBackOffice.Areas.PaymentGate.ModelsView
+
+@{
+    ViewBag.Title = "Thanh toán thành công";
+    Layout = "~/Areas/PaymentGate/Views/Shared/_Layout.cshtml";
+}
+@{
+    var authFlag = ViewBag.Auth ?? false;
+    var storeCode = ViewBag.StoreCode;
+}
+
+@section title{
+    Thanh toán thành công
+}
+
+@section content_page_script{
+    <script src="~/Scripts/jquery.form.min.js"></script>
+    <script>
+    let hadAuth = '@authFlag'.toLowerCase() === "true";
+    let storeCode = '@storeCode';
+    function historyPayment() {
+        if (hadAuth === false) {
+            $("#login").modal("show");
+            return;
+        }
+        else
+            location.href = './history?key=' + storeCode;
+    }
+    // Login
+    $(".payment-login").on("click", () => {
+        $(".payment-login img").show();
+        $.ajax({
+            method: "POST",
+            url: "/PaymentGate/Pay/Login",
+            data: { "email": $("#login_form input[name='email']").val(), "password": $("#login_form input[name='password']").val() },
+            dataType: "json"
+        })
+            .done(function (data) {
+                $("#login").modal("hide");
+                hadAuth = true;
+                location.href = './history?key=' + data;
+            })
+            .fail(function (err) {
+                $("#login div.alert-dismissible").hide();
+                $("span.msg-login").text("");
+                if (err.responseText.startsWith("Please login first") || err.status === 403) {
+                    $("#login div.alert-dismissible").show();
+                    $("span.msg-login").text(err.responseJSON);
+                } else {
+                    noty({ "text": "Sorry, An error has occurred! Please try again later!", "layout": "topRight", "type": "error" });
+                }
+            })
+            .always(function () {
+                $(".payment-login img").hide();
+            });
+    });
+    </script>
+}
+
+@section content_header{
+    @if (Model == null)
+    {
+        <text>
+            <div class="alert alert-success alert-dismissible" style="margin: 0">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-check-circle-o"></i> Thanh toán thành công.</span>
+            </div>
+            @if (ViewBag.Error != null)
+            {
+                <div class="alert alert-danger alert-dismissible" style="margin: 0">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+
+                    <span><i class="icon fa fa-times-circle-o"></i> @ViewBag.Error</span><br />
+                </div>
+            }
+        </text>
+
+        return;
+    }
+}
+
+@section content_left {
+    <div style="margin-top: 15px">
+        <a class="pull-right" href="#" onclick="historyPayment()"><u>Lịch sử giao dịch</u></a>
+    </div>
+}
+
+@section content_right {
+
+}

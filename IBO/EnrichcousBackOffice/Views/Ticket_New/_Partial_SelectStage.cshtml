@@ -1,0 +1,225 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.T_Project_Stage>
+@using EnrichcousBackOffice.Models
+@{
+    var Projects = ViewBag.projects as List<T_Project_Milestone> ?? new List<T_Project_Milestone>();
+  //  var Versions = ViewBag.versions as List<T_Project_Milestone> ?? new List<T_Project_Milestone>();
+    bool reSelect = ViewBag.reSelect ?? false;
+}
+<style>
+    .slide_popup_tab {
+        position: absolute;
+        width: 100%;
+        height: 300px;
+        background-color: #fff;
+        transition: right .3s;
+        overflow-x: hidden;
+        overflow-y: auto;
+        right: -100%;
+    }
+
+        .slide_popup_tab.active {
+            right: 0 !important;
+            width: 700px !important;
+        }
+
+        .slide_popup_tab .title {
+            background-color: #eee;
+            margin: 0;
+            padding: 5px;
+            text-align: center
+        }
+
+            .slide_popup_tab .title > label {
+                font-size: 1.5em;
+                font-weight: bold;
+            }
+
+    .flat_tem {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        text-align: center;
+        min-height: 100px;
+        background-image: url('../../Content/Img/bg-banner.png');
+        background-size: cover;
+    }
+
+        .flat_tem > label {
+            display: block;
+            padding: 20px 0;
+            cursor: pointer;
+        }
+
+        .flat_tem:hover {
+            border-style: outset !important;
+            color: #fff;
+        }
+
+        .flat_tem:active {
+            border: inset !important;
+        }
+    .overlay-custom {
+        min-height: 80vh;
+        background:white;
+    }
+    #select_stage_box{
+        position:absolute;
+        top:50px;
+        left:50px;
+    }
+</style>
+<div id="select_stage" class="overlay overlay-custom" style="backdrop-filter: blur(3px); overflow:hidden;width:100%; display:flex">
+    <div id="select_stage_box" style="display:flex; height:300px; width: 700px; overflow:hidden;box-shadow: 5px 10px 8px #888888;border: 1px outset lightgray;">
+        <div id="select1" class="slide_popup_tab active">
+            <div class="col-md-12 title">
+                @if (reSelect)
+                {
+                    <button class="pull-left" style="margin-top:5px" onclick="$('#select_stage').hide()"><i class="fa fa-angle-double-left"></i> Back</button>
+                    <button class="pull-right" style="margin-top:5px" onclick="$('#select_stage').hide()"><i class="fa fa-close"></i></button>
+                }
+                <label>Select Project</label>
+            </div>
+            <div class="col-md-3" style="padding:5px">
+                <a class="flat_tem col-md-12" onclick="select_all_project()">
+                    <label>ALL PROJECTS</label>
+                </a>
+
+            </div>
+            @foreach (var p in Projects)
+            {
+                <div class="col-md-3" style="padding:5px">
+                    <a class="flat_tem col-md-12" onclick="select_project('@p.Id')">
+                        <label>@p.Name</label>
+                    </a>
+
+                </div>
+            }
+        </div>
+        <div id="stage_list" class="slide_popup_tab">
+            <div class="col-md-12 title">
+                <button class="pull-left" style="margin-top:5px" onclick="$('#stage_list').removeClass('active')"><i class="fa fa-angle-double-left"></i> Back</button>
+                <label>Select Stage</label>
+                @if (reSelect)
+                {
+                    <button class="pull-right" style="margin-top:5px" onclick="$('#select_stage').hide()"><i class="fa fa-close"></i></button>
+                }
+            </div>
+            <div class="col-md-3" style="padding:5px">
+                <a class="flat_tem all col-md-12" onclick="select_stage('all')" style="background-color: #111">
+                    <label>ALL STAGE</label>
+                </a>
+
+            </div>
+            @foreach (var s in Model)
+            {
+                <div class="col-md-3" style="padding:5px">
+                    <a class="flat_tem prj_@s.ProjectId col-md-12" onclick="select_stage('@s.Id')" style="background-color: #111">
+                        <label>@s.Name</label>
+                    </a>
+
+                </div>
+            }
+        </div>
+        <div id="version_list" class="slide_popup_tab">
+            <div class="col-md-12 title">
+                <button class="pull-left" style="margin-top:5px" onclick="$('#version_list').removeClass('active')"><i class="fa fa-angle-double-left"></i> Back</button>
+                <label>Select Version</label>
+                @if (reSelect)
+                {
+                    <button class="pull-right" style="margin-top:5px" onclick="$('#select_stage').hide()"><i class="fa fa-close"></i></button>
+                }
+
+            </div>
+            <div class="col-md-3" style="padding:5px">
+                <a class="flat_tem all col-md-12" onclick="select_version('all')" style="background-color: #111">
+                    <label>ALL VERSIONS</label>
+                </a>
+
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    var colors = ["rgb(168, 74, 162)", "rgb(65, 145, 19)", "rgb(41, 157, 132)", "rgb(86, 101, 174)", "rgb(28, 45, 54)", "rgb(184, 188, 107)", "rgb(152, 144, 175)", "rgb(72, 162, 12)", "rgb(88, 25, 12)", "rgb(169, 24, 7)", "rgb(123, 160, 9)", "rgb(96, 134, 135)", "rgb(42, 56, 32)", "rgb(40, 121, 179)", "rgb(156, 100, 194)", "rgb(5, 124, 160)", "rgb(57, 145, 102)", "rgb(171, 38, 151)", "rgb(83, 11, 72)", "rgb(146, 176, 79)", "rgb(69, 136, 128)", "rgb(103, 198, 180)", "rgb(19, 19, 147)", "rgb(170, 84, 156)", "rgb(180, 51, 171)", "rgb(189, 168, 170)", "rgb(66, 103, 174)", "rgb(100, 138, 42)", "rgb(52, 143, 94)", "rgb(139, 177, 84)"];
+
+    $(function () {
+        $(".flat_tem").each(function (index) {
+            $(this).css("background-color", colors[index % 30]).css("border", "solid " + colors[index % 30]);
+        });
+        @if (!reSelect)
+            { <text>
+                var stageId = localStorage.stageId;
+                if (stageId)
+                {
+                    select_stage(stageId);}
+        </text>
+        }
+        else
+        {
+            <text>
+        $("#select_stage").on("click", function (event) {
+            if ($(event.target).closest("#select_stage_box").length == 0) {
+                $('#select_stage').hide();
+            }
+        })
+
+    </text>
+        }
+    });
+    var projectId = '';
+    function select_project(Id) {
+        if (Id == "all") {
+            //redirectPost('/development_new', { projectId: "all" });
+        } else {
+            $(`#stage_list .flat_tem.prj_${Id}`).parent().show();
+            $(`#stage_list .flat_tem:not(.prj_${Id}):not(.all)`).parent().hide();
+            $('#stage_list').addClass("active");
+            projectId = Id;
+        }
+    }
+    function select_all_project(){
+        redirectPost('/ticket?Page=DevelopmentsTicket', { projectId: "all" });
+    }
+    var stageId = '';
+    function select_stage(stage_Id) {
+        if (projectId || stage_Id != "all") {
+            debugger;
+            overlayOn();
+            $.ajax({
+                method: "POST",
+                url: "/ProjectManagement/loadStageVersion",
+                data: { stage_Id, projectId },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    if (data[0]) {
+                        $(`#version_list .flat_tem:not(.all)`).parent().remove();
+                        for (var i in data[1]) {
+                            $(`#version_list`).append(`<div class="col-md-3" style="padding:5px">
+                    <a class="flat_tem col-md-12" onclick="select_version('${data[1][i].Id}')" style="background-color: ${colors[i]}">
+                        <label>${data[1][i].Name}</label>
+                    </a>
+                </div>`);
+                        }
+                        $('#version_list').addClass("active");
+
+                    } else {
+                        error(data[1]);
+                        console.log(data);
+                    }
+                })
+                .fail(function () {
+                    alert("select_stage fail!");
+                })
+                .always(function () {
+                    overlayOff();
+                });
+            console.log(stageId);
+            stageId = stage_Id;
+        }
+    }
+    function select_version(versionId="") {
+        redirectPost('/ticket?Page=DevelopmentsTicket', { projectId, stageId, versionId });
+    }
+</script>

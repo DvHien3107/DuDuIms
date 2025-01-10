@@ -1,0 +1,206 @@
+﻿
+<div id="bankcard">
+    <div class="">
+        <div class="pull-right box-tools">
+
+
+            <a class="btn btn-sm btn-success btn-header-lead" onclick="AddOrUpdateCard()" style="font-size:12px; margin-left:5px">
+                <i class="fa fa-plus"></i> New Card <img id="img_load_add_card" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+            </a>
+
+        </div>
+        <div class="box-body">
+
+            <div class="panel-body">
+                <div class="list_groups custom-scroll" style="margin-top:10px; background-color: #ffffff">
+
+                    <table class="table table-bordered table-hover table-striped table-employee-card" style="margin-bottom:0px">
+                        <thead>
+                            <tr>
+                                <th>Account Number</th>
+                                <th>Bank Name</th>
+                                <th>Bank Branch</th>
+                                <th>Last Update</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="render_crud_employees_card">
+</div>
+<script>
+          $(document).ready(function () {
+
+              var t = $(".table-employee-card").DataTable({
+                  "language": {
+                      "processing": '<i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>',
+                      "emptyTable": "No file to display",
+                      "paginate": {
+                          "first": '<i class="fa fa-angle-double-left" aria-hidden="true"></i>',
+                          "last": '<i class="fa fa-angle-double-right" aria-hidden="true"></i>',
+                          "next": '<i class="fa fa-angle-right" aria-hidden="true"></i>',
+                          "previous": '<i class="fa fa-angle-left" aria-hidden="true"></i>'
+                      },
+                  },
+                  // "lengthMenu": [10, 25, 50, 75, 100],
+                  "pageLength": 10,
+                  "serverSide": true, // for process server side
+                  "processing": true, // for show progress bar
+                  "lengthChange": false,
+                  'searching': false,
+                  "orderable": false,
+                  //'ordering': false,
+                  'stateSave': true,
+                  'info': false,
+                  'autoWidth': true,
+                  "order": [],
+                  'fnCreatedRow': function (nRow, aData, iDataIndex) {
+                      $(nRow).attr('data-id',  aData.Id.toString());
+                      //$(nRow).attr('class', "tr-view-file");
+                      //$(nRow).attr('title', "click to view employee file");
+                  },
+
+                  "ajax": {
+                      "url": "/MemberMan/GetListCard",
+                      "type": "get",
+                      "datatype": "json",
+                      'data': { 'MemberNumber':'@(Model.MemberNumber)' },
+                  },
+
+                  "columns": [
+                      {
+                          "name": "CardNumber",
+                          'data': "CardNumber",
+                            "render": function (data, type, row) {
+                              let html = '';
+                                html += `<span>${data}</span>`;
+                                if (row['IsDefault']) {
+                                    html += `<br/><span class="label label-success">default</span>`;
+                                }
+                              return html;
+                          },
+                      },
+                      {
+                          "name": "BankName",
+                          'data': "BankName",
+                      },
+                      {
+                          "name": "BranchNameBank",
+                          'data': "BranchNameBank",
+                      },
+                     
+                      {
+                          "name": "CreateAt",
+                          'data': "CreateAt",
+
+                          "render": function (data, type, row) {
+                              let html = '';
+                              html += `- <span>${moment(row['CreateAt']).format('ll')}<span><br/><span>- by: ${row['CreatedBy']}</span>`;
+                              return html;
+                          },
+                          "orderable": true,
+                      },
+
+                      {
+                          "name": "Action",
+                          "class": "text-center",
+                          "render": function (data, type, row) {
+                              return `<div class="on_rows btn-group">
+                                <div class="dots-menu btn-group">
+                                    <div class="dropdown-dot" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></div>
+                                    <ul class="dropdown-menu dropdown-menu-right">
+                                             <li class=""><a href="javascript:void(0)" style="margin-right:5px;" onclick="MarkCardDefault(${row['Id']})"><i class="fa fa-angle-double-right"></i>Set is default</a></li>
+                                            <li class=""><a href="javascript:void(0)" style="margin-right:5px;" onclick="AddOrUpdateCard(${row['Id']})"><i class="fa fa-pencil"></i>Edit</a></li>
+                                            <li class=""><a href="javascript:void(0)" style="margin-right:5px;" onclick="DeleteCard(${row['Id']})"><i class="fa fa-trash"></i>Delete</a></li>
+                                    </ul>
+                                </div>
+                            </div>`;
+                          },
+                          "orderable": false,
+                      },
+                  ]
+
+              });
+          })
+
+    function AddOrUpdateCard(EmployeeCardId) {
+            $("#img_load_add_card").show();
+            $.ajax({
+                type: "post",
+                url: "/MemberMan/AddOrUpdateEmployeeCard",
+                dataType: "html",
+                data: { 'MemberNumber': '@(Model.MemberNumber)', EmployeeCardId },
+                success: function (data) {
+                    $("#render_crud_employees_card").html(data);
+                    $("#employee_card_modal").modal("show");
+                },
+                error: function () {
+
+                },
+                complete: function () {
+                    $("#img_load_add_card").hide();
+                }
+            });
+    }
+    function MarkCardDefault(EmployeeCardId) {
+        overlayOn();
+        $.ajax({
+            type: "post",
+            url:"/memberman/MarkCardDefault",
+                dataType: "json",
+                data: {EmployeeCardId },
+                success: function (data) {
+                    if (data.status) {
+                        let success = $.parseJSON('{"text":"' + data.message + '","layout":"topRight","type":"success"}');
+                        noty(success);
+                        $(".table-employee-card").DataTable().ajax.reload();
+                    }
+                    else {
+                        let error = $.parseJSON('{"text":"' + data.message + '","layout":"topRight","type":"error"}');
+                        noty(error);
+                    }
+                },
+                error: function () {
+
+                },
+            complete: function () {
+                overlayOff();
+                }
+        })
+    }
+    function DeleteCard(CardId) {
+        if (confirm('are you sure delete this card !')) {
+            overlayOn();
+            $.ajax({
+                type: "post",
+                url: "/MemberMan/DeleteEmployeeCard",
+                data: { CardId },
+                dataType: "json",
+                success: function (data) {
+                    if (data.status) {
+                        let success = $.parseJSON('{"text":"' + data.message + '","layout":"topRight","type":"success"}');
+                        noty(success);
+                        $(".table-employee-card").DataTable().ajax.reload();
+                    }
+                    else {
+                        let error = $.parseJSON('{"text":"' + data.message + '","layout":"topRight","type":"error"}');
+                        noty(error);
+                    }
+                },
+                error: function () {
+
+                },
+                complete: function () {
+                    overlayOff();
+                }
+            });
+        }
+
+    }
+</script>

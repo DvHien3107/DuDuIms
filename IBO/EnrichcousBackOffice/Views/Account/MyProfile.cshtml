@@ -1,0 +1,582 @@
+﻿@model EnrichcousBackOffice.Models.P_Member
+@using EnrichcousBackOffice.Models;
+@using EnrichcousBackOffice.Utils.IEnums
+@using Inner.Libs.Helpful
+
+@{
+    ViewBag.Title = "My Profile";
+    var curLevel = ViewBag.CurLevel as P_MemberLevel;
+
+    string picture;
+    if (string.IsNullOrWhiteSpace(Model.Picture))
+    {
+        if (Model.Gender?.Equals("Male", StringComparison.InvariantCultureIgnoreCase) == true)
+        {
+            picture = "/Upload/Img/Male.png";
+        }
+        else
+        {
+            picture = "/Upload/Img/Female.png";
+        }
+    }
+    else
+    {
+        picture = Model.Picture;
+    }
+
+}
+
+
+<section class="content-header">
+    <h1>
+        My Profile
+        <small>Employee information</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Dashboard</a></li>
+        <li class="active">My profile</li>
+    </ol>
+</section>
+<!-- Main content -->
+<section class="content container-fluid">
+    <div class="row">
+
+        <div class="col-md-8">
+            <div class="box">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Update profile</h3>
+
+                    <div class="box-tools pull-right">
+                        <button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="" data-original-title="Collapse">
+                            <i class="fa fa-minus"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="box-body">
+
+                    @if (TempData["error"] != null)
+                    {
+                        <div class="alert alert-warning alert-dismissible">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                            <span><i class="icon fa fa-warning"></i>@TempData["error"]</span>
+                        </div>
+                    }
+                    else if (TempData["success"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                            <span><i class="icon fa fa-check"></i>@TempData["success"]</span>
+                        </div>
+                    }
+
+                    <form id="updatemyprofile_form" role="form" action="/account/updatemyprofile" method="post" class="form-horizontal" enctype="multipart/form-data">
+                        @Html.AntiForgeryToken()
+                        @Html.HiddenFor(m => m.Id)
+                        <div class="box-body">
+                            <h3>Personal infomation</h3>
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Picture</label>
+                                <div class="col-sm-9">
+                                    <input type="file" id="pic0" name="pic0" onchange="reviewUpload(this)" />
+
+                                    <div style="padding-left:0px;display:block" class="col-sm-12" id="review_pic0">
+                                        <p class="col-sm-12" style="border:1px dotted red; padding:3px">
+                                            <img id="img_pic0" src="@picture" style="height:100px;margin-left:0" alt="xem trước" />
+                                            <i style="padding-left:5px" id="fname_pic0"></i>
+                                            <a onclick="upload_delete('pic0')" href="#" data-toggle="tooltip" title="Xóa file này" class="pull-right">
+                                                <i class="fa fa-trash"></i>
+                                            </a>
+                                        </p>
+                                        <input type="hidden" name="hdPicDelete_pic0" id="hdPicDelete_pic0" value="0" />
+                                    </div>
+                                </div>
+                            </div>
+                            <!--<div class="form-group">
+    <label class="col-sm-3 control-label">Authorize</label>
+    <div class="col-sm-9">
+       <div>
+           <div style="display: flex;align-items: center;">
+               <img src="~/Content/jiraconnector/atlassian-jira-logo-large.png" width="50" />
+               <div id="jira-auth" style="display:inline-block">
+                   <span class="show-check">
+                       <i class="fa fa-spinner fa-spin fa-2x fa-fw"></i>
+                       <span class="sr-only">Loading...</span>
+                   </span>
+
+               </div>-->
+                            @*@if (ViewBag.IsJiraAuth == false)
+        {
+            <span class="btn btn-xs btn-warning" onclick="loadJiraAuthorize()" style="margin-left:5px"><i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Auth</span>
+        }
+        else
+        {
+               <span class="btn btn-sm btn-success" style="margin-left:5px">Vefired</span>
+        }*@
+
+                            <!--</div>
+           </div>
+        </div>
+    </div>-->
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Profile Defined Color </label>
+                                <div class="col-sm-9">
+                                    <input type="color" class="form-control" name="ProfileDefinedColor"
+                                           data-toggle="tooltip" title="Click here to changes color" data-placement="bottom"
+                                           id="ProfileDefinedColor" onchange="pickerColor()" value="@(Model.ProfileDefinedColor == null ? "#ffffff" : Model.ProfileDefinedColor)"
+                                           style="width: 68px; cursor: pointer" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Time Zone </label>
+                                <div class="col-sm-9">
+                                    <select class="form-control timezone" style="width: auto" id="TimeZone" name="TimeZone">
+                                        <option @if (Model?.TimeZone == "Eastern") { @Html.Raw("selected") } value="Eastern">(UTC @(TIMEZONE_NUMBER_BY_ID.Eastern.Text())) @(TIMEZONE_NUMBER_BY_ID.Eastern.Code<string>())</option>
+                                        <option @if (Model?.TimeZone == "Central") { @Html.Raw("selected") } value="Central">(UTC  @(TIMEZONE_NUMBER_BY_ID.Central.Text())) @(TIMEZONE_NUMBER_BY_ID.Central.Code<string>())</option>
+                                        <option @if (Model?.TimeZone == "Mountain") { @Html.Raw("selected") } value="Mountain">(UTC  @(TIMEZONE_NUMBER_BY_ID.Mountain.Text())) @(TIMEZONE_NUMBER_BY_ID.Mountain.Code<string>())</option>
+                                        <option @if (Model?.TimeZone == "Pacific") { @Html.Raw("selected") } value="Pacific">(UTC  @(TIMEZONE_NUMBER_BY_ID.Pacific.Text())) @(TIMEZONE_NUMBER_BY_ID.Pacific.Code<string>())</option>
+                                        <option @if (Model?.TimeZone == "VietNam") { @Html.Raw("selected") } value="VietNam">(UTC  @(TIMEZONE_NUMBER_BY_ID.VietNam.Text())) @(TIMEZONE_NUMBER_BY_ID.VietNam.Code<string>())</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">First name <span style="color:red">*</span></label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="FirstName" class="form-control" value="@Model.FirstName" required />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Last name</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="LastName" class="form-control" value="@Model.LastName" required />
+                                </div>
+                            </div>
+
+                            <!--Country - State - City - ZipCode-->
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Country</label>
+                                <div class="col-sm-9">
+                                    @Html.DropDownListFor(m => m.Country, ViewBag.Countries as SelectList, new { @class = "form-control select2" })
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">State</label>
+                                <div class="col-sm-9">
+                                    <input id="txtState" type="text" value="@Model.State" class="form-control col-md-9" name="State" />
+                                    <select id="selectState" class="form-control" name="State" style="display: none; width:100%"></select>
+                                    <img id="stateLoading" alt="loading..." src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display: none" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">City</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="City" class="form-control" value="@Model.City" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Zip code</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="ZipCode" class="form-control" maxlength="5" value="@Model.ZipCode" />
+                                </div>
+                            </div>
+                            <!--/.End-->
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Address</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="Address" class="form-control" value="@Model.Address" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Cell phone</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="CellPhone" class="form-control" value="@Model.CellPhone" required />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Personal email</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="PersonalEmail" class="form-control" value="@Model.PersonalEmail" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Gender</label>
+                                <div class="col-sm-9">
+                                    <select class="form-control select2" name="Gender">
+                                        <option value="Female">Female</option>
+                                        <option @if (Model.Gender?.Equals("Male") == true) { @Html.Raw("selected") } value="Male">Male</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Birthday</label>
+                                <div class="col-sm-9">
+                                    <input type="text" id="datepicker" name="Birthday" class="form-control" value="@(Model.Birthday?.ToString("MM/dd/yyyy"))" readonly />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Refered by</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="ReferedByName" class="form-control" value="@Model.ReferedByName" readonly />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Identity card</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="IdentityCardNumber" class="form-control" value="@Model.IdentityCardNumber" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Personal Income Tax</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="PersonalIncomeTax" class="form-control" value="@Model.PersonalIncomeTax" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Social Insurance Code</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="SocialInsuranceCode" class="form-control" value="@Model.SocialInsuranceCode" />
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Attachment</label>
+                                <div class="col-sm-9">
+                                    <div style="border:1px solid #d2d6de; padding:5px">
+                                        @Html.Partial("_UploadMoreFilesPartial", ViewBag.MoreFiles as List<UploadMoreFile>, new ViewDataDictionary { { "upload", true } })
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.box-body -->
+
+                        <div class="box-footer">
+                            <button type="submit" class="btn btn-primary" style="float:right">Save changes</button>
+                        </div>
+                    </form>
+
+                    
+                   </div>
+                  
+                </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="box box-primary">
+                <div class="box-body box-profile">
+
+                    @if (string.IsNullOrEmpty(Model.Picture) == true)
+                    {
+                        if (Model?.Gender == "Male")
+                        {
+                            <img class="profile-user-img img-responsive img-circle" src="~/Upload/Img/Male.png" alt="User profile picture">
+                        }
+                        else
+                        {
+                            <img class="profile-user-img img-responsive img-circle" src="~/Upload/Img/Female.png" alt="User profile picture">
+                        }
+                    }
+                    else
+                    {
+                        <img class="profile-user-img img-responsive img-circle" src="@Model.Picture" alt="User profile picture">
+                    }
+
+
+                    <h3 class="profile-username text-center">@Model.FullName</h3>
+
+                    <p class="text-muted text-center">@(Model.RoleName?.Replace(" ,", ",").Replace(",", ", "))</p>
+
+
+                    <table class="table table-hover table-bordered">
+                        <tr>
+                            <th style="text-align:left;vertical-align:top;width:150px"><b>ID IMS</b></th>
+                            <td style="text-align:left">@Model.MemberNumber</td>
+                        </tr>
+                        <tr>
+                            <th style="text-align:left;vertical-align:top;width:150px"><b>DEPARTMENT</b></th>
+                            <td style="text-align:left">@(Model.DepartmentName?.Replace(" ,", ",").Replace(",", ", "))</td>
+                        </tr>
+                        <tr>
+                            <th style="text-align:left;vertical-align:top"><b>BASE SALARY</b></th>
+                            <td style="text-align:left">@(Model.BaseSalary?.ToString("$#,##0.##"))</td>
+                        </tr>
+                        <tr>
+                            <th style="text-align:left;vertical-align:top"><b>ACCESS RIGHT</b></th>
+                            <td style="text-align:left">@(Model.RoleName?.Replace(" ,", ",").Replace(",", ", "))</td>
+                        </tr>
+                        <tr>
+                            <th style="text-align:left"><b>TEAMS</b></th>
+                            <td style="text-align:left">0</td>
+                        </tr>
+                        <tr>
+                            <th style="text-align:left"><b>LEVEL</b></th>
+                            <td style="text-align:left">
+                                @if (Model.MemberType == "distributor")
+                                {
+                                    <a class="pull-left">Level #@(curLevel?.LevelNumber) - @(curLevel?.LevelName)</a>
+                                }
+                                else
+                                {
+                                    <a class="pull-left">---</a>
+                                }
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Other information</h3>
+                </div>
+                <!-- /.box-header -->
+                <div class="box-body">
+                    <strong><i class="fa fa-newspaper-o margin-r-5"></i> Time to join</strong>
+                    <p class="text-muted">
+                        Join date:
+                        <span id="localtime-joindate">
+                            <script>convertLocalTime("joindate", "@Model.JoinDate", "MMMddyyyy")</script>
+                        </span>
+                        <br />
+                        Create by: @(Model.CreateBy?.ToUpper())<br />
+                        At:
+                        <span id="localtime-joindatetime">
+                            <script>convertLocalTime("joindatetime", "@Model.JoinDate")</script>
+                        </span>
+                    </p>
+                    <hr>
+                    <strong><i class="fa fa-edit margin-r-5"></i> Last updated</strong>
+                    <p class="text-muted">
+                        At:
+                        <span id="localtime-update">
+                            <script>convertLocalTime("update", "@Model.UpdateAt")</script>
+                        </span><br />
+                        Update by : @(Model.UpdateBy?.ToUpper())
+                    </p>
+
+                    <a onclick="javascript:$('#modal-default').modal()" data-toggle="modal" data-target="modal-default" href="#" class="btn btn-primary btn-block"><b>Change password</b></a>
+
+                </div>
+                <!-- /.box-body -->
+            </div>
+        </div>
+    </div>
+
+
+    <div class="modal fade in" id="modal-default">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                    <h4 class="modal-title">You want to change your password?</h4>
+                </div>
+                <div class="modal-body">
+                    <form role="form">
+                        <div class="form-group">
+                            <label>Current password</label>
+                            <input name="currentPass" class="form-control" type="password" required placeholder="Current password" />
+                        </div>
+                        <div class="form-group">
+                            <label>New password</label>
+                            <input name="newPass" class="form-control" type="password" required placeholder="New password" />
+                        </div>
+                        <div class="form-group">
+                            <label>Retype password</label>
+                            <input name="retypeNewPass" class="form-control" type="password" required placeholder="Retype password" />
+                        </div>
+                    </form>
+
+                    <div style="display:none" id="divSucc" class="alert alert-success alert-dismissible">
+                        <h4><i class="icon fa fa-check"></i> Submitted successfully</h4>
+                        <span>Please check your mail box. If not found, try searching in the SPAM directory.</span>
+                    </div>
+                    <div class="alert alert-warning alert-dismissible" style="display:none" id="divErr">
+                        <h4><i class="icon fa fa-warning"></i> Send failed!</h4>
+                        <span>We had problems sending, please check your email!</span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Cancel</button>
+                    <button type="button" id="btChangePass" class="btn btn-primary">
+                        Save change <img id="loading" style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                    </button>
+                </div>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
+</section>
+
+
+@section style{
+    <!-- datepicker jquery -->
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+}
+
+@section script{
+
+    <script src="~/Scripts/upload_and_review.js"></script>
+    <script src="~/Scripts/us-zip-city-state.js"></script>
+
+    <!-- datepicker jquery -->
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+    <script type="text/javascript">
+
+        //function checkAuth() {
+        //    $.ajax({
+        //        url: '/home/CheckAuth',
+        //        type: 'POST',
+        //        dataType: 'json',
+        //        success: function (data) {
+        //            if (!data) {
+        //                $("#jira-auth").html(`<span class="text text-danger" style="display:inline-block;margin-left:5px">Unauthorized</span><span class="btn btn-xs btn-default" onclick="loadJiraAuthorize()" style="margin-left:5px">Auth Now</span>`);
+        //            }
+        //            else {
+        //                $("#jira-auth").html(`<span class="label label-sm label-success" style="margin-left:5px">Vefired</span>`)
+        //            }
+        //        },
+        //        error: function (data) {
+        //            console.log(data.message);
+        //        },
+        //        always: function () {
+        //        }
+        //    })
+        //}
+        //checkAuth();
+
+        $(function () {
+            //Select2
+            $('.select2').select2();
+
+            //Datepicker
+            $("#datepicker").datepicker({
+                changeMonth: true,
+                changeYear: true,
+                yearRange: '1950:2050'
+            });
+           
+
+            $.ajax({
+                method: "POST",
+                url: "/account/GetEmpNumber",
+                data: {},
+                dataType: "json"
+            }).done(function (data) {
+                    //data: object[] {true/false, empNumber/message)}
+                    if (data[0] == true) {
+                        $("#empNumber").html(data[1]);
+                    }
+                    else {
+                        var optionsError = $.parseJSON('{"text":"' + data[1] + '","layout":"topRight","type":"error"}');
+                        noty(optionsError);
+                    }
+                })
+                .fail(function () {
+                    alert("Oops! Something went wrong");
+                })
+                .always(function () {
+                    //$("#loading").hide();
+                });
+
+            $("#updatemyprofile_form").ajaxForm(function (data) {
+                if (data[0]) {
+                    success(data[1]);
+                    if (data[2]) {
+                        alert("Update success. You must re-login because your login email has been changed!");
+                        location.href = "/Account/MyProfile";
+                    }
+
+                } else {
+                    error(data[1]);
+                }
+            })
+        });
+
+
+
+        $("#btChangePass").click(function () {
+            var p1 = $("[name=currentPass]").val();
+            var p2 = $("[name=newPass]").val();
+            var p3 = $("[name=retypeNewPass]").val();
+            var ok = true;
+
+            if (p1 === null || p1 === "") {
+                $("[name=currentPass]").parent().addClass("has-error");
+                ok = false;
+            }
+            else {
+                $("[name=currentPass]").parent().removeClass("has-error");
+            }
+            if (p2 == null || p2 == "") {
+                $("[name=newPass]").parent().addClass("has-error");
+                ok = false;
+            }
+            else {
+
+                $("[name=newPass]").parent().removeClass("has-error");
+            }
+
+            if (p3 == null || p3 == "") {
+                $("[name=retypeNewPass]").parent().addClass("has-error");
+                ok = false;
+            }
+            else {
+                $("[name=retypeNewPass]").parent().removeClass("has-error");
+            }
+
+            if (ok == true) {
+                $("[name=currentPass]").parent().removeClass("has-error");
+                $("[name=newPass]").parent().removeClass("has-error");
+                $("[name=retypeNewPass]").parent().removeClass("has-error");
+
+                $(this).attr("disabled", true);
+                $("#loading").show();
+
+                $.ajax({
+                    url: "/account/changepass/",
+                    type: "post",
+                    datatype: "json",
+                    contenttype: "application/json",
+                    data: { "p1": p1, "p2": p2, "p3": p3 }
+
+                }).done(function (data) {
+                    //alert(data[1]);
+                    if (data[0] == true) {
+                        //$("#divSucc").show();
+                        //$("#divErr").hide();
+                        //$("#divSucc  span").html(data[1]);
+                        $("#modal-default").modal("hide");
+                        noty({ "text": data[1], "layout": "top", "type": "success" });
+                    }
+                    else {
+                        //$("#divSucc").hide();
+                        //$("#divErr").show();
+                        //$("#divErr  span").html(data[1]);
+                        noty({ "text": data[1], "layout": "top", "type": "error" });
+                    }
+
+                    $("[name=currentPass]").val("");
+                    $("[name=newPass]").val("");
+                    $("[name=retypeNewPass]").val("");
+
+                })
+                    .fail(function () { alert("Request a problem."); $("#loading").hide(); $("#btChangePass").removeAttr("disabled"); })
+                    .always(function () { $("#loading").hide(); $("#btChangePass").removeAttr("disabled"); });
+            }
+            else {
+                $("[name=newPass]").parent().addClass("has-error");
+                $("[name=retypeNewPass]").parent().addClass("has-error");
+            }
+        });
+
+
+
+    </script>
+}

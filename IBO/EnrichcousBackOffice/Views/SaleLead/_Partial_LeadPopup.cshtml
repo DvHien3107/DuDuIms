@@ -1,0 +1,475 @@
+﻿@model (EnrichcousBackOffice.Models.C_Customer cus, EnrichcousBackOffice.Models.C_SalesLead lead)
+@using EnrichcousBackOffice.Utils.IEnums
+@using Inner.Libs.Helpful
+@{
+    var close_status = LeadStatus.Merchant.Text();
+}
+<style type="text/css">
+    #c_other_note {
+        width: 80%;
+        border: none;
+        border-bottom: 2px solid #f1dbbe;
+        padding: 1px 3px;
+        transition: border-bottom 0.5s;
+    }
+
+        #c_other_note:focus {
+            outline: none;
+            border-bottom: 2px solid green;
+        }
+</style>
+
+<form class="modal fade" id="lead_modal" method="post" action="/salelead/SaveLead" role="dialog">
+
+    <div class="modal-dialog" style="width:800px; max-width:100%">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header" style="background-color:#a8a0a0">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">New Lead</h4>
+            </div>
+            <div class="modal-body" style="overflow:auto;top:0">
+                <input type="hidden" name="Id" value="@(Model.cus?.Id)" />
+                <input type="hidden" name="customer_code" value="@(Model.cus?.CustomerCode)" />
+                <h3 style="padding:5px;border-left:solid 5px red;background-color:#f1dbbe">CONTACT PERSON</h3>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Contact/Owner Name <span style="color:red">*</span></label>
+                            <input maxlength="200" class="form-control" name="ContactName" value="@(Model.cus?.ContactName)" required />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Contact Number <span style="color:red">*</span></label>
+                            <input maxlength="50" type="text" required class="form-control" name="CellPhone" value="@(Model.cus?.CellPhone)" data-inputmask='"mask": "(999) 999-9999"' data-mask />
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Contact Email <span style="color:red">*</span></label>
+                            <input class="form-control" type="email" name="Email" value="@(Model.cus?.Email)" required/>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="control-label">Potential rate:</label>
+                            <div class="clearfix"></div>
+                            <div class="rate">
+                                <input type="radio" id="star5" name="rate" value="5" @if (Model.lead?.PotentialRateScore == 5) { @Html.Raw("checked") } />
+                                <label for="star5" title="5 stars">5 stars</label>
+                                <input type="radio" id="star4" name="rate" value="4" @if (Model.lead?.PotentialRateScore == 4) { @Html.Raw("checked") } />
+                                <label for="star4" title="4 stars">4 stars</label>
+                                <input type="radio" id="star3" name="rate" value="3" @if (Model.lead?.PotentialRateScore == 3) { @Html.Raw("checked") } />
+                                <label for="star3" title="3 stars">3 stars</label>
+                                <input type="radio" id="star2" name="rate" value="2" @if (Model.lead?.PotentialRateScore == 2) { @Html.Raw("checked") } />
+                                <label for="star2" title="2 stars">2 stars</label>
+                                <input type="radio" id="star1" name="rate" value="1" @if (Model.lead?.PotentialRateScore == 1 || Model.lead?.PotentialRateScore == null) { @Html.Raw("checked") } />
+                                <label for="star1" title="1 stars">1 star</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <h3 style="padding:5px;border-left:solid 5px red;background-color:#f1dbbe">SALON INFOMATION</h3>
+                <div class="row">
+                    <div class="col-md-12" style="margin-bottom: 15px;">
+                        <div class="col-md-6" style="padding-left: 0;">
+                            <select name="salonType" class="form-control">
+                                <option>THIS IS A CURRENT SALON</option>
+                                <option @(Model.cus?.BusinessStartDate > DateTime.Now ? "selected" : "")>THIS IS A NEW SALON</option>
+                            </select>
+                        </div>
+                        <div class="input-group col-md-6" style="display:none;padding-right:0;padding-left: inherit;" id="div_expected_open_date">
+                            <div class="input-group-addon" style="line-height: 20px;width: 35%;text-align: left;text-indent: 5px;">
+                                <i class="fa fa-calendar" style="margin-right: 5px;"></i>Expected open date
+                            </div>
+                            <input class="datepicker form-control date form-control" name="expected_open_date" 
+                                value="@(Model.cus?.BusinessStartDate.HasValue==true ? Model.cus?.BusinessStartDate.Value.ToString("MM/dd/yyyy"):"")" onkeydown="return false"
+                                placeholder="MM/dd/yyyy" />
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Salon Name</label>
+                            <input maxlength="200" class="form-control" name="BusinessName" value="@(Model.cus?.BusinessName)" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Time zone <span style="color:red">*</span></label>
+                            <select id="SalonTimeZone" class="form-control" name="SalonTimeZone" required>
+                                <option value="">N/A</option>
+                                <option @if (Model.cus?.SalonTimeZone == "Eastern") { @Html.Raw("selected") }>Eastern</option>
+                                <option @if (Model.cus?.SalonTimeZone == "Central") { @Html.Raw("selected") }>Central</option>
+                                <option @if (Model.cus?.SalonTimeZone == "Mountain") { @Html.Raw("selected") }>Mountain</option>
+                                <option @if (Model.cus?.SalonTimeZone == "Pacific") { @Html.Raw("selected") }>Pacific</option>
+                                <option @if (Model.cus?.SalonTimeZone == "VietNam") { @Html.Raw("selected") }>VietNam</option>
+                            </select>
+                        </div>
+
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Salon Number</label>
+                            <input type="text" class="form-control" name="BusinessPhone" value="@(Model.cus?.BusinessPhone)" data-inputmask='"mask": "(999) 999-9999"' data-mask />
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Salon Email</label>
+                            <input class="form-control" type="email" name="BusinessEmail" value="@(Model.cus?.BusinessEmail)" />
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label>Salon Address</label>
+                            <input class="form-control" name="BusinessAddressStreet" placeholder="street" value="@(Model.cus?.BusinessAddressStreet)" />
+                            <div class="row">
+                                <div class="col-md-6" style="padding-right:0px; margin-top:-1px">
+                                    <input class="form-control" name="BusinessCity" placeholder="City/Town *" value="@(Model.cus?.BusinessCity)" />
+                                </div>
+                                <div class="col-md-6" style="padding-left:0px; margin-top:-1px;">
+                                    <input class="form-control" name="BusinessState" id="state" placeholder="State/Province *" value="@(Model.cus?.BusinessState)" style="border-left:none" />
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6" style="padding-right:0px; margin-top:-1px">
+                                    <input class="form-control" name="BusinessZipCode" placeholder="ZIP code *" pattern="[0-9]+" value="@(Model.cus?.BusinessZipCode)" />
+                                </div>
+                                <div class="col-md-6" style="padding-left:0px; margin-top:-1px">
+                                    <input class="form-control" id="country" name="BusinessCountry" placeholder="Country" value="@(Model.cus?.BusinessCountry ?? "United States")" style="border-left:none" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="clear"></div>
+
+                <br />
+                <h3 style="padding:5px;border-left:solid 5px red;background-color:#f1dbbe">FEATURES OF INTERES</h3>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label><input type="checkbox" name="feature_interes" value="checkin" @if (Model.lead?.Features_Interes?.Contains("checkin") == true) { @Html.Raw("checked") } /> CHECK IN</label>
+                            </div>
+                            <div class="col-md-6">
+                                <label><input type="checkbox" name="feature_interes_other" value="true" @if (!string.IsNullOrEmpty(Model.lead?.Features_Interes_other)) { @Html.Raw("checked") } /> OTHER </label>
+                                <input type="text" id="c_other_note" onclick="$('input[name=feature_interes_other]').prop('checked', true)" name="c_other_note" value="@(Model.lead?.Features_Interes_other)" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label><input type="checkbox" name="feature_interes" value="payroll" @if (Model.lead?.Features_Interes?.Contains("payroll") == true) { @Html.Raw("checked") } /> PAYROLL</label>
+                            </div>
+                            <div class="col-md-6">
+                                <label><input type="checkbox" name="feature_interes" value="automation" @if (Model.lead?.Features_Interes?.Contains("automation") == true) { @Html.Raw("checked") } /> AUTOMATION</label>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label><input type="checkbox" name="feature_interes" value="techmanagement" @if (Model.lead?.Features_Interes?.Contains("techmanagement") == true) { @Html.Raw("checked") } /> TECH MANAGEMENT</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <br />
+                @if (Model.cus == null)
+                {
+                    <h3 style="padding:5px;border-left:solid 5px red;background-color:#f1dbbe"> APPOINTMENT <a id="appointment_btn" class="btn btn-sm fa fa-plus" style="padding:2px; font-size:16px" onclick="toggle_appointment()"> Add apointment</a></h3>
+                    <input type="checkbox" value="1" name="appointment" style="display:none" />
+                    <div class="row">
+                        @{
+                            System.Collections.ObjectModel.ReadOnlyCollection<TimeZoneInfo> tz = TimeZoneInfo.GetSystemTimeZones();
+                        }
+                        <div id="schedule" class="col-md-12" style="display:none">
+                            <div class="col-md-6 form-group" style="padding: 0;">
+                                <label>Visit at</label><br>
+                                <div class="col-md-12" style="display: -webkit-box;padding: 0;">
+                                    <input class="datepicker date form-control" style="width:120px" name="schedule_date" onkeydown="return false" placeholder="MM/dd/yyyy" required />
+                                    <input class="hours form-control" name="schedule_hours" type="number" min="1" max="12" maxlength="2" style="width:50px;padding-right: 7px;padding-left: 7px;" placeholder="hh" required />
+                                    <label class="" style="height: 34px;line-height: 27px;padding: 3px 0;margin: 0;width: 10px;text-align: center;">:</label>
+                                    <input class="minute form-control" name="schedule_minute" type="number" min="0" max="60" style="width:50px;padding-right: 7px;padding-left: 7px;" placeholder="mm" required />
+                                    <select class="am_pm form-control" name="schedule_am_pm" style="width:50px;padding:2px">
+                                        <option value="AM">AM</option>
+                                        <option value="PM">PM</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6 form-group" style="padding: 0;">
+                                <label>Time Zone</label><br>
+                                <div class="col-md-12" style="display: -webkit-box;padding: 0;">
+                                    <select class="am_pm form-control" name="schedule_timezone" style="width:250px;padding:2px;">
+                                        @foreach (var item in tz.ToList())
+                                        {
+                                            <option value="@item.DisplayName">@item.DisplayName</option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-12" style="padding:0 ">
+                                <label>Title </label>
+                                <div class="form-group">
+                                    <input class="form-control" type="text" name="appoiment_title">
+                                </div>
+                            </div>
+                            <div class="col-md-12" style="padding:0">
+                                <label>Description</label>
+                                <div class="form-group">
+                                    <textarea id="desc" class="form-control" wrap="soft" name="appoiment_description" rows="5"></textarea>
+                                </div>
+                            </div>
+                            <div class="btn-group btn-group-toggle pull-left update_event_flag" data-toggle="buttons">
+                                <label class="btn btn-secondary active btn-default">
+                                    <input type="radio" name="event_done" value="0" autocomplete="off" checked=""> Pending
+                                </label>
+                                <label class="btn btn-secondary btn-default">
+                                    <input type="radio" name="event_done" value="1" autocomplete="off"> Visited
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                }
+                @*else
+                {
+                    List<C_SalesLead_Status> leadStatus = SaleLeadViewService.SalesLeadStatuses();
+                    <h3 style="padding:5px;border-left:solid 5px red;background-color:burlywood">LEAD STATUS</h3>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <select name="status" class="form-control">
+                                    @foreach (var status in leadStatus.ToList())
+                                    {
+                                        <option value="@status.Id" @(Model.lead?.SL_Status == status.Id ? "selected" : "") style="color:@status.Color">@status.Name</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6 confirm-change-lead-status" style="display: none">
+                            @if (Model.lead?.SL_StatusName != close_status)
+                            {
+                                <div class="form-group">
+                                    <input type="checkbox" id="confirm-change-lead-status">
+                                    <label for="confirm-change-lead-status">Create an estimate for this merchant?</label>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }*@
+            </div>
+
+            <div class="modal-footer">
+
+                <a class="btn btn-default pull-left" data-dismiss="modal">Close</a>
+                <button class="btn btn-success">
+                    Save <img id="submit_img" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                </button>
+
+            </div>
+        </div>
+    </div>
+
+    <input type="hidden" value="" id="newsalon_form" name="newsalon_form" />
+</form>
+
+
+
+<script src="~/Content/Admin/plugins/input-mask/jquery.inputmask.js"></script>
+
+<script>
+    var state = new Array();
+    var country = new Array();
+    $(function () {
+        requeck_check();
+        //Phone data-mask
+        $('[data-mask]').inputmask()
+
+        $("select[name=salonType]").change(function () {
+            //  console.log($(this).val());
+            if ($(this).val() == "THIS IS A NEW SALON") {
+                $("#div_expected_open_date").show(300);
+            }
+            else {
+                $("#div_expected_open_date").hide(300);
+                $("input[name=expected_open_date]").val("");
+            }
+        });
+
+
+        $('#lead_modal').ajaxForm(function (data) {
+            $('#submit_img').hide();
+            if (data[0]) {
+                noty({ "text": data[2], "layout": "topRight", "type": "success" });
+                refresh_list();
+                localStorage.removeItem("list_merchant");
+                $('#lead_modal').modal('hide');
+
+            } else {
+                noty({ "text": data[2], "layout": "topRight", "type": "error" });
+            }
+        });
+
+        $('#lead_modal').on('submit', function () {
+            $('#submit_img').show();
+        });
+        $(".datepicker").datepicker({
+            changeMonth: true,
+            changeYear: true,
+            dateFormat: 'mm/dd/yy'
+        });
+        $("#lead_modal").on('hide.bs.modal', function () {
+            if ( $("#confirm-change-lead-status").is(":checked")) {
+                 window.location.href = "/order/save?select_cus_code=@(Model.cus?.CustomerCode)";
+            }
+            $('#lead_modal').resetForm();
+            $('#img_load_newlead').hide();
+        });
+
+
+        $('#same').on("change", function () {
+            if ($(this).is(":checked")) {
+                $("#shipping_address input").not(this).attr("disabled", true);
+            }
+            else {
+                $("#shipping_address input").removeAttr("disabled");
+            }
+        });
+
+        $.ajax({
+            method: "POST",
+            url: "/Merchantman/LoadListState",
+            dataType: "json"
+        })
+            .done(function (data) {
+                state = data[0];
+                country = data[1];
+                $("#state,.state").autocomplete({
+                    source: data[0],
+                    minLength: 0
+                }).focus(function () {
+                    $(this).autocomplete('search', $(this).val())
+                });
+
+                $("#country,.country").autocomplete({
+                    source: data[1],
+                    minLength: 0
+                }).focus(function () {
+                    $(this).autocomplete('search', $(this).val())
+                });
+            })
+            .fail(function () {
+            })
+            .always(function () {
+            });
+        $.post("/home/getclienttimezone", { id: Intl.DateTimeFormat().resolvedOptions().timeZone }, function (data) {
+            // alert(data);
+            $("select[name=schedule_timezone]").val(data);
+        });
+    });
+    function requeck_check() {
+        var today = new Date();
+        var tomorow_date = today.setDate(today.getDate() + 1);
+        var tomorow = new Date(tomorow_date);
+       
+        var dd = String(tomorow.getDate()).padStart(2, '0');
+        var mm = String(tomorow.getMonth() + 1).padStart(2, '0'); //January is 0!
+        var yyyy = tomorow.getFullYear();
+        tomorow = mm + '/' + dd + '/' + yyyy;
+
+        $("input[name='schedule_date']").val(tomorow);
+        $("input[name='schedule_hours']").val("09");
+        $("input[name='schedule_minute']").val("00");
+        $("#schedule input,#schedule select").attr("disabled", false);
+    }
+    $(function () {
+        $("#schedule").find("input,select,textarea").attr("disabled", true);
+    })
+    function toggle_appointment() {
+        $("input[name=appointment]").trigger("click");
+        if ($("input[name=appointment]").is(":checked")) {
+            $("#schedule").slideDown(200);
+            $("#appointment_btn").removeClass("fa-plus").addClass("fa-minus");
+            $("#appointment_btn").html(" No Appointment");
+            $("#schedule").find("input,select,textarea").prop("disabled", false);
+        } else {
+            $("#schedule").slideUp(200);
+            $("#appointment_btn").removeClass("fa-minus").addClass("fa-plus");
+            $("#schedule").find("input,select,textarea").prop("disabled", true);
+             $("#appointment_btn").html(" Add Appointment");
+        }
+    }
+    $("select[name='status']").on("change", function(){
+        $(this).css({"color": $(this).find("option:selected").css("color")});
+        $(".confirm-change-lead-status").hide();
+        if ($(this).find("option:selected").text() === '@close_status') {
+            $(".confirm-change-lead-status").show();
+        }
+    }).trigger("change");
+    
+</script>
+<style>
+    .ui-widget.ui-widget-content {
+        z-index: 9999;
+    }
+
+    .datepicker:read-only:not(:disabled) {
+        background-color: #fff;
+    }
+
+    input:disabled, select:disabled {
+        background-color: #eee;
+    }
+
+    .rate {
+        float: left;
+        height: 46px;
+        padding: 0;
+        margin-top: -5px;
+    }
+
+    .rate:not(:checked) > input {
+        position: absolute;
+        top: -9999px;
+    }
+
+    .rate:not(:checked) > label {
+        float: right;
+        width: 1em;
+        overflow: hidden;
+        white-space: nowrap;
+        cursor: pointer;
+        font-size: 30px;
+        color: #ccc;
+    }
+
+        .rate:not(:checked) > label:before {
+            content: '★ ';
+        }
+
+    .rate > input:checked ~ label {
+        color: #ffc700;
+    }
+
+    .rate:not(:checked) > label:hover,
+    .rate:not(:checked) > label:hover ~ label {
+        color: #deb217;
+    }
+
+    .rate > input:checked + label:hover,
+    .rate > input:checked + label:hover ~ label,
+    .rate > input:checked ~ label:hover,
+    .rate > input:checked ~ label:hover ~ label,
+    .rate > label:hover ~ input:checked ~ label {
+        color: #c59b08;
+    }
+    
+    #lead_modal h3 {
+        margin-top: 0;
+    }
+        
+</style>

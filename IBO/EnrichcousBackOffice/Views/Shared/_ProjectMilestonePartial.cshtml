@@ -1,0 +1,270 @@
+@model EnrichcousBackOffice.Models.T_SupportTicket
+@using EnrichcousBackOffice.AppLB
+@using EnrichcousBackOffice.Utils
+@using EnrichcousBackOffice.Utils.IEnums
+@using Inner.Libs.Helpful
+
+@{
+    Dictionary<string, bool> access = Authority.GetAccessAuthority();
+    string projectId = string.IsNullOrWhiteSpace(Model?.CategoryId) ? ViewBag.cateid : (Model?.CategoryId);
+    var project = Model?.CategoryId;
+    var affectedVersion = Model?.MilestoneId;
+    var fixedVersion = Model?.FixedMilestoneId;
+    var stage = ViewContext.RouteData.Values["controller"].ToString().ToLower();
+    var canUpdateCategory = AppFunc.CanAccess(AccessRole.TICKET_CATEGORY_UPDATE);
+    bool development = ViewBag.development == true;
+    string development_proj = ViewBag.development_proj;
+    string development_proj_name = ViewBag.development_proj_name;
+
+}
+@if (development)
+{
+    <input type="hidden" id="ticket_projectId" value="@(projectId ?? "")" />
+    <input type="hidden" id="ticket_milestoneId" value="@(Model?.MilestoneId ?? "")" />
+    <div class="form-group">
+        <label>Category <img id="project_loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display: none" /></label>
+
+        @if (canUpdateCategory && Model != null)
+        {
+            <span class="pull-right">
+                @*<i class="fa fa-plus" onclick="SaveProject('add')" style="font-weight:bold; color:var(--main-color-1); cursor:pointer;" title="Add new"></i>&nbsp;&nbsp;&nbsp;
+                    <i class="fa fa-edit" onclick="SaveProject('edit')" style="font-weight:bold; color:var(--main-color-1); cursor:pointer;" title="Edit"></i>&nbsp;&nbsp;&nbsp;*@
+                <i class="fa fa-plus" onclick="projectCategoryManager('add')" style="font-weight:bold; color:var(--main-color-1); cursor:pointer;" title="Add new"></i>&nbsp;&nbsp;&nbsp;
+                <i class="fa fa-edit" onclick="projectCategoryManager('edit')" style="font-weight:bold; color:var(--main-color-1); cursor:pointer;" title="Edit"></i>&nbsp;&nbsp;&nbsp;
+            </span>
+        }
+        <select id="project" class="form-control" name="project" data-allow-clear="true" data-placeholder="Not yet..."></select>
+    </div>
+}
+else
+{
+    <!--Project & Milestone-->
+    <input type="hidden" id="ticket_projectId" value="@(projectId ?? "")" />
+    <input type="hidden" id="ticket_milestoneId" value="@(Model?.MilestoneId ?? "")" />
+    <div class="form-group quick">
+        <label @Html.Raw(Model != null ? "class='col-sm-12'" : "")>
+            <span class="pull-left">
+                Category <img id="project_loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display: none" />
+            </span>
+
+            @if (canUpdateCategory && Model != null)
+            {
+                <span class="pull-right">
+                    @*<i class="fa fa-plus" onclick="SaveProject('add')" style="font-weight:bold; color:var(--main-color-1); cursor:pointer;" title="Add new"></i>&nbsp;&nbsp;&nbsp;
+                        <i class="fa fa-edit" onclick="SaveProject('edit')" style="font-weight:bold; color:var(--main-color-1); cursor:pointer;" title="Edit"></i>&nbsp;&nbsp;&nbsp;*@
+                    <i class="fa fa-plus" onclick="projectCategoryManager('add')" style="font-weight:bold; color:var(--main-color-1); cursor:pointer;" title="Add new"></i>&nbsp;&nbsp;&nbsp;
+                    <i class="fa fa-edit" onclick="projectCategoryManager('edit')" style="font-weight:bold; color:var(--main-color-1); cursor:pointer;" title="Edit"></i>&nbsp;&nbsp;&nbsp;
+                </span>
+            }
+        </label>
+        <div @Html.Raw(Model != null ? "class='col-sm-12'" : "")>
+            <select id="project" class="form-control" name="project" data-allow-clear="true" data-placeholder="Not yet..."></select>
+        </div>
+    </div>
+
+    <div class="form-group quick">
+        <label @Html.Raw(Model != null ? "class='col-sm-12'" : "")>
+            <span class="pull-left">
+                Affected Version <img id="milestone_loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+            </span>
+
+            @if ((access.Any(k => k.Key.Equals("ticket_category_update")) == true && access["ticket_category_update"] == true) && Model != null)
+            {
+                <span class="pull-right">
+                    @*<i class="fa fa-plus" onclick="SaveMilestone('add')" style="font-weight:bold; color:var(--main-color-1); cursor:pointer;" title="Add new"></i>&nbsp;&nbsp;&nbsp;
+                        <i class="fa fa-edit" onclick="SaveMilestone('edit')" style="font-weight:bold; color:var(--main-color-1); cursor:pointer;" title="Edit"></i>&nbsp;&nbsp;&nbsp;*@
+                    <i class="fa fa-plus" onclick="versionManager('affected', 'add')" style="font-weight:bold; color:var(--main-color-1); cursor:pointer;" title="Add new"></i>&nbsp;&nbsp;&nbsp;
+                    <i class="fa fa-edit" onclick="versionManager('affected', 'edit')" style="font-weight:bold; color:var(--main-color-1); cursor:pointer;" title="Edit"></i>&nbsp;&nbsp;&nbsp;
+                </span>
+            }
+        </label>
+
+        <div @Html.Raw(Model != null ? "class='col-sm-12'" : "")>
+            <select id="affected-milestone" class="form-control" name="affected-milestone" data-allow-clear="true" data-placeholder="No milestone..."></select>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label @Html.Raw(Model != null ? "class='col-sm-12'" : "")>
+
+            <span class="pull-left">
+                Fixed Version <img id="milestone_loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+            </span>
+
+            @if (canUpdateCategory && Model != null)
+            {
+                <span class="pull-right">
+                    @*<i class="fa fa-plus" onclick="SaveMilestone('add')" style="font-weight:bold; color:var(--main-color-1); cursor:pointer;" title="Add new"></i>&nbsp;&nbsp;&nbsp;
+                        <i class="fa fa-edit" onclick="SaveMilestone('edit')" style="font-weight:bold; color:var(--main-color-1); cursor:pointer;" title="Edit"></i>&nbsp;&nbsp;&nbsp;*@
+                    <i class="fa fa-plus" onclick="versionManager('fixed', 'add')" style="font-weight:bold; color:var(--main-color-1); cursor:pointer;" title="Add new"></i>&nbsp;&nbsp;&nbsp;
+                    <i class="fa fa-edit" onclick="versionManager('fixed', 'edit')" style="font-weight:bold; color:var(--main-color-1); cursor:pointer;" title="Edit"></i>&nbsp;&nbsp;&nbsp;
+                </span>
+            }
+        </label>
+
+        <div @Html.Raw(Model != null ? "class='col-sm-12'" : "")>
+            <select id="fixed-milestone" class="form-control" name="fixed-milestone" data-allow-clear="true" data-placeholder="No milestone..."></select>
+        </div>
+    </div>
+}
+@Html.Partial("_ProjectMilestoneEdit_Partial")
+
+@*<script src="~/Scripts/ticket/Project_Milestone.js"></script>*@
+
+<script type="text/javascript">
+    sessionStorage.removeItem("_ProjectMilestone");
+let projectBase = '@project';
+let affectedBase = '@affectedVersion';
+let fixedBase = '@fixedVersion';
+// BuildCategoryViewGroup
+let initGroup = true;
+let initAffected = true;
+    let initFixed = true;
+    @if (development)
+    {
+        <text>
+    let current_project = "@development_proj";
+    let current_project_name = "@development_proj_name";
+    $(function () {
+        $("#Project_select").on("change", function () {
+            current_project = $(this).val();
+            current_project_name = $(this).find("option:selected").text();
+            if (current_project !== "") {
+                buildCategoryViewGroup();
+            }
+            else {
+                $('#project option').remove()
+             
+            }
+        })
+    })
+    </text>
+    }
+    function buildCategoryViewGroup(target = "select#project", affected = "select#affected-milestone", fixed = "select#fixed-milestone") {
+    $(`${target} optgroup`).remove();
+    $(`${target} option`).remove();
+    let groupInfo = StorageGet(PROJECT_MILESTONE);
+
+    @if (development)
+    {
+        <text>
+        let group = groupInfo[current_project];
+        for (const category of group[CATEGORIES]) {
+        let opt = $(`<option value='${category.Id}'>${category.Name}</option>`);
+        $(`${target}`).append(opt);
+        }
+        </text>
+    }
+    else {
+        <text>
+        for (const groupId in groupInfo) {
+                let group = groupInfo[groupId];
+                let optGroup = $(`<optgroup label='${group.Name}' data-value='${group.Id}' ></optgroup>`);
+                for (const category of group[CATEGORIES]) {
+                    let opt = $(`<option value='${category.Id}'>${ category.Name}</option>`);
+                    optGroup.append(opt);
+                }
+        $(`${target}`).append(optGroup);
+        }
+        </text>
+    }
+        $(`${target}`).select2().on("change", function(e) {
+            if (initGroup === false) {
+                try { setonunload(); } catch (e) { }
+            }
+            initGroup = false;
+            const group = $(`${target} :selected`).parent().data('value');
+            const groupPrev = $(`${target}`).data('prev-data');
+            if (group === groupPrev) {
+                // return;
+            }
+        $(`${target}`).data('prev-data', group);
+        $(`${affected} option`).remove();
+        $(`${fixed} option`).remove();
+            if (group === null || group === undefined) {
+                return;
+            }
+            try{
+                for (const version of groupInfo[group][VERSIONS]) {
+                    let opt = $(`<option value='${version.Id}'>${version.Name}</option>`);
+                $(`${affected}`).append(opt.clone());
+                $(`${fixed}`).append(opt.clone());
+                }
+            } catch (e) {
+                console.log(e);
+            }
+        $(`${affected}`).select2({}).on("change", function(e) {
+                if (initAffected == false) {
+                    try { setonunload(); } catch (e) { }
+                }
+                initAffected = false;
+                if (validString($(`${affected} :selected`).val())) {
+                    affectedBase = $(`${affected} :selected`).val();
+                }
+            }).val(affectedBase).trigger("change");
+        $(`${fixed}`).select2({}).on("change", function(e) {
+                if (initFixed == false) {
+                    try { setonunload(); } catch (e) { }
+                }
+                initFixed = false;
+                if (validString($(`${fixed} :selected`).val())) {
+                    fixedBase = $(`${fixed} :selected`).val();
+                }
+            }).val(fixedBase).trigger("change");
+        }).val(projectBase).trigger("change");
+    }
+
+    function projectCategoryManager(action = 'edit') {
+    let groupSelect = $('#project :selected').parent().data('value');
+    let categorySelect = $('#project :selected').val();
+    var data = {
+        stage: '@stage',
+        process: action,
+        target: 'category',
+        group: groupSelect,
+        groupName: $('#project :selected').parent().attr('label'),
+        category: categorySelect,
+        categoryName: $('#project :selected').text(),
+        finish: (group, category) => {
+
+            projectBase = category;
+            buildCategoryViewGroup();
+        }
+    };
+
+    @if (development)
+    {
+        <text>
+        data.group = current_project;
+        data.groupName = current_project_name;
+        $("#project-milestone .group").prop('disabled', true);
+        </text>
+    }
+    showMilestoneManger(data);
+}
+function versionManager(target, action = 'edit') {
+    let groupSelect = $('#project :selected').parent().data('value');
+    let categorySelect = $('#project :selected').val();
+    let versionSelect = $(`#${target}-milestone :selected`).val();
+    showMilestoneManger({
+        stage : '@stage',
+        process : action,
+        target : 'version',
+        group : groupSelect,
+        groupName : $('#project :selected').parent().attr('label'),
+        category : categorySelect,
+        categoryName : $('#project :selected').text(),
+        version : versionSelect,
+        versionName : $(`#${target}-milestone :selected`).text(),
+        finish: (group, category, version) => {
+            projectBase = category;
+            eval(`${target}Base = '${version}';`);
+            buildCategoryViewGroup();
+        }
+    });
+}
+
+RegistCallback("init_view", ()=>{
+    buildCategoryViewGroup();
+})
+</script>

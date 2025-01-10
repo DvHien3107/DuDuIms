@@ -1,0 +1,52 @@
+﻿<div class="row" style="padding-bottom:20px">
+
+    <div id="search_select_group">
+        <form id="search_form">
+            <div class="col-md-3">
+                <div class="input-group">
+                    <span class="input-group-addon">
+                        From
+                    </span>
+                    <input name="FromSearch" id="FromSearch" value="@ViewBag.FromDate" class="form-control datepicker change-search" readonly />
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="input-group">
+                    <span class="input-group-addon">
+                        To
+                    </span>
+                    <input name="ToSearch" id="ToSearch" value="@ViewBag.ToDate" class="form-control datepicker change-search" readonly />
+                </div>
+            </div>
+            @*<div class="col-md-3">
+                    <div class="input-group">
+                        <span class="input-group-addon">
+                            Member
+                        </span>
+                        <select name="MemberSearch" id="MemberSearch" class="form-control select2 MemberSearch change-search">
+                            <option value="">N/A</option>
+                            @foreach(var m in ViewBag.Member as List<SelectListItem>){
+                                <option value="@m.Value">@m.Text</option>
+                            }
+                        </select>
+                    </div>
+                </div>*@
+            <div class="col-md-3">
+                <div class="input-group">
+                    <span class="input-group-addon">
+                        Salon
+                    </span>
+                    <input name="SalonText" id="SalonText" placeholder="Search by Salon | Owner" class="form-control change-search" />
+                </div>
+            </div>
+
+
+        </form>
+    </div>
+</div>
+<hr />
+<div style="text-align:right;">
+    <a class="btn btn-success pull-right" target="_blank" href="/MemberMan/AvailabelTime"><i class="fa fa-cog"></i> My Time Manage</a>
+    <a class="btn btn-primary pull-right" style="margin-right:5px" id="create-demo-scheduler-btn"><i class="fa fa-plus"></i> New Demo Scheduler <img class="loading" style="display:none;" src="/Content/ajax-loaders/ajax-loader-1.gif" /></a>
+
+</div>

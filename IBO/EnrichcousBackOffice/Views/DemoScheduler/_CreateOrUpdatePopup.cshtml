@@ -1,0 +1,245 @@
+﻿@model EnrichcousBackOffice.Models.C_DemoScheduler
+    @{ 
+        var cus = ViewBag.Cus as EnrichcousBackOffice.Models.C_Customer;
+
+    }
+@*modal cru demo cheduler*@
+<div class="modal fade" tabindex="-1" id="modal-cru-demo-scheduler" >
+    <div class="modal-dialog modal-lg" style="max-width:800px;">
+        <div class="modal-content">
+            <form id="form-cru-demo-scheduler" method="post" action="/DemoScheduler/CreateOrUpdateDemoScheduler">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                    <h4 id="modal-department-title" class="modal-title">
+                        Create New Demo Scheduler
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="Id" id="Id" value="@Model.Id"/>
+                    <input type="hidden" name="CustomerCode" value="@Model.CustomerCode" id="CustomerCode" />
+                    <div class="col-12">
+                        <!--merchant duoc chon-->
+                        <div class="row" style="margin-bottom:15px">
+                            <div class="col-md-12">
+                                <div class="box box-primary ">
+                                    <div class="box-header with-border">
+                                        <label>Salon <span style="color:red">*</span></label>
+                                    </div>
+                                    <div class="box-body" style="padding-bottom: 22px;">
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <div class="input-group">
+                                                        <input type="text" class="form-control" id="salon_search" name="salon_search" placeholder="Search for Salon | Owner" />
+                                                        <div class="input-group-addon" style="cursor: pointer;background-color:var(--main-color-1);color:white;" onclick="search_salon()">
+                                                            <i class="fa fa-search"></i> Search
+                                                            <img id="search_loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <!--list merhcant duoc filter-->
+                                                <div id="div_list_salon" style="display:none">
+                                                    <div style="max-height:250px; border:1px dotted red; margin-top:5px; overflow:auto">
+                                                        <table class="table table-bordered table-striped">
+                                                            <thead>
+                                                                <tr style="border-bottom:2px solid grey">
+                                                                    <th>#</th>
+                                                                    <th>Salon Name</th>
+                                                                    <th>Contact Infomation</th>
+                                                                    <th style="width:30px"></th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody id="list_salon">
+                                                                <!--Add content form javascrip-->
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                                <!---->
+                                            </div>
+                                        </div>
+                                        <div id="div_salon_info" @(string.IsNullOrEmpty(Model.CustomerCode) ? "style=display:none;" : "")>
+                                            <span style="font-style:italic;display:block;font-size:14px;margin-bottom:10px;">Salon Selected :</span>
+                                            @if (ViewBag.Cus != null)
+                                            {
+                                                <table class="table table-bordered">
+                                                    <tr>
+                                                        <th style="min-width:120px">Salon Name:</th>
+                                                        <td><span id="m_name">@cus.BusinessName</span></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th style="min-width:120px">Address:</th>
+                                                        <td>
+                                                            <span id="m_address">
+                                                                @(cus.SalonAddress1 + ", " + cus.City + ", " + cus.SalonState + " " + cus.SalonZipcode + ", " + cus.BusinessCountry)
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th style="min-width:120px">Contact Name:</th>
+                                                        <td><span id="c_name">@cus.ContactName</span></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th style="min-width:120px">Cell phone:</th>
+                                                        <td><span id="c_phone">@cus.SalonPhone</span></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th style="min-width:120px">Salon Email:</th>
+                                                        <td><span id="c_email">@cus.SalonEmail</span></td>
+                                                    </tr>
+                                                </table>
+                                            }
+                                            else
+                                            {
+                                                <table class="table table-bordered">
+                                                    <tr>
+                                                        <th style="min-width:120px">Salon Name:</th>
+                                                        <td><span id="m_name"></span></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th style="min-width:120px">Address:</th>
+                                                        <td>
+                                                            <span id="m_address">
+
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th style="min-width:120px">Contact Name:</th>
+                                                        <td><span id="c_name"></span></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th style="min-width:120px">Cell phone:</th>
+                                                        <td><span id="c_phone"></span></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th style="min-width:120px">Salon Email:</th>
+                                                        <td><span id="c_email"></span></td>
+                                                    </tr>
+                                                </table>
+                                            }
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label>Note <span style="color:red">*</span></label>
+                                    <textarea class="form-control" name="Note" id="Note" rows="5" value="">@Model.Note</textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Status <span style="color:red">*</span></label>
+                                    <select class="form-control" name="status" id="status">
+                                        <option value="" @(Model.Status == null ? "selected" : "")>Demo Scheduler</option>
+                                        <option value="1" @(Model.Status == 1 ? "selected" : "")>Completed</option>
+                                        <option value="0" @(Model.Status == 0 ? "selected" : "")>Cancel</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="col-12" style="position:relative">
+
+                        <button type="button" class="btn btn-default pull-left" data-dismiss="modal">
+                            Close
+                        </button>
+                        @if (Model != null && ViewBag.LastEvent != null)
+                        {
+                            <button style="position:absolute;right:50%;transform:translate(50%);color:white;" type="submit" data-command="updateScheduler" data-membernumber="@((ViewBag.LastEvent as EnrichcousBackOffice.Models.Calendar_Event).MemberNumber)" data-defaultdate="@((ViewBag.LastEvent as EnrichcousBackOffice.Models.Calendar_Event).StartEvent.Substring(0,10))" class="btn btn-warning pull-left">
+                                Update Scheduler
+                                <img class="loading-appointment" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none">
+                            </button>
+                        }
+                        else
+                        {
+                            <button style="position:absolute;right:50%;transform:translate(50%);color:white;" type="submit" data-command="setAppointment" class="btn btn-warning pull-left">
+                                Assign Appointment
+                                <img class="loading-appointment" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none">
+                            </button>
+                        }
+                        <button data-command="save" type="submit" class="btn btn-primary">
+                            Save & Close
+                            <img class="loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none">
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    $("#salon_search").keydown(function (event) {
+        if (event.keyCode === 13) {
+            search_salon();
+            return false;
+        }
+    });
+    // this is the id of the form
+    $("#form-cru-demo-scheduler").submit(function (e) {
+        var btn = $(this).find("button[type=submit]:focus");
+        var loading = $(btn).find(".loading"); 
+        var command = $(btn).attr("data-command");
+        e.preventDefault(); // avoid to execute the actual submit of the form.
+        if ($(this).find('[name="CustomerCode"]').val() ==='') {
+            let MsgSuccess = $.parseJSON('{"text":"please select salon !", "layout":"topRight", "type":"warning"}');
+            noty(MsgSuccess);
+            return false;
+        }
+        var form = $(this);
+        var url = form.attr('action');
+        $.ajax({
+            type: "POST",
+            url: url,
+            data: form.serialize(), // serializes the form's elements.
+            success: function (data) {
+         
+                $("#modal-cru-demo-scheduler").modal('hide');
+                if (command === "setAppointment") {
+                    localStorage.setItem('Demoscheduler-SetAppointment', true);
+                    ViewCalendarPopup(data.DemoSchedulerId);
+                    //$.ajax({
+                    //    type: "get",
+                    //    url: "/DemoScheduler/ShowPopupAssign?DemoSchedulerId=" + data.DemoSchedulerId,
+                    //    success: function (data) {
+                    //        $("#render-popup-assign").html(data);
+                    //        $("#modal-assign-demo-scheduler").modal({ backdrop: 'static', keyboard: false });
+                    //    },
+                    //    error: function (xhr, ajaxOptions, thrownError) {
+                    //        alert('fail');
+                    //    },
+                    //    complete: function () {
+                    //        $(loading).hide();
+                    //    },
+                    //});
+                }
+                else if (command === "updateScheduler") {
+          
+                    ViewCalendarPopup(data.DemoSchedulerId, $(btn).attr("data-membernumber"), $(btn).attr("data-defaultdate"));
+                }
+                else {
+                    $('.demo-scheduler').DataTable().ajax.reload();
+                    let MsgSuccess = $.parseJSON('{"text":"' + data.message + '", "layout":"topRight", "type":"success"}');
+                    noty(MsgSuccess);
+                }
+            }
+        });
+
+
+    });
+</script>

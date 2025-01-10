@@ -1,0 +1,14 @@
+
+.vs/PosSource/v17/.suo
+.vs/*
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+bld/
+[Oo]bj/
+[Ll]og/
+[Bb]in/
+PublishProfiles/

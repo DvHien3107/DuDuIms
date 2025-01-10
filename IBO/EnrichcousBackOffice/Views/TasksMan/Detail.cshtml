@@ -1,0 +1,282 @@
+﻿@model EnrichcousBackOffice.Models.Ts_Task
+@using EnrichcousBackOffice.Models
+
+@{
+    ViewBag.Title = "Detail";
+}
+
+<section class="content-header">
+    <h1>
+        Tasks Management
+        <small>Tasks Detail</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Dashboard</a></li>
+        <li><a href="/tasksman"><i class="fa fa-bars"></i> Tasks Management</a></li>
+        <li><i class="fa fa-fa-tasks"></i> Tasks Detail</li>
+    </ol>
+</section>
+
+<section class="content">
+    <div class="row">
+
+        @if (TempData["e"] != null)
+        {
+            <div class="alert alert-warning alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+            </div>
+        }
+        else if (TempData["s"] != null)
+        {
+            <div class="alert alert-success alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+            </div>
+        }
+        <div class="col-md-12">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Task Detail: @Model.Name</h3>
+                    <input type="hidden" name="hd_url" value="@Request.Url.PathAndQuery" />
+
+                    <div class="pull-right box-tools">
+                        <a href="/tasksman" class="btn btn-default"><i class="fa fa-arrow-left"></i> Go back</a>&nbsp;&nbsp;
+                        @*<button type="button" class="btn btn-default btn-sm" style="background-color: ghostwhite">Mark Completed</button>*@
+                        <div class="btn-group">
+                            @*<button type="button" class="btn btn-default btn-sm">
+                                    <i class="fa fa-refresh"></i>
+                                </button>*@
+                            <button type="button" class="btn btn-warning" title="Edit" onclick="update_task('false' ,'@Model.Id', 'true')"><i class="fa fa-edit"></i> Edit Task</button>
+                            <a href="/tasksman/delete/@Model.Id" onclick="return confirm('You want to delete this task?')" class="btn btn-danger" title="Delete">
+                                <i class="fa fa-trash-o"></i> Delete
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <!-- /.box-header -->
+
+                <div class="box-body">
+                    <div class="col-md-12">
+                        <div class="col-md-8">
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <h4 class="panel-title pull-left">Description</h4>
+                                    @*<div class="box-tools pull-right">
+                                            <a href="#"><i class="fa fa-pencil"></i></a>
+                                        </div>*@
+                                    <div class="clearfix"></div>
+                                </div>
+                                <div class="panel-body">
+                                    <span>@Html.Raw(Model.Description)</span>
+                                </div>
+                            </div>
+
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <h4 class="panel-title pull-left">Subtasks</h4>
+                                    @*<div class="box-tools pull-right">
+                                            <a href="#"><i class="fa fa-plus"></i></a>&nbsp;&nbsp;
+                                            <a href="#"><i class="fa fa-refresh"></i></a>
+                                        </div>*@
+                                    <div class="clearfix"></div>
+                                </div>
+                                <div class="panel-body">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Name</th>
+                                                <th>Assigned to</th>
+                                                <th>Due Date</th>
+                                                <th>Complete</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var item in ViewBag.ListSubtask as List<Ts_Task>)
+                                            {
+                                                <tr>
+                                                    <td>@(item.Name)</td>
+                                                    <td>@(item.AssignedToMemberNumber != null ? item.AssignedToMemberName + " (#" + item.AssignedToMemberNumber + ")" : "Unassigned")</td>
+                                                    <td>
+                                                        <span id="localtime-@item.Id">
+                                                            <script>convertLocalTime("@item.Id", "@item.DueDate", "MMMddyyyy")</script>
+                                                        </span>
+                                                    </td>
+                                                    <td><span style="color:#258e4f"><b>@(item.Complete == true ? "Done" : "")</b></span></td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <h4 class="panel-title pull-left">History</h4>
+                                    <div class="box-tools pull-right">
+                                        <a id="down" href="javascript:void(0)" onclick="show_history()"><i class="fa fa-chevron-down"></i></a>
+                                        <a id="up" href="javascript:void(0)" onclick="hide_history()" style="display:none"><i class="fa fa-chevron-up"></i></a>
+                                        @*&nbsp;&nbsp;
+                                            <a href="#"><i class="fa fa-refresh"></i></a>*@
+                                    </div>
+                                    <div class="clearfix"></div>
+                                </div>
+                                <div class="panel-body" id="div_history" style="display:none">
+                                    @if (Model.UpdateBy != null)
+                                    {
+                                        var lst_update = Model.UpdateBy.Split('|');
+
+                                        for (int i = 0; i < lst_update.Length - 1; i++)
+                                        {
+                                            <span><b>- Cập nhật: </b>@(lst_update[i])</span><br />
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <h4 class="panel-title">Task Info</h4>
+                                </div>
+                                <div class="panel-body">
+                                    <div class="form-group">
+                                        <span class="pull-left"><i class="fa fa-check-square" style="color:#00a65a"></i> @(ViewBag.subtask_complete)</span>
+                                        <span class="pull-right" style="color:green"><b>@(ViewBag.percent_complete)%</b></span>
+                                        <div class="clearfix"></div>
+                                        <div class="progress progress-xs">
+                                            <div class="progress-bar progress-bar-success progress-bar-striped" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: @(ViewBag.percent_complete)%">
+                                                <span class="sr-only">60% Complete (success)</span>
+                                            </div>
+                                        </div>
+                                    </div><hr />
+
+                                    <table class="table">
+                                        <tr>
+                                            <th style="border:unset; width:120px">Assigned To</th>
+                                            <td style="border:unset"><span>@(Model.AssignedToMemberNumber != null ? Model.AssignedToMemberName + " (#" + Model.AssignedToMemberNumber + ")" : "Unassigned")</span></td>
+                                        </tr>
+                                        <tr>
+                                            <th style="border:unset; width:120px">Complete</th>
+                                            <td style="border:unset"><span style="color:#258e4f"><b>@(Model.Complete == true ? "Done" : "")</b></span></td>
+                                        </tr>
+                                        <tr>
+                                            <th style="border:unset; width:120px">Due Date</th>
+                                            <td style="border:unset">
+                                                <span id="localtime-@Model.Id">
+                                                    <script>convertLocalTime("@Model.Id", "@Model.DueDate", "MMMddyyyy")</script>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th style="border:unset; width:120px">Reminder</th>
+                                            <td style="border:unset">
+                                                @if (Model.ReminderWeeklyAt != null)
+                                                {
+                                                    <span>
+                                                        Weekly at
+                                                        @if (Model.ReminderWeeklyAt == 1)
+                                                        {@Html.Raw(" Monday")}
+                                                    else if (Model.ReminderWeeklyAt == 2)
+                                                    {@Html.Raw(" Tuesday")}
+                                                else if (Model.ReminderWeeklyAt == 3)
+                                                {@Html.Raw(" Wednesday")}
+                                            else if (Model.ReminderWeeklyAt == 4)
+                                            {@Html.Raw(" Thursday")}
+                                        else if (Model.ReminderWeeklyAt == 5)
+                                        {@Html.Raw(" Friday")}
+                                                    </span>
+                                                }
+                                                else if (Model.ReminderMonthlyAt != null)
+                                                {
+                                                    <span>Monthly at @(Model.ReminderMonthlyAt < 4 ? "Day " + Model.ReminderMonthlyAt : Model.ReminderMonthlyAt + "th")</span>
+                                                }
+                                                else
+                                                {
+                                                    <span>None</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    </table>
+
+                                    <table class="table">
+                                        <tr>
+                                            <th style="width:120px">Tạo bởi</th>
+                                            <td><span>@(Model.CreateBy)</span></td>
+                                        </tr>
+                                        <tr>
+                                            <th style="border:unset; width:120px">Vào lúc</th>
+                                            <td style="border:unset">
+                                                <span id="localtime-create-@Model.Id">
+                                                    <script>convertLocalTime("create-" + "@Model.Id", "@Model.CreateAt")</script>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- /.box-body -->
+            </div>
+            <!-- /.box -->
+        </div>
+    </div>
+</section>
+
+<!--Modal task-->
+@*<div id="task_popup">
+        @Html.Partial("_TaskPopupPartial", new Ts_Task(), new ViewDataDictionary { { "ts_update", false } })
+    </div>*@
+<!--/.End-->
+
+
+@section style
+{
+    <!--noty-->
+    <link href="~/Content/noty/jquery.noty.css" rel="stylesheet" />
+    <link href="~/Content/noty/noty_theme_default.css" rel="stylesheet" />
+}
+
+
+@section script
+{
+    <!--noty-->
+    <script src="~/Content/noty/jquery.noty.js"></script>
+    <script src="~/Scripts/jquery.unobtrusive-ajax.min.js"></script>
+
+    <script type="text/javascript">
+
+        //iCheck for checkbox and radio inputs
+        $('input[type="checkbox"].minimal').iCheck({
+            checkboxClass: 'icheckbox_minimal-blue',
+            radioClass: 'iradio_minimal-blue'
+        });
+
+        //Inactive checked khi xem chi tiet
+        $('input[type="checkbox"].inactive_unchecked').on('ifChanged', function (e) {
+            var isChecked = e.currentTarget.checked;
+            if (isChecked == false) {  //neu uncheck thi gan lai la check
+                this.iCheck('check');
+            }
+            else {  //neu uncheck thi gan lai la check
+                this.iCheck('uncheck');
+            }
+        });
+
+        function show_history() {
+            $("#div_history").show("500");
+            $("#down").hide();
+            $("#up").show();
+        }
+
+        function hide_history() {
+            $("#div_history").hide("500");
+            $("#down").show();
+            $("#up").hide();
+        }
+
+    </script>
+}
+

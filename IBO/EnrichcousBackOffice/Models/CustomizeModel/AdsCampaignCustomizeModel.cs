@@ -1,0 +1,35 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+
+namespace EnrichcousBackOffice.Models.CustomizeModel
+{
+    public class ViewAds
+    {
+        public string Id { get; set; }
+        public string AdsType { get; set; }
+        public string Resource { get; set; }
+        public string LicenseType { get; set; }
+        public string State { get; set; }
+        public string Zipcode { get; set; }
+        public Nullable<int> NumberOfPeopleReached { get; set; }
+        public string Additional { get; set; }
+        public string Message { get; set; }
+        public string Status { get; set; }
+        public Nullable<System.DateTime> StatusDate { get; set; }
+        public Nullable<int> TotalSuccess { get; set; }
+        public Nullable<int> TotalFailed { get; set; }
+        public string TemplateID { get; set; }
+        public string FailedReason { get; set; }
+        public Nullable<System.DateTime> CreateAt { get; set; }
+        public string CreateBy { get; set; }
+        public Nullable<System.DateTime> LastUpdateAt { get; set; }
+        public string LastUpdateBy { get; set; }
+        public string CampaignId { get; set; }
+        public string Name { get; set; }
+        public string CompaignName { get; set; }
+        public string Attachment { get; set; }
+
+    }
+}

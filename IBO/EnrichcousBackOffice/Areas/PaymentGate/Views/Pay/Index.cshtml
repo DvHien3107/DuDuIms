@@ -1,0 +1,1034 @@
+﻿@model EnrichcousBackOffice.Models.O_Orders
+@using Enrichcous.Payment.Mxmerchant.Config.Enums
+@using EnrichcousBackOffice.Areas.PaymentGate.ModelsView.DTO
+@using EnrichcousBackOffice.Models
+@using EnrichcousBackOffice.Utils.IEnums
+@using Inner.Libs.Helpful
+@using EnrichcousBackOffice.ViewModel
+@using EnrichcousBackOffice.Controllers
+@using EnrichcousBackOffice.Models.CustomizeModel
+@{
+    List<Ad_Country> country = ViewBag.country ?? new List<Ad_Country>();
+    List<Ad_USAState> states = ViewBag.states ?? new List<Ad_USAState>();
+    List<C_CustomerCard> cards = ViewBag.credit ?? new List<C_CustomerCard>();
+    List<C_PartnerCard> partner_cards = ViewBag.creditPartner ?? new List<C_PartnerCard>();
+
+    C_Customer cus = ViewBag.cus;
+    decimal? discount = 0;
+    decimal? tax = 0;
+    var goBack = ViewBag.HadHistory ?? false;
+    //var host = $"{HttpContext.Current.Request.Url.Scheme}://{HttpContext.Current.Request.Url.Authority}";
+    var authFlag = ViewBag.Auth ?? false;
+    var error = ViewBag.Error ?? "";
+    var isAgent = ViewBag.AgentAction ?? false;
+    string pay_pc = ViewBag.pay_pc as string;
+    var closedInvoice = ViewBag.closedInvoice;
+    TransRequest cardSessionInfo = ViewBag.CardSession ?? null;
+
+    var subscriptions = ViewBag.SubscriptionList as List<Order_Subcription>;
+
+    var package_hardware = ViewBag.ListOrderPackage as List<Order_Package_view>;
+    var ListOrderSubcription = ViewBag.ListOrderSubcription as List<VmOrderService>;
+    TotalMoneyOrder _total_money_order = ViewBag._total_money_order as TotalMoneyOrder;
+    if (_total_money_order == null)
+    {
+        _total_money_order = new TotalMoneyOrder();
+    }
+    ViewBag.ActionLogin = "/PaymentGate/Pay/Login";
+    var POSNextGenApi = System.Configuration.ConfigurationManager.AppSettings["POSNextGenApi"];
+}
+
+@section title{
+    Simply Pos | Payment
+}
+
+@section content_page_style {
+    <link rel="stylesheet" href="/content/admin/plugins/iCheck/all.css" />
+    <link rel="stylesheet" href="~/Areas/PaymentGate/Content/page/pay.css" />
+
+}
+@section content_page_script{
+    @if (Model == null)
+    {
+        return;
+    }
+    <script src="~/Content/Toastify/toastify-js.js"></script>
+    <link href="~/Content/Toastify/toastify.min.css" rel="stylesheet" />
+    <script src="~/Scripts/Toast/ToastConsole.js"></script>
+    <script src="~/Scripts/Axios/axios.min.js"></script>
+    <script>
+        const cusDefaultProfile = '@cus.DepositAccountNumber'
+    const axiosNextGen = axios.create({
+        baseURL: '@POSNextGenApi/v1/api',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    });
+    </script>
+    <script src="~/Scripts/Axios/axios.console.js"></script>
+    <script src="~/Scripts/jquery.form.min.js"></script>
+    <!-- InputMask -->
+    <script src="~/Content/Admin/plugins/input-mask/jquery.inputmask.js"></script>
+    <!--icheck-->
+    <script src="/content/admin/plugins/iCheck/icheck.min.js"></script>
+
+
+    <script>
+        function select_credit(el, cardId) {
+            $(".credit_card").not(el).removeClass("active").find(".fa-check-circle").hide();
+            $(el).addClass("active").find(".fa-check-circle").show();
+            $("input[name='CardId']").val(cardId);
+            //$.ajax({
+            //    method: "POST",
+            //    url: "/PaymentGate/Pay/ChangeDefaultCard",
+            //    data: {"cardId": cardId},
+            //    dataType: "json"
+            //})
+            //.done(function (data) {
+            //})
+            //.fail(function (err) {
+            //})
+            //.always(function () {});
+        }
+        function addNewCard() {
+            $("#div-recurring-checkbox").slideUp();
+            $("#new_credit input.req").each((i, el)=>{
+                $(el).attr("required", true);
+            });
+            $("#new_credit").show();
+            $("#pay_slide").animate({ marginLeft: "-100%" }, event === null ? 0 : 300);
+            $('.message-auto-recurring').slideUp();
+        }
+        function prev() {
+            $("#pay_slide").animate({ marginLeft: "0px" }, 300);
+            $("#new_credit input.req").each((i, el)=>{
+                $(el).removeAttr('required');
+            });
+        }
+        function makeLinkStyle(path) {
+            let link = document.createElement("link");
+            link.setAttribute("rel", "stylesheet");
+            link.setAttribute("type", "text/css");
+            link.setAttribute("href", path);
+            return link;
+        }
+
+        $('input[type="checkbox"].flat-red, input[type="radio"].flat-red').iCheck({
+            checkboxClass: 'icheckbox_flat-blue',
+            radioClass: 'iradio_flat-blue'
+        })
+
+        $(document).ready(() => {
+            @*if (@Model.GrandTotal == 0) {
+                $("#ignismyModal").modal({ 'backdrop': 'static' });
+            }*@
+            let frame = document.getElementById('invoice-view');
+            if (frame !== null && frame !== undefined) {
+                frame.onload = function() {
+                    ["_layout", "_invoice"].forEach((path)=>{
+                        $("#invoice-view").contents().find("head").append(makeLinkStyle(`../Areas/PaymentGate/Content/page/${path}.css`));
+                    });
+                    $("#invoice-view").contents().find("body").addClass("custom-scroll");
+                };
+            }
+            @*@if (authFlag == false)
+            {
+                $("#login").modal("show");
+                $(".payment-content").css({"filter" : "blur(5px)"});
+            }*@
+
+            $('#CardExpiry').inputmask('99/99', { showMaskOnHover: false });
+            $('input[name="CardCSC"]').inputmask({ "mask": "9", "repeat": 4, "greedy": false , showMaskOnHover: false });
+            $(".pay-with-new-card").click(()=>{
+                $("input[name='CardId']").val("");
+            });
+            $("input[name='CardNumber']").trigger("change");
+
+
+
+            $('#check_confirm_payment').on('ifChecked', function () {
+                $('.pay-with-new-card').removeAttr("disabled");
+            })
+            $('#check_confirm_payment').on('ifUnchecked', function () {
+                $('.pay-with-new-card').attr("disabled", true);
+            })
+        });
+        function checkCardType(el) {
+            $(el).parent("div._input").find(".cardIcon").attr('class', `cardIcon ${CardType($(el).val())}`)
+        }
+        function confirm_pay() {
+            overlay(true);
+            doPay();
+        }
+        function onError(title) {
+            toastConsole.error(title)
+            overlay(false)
+        }
+        function doPay() {
+            //OrdersCode, CardNumber, CardExpiry, CardCSC,
+            const OrdersCode = $('input[name="OrdersCode"]').val();
+            const CardNumber = $('input[name="CardNumber"]').val();
+            const CardExpiry = $('input[name="CardExpiry"]').val();
+            const CardCSC = $('input[name="CardCSC"]').val();
+            const CardHolderName = $('input[name="CardHolderName"]').val();
+            payment.doCollectNewCard(OrdersCode, CardNumber, CardExpiry, CardCSC, CardHolderName, function (data) {
+                if (data.status == 200) {
+                    toastConsole.success("Pay success")
+                    location.reload();
+                }
+            })
+        }
+        function doQuickPay() {
+            //OrdersCode, CardNumber, CardExpiry, CardCSC,
+
+            const $creditCard = $('.btn-outline-primary.credit_card.active')
+            const OrdersCode = $('input[name="OrdersCode"]').val();
+            const PaymentProfileId = $creditCard.attr('data-paymentprofile');
+            const PaymentType = $creditCard.attr('data-type');
+            const PaymentNumber = (($creditCard.attr('data-number') || '') + '').replaceAll('X','');
+
+            $.confirm({
+                useBootstrap: false,
+                backgroundDismiss: true,
+                title: `Invoice will pay with: <b>${PaymentType} - ${PaymentNumber}</b>`,
+                content: 'Do you really want to pay with this ?',
+                buttons: {
+                    override: {
+                        text: 'Cancel',
+                        btnClass: 'btn-orange',
+                        action: function () {
+                        }
+                    },
+                    addNew: {
+                        text: 'Continue',
+                        btnClass: 'btn-blue',
+                        action: function () {
+                            overlay(true);
+                            payment.doCollectExistCard(OrdersCode, PaymentProfileId, function (data) {
+                                if (data.status == 200) {
+                                    toastConsole.success("Pay success")
+                                    location.reload();
+                                }
+                            })
+                        }
+                    }
+                }
+            });
+
+
+        }
+        $('#btn-auto-subscription-overview').on('click', function () {
+            $('#btn-auto-subscription-overview').text($('#btn-auto-subscription-overview').text() == 'See less' ? 'See more' : 'See less');
+            $('#auto-subscriptions-list-overview').slideToggle();
+        });
+        $('#btn-auto-subscription').on('click', function () {
+            $('#btn-auto-subscription').text($('#btn-auto-subscription').text() == 'See less' ? 'See more' : 'See less');
+            $('#auto-subscriptions-list').slideToggle();
+        });
+        function forEach(array, action) {
+            for (var i = 0; i < array.length; i++)
+                action(array[i]);
+        }
+
+        function loadCardProfileData() {
+            const customerCode = $('input[name="CustomerCode"]').val();
+            payment.loadLstCard(customerCode, function (data) {
+                console.log(data)
+                const paymentProfiles = data.paymentProfiles;
+                let html = '';
+                forEach(paymentProfiles, function (item) {
+                    let payment = item.payment.item;
+                    let classActive = '';
+                    if (cusDefaultProfile == item.customerPaymentProfileId) {
+                        classActive = 'active'
+                    }
+                    html +=
+                        `<div class="col-md-12 btn btn-outline-primary credit_card ${classActive}" onclick="select_credit(this)" style="margin-bottom:10px"
+                         data-paymentProfile="${item.customerPaymentProfileId}" data-type="${payment.cardType}" data-number="${payment.cardNumber}">
+                        <div class="card-view creditCardInput" style="width: fit-content;float: left;padding: 0;line-height: unset;">
+                            <i class="fa fa-credit-card pull-left" style="margin:2px 0;position: absolute;font-size: 20px;"></i>
+                            <div class="cardIcon ${((payment.cardType||'')+'').toUpperCase()}"></div>
+                        </div>
+                        <b>${payment.cardNumber}<i class="fa fa-check-circle icon-select" style="margin-left: 10px;"></i></b>
+                    </div>`
+                });
+                $('#lst-auth-card').html(html);
+
+            }, function () {
+                 addNewCard();
+                 $(".btn-prev-list-card").hide();
+            })
+        }
+        $(function () {
+            loadCardProfileData()
+        });
+
+    </script>
+    <script src="~/Scripts/Payment/AuthorizeNet/Payment.js"></script>
+}
+
+@section content_header{
+    @if (Model == null)
+    {
+        <text>
+            <div class="alert alert-warning alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-warning"></i>Your link is not valid, click <a href="https://pos.sposus.co/">here to go back</a>!</span>
+            </div>
+        </text>
+        return;
+    }
+
+    <div class="col-lg-8 col-sm-8 header-left custom-scroll">
+        @if (goBack)
+        {
+            <button class="btn btn-sm btn-outline-primary" style="border:none;float: left" onclick="location.href='@ViewBag.History';"><i class="fa fa-arrow-left"></i><b> Back</b></button>
+        }
+        <button type="button" class="btn btn-sm" onclick="document.getElementById('invoice-view').contentWindow.print()" style="float: left"><i class="fa fa-print"></i> Print</button>
+        @*<div style="float:right; font-weight:bold; padding-top:10px"><span><i class="fa fa-shopping-cart "></i> @(Model?.GrandTotal?.ToString("$#,##0.#0"))</span></div>*@
+    </div>
+    <div class="col-lg-4 col-sm-4 header-right">
+
+        <div style="float:right; padding-top:10px"><span>Wellcome, <b>@(cus?.BusinessName ?? cus?.OwnerName)</b>!</span></div>
+    </div>
+}
+
+@section content_left {
+    @if (Model == null)
+    {
+        return;
+    }
+    <input type="hidden" name="OrdersCode" value="@Model.OrdersCode">
+    <div class="col-lg-8 col-md-7 col-sm-12 detail-invoice-pc" style=" background-color: #f3f3f3;text-align:center; padding-bottom:20px;">
+        <table class="table" style="width:100%; max-width:400px; margin:auto; margin-top:10px;">
+            <tbody>
+                <tr>
+                    <td style="text-align:left; border-top:none">Invoice</td>
+                    <td style="text-align: right; border-top: none">#@Model.OrdersCode</td>
+                </tr>
+                <tr>
+                    <td style="text-align:left">Invoice Date</td>
+                    <td style="text-align:right">@(Model.CreatedAt.HasValue? Model.CreatedAt.Value.ToString("MMM dd, yyyy"):"")</td>
+                </tr>
+                <tr>
+                    <td style="text-align:left">Due Date</td>
+                    <td style="text-align:right">@(Model.DueDate.HasValue? Model.DueDate.Value.ToString("MMM dd, yyyy"):"")</td>
+                </tr>
+                <tr>
+                    <td style="text-align:left">Status</td>
+                    <td style="text-align:right">
+                        @if (Model.Status == "Open")
+                        {
+                            <span class="label label-warning">Pending</span>
+                        }
+                        else if (Model.Status == "Canceled")
+                        {
+                            <span class="label label-danger">Canceled</span>
+                        }
+                        else if (Model.Status == InvoiceStatus.PaymentLater.ToString())
+                        {
+                            <span class="label label-warning">Payment Later</span>
+                        }
+                        else
+                        {
+                            <span class="label label-success">Paid Completed</span>
+                        }
+                    </td>
+                </tr>
+                <tr style="border-top: 1px solid gray">
+                    <th style="text-align:left">Total</th>
+                    <th style="text-align:right">@(Model.GrandTotal?.ToString("$#,##0.#0"))</th>
+                </tr>
+            </tbody>
+        </table>
+        <button id="show_invoice_btn" class="btn btn-outline-dark"
+                style="border-radius:20px; margin:auto;width:200px; max-width:100%"
+                onclick="$('#invoice-view').toggle(200);
+                            //$('#invoice-div').height(300);
+                            $('#show_invoice_btn').toggleClass('active');
+                            $(this).text(function (i, text) { return text === 'Close' ? 'View Invoice' : 'Close'; })">
+            View Invoice
+        </button>
+        <div class="content-iframe">
+            <iframe style="width: 100%; border: none; height: 400px;display:none; padding-top: 20px" id="invoice-view"
+                    @*src='@host/order/ImportInvoiceToPDF?_code=@Model.OrdersCode&flag=Estimates'></iframe>*@
+                    src='/order/ImportInvoiceToPDF?_code=@Model.OrdersCode&flag=Estimates'></iframe>
+
+        </div>
+
+
+        @*<div id="invoice-div" style="padding-top: 10px;">
+
+            </div>*@
+    </div>
+}
+
+@section content_right {
+    @if (Model == null)
+    {
+        return;
+    }
+    <div class="col-lg-4 col-md-5 col-sm-12" style="padding: 0; height: 100%;">
+        @*<div class="col-md-12" style="padding:25px 15px 5px">
+                @if (Model.Status == InvoiceStatus.Open.ToString() || Model.Status == InvoiceStatus.PaymentLater.ToString())
+                {
+                    if (isAgent)
+                    {
+                        <div class="alert alert-success alert-dismissible">
+                            <span>Invoice has been created successful.</span>
+                        </div>
+                        <span>
+                            We had sent payment information to your email.<br />
+                            Please confirm to continue.
+                        </span>
+                    }
+                    else
+                    {
+                        <h4 style="font-weight:bold;">Pay with debit or credit card</h4>
+                        <span style="color:#8e9397">We don’t share your financial details.</span>
+                    }
+                }
+                else if (Model.Status == InvoiceStatus.Closed.ToString() || Model.Status == InvoiceStatus.Paid_Wait.ToString())
+                {
+                    <h6 style="font-weight:bold;">Your payment already completed!</h6>
+                }
+            </div>
+            @if (isAgent)
+            {
+                return;
+            }*@
+
+        <div class="col-12 main detail-invoice-mobile">
+            @if (package_hardware != null && package_hardware.Count > 0)
+            {
+                var shipping_address = Model.ShippingAddress.Split('|');
+                <div class="bg-white">
+                    <div class="adress">
+                        <p>
+                            <span style="font-weight: 600;display: block; padding-bottom:5px ;">Shipping Address:</span>
+                            @if (shipping_address != null)
+                            {
+                                <span>
+                                    @(shipping_address[0]), @(shipping_address[1]), @(shipping_address[2]) @(shipping_address[3]), @(shipping_address[4])
+                                </span>
+                            }
+                        </p>
+                    </div>
+                </div>
+            }
+
+            <div class="bg-white">
+                <div class="card">
+                    @if (package_hardware != null && package_hardware.Count > 0)
+                    {
+                        foreach (var item in package_hardware.Where(c => c.Package != null))
+                        {
+                            var product = item.Products.FirstOrDefault().order_model;
+                            <div class="hardware">
+                                <p class="product"><b>@item.Package.Name</b> <span class="label label-primary" style="font-size: 9px">Package</span></p>
+                                @foreach (var prod in item.Products.Where(c => !string.IsNullOrEmpty(c.order_model.ProductCode)))
+                                {
+                                    <div class="properties">
+                                        <i style="margin-right: 20px; font-size: 12px;">@prod.order_model.ModelName (@prod.order_model.Feature)</i>
+                                        <i style="font-size: 12px;">x @(prod.order_model.Quantity / prod.order_model.BundleQTY)</i>
+                                    </div>
+                                }
+                                <div class="price">
+                                    <p>
+                                        @((product.Price ?? 0).ToString("$#,##0.00"))
+                                        <br />
+                                        @if (product.Discount > 0)
+                                        {
+                                            if (product.DiscountPercent > 0)
+                                            {
+                                                <span style="font-size: 12px; color: #494D5ECC">
+                                                    Discount:
+                                                    <i style="" class="text-danger">
+                                                        -@product.DiscountPercent%
+                                                    </i>
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span style="font-size: 12px; color: #494D5ECC">
+                                                    Discount:
+                                                    <i style="" class="text-danger">
+                                                        -@((product.Discount ?? 0).ToString("$#,##0.00"))
+                                                    </i>
+                                                </span>
+                                            }
+                                        }
+                                    </p>
+                                    <p>x@(product.BundleQTY ?? 1)</p>
+                                </div>
+                            </div>
+                        }
+                        foreach (var item in package_hardware.Where(c => c.Package == null))
+                        {
+                            var product = item.Products.FirstOrDefault().order_model;
+                            <div class="hardware">
+                                <p class="product"><b>@product.ModelName</b></p>
+                                <div class="properties">
+                                    <i style="margin-right: 20px; font-size: 12px;">Type: @product.ProductName</i>
+                                    <i style="font-size: 12px;">Color: @product.Feature</i>
+                                </div>
+                                <div class="price">
+                                    <p>
+                                        @((product.Price ?? 0).ToString("$#,##0.00"))
+                                        <br />
+                                        @if (product.Discount > 0)
+                                        {
+                                            if (product.DiscountPercent > 0)
+                                            {
+                                                <span style="font-size: 12px; color: #494D5ECC">
+                                                    Discount:
+                                                    <i style="" class="text-danger">
+                                                        -@product.DiscountPercent%
+                                                    </i>
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span style="font-size: 12px; color: #494D5ECC">
+                                                    Discount:
+                                                    <i style="" class="text-danger">
+                                                        -@((product.Discount ?? 0).ToString("$#,##0.00"))
+                                                    </i>
+                                                </span>
+                                            }
+                                        }
+                                    </p>
+                                    <p>x@(product.Quantity ?? 1)</p>
+                                </div>
+                            </div>
+                        }
+                    }
+                    @if (ListOrderSubcription != null && ListOrderSubcription.Count > 0)
+                    {
+                        foreach (var item in ListOrderSubcription)
+                        {
+                            if (item.ApplyPaidDate != true && (Model.Status == "Open" || Model.Status == "Canceled") && item.Period == "MONTHLY")
+                            {
+                                item.StartDate = DateTime.UtcNow.Date;
+                                item.EndDate = item.StartDate;
+                                if (item.PriceType.Split(',').Contains(Store_Apply_Status.Trial.Text()))
+                                {
+                                    item.EndDate = item.EndDate.Value.AddMonths(item.TrialMonths);
+                                }
+                                if (item.PriceType.Split(',').Contains(Store_Apply_Status.Promotional.Text()))
+                                {
+                                    item.EndDate = item.EndDate.Value.AddMonths(item.Promotion_Apply_Months);
+                                }
+                                if (item.PriceType.Split(',').Contains(Store_Apply_Status.Real.Text()))
+                                {
+                                    var license_qty = (item.SubscriptionQuantity ?? 1) * (item.Quantity ?? 1);
+                                    if (item.PeriodRecurring == "Yearly") { item.EndDate = item.EndDate.Value.AddYears(license_qty); }
+                                    else if (item.PeriodRecurring == "Weekly") { item.EndDate = item.EndDate.Value.AddDays(license_qty * 7); }
+                                    else { item.EndDate = item.EndDate.Value.AddMonths(license_qty); }
+                                }
+                            }
+
+                            <div class="hardware">
+                                <p class="product">
+                                    <label><b>@(item.SubscriptionType == "setupfee" ? "Activation Fee" : item.SubscriptionType == "interactionfee" ? "Interaction Fee" : item.ProductName)</b></label> <i>@(item.PriceType == "Trial" || item.PriceType == "Promotional" ? "(" + item.PriceType + ")" : "")</i> <i>@(item.SubscriptionType == "setupfee" || item.SubscriptionType == "interactionfee" ? "(" + item.ProductName + ")" : "")</i><br />
+                                </p>
+                                @if (item.SubscriptionType == "setupfee" || item.SubscriptionType == "interactionfee")
+                                {
+                                }
+                                else if (item.StartDate != null || item.EndDate != null)
+                                {
+                                    <div class="date">
+                                        <p>
+                                            <i style="font-size:12px; color:#494D5ECC">
+                                                Date: @(item.StartDate?.ToString("MMM dd, yyyy")) @(item.EndDate != null ? " - " + item.EndDate?.ToString("MMM dd, yyyy") : "")
+                                                @if (item.PreparingDate > 0)
+                                                {
+                                                    <span>+ @item.PreparingDate  days (Preparing Date)</span>
+                                                }
+                                            </i>
+                                        </p>
+                                    </div>
+                                }
+
+                                @if (item.PriceType.Contains("Trial"))
+                                {
+                                    <div class="price">
+                                        <p>
+                                            $0<span style="font-size:12px; color:#494D5ECC"> / @item.TrialMonths month@(item.TrialMonths == 1 ? "":"s")</span>
+                                        </p>
+                                        <p><i class="label label-success" style="font-size: 10px; padding: 0 6px">trial</i></p>
+                                    </div>
+                                }
+                                @if (item.PriceType.Contains("Promotional"))
+                                {
+                                    <div class="price">
+                                        <p>
+                                            @(item.Promotion_Price.ToString("$#,##0.00"))<span style="font-size:12px; color:#494D5ECC"> / @item.Promotion_Apply_Months month@(item.Promotion_Apply_Months == 1 ? "":"s")</span>
+                                        </p>
+                                        <p><i class="label label-primary" style="font-size:10px;padding:0 6px 2px 6px">promotion</i></p>
+                                    </div>
+                                }
+                                @if (string.IsNullOrEmpty(item.PriceType) || item.PriceType.Contains("Real"))
+                                {
+                                    <div class="price">
+                                        <p>
+                                            @((item.Price??0).ToString("$#,##0.00"))<span style="font-size:12px; color:#494D5ECC"> / @(item.Period != "MONTHLY" ? " times" : (item.Quantity + " " + (string.IsNullOrEmpty(item.PeriodRecurring) ? " month" : item.PeriodRecurring.ToLower().Replace("ly", "")) + (item.Quantity == 1 ? "" : "s")))</span>
+                                            <br />
+                                            @if (item.Discount > 0)
+                                            {
+                                                if (item.DiscountPercent > 0)
+                                                {
+                                                    <span style="font-size: 12px; color: #494D5ECC">
+                                                        Discount:
+                                                        <i style="" class="text-danger">
+                                                            -@item.DiscountPercent%
+                                                        </i>
+                                                        @if (item.AutoRenew == true && item.ApplyDiscountAsRecurring == true)
+                                                        {
+                                                            <br /><i>Recurring with discount -@item.DiscountPercent%</i>
+                                                        }
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span style="font-size: 12px; color: #494D5ECC">
+                                                        Discount:
+                                                        <i style="" class="text-danger">
+                                                            -@((item.Discount??0).ToString("$#,##0.00"))
+                                                        </i>
+                                                        @if (item.AutoRenew == true && item.ApplyDiscountAsRecurring == true)
+                                                        {
+                                                            <br /><i>Recurring with discount -@((item.Discount??0).ToString("$#,##0.00"))</i>
+                                                        }
+                                                    </span>
+                                                }
+                                            }
+                                        </p>
+                                        <p>x @(item.Period != "MONTHLY" ? item.Quantity : item.SubscriptionQuantity)</p>
+                                    </div>
+                                }
+                                else
+                                { }
+                            </div>
+                        }
+                    }
+
+                </div>
+            </div>
+            <div class="bg-white">
+
+                <div class="description">
+                    <p>NOTE<br />@Html.Raw(Model.Comment)</p>
+                    <p style="min-height:10px"></p>
+                    <div class="subtotal">
+                        <p>SUBTOTAL</p>
+                        <p>@((_total_money_order.SubTotal).ToString("$#,##0.#0"))</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white">
+                <div class="info-invoice">
+                    <div class="invoice">
+                        <p>
+                            DISCOUNT @if (Model.DiscountPercent > 0)
+                            {@Html.Raw("(" + Model.DiscountPercent + "%)")}
+                        </p>
+                        <p>
+                            @if (Model.DiscountAmount > 0)
+                            {
+                                discount = Model.DiscountAmount ?? 0;
+                                <span class="text-right">@((_total_money_order.DiscountAmount).ToString("- $#,##0.#0"))</span>
+                            }
+                            else if (Model.DiscountPercent > 0)
+                            {
+                                discount = (Model.TotalHardware_Amount * Convert.ToDecimal(Model.DiscountPercent / 100)) ?? 0;
+                                <span class="text-right">@((_total_money_order.DiscountPercent).ToString("$#,##0.#0"))</span>
+                            }
+                            else
+                            {
+                                <span class="text-right">$0.00</span>
+                            }
+                        </p>
+                    </div>
+                    <div class="invoice">
+                        <p>SHIPPING</p>
+                        <p>@((_total_money_order.ShippingFee).ToString("$#,##0.#0"))</p>
+                    </div>
+                    <div class="invoice">
+                        <p>TAX (@(Model.TaxRate > 0 ? Model.TaxRate : 0)%)</p>
+                        <p>@((_total_money_order.TaxRate).ToString("$#,##0.#0"))</p>
+                    </div>
+                    <div class="invoice">
+                        <p style="font-size:16px;color: #FF0000; font-weight:500">
+                            TOTAL DUE
+                        </p>
+                        <p style="font-size:16px;color: #FF0000; font-weight:700">
+                            @((_total_money_order.GrandTotal).ToString("$#,##0.#0"))
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white">
+                <div class="info-invoice">
+                    <div class="invoice">
+                        <p>Invoice</p>
+                        <p><b>#@Model.OrdersCode</b></p>
+                    </div>
+                    <div class="invoice">
+                        <p>Invoice Date</p>
+                        <p>@Model.CreatedAt.Value.ToString("MMM dd, yyyy")</p>
+                    </div>
+                    @if (Model.DueDate.HasValue)
+                    {
+                        <div class="invoice">
+                            <p>Due Date</p>
+                            <p>@Model.DueDate.Value.ToString("MMM dd, yyyy")</p>
+                        </div>
+                    }
+                    <div class="invoice">
+                        <p>Status</p>
+                        @if (Model.Status == "Open")
+                        {
+                            <div class="btn-pending">Pending</div>
+                        }
+                        else if (Model.Status == "Canceled")
+                        {
+                            <span class="btn-danger-cus">Canceled</span>
+                        }
+                        else if (Model.Status == InvoiceStatus.PaymentLater.ToString())
+                        {
+                            <span class="btn-pending">Payment Later</span>
+                        }
+                        else
+                        {
+                            <span class="btn-success-cus">Paid Completed</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-12 custom-scroll" style="padding:0;overflow-y: auto;height: calc(100% - 65px);max-height: calc(100% - 65px);overflow-x: hidden;  @if (closedInvoice){ @Html.Raw("display:none;")}">
+            @if (ViewBag.checkRecurring == 1)
+            {
+                <div class="col-md-12 message-auto-recurring" style="margin-bottom: 25px">
+                    <label style="font-weight: unset; text-align: left; margin: 5px 0">
+                        <i>Your subscription plan will automatically renew unless cancelled before the next billing cycle.</i>
+                    </label>
+                    <label id="auto-subscriptions-list-overview" style="font-weight: unset; text-align: left; margin: 10px 0;display:none">
+                        <span style="font-size:13px;">Subscription auto renew list:</span>
+                        @foreach (var sub in subscriptions)
+                        {
+                            <br /><span style="font-size:13px;">@sub.ProductName (@sub.SubscriptionType)</span>
+                        }
+                    </label>
+                    <label style="font-weight: unset; text-align: right; margin: 5px 0 10px 0">
+                        <btn class="btn-link" id="btn-auto-subscription-overview" style="font-size:13px">See more</btn>
+                    </label>
+                </div>
+            }
+
+            <div style="padding: 0 10px"><button id="show_form_btn" class="btn btn-success btn-flat" style="width:100%; border-radius: 20px" onclick="$('#collect-form').slideDown(400);$('#show_form_btn').hide()"><i class="fa fa-unlock-alt"></i> Pay @(Model.GrandTotal?.ToString("$#,##0.#0"))</button></div>
+
+            <div @*action="/PaymentGate/Pay/Collect" method="post" name="collect-form"*@ id="collect-form" style="display:none">
+                <div id="pay_slide" style="width:200%">
+                    <input type="hidden" name="Key" value="@ViewBag.Key" />
+                    <input type="hidden" name="Pc" value="@ViewBag.Pc" />
+                    <input type="hidden" name="CardId" value="@(partner_cards.FirstOrDefault(card => card.IsDefault)?.Id ?? cards.FirstOrDefault(card => card.IsDefault)?.Id)" />
+                    <input type="hidden" name="CustomerCode" value="@Model.CustomerCode" />
+                    <input type="hidden" name="StoreCode" value="@(cus?.StoreCode)" />
+                    <div class="col-md-6" style='padding: 0 5px; overflow-x: hidden;float:left;'>
+                        <div style="text-align:center; ">
+                            <div id="lst-auth-card" >
+
+                            </div>
+                            
+
+                            <a class="btn btn-primary" onclick="doQuickPay()" style="width:100%; font-weight:bold; color:white">Pay Now</a>
+                            <hr />
+                            <div style="text-align:center; margin-top: -25px;"><b style=" background-color: #fff; padding: 5px;">or</b></div>
+                            <a class="btn btn-success btn-slide-new-card" style="width:100%; font-weight:bold; color: #fff" data-value="new" onclick="addNewCard()">Pay with new credit</a>
+                        </div>
+                    </div>
+                    <div id="new_credit" class="col-md-6" style="padding: 0px 5px;float: right;display: none;">
+                        <div class="row no-gutters">
+                            <div class="col-md-12">
+                                <input type="hidden" name="CardId" value="" />
+                                <div style="padding:5px">
+                                    <lable class="btn btn-sm btn-outline-primary btn-prev-list-card" style="border:none" onclick="$('.message-auto-recurring').slideDown();prev()"><i class="fa fa-arrow-left"></i> <b>Back</b></lable>
+                                </div>
+
+                                <div class="creditCardInput" style="height:40px; width:100%; border: solid 1px #e3e3e3; border-radius:5px; background-color:#f2f3f4; margin-bottom:10px">
+                                    <div class="cardIcon VISA"></div>
+                                    <div class="cardIcon AMEX"></div>
+                                    <div class="cardIcon MASTERCARD"></div>
+                                    <div class="cardIcon ELECTRON"></div>
+                                    <div class="cardIcon MAESTRO"></div>
+                                    <div class="cardIcon JCB"></div>
+                                    <div class="cardIcon DISCOVER"></div>
+                                </div>
+                                <div class="_input">
+                                    <div class="card-view creditCardInput" style="padding: 0;line-height: unset;top: 20px;left: 5px;">
+                                        <i class="fa fa-credit-card pull-left" style="margin-top:2px;position: absolute;font-size: 20px;"></i>
+                                        <div class="cardIcon"></div>
+                                    </div>
+                                    <input style="text-indent: 25px" class="_text req" type="number" name="CardNumber" @*value="@(cardSessionInfo?.CardNumber ?? "")"*@ onchange="checkCardType(this)" />
+                                    <span class="_label" style="left: 40px">Card number <span style="color:red">*</span></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="_input">
+                                    <input class="_text req" type="text" id="CardExpiry" name="CardExpiry" @*value="@(cardSessionInfo?.CardExpiry ?? "")"*@ />
+                                    <span class="_label">Expired (MM/YY) <span style="color:red">*</span></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="_input">
+                                    <input class="_text req" type="text" name="CardCSC" @*value="@(cardSessionInfo?.CardCSC ?? "")"*@ />
+                                    <span class="_label">CSC <span style="color:red">*</span></span>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="_input">
+                                    <input class="_text req" type="text" name="CardHolderName" @*value="@(cardSessionInfo?.CardHolderName ??cus.OwnerName?? "")"*@ />
+                                    <span class="_label">Holder Name <span style="color:red">*</span></span>
+                                </div>
+                            </div>
+
+                            @* <hr /> *@
+                            <div style="text-align:center; margin-top: -20px;">
+                                <b style=" background-color: #fff; padding: 5px;">***</b>
+                            </div>
+                            <!--<div class="col-md-12">
+                                <div class="_input">
+                                    <input class="_text req" type="text" name="CardAddressStreet"-->
+                            @*value="@(cardSessionInfo?.CardAddressStreet ?? cus.BusinessAddressStreet)"*@
+                            <!--/>
+                                    <span class="_label">Street address <span style="color:red">*</span></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="_input">
+                                    <input class="_text req" type="text" name="CardCity"-->
+                            @*value="@(cardSessionInfo?.CardCity ?? cus.BusinessCity)"*@
+                            <!--/>
+                                    <span class="_label">City <span style="color:red">*</span></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="_input">
+                                    <select class="_text req select-iphone" name="CardState">
+                                        @foreach (var state in states)
+                                        {
+                                            <option value="@state.abbreviation" @*@if (state.name.ToLower().Equals((cardSessionInfo?.CardState ?? cus.BusinessState ?? "").ToLower())) { @Html.Raw("selected") }*@>@state.name</option>
+                                        }
+                                    </select>
+                                    <span class="_label">State <span style="color:red">*</span></span>
+                                </div>
+                            </div>-->
+                            @*<div class="col-md-6 _input" style="float:left; padding-left:0; padding-right:3px">
+                                    <select class="_text req" name="CardCountry">
+                                        @foreach (var c in country)
+                                        {
+                                            <option value="@c.Name" @if (c.Name.ToLower().Equals((cardSessionInfo?.CardCountry ?? cus.BusinessCountry).ToLower())) { @Html.Raw("selected") }>@c.Name</option>
+                                        }
+                                    </select>
+                                    <span class="_label">Country/Region</span>
+                                </div>*@
+                            <!--<div class="col-md-6">
+                                <div class="_input">
+                                    <input class="_text req" type="text" name="CardZipCode"-->
+                            @*value="@(cardSessionInfo?.CardZipCode ?? cus.BusinessZipCode)"*@
+                            <!--/>
+                                    <span class="_label">Postal code <span style="color:red">*</span></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="_input">
+                                    <input class="_text" type="text" name="CardPhone"-->
+                            @*value="@(cardSessionInfo?.CardPhone ?? cus.BusinessPhone)"*@
+                            <!--/>
+                                    <span class="_label">Phone number</span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-12">
+                                <div class="_input">
+                                    <input class="_text" type="text" name="CardEmail"-->
+                            @*value="@(cardSessionInfo?.CardEmail ?? cus.BusinessEmail)"*@
+                            <!--/>
+                                    <span class="_label">Email</span>
+                                </div>
+                            </div>-->
+
+                            <div class="col-md-12">
+                                <label style="font-weight:unset; text-align: justify; margin: 10px 0">
+                                    <input type="checkbox" id="check_confirm_payment" class="flat-red">
+                                    <i>I authorized Simply Pos to store and charge this card for future payments until canceled. Please review our <a style="text-decoration: underline; color: blue;" href="/StaticView/terms-of-use.html" target="_blank">Terms Of Use</a>.</i>
+                                </label>
+                            </div>
+                            @if (ViewBag.checkRecurring == 1)
+                            {
+                                <div class="col-md-12">
+                                    <input type="hidden" value="on" id="check_confirm_renew" name="check_confirm_renew" class="flat-red">
+                                    <label style="font-weight:unset; text-align: left; margin: 10px 0">
+                                        <i>Your subscription plan will be automatically renew until I cancel.</i>
+                                    </label>
+                                    <label id="auto-subscriptions-list" style="font-weight: unset; text-align: left; margin: 10px 0;display:none">
+                                        <span style="font-size:13px;">Subscription auto renew list:</span>
+                                        @foreach (var sub in subscriptions)
+                                        {
+                                            <br /><span style="font-size:13px;">@sub.ProductName (@sub.SubscriptionType)</span>
+                                        }
+                                    </label>
+                                    <label style="font-weight: unset; text-align: right; margin: 5px 0 10px 0">
+                                        <button class="btn-link" type="button" id="btn-auto-subscription" style="font-size:13px">See more</button>
+                                    </label>
+                                </div>
+                            }
+                            <div class="col-md-12">
+                                <button @*type="submit"*@ class="btn btn-primary col-md-12 pay-with-new-card"
+                                        onclick="confirm_pay()" style="font-weight:bold" disabled>
+                                    Confirm & Pay
+                                </button>
+
+                                <button type="button" class="btn btn-default col-md-12" onclick="$('#collect-form').slideUp(400);$('#show_form_btn').show()" style="font-weight:bold; margin-top: 10px">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @*@if (isAgent == false)
+        {
+            <p id="viewhistory" style=" padding: 0 10px;text-align:center">
+                <b><a href="/PaymentGate/Card?key=@(Request.QueryString["key"])" style="text-decoration: underline;color: blue;"><i class="fa fa-link" aria-hidden="true"></i> Click here to view payment history</a></b>
+            </p>
+        }*@
+    </div>
+}
+
+<div class="modal fade" id="ignismyModal" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content" style="margin-top:25vh">
+            <div class="modal-header">
+                @*<button type="button" class="close" data-dismiss="modal" aria-label=""><span>×</span></button>*@
+            </div>
+
+            <div class="modal-body">
+
+                <div class="thank-you-pop">
+                    <div class="fa fa-check-circle"></div>
+                    <h1>Thank You!</h1>
+                    <div class="col-md-12" style="padding:0px 15px 5px">
+                        <h6 style="font-weight:bold; color:gray">Your payment already completed!</h6>
+                    </div>
+                    @*@if (isAgent == false)
+                    {
+                        <span id="viewhistory" style="text-align:center; padding: 0 10px; margin-top:0">
+                            <b><a href="/PaymentGate/Card" style="text-decoration: underline;color: blue;"><i class="fa fa-arrow-right" aria-hidden="true"></i> Click here to view payment History</a></b>
+                        </span>
+                    }*@
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+<style type="text/css">
+    .header-right {
+        border-bottom: 1px solid #f3f3f3;
+    }
+
+    .header-left {
+        text-align: right;
+        border-bottom: 1px solid #f3f3f3;
+    }
+
+    .select-iphone {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+    }
+
+    @@media (max-width: 767.98px) {
+        #invoice-div {
+            transform: scale(.7);
+        }
+    }
+
+
+    @@media (min-width: 768px) {
+        .no-gutters > .col, .no-gutters > [class*=col-] {
+            padding-right: 5px;
+            padding-left: 5px;
+        }
+    }
+
+    .table td {
+        border-top: 1px dashed #dee2e6
+    }
+
+    .thank-you-pop {
+        width: 100%;
+        padding: 20px;
+        text-align: center;
+    }
+
+        .thank-you-pop .fa-check-circle {
+            font-size: 5em;
+            color: limegreen;
+            margin: auto;
+            display: block;
+            margin-bottom: 25px;
+        }
+
+        .thank-you-pop h1 {
+            font-size: 42px;
+            margin-bottom: 25px;
+            color: #5C5C5C;
+        }
+
+        .thank-you-pop p {
+            font-size: 20px;
+            margin-bottom: 27px;
+            color: #5C5C5C;
+        }
+
+    #ignismyModal .modal-header {
+        border: 0px;
+    }
+
+    .modal.fade.show {
+        backdrop-filter: blur(6px);
+    }
+
+    #show_invoice_btn:active {
+        color: #343a40;
+        background-color: transparent;
+        border-color: #343a40;
+    }
+
+    .custom-scroll::-webkit-scrollbar {
+        width: 7px;
+        background-color: #f1f1f1;
+    }
+
+    .custom-scroll::-webkit-scrollbar-track {
+        -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+        border-radius: 10px;
+        background-color: #f1f1f1;
+    }
+
+    .custom-scroll::-webkit-scrollbar-thumb {
+        border-radius: 10px;
+        -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+        background-color: #d9d9d9;
+    }
+
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+</style>

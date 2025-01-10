@@ -1,0 +1,32 @@
+namespace Enrich.IMS.Entities
+{      
+    public partial class Vendor
+    {
+        public long Id { get; set; }
+        public string CompanyName { get; set; }
+        public string Address { get; set; }
+        public string State { get; set; }
+        public string City { get; set; }
+        public string Zipcode { get; set; }
+        public string Country { get; set; }
+        public string Phone { get; set; }
+        public string Email { get; set; }
+        public string Fax { get; set; }
+        public string Description { get; set; }
+        public string Website { get; set; }
+        public string M_UserName { get; set; }
+        public string M_Password { get; set; }
+        public string M_PartnerWebsite { get; set; }
+        public string M_AgentID { get; set; }
+        public string ContactFirstName { get; set; }
+        public string ContactLastName { get; set; }
+        public string ContactPhone { get; set; }
+        public string ContactEmail { get; set; }
+        public string M_StatementAnalysisEmail { get; set; }
+        public string M_UnderwriterSubmissionEmail { get; set; }
+        public string M_SupportHotline { get; set; }
+        public string M_SupportEmail { get; set; }
+        public bool? Active { get; set; }
+        public string VendorType { get; set; }
+    }
+}

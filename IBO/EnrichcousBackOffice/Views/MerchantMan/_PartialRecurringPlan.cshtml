@@ -1,0 +1,445 @@
+﻿
+@using EnrichcousBackOffice.Models
+@{
+    var customer = ViewBag.Customer as C_Customer;
+}
+<link rel="stylesheet" href="/content/admin/plugins/iCheck/all.css" />
+<style>
+
+    .discount-group {
+    }
+
+        .discount-group .input-group-addon {
+            padding: 0;
+        }
+
+            .discount-group .input-group-addon label {
+                margin: 0;
+                width: 35px;
+                height: 100%;
+                display: block;
+                opacity: 0.3;
+            }
+
+                .discount-group .input-group-addon label i {
+                    line-height: 32px;
+                    width: 100%;
+                    cursor: pointer;
+                }
+
+                .discount-group .input-group-addon label.active {
+                    color: #fff;
+                    background-color: #17a2b8;
+                    border-color: #17a2b8;
+                    opacity: 1;
+                }
+</style>
+<div class="row">
+    <div class="col-md-12">
+        <div class="render-table">
+            <table class="table table-bordered table-hover" id="table-service" style="width:100%">
+                <thead>
+                    <tr class="bg-info">
+                        <th>#</th>
+                        <th>Activated License</th>
+                        <th>Recurring</th>
+                        <th>Enable</th>
+                        <th>History</th>
+                        <th>Order Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modal-planning" tabindex="0" role="dialog" data-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title"></h4>
+            </div>
+            <div class="modal-body">
+                <form method="post" action="/StoreReport/SaveRecurringPlan" id="form-planning" onsubmit="overlayOn()">
+                    <input type="hidden" value="" name="Id" />
+                    <input type="hidden" value="" name="ApplyDiscountAsRecurring" />
+                    <input type="hidden" value="" name="DiscountPercent" />
+                    <input type="hidden" value="" name="Discount" />
+                    <input type="hidden" value="" name="Status" />
+                    <input type="hidden" value="" name="TotalRecurringPrice" id="TotalRecurringPrice" />
+                    <div class="row">
+                        <div class="col-md-12" style="padding-bottom:20px">
+                            <label>Store: <i id="data_store"></i></label>
+                        </div>
+                        <div class="col-md-12" style="padding-bottom:20px">
+                            <label>Subscription: <i id="data_subscription"></i></label>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6" style="padding-bottom:20px">
+                            <label>Recurring price <span style="color:red">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-addon">$</span>
+                                <input id="Price" name="Price" min="0" class="form-control prd_price" onchange="changeDiscount()" type="number" required />
+                            </div>
+                        </div>
+                        <div class="col-md-6" style="padding-bottom:20px">
+                            <label>Recurring date <span style="color:red">*</span></label>
+                            <input id="RecurringDate" name="RecurringDate" class="form-control datepicker" required />
+                        </div>
+                        <div class="col-md-12" style="padding-bottom:20px">
+                            <label>Discount</label>
+                            <div class="input-group discount-group">
+                                <input type="number" step="0.01" class="form-control disable-enter" name="DiscountValue" id="DiscountValue" onchange="changeDiscount()"
+                                       value="" style="text-align: right;" />
+                                <div class="input-group-addon">
+                                    <input type="radio" id="discount-amount" name="discount" value="discount-amount" class="disable-enter" style="display:none" />
+                                    <label for="discount-amount" class="discount-amount active" style="margin: 0" onclick="changeDiscount('amount')">
+                                        <i class="fa fa-dollar" data-toggle="tooltip" title="Amount"></i>
+                                    </label>
+                                </div>
+                                <div class="input-group-addon">
+                                    <input type="radio" id="discount-rate" name="discount" value="discount-rate" class="disable-enter" style="display:none" />
+                                    <label for="discount-rate" class="discount-rate" style="margin: 0" onclick="changeDiscount('rate')">
+                                        <i class="fa fa-percent" data-toggle="tooltip" title="Rate"></i>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12" style="padding-bottom:20px">
+                            <label>
+                                <input type="checkbox" name="ApplyDiscount" id="ApplyDiscount" class="flat-red card_type"> Apply discount as recurring
+                            </label>
+                        </div>
+                        <div class="col-md-12" style="padding-bottom:20px">
+                            <label>
+                                <input type="checkbox" name="recurringStatus" id="recurringStatus" class="flat-red card_type"> Active recurring
+                            </label>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12" style="padding-bottom:20px">
+                            <label>Total recurring: <i id="data_total" style="font-size:20px"></i></label>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <button type="submit" class="btn btn-primary pull-right" onsubmit="overlayOn()" id="btn-save-cam">Save</button>
+                            <button type="button" class="btn btn-danger pull-left" onclick="deleteRecurring()">Delete</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modal-histories" tabindex="0" role="dialog" data-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title"></h4>
+            </div>
+            <div class="modal-body">
+                <table style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>Order</th>
+                            <th>Recurring date</th>
+                            <th>Grand total</th>
+                            <th>Message</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="content-histories">
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script src="~/Content/Admin/bower_components/bootstrap-daterangepicker/daterangepicker.js"></script>
+<script src="/content/admin/plugins/iCheck/icheck.min.js"></script>
+<script src="http://malsup.github.com/jquery.form.js"></script>
+
+<script>
+    var _dataPlanning = null;
+    var planning = null;
+    $(function () {
+        var t = $("#table-service").DataTable({
+            "language": {
+                "processing": '<img src="/Content/ajax-loaders/loading2.gif" width="60px" />',
+                "paginate": {
+                    "first": '<i class="fa fa-angle-double-left" aria-hidden="true"></i>',
+                    "last": '<i class="fa fa-angle-double-right" aria-hidden="true"></i>',
+                    "next": '<i class="fa fa-angle-right" aria-hidden="true"></i>',
+                    "previous": '<i class="fa fa-angle-left" aria-hidden="true"></i>'
+                },
+            },
+            //"columnDefs": [{
+            //    "targets": 'no-sort',
+            //    "orderable": false,
+            //}],
+            'paging': true,
+            "pageLength": 10,
+            "serverSide": true, // for process server side
+            "processing": true, // for show progress bar
+            'lengthChange': true,
+            'searching': false,
+            //'ordering': false,
+            'stateSave': false,
+            'info': false,
+            "scrollX": true,
+            'autoWidth': true,
+            "order": [[3, "desc"]],
+            "ajax": {
+                "url": "/storereport/LoadRecurringPlan",
+                "type": "POST",
+                "datatype": "json",
+                data: function (data) {
+                    data.searchText = $("#s_searchText").val();
+                    data.status = $("#s_recurringStatus").val();
+                    data.slicense = $("#s_subcription").val();
+                    data.storeCode = '@customer.StoreCode';
+                    //data.fromDate = $('.daterange').data('daterangepicker').startDate.format('YYYY-MM-DD');
+                    //data.toDate = $('.daterange').data('daterangepicker').endDate.format('YYYY-MM-DD');
+                    return data;
+                },
+                'dataSrc': function (data) {
+                    _dataPlanning = data.data;
+                    return data.data;
+                },
+                "complete": function (json) { }
+            },
+            'fnCreatedRow': function (nRow, aData, iDataIndex) {
+                $(nRow).hover(
+                    function () {
+                        $(this).find('.btn_group').css({ opacity: 0.0, visibility: "visible" }).animate({ opacity: 1.0 });
+                    },
+                    function () {
+                        $(this).find('.btn_group').css({ opacity: 0.0, visibility: "hidden" }).animate({ opacity: 1.0 });
+                    }
+                )
+            },
+            "columns": [
+                {
+                    name: 'Id',
+                    render: function (data, type, row, meta) {
+                        return `<b>#${row.planningId}</b>`;
+                    },
+                },
+                {
+                    name: 'ProductCode',
+                    render: function (data, type, row, meta) {
+                        let html = '';
+                        html += `<b>${row.licenseName}</b></br>`;
+                        html += `Quantity: <b>${row.planningSubscriptionQuantity ?? 1}</b></br>`;
+                        html += 'Price: ' + Math.abs(row.planningPrice).toLocaleString('en-US', {
+                            style: 'currency',
+                            currency: 'USD',
+                        });
+                        if (row.ApplyDiscountAsRecurring == true) {
+                            if (row.planningDiscountPercent != null && row.planningDiscountPercent != 0) {
+                                html += '<br>Discount: ' + Math.abs(row.planningDiscountPercent) + '%';
+                            }
+                            else if (row.planningDiscount != null && row.planningDiscount != 0) {
+                                html += '<br>Discount: ' + Math.abs(row.planningDiscount).toLocaleString('en-US', {
+                                    style: 'currency',
+                                    currency: 'USD',
+                                });
+                            }
+                        }
+
+                        return html;
+                    },
+                },
+                {
+                    name: 'Recurring',
+                    render: function (data, type, row, meta) {
+                        let html = '';
+                        let offset = moment().utcOffset();
+                        if (row['planning']?.RecurringDate != null) {
+                            let local = moment.utc(row['planning']?.RecurringDate).utcOffset(offset).format("MMM DD, YYYY");
+                            html += `Next recurring: <b>${local}</b>`;
+                        }
+                        else {
+                            html += 'N/A';
+                        }
+                        if (row['planning'].TotalRecurringPrice == null)
+                            row['planning'].TotalRecurringPrice = row['planning'].Price * (row['planning'].SubscriptionQuantity ?? 1)
+                                - (row['planning'].ApplyDiscountAsRecurring == true ? (row['planning'].Discount ?? 0) : 0)
+                        html += '<br>Recurring price: <b>' + Math.abs(row['planning'].TotalRecurringPrice).toLocaleString('en-US', {
+                            style: 'currency',
+                            currency: 'USD',
+                        }) + '</b>';
+                        html += `<br>Recurring with: ${row['planning'].RecurringType ?? "None"}`;
+                        return html;
+                    },
+                },
+                {
+                    name: 'RecurringStatus',
+                    render: function (data, type, row, meta) {
+                        let html = '';
+                        if (row['planning']?.Status == 1)
+                            html += `<span class="label label-success">ON</span>`;
+                        else if (row['planning']?.Status == 0)
+                            html += `<span class="label label-warning">OFF</span>`;
+                        else
+                            html += `<span class="label label-danger">Removed</span>`;
+                        return html;
+                    },
+                },
+                {
+                    name: 'History',
+                    render: function (data, type, row, meta) {
+                        let html = '';
+                        if (row['histories'].length > 0) {
+                            let history = row['histories'][row['histories'].length - 1];
+                            if (history.Status == 0) {
+                                html = `<td><span class='label label-warning'>Incomplete</span></td>`
+                            }
+                            else {
+                                html = `<td><span class='label label-success'>Complete</span></td>`
+                            }
+                        }
+                        else
+                            html = `<td><span class='label label-default'>Waiting</span></td>`
+                        return html;
+                    },
+                },
+                {
+                    name: 'OrderStatus',
+                    render: function (data, type, row, meta) {
+                        let html = '';
+                        if (row['histories'].length > 0) {
+                            if (row['order'].Status == "Open") html = `<span class='label label-default'>Open</span>`;
+                            else if (row['order'].Status == "Paid_Wait") html = `<span class='label label-primary'>Paid Wait</span>`;
+                            else if (row['order'].Status == "PaymentLater") html = `<span class='label label-primary'>Payment Later</span>`;
+                            else if (row['order'].Status == "Closed") html = `<span class='label label-success'>Complete</span>`;
+                        }
+                        else html = `<span class='label label-default'>N/A</span>`
+                        return html;
+                    },
+                },
+                {
+                    name: 'Action',
+                    render: function (data, type, row, meta) {
+                        let html = '<div class="btn_group" style="visibility:hidden;">';
+                        if (row['planning']?.Status >= 0) {
+                            html += `<button type="button" class="btn btn-warning btn-sm pull-right btn-edit" onclick="popupPlanning('${row['planning'].Id}')"><i class="fa fa-pencil-square-o" aria-hidden="true"></i> Edit</button>`;
+                        }
+                        html += `<button type="button" class="btn btn-info btn-sm pull-right" onclick="popupHistories('${row['planning'].Id}')" style="margin-right:5px"><i class="fa fa-history" aria-hidden="true"></i> Histories</button></div>`;
+                        return html;
+                    },
+                },
+            ]
+        });
+        $(".search-change").change(function () {
+            t.draw();
+        });
+        $("#RecurringDate").datepicker({
+            showAnim: 'slideDown',
+            showButtonPanel: true,
+            changeMonth: true,
+            changeYear: true,
+            yearRange: '2000:2050',
+            dateFormat: 'M dd, yy'
+        });
+        $('input[type="checkbox"].flat-red, input[type="radio"].flat-red').iCheck({
+            checkboxClass: 'icheckbox_flat-blue',
+            radioClass: 'iradio_flat-blue'
+        });
+        $("#modal-planning #ApplyDiscount").on('ifChanged', function () {
+            changeDiscount();
+        });
+
+        $("#modal-planning #recurringStatus").on('ifChanged', function () {
+            $("input[name='Status']").val($("#modal-planning #recurringStatus").is(":checked") ? 1 : 0);
+        });
+
+        $('#form-planning').ajaxForm(function (data) {
+            if (data[0]) {
+                noty({ "text": data[1], "layout": "topRight", "type": "success" });
+                t.draw();
+                $("#modal-planning").modal("hide");
+            } else {
+                noty({ "text": data[1], "layout": "topRight", "type": "error" });
+            }
+            overlayOff();
+        });
+    })
+
+    function changeDiscount(type) {
+        if (type == 'rate') {
+            $('#modal-planning .discount-amount').removeClass('active');
+            $('#modal-planning .discount-rate').addClass('active');
+            $('#modal-planning #discount-amount').prop("checked", false);
+            $('#modal-planning #discount-rate').prop("checked", true);
+        }
+        else if (type == 'amount') {
+            $('#modal-planning .discount-amount').addClass('active');
+            $('#modal-planning .discount-rate').removeClass('active');
+            $('#modal-planning #discount-amount').prop("checked", true);
+            $('#modal-planning #discount-rate').prop("checked", false);
+        }
+        //else return;
+        var applyDiscount = $("#modal-planning #ApplyDiscount").is(":checked");
+        var discountType = $("input[name='discount']:checked").val();
+        var price = $('#modal-planning #Price').val() ?? 0;
+        var quantity = planning.planning.SubscriptionQuantity ?? 1;
+        var discountValue = applyDiscount == true ? ($('#modal-planning #DiscountValue').val() ?? 0) : 0;
+        var total = calculatorTotal(price, quantity, discountValue, discountType, applyDiscount);
+        $('#modal-planning #data_total').html("$" + total);
+        $('#modal-planning #TotalRecurringPrice').val(total);
+    }
+    function calculatorTotal(price, quantity, discountValue, discountType, applyDiscount) {
+        $("input[name='ApplyDiscountAsRecurring']").val(applyDiscount);
+        var total = price * quantity;
+        if (discountType == 'discount-rate') {
+            discountValue = discountValue > 100 ? 100 : discountValue;
+            $("input[name='DiscountPercent']").val(discountValue);
+            $("input[name='Discount']").val(total * discountValue / 100);
+            total = total * (100 - discountValue) / 100;
+        }
+        else {
+            discountValue = discountValue > total ? total : discountValue;
+            $("input[name='DiscountPercent']").val(0);
+            $("input[name='Discount']").val(discountValue);
+            total -= discountValue
+        }
+        $("input[name='TotalRecurringPrice']").val(total.toFixed(2));
+        return total.toFixed(2);
+    }
+    function deleteRecurring(id) {
+        if (confirm("Are you sure you want to delete this Recurring?") == true) {
+            overlayOn();
+            $.ajax({
+                url: `/StoreReport/RemoveRecurringPlan?id=${planning.planning.Id}`,
+                type: "get",
+                success: function (data) {
+                    if (data[0]) {
+                        noty({ "text": data[1], "layout": "topRight", "type": "success" });
+                        $("#table-service").DataTable().draw();
+                        $("#modal-planning").modal("hide");
+                    }
+                    else {
+                        noty({ "text": data[1], "layout": "topRight", "type": "error" });
+                    }
+                    overlayOff();
+                },
+            })
+        }
+    }
+</script>

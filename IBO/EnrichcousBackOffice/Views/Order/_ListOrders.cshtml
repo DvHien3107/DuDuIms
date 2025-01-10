@@ -1,0 +1,142 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.CustomizeModel.OrderViewListModel>
+@using EnrichcousBackOffice.Utils.IEnums
+@using EnrichcousBackOffice.AppLB
+@using Inner.Libs.Helpful
+@{
+    Dictionary<string, bool> p = ViewBag.p;
+}
+@foreach (var item in Model)
+{
+    <tr @(item.order.IsDelete == true ? "style=text-decoration:line-through;" : "")>
+        <td data-sort="@((item.order.UpdatedAt ?? item.order.CreatedAt).Value.Ticks)">
+            @*<span id="localtime-update-@item.order.Id">
+                    <script>convertLocalTime("update-" +@item.order.Id, "@(item.order.UpdatedAt ?? item.order.CreatedAt)", "MMMddyyyy")</script>
+                </span><br />*@
+            <span>@((item.order.UpdatedAt ?? item.order.CreatedAt).Value.UtcToIMSDateTime().ToString("MMM dd, yyyy hh:mm tt"))</span><br />
+            <i style="font-size:12px">by @item.order.CreatedBy</i>
+        </td>
+        <td>
+            @if ((p.Any(k => k.Key.Equals("orders_viewall")) == true && p["orders_viewall"] == true) || (p.Any(k => k.Key.Equals("orders_viewteam")) == true && p["orders_viewteam"] == true))
+            {
+                <a href="/order/estimatesdetail/@item.order.Id?url_back='/order'" onclick="overlayOn()" data-toggle="tooltip" data-original-title="Click here to view invoice">#@(item.order.OrdersCode)</a>
+            }
+            else
+            {
+                <span>#@(item.order.OrdersCode)</span>
+            }
+        </td>
+        <td>
+            <span><b>@(item.order.CustomerName)</b></span><br />
+            <span><i>Code: #@(item.StoreCode)</i></span>
+            @if (!string.IsNullOrEmpty(item.order.PartnerCode))
+            {
+                <br /><span class="label label-default" style="font-size: 12px; cursor: pointer" onclick="$('#Partner').val('@item.order.PartnerCode').trigger('change');"><i> #@(item.order.PartnerCode)</i></span>
+            }
+
+        </td>
+        <td class="change-sales-person-td">
+            @if (string.IsNullOrEmpty(item.order.SalesMemberNumber) == false)
+            {
+                <div class="sales-person-@item.order.OrdersCode">
+                    <span><b>@(item.order.SalesName)</b></span><br />
+                    <span><i>Member number: #@(item.order.SalesMemberNumber)</i></span>
+                </div>
+                //không thể đổi sale persion nếu Invoice đã closed, kể cả admin(cho tới khi xong tính năng payroll)
+                if ((p.Any(k => k.Key.Equals("sales_lead_assigned")) == true && p["sales_lead_assigned"] == true) && (item.order.Status == "Paid_Wait" || item.order.Status == "Open" || item.order.Status == "PaymentLater"))
+                {
+                    <span onclick="showPopupSalesPerson('@item.order.OrdersCode')" class="label label-primary change-sales-person" style="cursor:pointer;opacity:0"><i class="fa fa-refresh" aria-hidden="true"></i> Change</span>
+                }
+
+            }
+            else
+            {
+                <div class="sales-person-@item.order.OrdersCode">
+                    <span><b>--N/A--</b></span>
+                </div>
+                if ((p.Any(k => k.Key.Equals("sales_lead_assigned")) == true && p["sales_lead_assigned"] == true) && (item.order.Status == "Paid_Wait" || item.order.Status == "Open" || item.order.Status == "PaymentLater"))
+                {
+                    <span onclick="showPopupSalesPerson('@item.order.OrdersCode')" class="label label-primary change-sales-person" style="cursor:pointer;opacity:0"><i class="fa fa-refresh" aria-hidden="true"></i> Change</span>
+                }
+            }
+        </td>
+        <td>
+            <b style="color:#258e4f">@(item.order.GrandTotal?.ToString("$#,##0.#0"))</b>
+        </td>
+        <td>
+            @{
+                var status = Ext.EnumParse<InvoiceStatus>(item.order.Status);
+                var label = "danger";
+                var remaning_paymentlater_date = 0;
+                if (item.order.Status == InvoiceStatus.PaymentLater.ToString() && item.order.DueDate != null)
+                {
+                    remaning_paymentlater_date = (item.order.DueDate.Value.Date - DateTime.UtcNow.Date).Days;
+                }
+                switch (status)
+                {
+                    case InvoiceStatus.Open: label = "default"; break;
+                    case InvoiceStatus.Paid_Wait: label = "warning"; break;
+                    case InvoiceStatus.Closed: label = "success"; break;
+                    case InvoiceStatus.PaymentLater: label = item.order.DueDate > DateTime.UtcNow ? "primary" : "danger"; break;
+                }
+            }
+            <span class="label label-@(label)" @(status == InvoiceStatus.Paid_Wait ? "data-html=\"true\" data-toggle=\"tooltip\" data-original-title=\"" + item.order.PaymentMethod + "<br/>" + item.order.PaymentNote + "\" style=\"cursor: pointer\"" : "")>
+                @(status.Code<string>()) @(item.order.Status == InvoiceStatus.PaymentLater.ToString() ? ": "+ (remaning_paymentlater_date>0? (remaning_paymentlater_date + (remaning_paymentlater_date==1?" day":" days")) : ((item.order.DueDate ?? DateTime.UtcNow).ToString("MMM dd, yyyy")+" (expired)")) : "")
+            </span>
+            @if (item.order.IsDelete == true)
+            {
+                <label class="label label-danger">Deleted</label>
+            }
+            <br />
+
+            @if (string.IsNullOrEmpty(item.order.UpdatedHistory))
+            {
+                <i style="color:grey;font-size:0.85em">
+                    @EnrichcousBackOffice.AppLB.CommonFunc.DateTimeRemain(item.order.CreatedAt ?? DateTime.UtcNow)
+                </i>
+            }
+            else
+            {
+                try
+                {
+                    string dateRemain = string.Empty;
+                    var lastupdate = item.order.UpdatedHistory.Split('|').Last().Split('-').First();
+                    dateRemain = EnrichcousBackOffice.AppLB.CommonFunc.DateTimeRemain(DateTime.Parse(lastupdate));
+                    <i style="color:grey;font-size:0.85em">@dateRemain</i>
+                }
+                catch (Exception)
+                {
+                    <i style="color:grey;font-size:0.85em">
+                        @EnrichcousBackOffice.AppLB.CommonFunc.DateTimeRemain(item.order.CreatedAt ?? DateTime.UtcNow)
+                    </i>
+                }
+            }
+        </td>
+        <td>
+            @if ((p.Any(k => k.Key.Equals("orders_viewall")) == true && p["orders_viewall"] == true) || (p.Any(k => k.Key.Equals("orders_viewteam")) == true && p["orders_viewteam"] == true))
+            {
+                <a href="/order/estimatesdetail/@item.order.Id?url_back='/order'" onclick="overlayOn()" class="btn btn-success btn-sm">View</a>
+            }
+
+            @if (p.Any(k => k.Key.Equals("orders_update")) == true && p["orders_update"] == true
+                && item.order.Status != InvoiceStatus.Closed.ToString()
+                && item.order.Status != InvoiceStatus.Canceled.ToString()
+                && item.order.Status != InvoiceStatus.Paid_Wait.ToString()
+                && item.order.IsDelete != true)
+            {
+                //only show edit khi order status la open.
+
+                <a href="/order/save/@item.order.Id?url_back=/order/estimates" onclick="overlayOn()" class="btn btn-warning btn-sm">
+                    <i class="fa fa-edit"></i> Edit
+                </a>
+            }
+            @*@if (p.Any(k => k.Key.Equals("orders_delete")) == true && p["orders_delete"] == true && item.IsDelete != true && item.Status?.Equals("Completed") == false && item.Status?.Equals("Payment cleared") == false)
+                {
+                    <a href="/order/delete/@item.Id" class="btn btn-danger btn-sm" onclick="return confirm('Do you want to delete this invoice?')">Delete</a>
+                }*@
+            @*@if (p.Any(k => k.Key.Equals("orders_delete")) == true && p["orders_delete"] == true && item.IsDelete == true)
+                {
+                    <a href="/order/recovery/@item.Id" class="btn btn-warning btn-sm" onclick="return confirm('Do you want to recovery this invoice?')">Recovery</a>
+                }*@
+        </td>
+    </tr>
+}

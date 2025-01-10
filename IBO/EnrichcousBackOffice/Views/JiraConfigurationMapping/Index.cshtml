@@ -1,0 +1,185 @@
+﻿
+@{
+    ViewBag.Title = "Jira Configuration Mapping";
+}
+<style>
+    tr {
+        height: 50px
+    }
+</style>
+<section class="content-header">
+    <h1>
+        Jira Configuration Mapping
+        
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Dashboard</a></li>
+        <li><i class="fa fa-credit-card"></i>Jira Configuration Mapping</li>
+    </ol>
+</section>
+
+<section class="content">
+    <div class="row">
+
+        @if (TempData["e"] != null)
+        {
+            <div class="alert alert-warning alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+            </div>
+        }
+        else if (TempData["s"] != null)
+        {
+            <div class="alert alert-success alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+            </div>
+        }
+
+
+        <div class="col-md-12">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Jira Configuration Mapping</h3>
+                </div>
+                <!-- /.box-header -->
+
+                <div class="box-body">
+                    <div class="col-md-12" style="padding: 0;text-align:right">
+                       <button onclick="createProjectMapping()" class="btn btn-primary"><i class="fa fa-plus" aria-hidden="true"></i> Create Mapping</button>
+                    </div>
+                </div>
+                <div class="render-table" style="padding:0 15px;max-width:1000px;margin:auto">
+                    <table id="main-table" class="table table-bordered table-striped">
+
+                    </table>
+                </div>
+                <!-- /.box-body -->
+            </div>
+            <!-- /.box -->
+        </div>
+
+    </div>
+</section>
+<div id="project-mapping-render">
+
+</div>
+<div id="config-mapping-render">
+
+</div>
+
+@section script{
+  
+   <script>
+       var dataT = $('#main-table').DataTable({
+           "language": {
+               "processing": '<img src="/Content/ajax-loaders/loading2.gif" width="60px" />',
+           },
+           "pageLength": 10,
+           "serverSide": true, // for process server side
+           "processing": true, // for show progress bar
+           'paging': false,
+           'lengthChange': true,
+           'searching': false,
+           'ordering': false,
+           'info': false,
+           'autoWidth': true,
+           'stateSave': false,
+           "ajax": {
+               "url": "/JiraConfigurationMapping/LoadJiraConfigurationMapping",
+               "type": "POST",
+               "datatype": "json",
+           },
+           "columns": [
+               {
+                   "title": "Mapping Name",
+                   "name": "Mapping",
+                   "data": "Mapping",
+                   "render": function (data, type, row) {
+                       return `<span>${row["IMSName"]}</span> <span style="padding: 0px 10px;transform: translateY(10px);"><i class="fa fa-angle-double-right" aria-hidden="true"></i></span><span>${row["JiraName"]}</span>`;
+                   },
+                   "className": 'align-middle',
+               },
+               {
+                   "title": "",
+                   "name": "",
+                   "data": "",
+                   "render": function (data, type, row) {
+                       return `<button class='btn btn-success btn-sm' onclick="configMapping(${row["Id"]})"><i class="fa fa-cog" aria-hidden="true"></i> Config Mapping</button>
+                                <button class='btn btn-danger btn-sm' onclick="deleteMapping(${row["Id"]})"><i class="fa fa-trash" aria-hidden="true"></i> Delete</button>
+                            `;
+                   },
+                   "className": 'align-middle',
+               }
+           ]
+       })
+
+
+       function createProjectMapping() {
+           overlayOn();
+           $.ajax({
+               type: "get",
+               url: "/JiraConfigurationMapping/CreateOrUpdateProjectMapping",
+               success: function (data) {
+                   $("#project-mapping-render").html(data);
+                   $("#project-mapping-popup").modal("show");
+               },
+               error: function (data) {
+                   console.log('An error occurred.');
+                   console.log(data);
+               },
+               complete: function (data) {
+                   overlayOff();
+               }
+           });
+       }
+
+       function configMapping(Id) {
+           overlayOn();
+           $.ajax({
+               type: "get",
+               url: "/JiraConfigurationMapping/CreateOrUpdateConfigMapping",
+               data: {"projectMappingId":Id},
+               success: function (data) {
+                   $("#config-mapping-render").html(data);
+                   $("#config-mapping-popup").modal("show");
+               },
+               error: function (data) {
+                   console.log('An error occurred.');
+                   console.log(data);
+               },
+               complete: function (data) {
+                   overlayOff();
+               }
+           });
+       }
+
+       function deleteMapping(Id) {
+           if(confirm("are you sure delete this project mapping")){
+               overlayOn();
+               $.ajax({
+                   type: "Post",
+                   url: "/JiraConfigurationMapping/DeleteProjectMapping",
+                   data: {"projectMappingId":Id},
+                   success: function (data) {
+                       if (data.status) {
+                           $('#main-table').DataTable().ajax.reload();
+                           success(data.message)
+                       }
+                       else {
+                           error(data.message)
+                       }
+                   },
+                   error: function (data) {
+                       console.log('An error occurred.');
+                       console.log(data);
+                   },
+                   complete: function (data) {
+                       overlayOff();
+                   }
+               });
+           } 
+       }
+      
+    </script>
+}

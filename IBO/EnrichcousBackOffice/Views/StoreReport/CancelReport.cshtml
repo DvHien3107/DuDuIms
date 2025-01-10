@@ -1,0 +1,122 @@
+﻿@{
+    ViewBag.Title = "Cancel report";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+@section style
+{
+    <!-- datepicker jquery -->
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <!-- DataTables -->
+    <link rel="stylesheet" href="~/content/admin/bower_components/datatables.net-bs/css/dataTables.bootstrap.min.css">
+    <!--noty-->
+    <link href="~/Content/noty/jquery.noty.css" rel="stylesheet" />
+    <link href="~/Content/noty/noty_theme_default.css" rel="stylesheet" />
+    <link href="~/Content/Admin/bower_components/bootstrap-daterangepicker/daterangepicker.css" rel="stylesheet" />
+}
+
+<section class="content-header">
+    <h1>
+        Cancel reports
+        <small>report</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Dashboard</a></li>
+        <li><i class="fa fa-bar-chart"></i> Cancel reports</li>
+    </ol>
+</section>
+
+<section class="content">
+    <div class="row">
+        @if (TempData["e"] != null)
+        {
+            <div class="alert alert-warning alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+            </div>
+        }
+        else if (TempData["s"] != null)
+        {
+            <div class="alert alert-success alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+            </div>
+        }
+        <div class="col-md-12">
+            <div class="box box-default" style="background:#ecf0f5;">
+                <div class="nav-tabs-custom">
+                    <ul class="nav nav-tabs" id="main_tab" style="margin:10px 0px;">
+                        <li id="report" class="active"><a style="cursor: pointer;font-size:18px;" class="tabs" data-toggle="tab" data-tab='report'>Cancel report</a></li>
+                        <li id="chart"><a style="cursor: pointer;font-size:18px;" class="tabs" data-toggle="tab" data-tab='chart'> Chart</a></li>
+                    </ul>
+                    <div class="content" style="position:relative">
+                        <div class="tab-content">
+                        </div>
+                        <div class="loadding-tab" style="position: absolute;right: 50%;top: 50%;transform: translate(-50%, -50%);color: #797979;">
+                            <svg class="circular" viewBox="25 25 50 50">
+                                <circle class="path" cx="50" cy="50" r="20" fill="none" stroke-width="2" stroke-miterlimit="10" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- /.box -->
+        </div>
+
+    </div>
+</section>
+
+@section script
+{
+    <!-- DataTables -->
+    <script src="~/content/admin/bower_components/datatables.net/js/jquery.dataTables.min.js"></script>
+    <script src="~/content/admin/bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.bundle.min.js"></script>
+    <script src="https://emn178.github.io/chartjs-plugin-labels/src/chartjs-plugin-labels.js"></script>
+    <script src="https://code.jquery.com/jquery-migrate-1.4.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/waypoints/4.0.1/jquery.waypoints.js"></script>
+    <script src="~/Content/Admin/bower_components/counter/jquery.counterup.min.js"></script>
+    <!--noty-->
+    <script src="~/Content/noty/jquery.noty.js"></script>
+    <script src="~/Content/Admin/bower_components/bootstrap-daterangepicker/daterangepicker.js"></script>
+    <!-- datepicker jquery -->
+    <script src="~/Content/Admin/plugins/jQueryUI/jquery-ui.min.js"></script>
+    <script>
+        $('#main_tab li a').on("click", function (e) {
+            var TabName = $(this).attr('data-tab');
+            var CurrentTab = localStorage.getItem('lastTabCancelR');
+            if (TabName !== CurrentTab) {
+                localStorage.setItem('lastTabCancelR', TabName);
+                LoadTabContent();
+            }
+        })
+        function LoadTabContent() {
+            $(".tab-content").html('')
+            $('.loadding-tab').show();
+            var CurrentTab = localStorage.getItem('lastTabCancelR');
+            if (!($('#main_tab').find('#' + CurrentTab)[0])) {
+                CurrentTab = $('#main_tab').find('li').first().attr('id');
+                localStorage.setItem('lastTabCancelR', CurrentTab);
+            }
+            $('#' + CurrentTab).tab('show');
+            overlayOn();
+            $.ajax({
+                url: '/storereport/cancelChangeTab',
+                type: 'POST',
+                dataType: 'html',
+                data: { "TabName": CurrentTab },
+                success: function (data) {
+                    $(".tab-content").html(data);
+                    overlayOff();
+                },
+                error: function (data) {
+                    console.log(data.text);
+                },
+                complete: function () {
+                    $('.loadding-tab').hide();
+                }
+            });
+        }
+        LoadTabContent();
+
+    </script>
+}

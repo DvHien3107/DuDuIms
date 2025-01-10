@@ -1,0 +1,82 @@
+﻿@model EnrichcousBackOffice.Models.SurveyMeeting
+
+<tr class="detail-survey tr-detail tr-detail-@Model.Id" style="background-color: #b7b6b6">
+    <td colspan="10" class="td-detail" style="padding:10px 20px;">
+        <div class="col-md-8 div-detail-@Model.Id" style="display:none;margin: auto;float: none;background: white;padding: 5px;">
+            <div class="header detail text-right">
+                <span onclick="showDetailSurvey('@Model.Id', false)" style="cursor:pointer;margin-right: 12px;font-size: 16px;color: #58595a;"><i class="fa fa-times" aria-hidden="true"></i></span>
+            </div>
+            <div id="survey-@Model.Id">
+                @if (Model.StartDate > DateTime.UtcNow)
+                {
+                    <span class="alert alert-warning" style="width:100%;display:block">Comming soon </span>
+                }
+                else
+                {
+                    
+                  <div style="text-align:right">
+                @{
+                        var feedbacks = ViewBag.ListFeedback as List<EnrichcousBackOffice.Models.SurveyMeetingMapping>;
+                        var feedbackSubmit = feedbacks.Where(x => x.Action != "skip");
+                      //  var feedbackSkip = feedbacks.Where(x => x.Action == "skip");
+                    }
+                      <b style="margin:15px">Survey: @(feedbackSubmit.Count()) | Average Rate: @Math.Round((double)feedbackSubmit.Sum(y=>y.Rate)/ feedbackSubmit.Count(),1)</b>
+                   </div>
+                    <div class="list_groups custom-scroll" style="margin:20px 10px; border: 1px solid var(--main-color-1); background-color: #ffffff;padding:1rem">
+                        <table id="detail-survey" class=" table table-bordered table-hover table-striped" style="margin-bottom:0px; margin-top:20px">
+                            <thead>
+                                <tr>
+                                    <th>Rate <span class="star"></span></th>
+                                    <th>@Model.Question</th>
+                                    <th>Survey At</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+
+                                @foreach (var item in feedbackSubmit)
+                                {
+                                    <tr>
+                                        <td>
+                                            <span>@item.Rate</span>
+                                        </td>
+                                        <td>
+                                            <span>@item.Note</span>
+                                        </td>
+                                        <td>
+                                            <span>@EnrichcousBackOffice.AppLB.CommonFunc.ConvertToSpecificTime(item.CreatedAt.Value, (int)EnrichcousBackOffice.Utils.IEnums.TimezoneNumber.EasternTime).ToString("MMM dd,yyyy hh:mm tt")</span>
+                                        </td>
+
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    <script>
+                        $("#detail-survey").DataTable({
+                            "language": {
+                                "paginate": {
+                                    "first": '<i class="fa fa-angle-double-left" aria-hidden="true"></i>',
+                                    "last": '<i class="fa fa-angle-double-right" aria-hidden="true"></i>',
+                                    "next": '<i class="fa fa-angle-right" aria-hidden="true"></i>',
+                                    "previous": '<i class="fa fa-angle-left" aria-hidden="true"></i>'
+                                },
+                            },
+                            'searching': true,
+                            "pageLength": 10,
+                            'paging': true,
+                            'destroy': true,
+                            'lengthChange': false,
+                            'info': false,
+                        });
+                    </script>
+                }
+
+            </div>
+        </div>
+      
+        <div class="col-md-8" style="margin: auto;float: none;padding:10px 0px 10px 0;text-align: right;display: flex;flex-wrap: wrap;">
+            <button onclick="showDetailSurvey('@Model.Id',false)" class="btn btn-default" style="margin-left:auto !important">Close</button>
+        </div>
+    </td>
+</tr>
+

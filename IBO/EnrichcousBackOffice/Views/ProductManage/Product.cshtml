@@ -1,0 +1,903 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.CustomizeModel.ProductManage_view>
+@using EnrichcousBackOffice.AppLB
+@{
+    var _access = EnrichcousBackOffice.AppLB.Authority.GetAccessAuthority();
+    var accessDelete = (_access.Any(k => k.Key.Equals("products_deletedevice")) == true && _access["products_deletedevice"] == true);
+    var accessAdd = (_access.Any(k => k.Key.Equals("products_addnewdevice")) == true && _access["products_addnewdevice"] == true);
+    var accessEdit = (_access.Any(k => k.Key.Equals("products_updatedevice")) == true && _access["products_updatedevice"] == true); 
+}
+@section style{
+    <style>
+        .jconfirm .jconfirm-box.jconfirm-type-blue {
+            border-top: solid 5px #3498db !important;
+        }
+
+        .jconfirm.jconfirm-white .jconfirm-box, .jconfirm.jconfirm-light .jconfirm-box {
+            border-radius: unset;
+        }
+
+        .jconfirm .jconfirm-box.jconfirm-type-blue .jconfirm-title-c .jconfirm-icon-c {
+            color: #217346 !important;
+        }
+
+        .jconfirm-icon-c {
+            font-size: 16px !important;
+            transform: translateY(-2px);
+        }
+
+        .jconfirm-title {
+            font-size: 16px !important;
+            color: #3498db;
+        }
+
+        .jconfirm-content {
+            font-size: 14px;
+        }
+
+        .btn.btn-cancel {
+            background-color: #d2d2d2;
+            border-color: #d2d2d2;
+            margin-right: 5px;
+            font-size: 14px !important;
+            font-weight: 400 !important;
+            text-transform: capitalize !important;
+        }
+
+            .btn.btn-cancel i {
+                padding-right: 5px !important;
+            }
+
+            .btn.btn-cancel:hover {
+                border-color: #d2d2d2;
+            }
+
+        .btn.btn-confirm {
+            background-color: #2ca25d;
+            color: #ffffff;
+            border-color: #38a25d;
+            margin-right: 5px;
+            font-size: 14px !important;
+            font-weight: 400 !important;
+            text-transform: capitalize !important;
+        }
+
+            .btn.btn-confirm i {
+                padding-right: 5px !important;
+            }
+
+            .btn.btn-confirm:hover {
+                border-color: #38a25d;
+            }
+    </style>
+    <link href="~/Content/Admin/plugins/jqueryconfirm/jquery-confirm.min.css" rel="stylesheet" />
+}
+@section headscript{
+    <script src="~/Content/Admin/plugins/jqueryconfirm/jquery-confirm.min.js"></script>
+}
+<section class="content-header">
+    <h1>
+        Products Management
+        <small>Products</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li><i class="fa fa-television"></i> Products</li>
+        <li class="active">Products Management</li>
+    </ol>
+</section>
+
+<!-- Main content -->
+<section class="content">
+    <div class="row">
+
+        @if (TempData["error"] != null)
+        {
+            <div class="alert alert-warning alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-warning"></i> @TempData["error"]</span>
+            </div>
+        }
+        else if (TempData["success"] != null)
+        {
+            <div class="alert alert-success alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-check"></i> @TempData["success"]</span>
+            </div>
+        }
+
+        <div class="col-md-12">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Products Management</h3>
+                    <div class="pull-right box-tools">
+                        <a class="btn btn-primary fa fa-gear" onclick="show_modal_vendor()"> Vendor manage <img id="show_modal_vendor_img" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" /></a>
+                    </div>
+                </div>
+                <div class="box-body" style="padding:30px">
+                    <div class="nav-tabs-custom" style="box-shadow:none">
+                        <ul class="nav nav-tabs" id="main_tab" style="margin:10px 0px">
+                            <li class="@(ViewBag.Tab=="available"?"active":"")"><a style="cursor: pointer;" class="tabs" href="/ProductManage/Product?tab=available" data-tab='available'>Available</a></li>
+                            <li class="@(ViewBag.Tab!="available"?"active":"")"><a style="cursor: pointer;" class="tabs" href="/ProductManage/Product?tab=deactivated" data-tab='deactivated'>Deactivated</a></li>
+                        </ul>
+                        <div class="tab-content">
+                            <table id="tb_products" style="width: 100%;border-collapse: collapse; " class="table-bordered striped3">
+                                <thead style="background-color: #aad3ea">
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Line</th>
+                                        <th>Number of Model</th>
+                                        <th>Description</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var product in Model)
+                                    {
+                                        <tr id="prod_@product.Product.Code" class="hover" onclick="show_model('@product.Product.Code')">
+                                            <td>
+                                                <a style="color:dodgerblue; margin: 0 10px; padding: 0" class="btn fa fa-2x fa-plus-square-o sh_@product.Product.Code" id="onhide_@product.Product.Code"></a>
+                                                <a style="color:orange; margin: 0 10px; padding: 0; display:none" class="btn fa fa-2x fa-minus-square-o sh_@product.Product.Code" id="onshow_@product.Product.Code"></a>
+                                                <b style="color:green" class="prod_name">@product.Product.Name</b>
+                                            </td>
+                                            <td class="prod_line">
+                                                @product.Line.Name
+                                            </td>
+                                            <td class="prod_num_model">
+                                                @product.Models.Count
+                                            </td>
+                                            <td class="prod_des">
+                                                @product.Product.Description
+                                            </td>
+                                            <td>
+
+                                                @if (ViewBag.Tab == "available")
+                                                {
+                                                    if (accessEdit)
+                                                    {
+                                                        <button type="button" class="btn btn-sm btn-warning edit_product" style="padding:5px 10px;color:white" onclick="edit_product('@product.Product.Code')"><i class="fa fa-pencil-square-o"></i> Edit</button>
+                                                    }
+                                                    if (accessDelete)
+                                                    {
+                                                        <button type="button" onclick="deleteProduct('@product.Product.Code')" class="btn btn-sm btn-danger editmodel" style="padding:5px 10px"><i class="fa fa-trash" aria-hidden="true"></i> Delete</button>
+                                                    }
+
+                                                }
+                                            </td>
+                                        </tr>
+                                        <tr class="prod_edit">
+                                            <td colspan="6" id="edit_@product.Product.Code" style="padding:0; border:none"></td>
+                                        </tr>
+                                        <tr id="models_@product.Product.Code" class="models_list" style="display:none;border-bottom: double 1px">
+                                            <td colspan="5" style="padding-left:50px;border:none;">
+                                                <div style="max-height:500px; overflow-y:auto; border: 1px solid orange">
+                                                    <table style="width: 100%;background-color:#fff;" class="striped3">
+                                                        <thead style="background-color: #aad3ea">
+                                                            <tr>
+                                                                <th>Model #</th>
+                                                                <th>Image</th>
+                                                                <th>Color</th>
+                                                                <th>Price</th>
+                                                                <th>Status</th>
+                                                                @if (ViewBag.Tab == "available")
+                                                                {
+                                                                    <th>Active</th>
+                                                                }
+                                                                    <th>Device Required</th>
+                                                                    <th>Merchant Onboarding</th>
+                                                                    <th></th>
+                                                                </tr>
+                                                        </thead>
+                                                        <tbody style="">
+                                                            @foreach (var m in product.Models)
+                                                            {
+                                                                if (ViewBag.Tab == "available")
+                                                                {
+                                                                    <text>
+                                                                        <tr id="model_@CommonFunc.ConvertNonUnicodeURL(m.o_Product_Model.ModelCode, true).Replace(" ","_")" onclick="edit_model('@(CommonFunc.ConvertNonUnicodeURL(m.o_Product_Model.ModelCode, true))')" class="hover model">
+                                                                    </text>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <text>
+                                                                    <tr id="model_@CommonFunc.ConvertNonUnicodeURL(m.o_Product_Model.ModelCode, true).Replace(" ","_")" class="hover model">
+                                                                    </text>
+                                                                }
+                                                                <td><b style="color:orange" class="model_name">
+                                                                    @m.o_Product_Model.ModelName
+                                                                    @if (ViewBag.Tab != "available")
+                                                                    {
+                                                                        if (m.o_Product_Model.IsDeleted == true)
+                                                                        {
+                                                                            <br />
+                                                                            <label class="text-center label label-danger">Deleted</label>
+                                                                        }
+                                                                        else
+                                                                        { <br />
+                                                                            <label class="text-center label label-warning">Deactive</label>
+                                                                        }
+                                                                    }
+                                                                </b></td>
+                                                                <td><img height="60" src="@(!string.IsNullOrEmpty(m.o_Product_Model.Picture)? m.o_Product_Model.Picture:"/Upload/Img/no_image.jpg")" class="model_picture" onerror="this.onerror=null; this.src='/Upload/Img/no_image.jpg'" /> </td>
+                                                                @*<td class="model_vendor">@m.VendorName</td>*@
+                                                                <td class="model_color">@m.o_Product_Model.Color</td>
+                                                                <td class="model_price">
+                                                                    @if (m.o_Product_Model.SalePrice > 0)
+                                                                    {
+                                                                        <span style="text-decoration: line-through;color: #8e8b8b;">
+                                                                            @m.o_Product_Model.Price
+                                                                        </span>
+                                                                        <br />
+                                                                        <span>@m.o_Product_Model.SalePrice</span>
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        @m.o_Product_Model.Price
+                                                                    }
+
+                                                                </td>
+                                                               
+                                                                    <td class="model_status">@m.o_Product_Model.Status</td>
+                                                                if (ViewBag.Tab == "available")
+                                                                {
+                                                                    <td class="model_active">
+                                                                        @if (m.o_Product_Model.Active != false)
+                                                                        {<label class="label label-success">Active</label>}
+                                                                        else
+                                                                        {<label class="label label-danger">Deactive</label>}
+                                                                    </td>
+                                                                    }
+                                                                    <td class="model_device_required">
+                                                                        @if (m.o_Product_Model.DeviceRequired == true)
+                                                                        {
+                                                                            <label class="label label-success">Yes</label>
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            <label class="label label-danger">No</label>
+                                                                        }
+                                                                    </td>
+                                                                    <td class="model_merchant_onboarding">
+                                                                        @if (m.o_Product_Model.MerchantOnboarding == true)
+                                                                        {
+                                                                            <label class="label label-success">Yes</label>
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            <label class="label label-danger">No</label>
+                                                                        }
+                                                                    </td>
+                                                                    <td>
+
+                                                                        @if (ViewBag.Tab == "available")
+                                                                        {
+                                                                            if (accessEdit)
+                                                                            {
+                                                                                <button type="button" class="btn btn-sm btn-warning editmodel" style="color:white" onclick="edit_model('@CommonFunc.ConvertNonUnicodeURL(m.o_Product_Model.ModelCode, true)')"><i class="fa fa-pencil-square"></i></button>
+                                                                            }
+                                                                            if (accessDelete)
+                                                                            {
+                                                                                <button type="button" style="margin-left:10px" onclick="deleteProductModel('@m.o_Product_Model.ModelCode')" class="btn btn-sm btn-danger editmodel"><i class="fa fa-trash" aria-hidden="true"></i></button>
+                                                                            }
+                                                                        }
+                                                                    </td>
+                                                                    @Html.Raw("</tr>");
+
+                                                                <tr><td id="edit_model_@CommonFunc.ConvertNonUnicodeURL(m.o_Product_Model.ModelCode,true).Replace(" ","_")" colspan="9" style="padding:0; border-top:none"></td></tr>
+                                                                <tr></tr>
+                                                            }
+                                                            </tbody>
+                                                    </table>
+                                                </div>
+                                                <div class="col-md-12" style="text-align:center; padding: 5px 0">
+                                                    @if (ViewBag.Tab == "available")
+                                                    {
+                                                        if (accessAdd)
+                                                        {
+                                                            <a class="btn btn-default btn-flat fa fa-plus" style="padding:10px 100px; color: #0094ff" onclick="new_model('@product.Product.Code')">
+                                                                <b> New model</b>
+                                                            </a>
+                                                        }
+                                                    }
+                                                </div>
+                                                <div id="new_model_@product.Product.Code"></div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                            @if (ViewBag.Tab == "available")
+                            {
+                                if (accessAdd)
+                                {
+                                    <a class="pull-right btn btn-primary fa fa-plus" style="margin-top:10px" onclick="new_product()"> New product</a>
+                                }
+                            }
+                            <div id="new_product_form">
+                                <form id="form_edit_product" class="col-md-8 col-md-offset-2" style="display:none;border:1px solid #ddd; background-color: #fff">
+                                    <div class="col-md-12">
+                                        <h3 style="margin-bottom:0" id="edit_product_header">Edit product</h3><img class="pull-left" id="img_load_edit_prod" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                                        <a class="pull-right fa fa-close" style="margin-top:-20px; padding:10px" onclick="$('#form_edit_product').hide(300)"></a>
+                                    </div>
+                                    <div class="col-md-12"><hr style="margin-top:0" /></div>
+
+                                    <input type="hidden" id="product_code" />
+                                    <div class="col-md-6 form-group">
+                                        <label>Product name <span style="color:red">*</span></label>
+                                        <input id="product_name" class="form-control" required />
+                                    </div>
+                                    <div class="col-md-6 form-group">
+                                        <label>Line <span style="color:red">*</span></label>
+                                        <select id="product_line" class="form-control">
+                                            @foreach (EnrichcousBackOffice.Models.O_Product_Line line in ViewBag.ProductLines)
+                                            {
+                                                <option value="@line.Code">@line.Name</option>
+                                            }
+                                            <option value="0" style="color:#337ab7">+ New Product Line</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-12 form-group">
+                                        <label>Description</label>
+                                        <textarea id="product_description" class="form-control"></textarea>
+                                    </div>
+                                    <div class="col-md-12" style="margin-bottom:10px">
+                                        <a id="form_edit_product_submit" class="btn btn-primary pull-right fa fa-check" onclick="save_product($(this))"> Save <img id="" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" /></a>
+                                        <a class="btn btn-default pull-left fa fa-close" onclick="$('#form_edit_product').hide(300)"> close</a>
+                                    </div>
+                                </form>
+                            </div>
+                            <div id="new_model_form">
+
+                                <form id="form_edit_model" action="/productmanage/SaveModel" method="post" onsubmit="$('#save_model_load').show()" enctype="multipart/form-data" class="col-md-10 col-md-offset-1" style="display:none; margin-bottom:20px; border:1px solid #ddd; background-color: #fff">
+
+                                    <div class="col-md-12">
+                                        <h3 style="margin-bottom:0" id="edit_model_header">Edit model</h3><img class="pull-left" id="img_load_edit_model" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                                        <a class="pull-right fa fa-close" style="margin-top:-20px; padding:10px" onclick="$('#form_edit_model').hide(300)"></a>
+                                    </div>
+                                    <div class="col-md-12"><hr style="margin-top:0" /></div>
+                                    <input type="hidden" id="model_code" name="code" />
+                                    <div class="col-md-3">
+                                        <label>Image</label><br />
+                                        <div style="border: 1px solid #ddd; margin-bottom:5px">
+                                            <img id="model_img" src="/Upload/Img/no_image.jpg" style="height:100px;" onerror="this.onerror=null; this.src='/Upload/Img/no_image.jpg'" />
+                                            <input type="hidden" id="image_modified" name="image_modified" value="0" />
+                                            <a id="no_image_btn" class="btn btn-danger btn-flat fa fa-close pull-right" onclick="$('#model_image_input').val('').trigger('change')" style="padding:6px; top:0"></a>
+                                            <input type="file" id="model_image_input" name="image" class="form-control" style="margin:0; border: none" />
+                                        </div>
+                                    </div>
+                                    <div class="col-md-9" style="padding:0">
+                                        <div class="col-md-12 form-group">
+                                            <label>Model Name <span style="color:red">*</span></label><br />
+                                            <input id="model_name" name="model_name" class="form-control" />
+                                        </div>
+                                        <div class="col-md-12 form-group">
+                                            <label>Product <span style="color:red">*</span></label>
+                                            <select id="model_prod" name="product" class="form-control">
+                                                @foreach (var prod in Model)
+                                                {
+                                                    <option value="@prod.Product.Code">@prod.Product.Name</option>
+                                                }
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3 form-group">
+                                            <label>Color </label>
+                                            <input id="model_color" name="color" class="form-control" />
+                                        </div>
+                                        <div class="col-md-3 form-group">
+                                            <label>Price ($)<span style="color:red">*</span></label>
+                                            <input id="model_price" name="price" class="form-control" type="number" min="0" step="0.01" required />
+                                        </div>
+                                        <div class="col-md-3 form-group">
+                                            <label>Sale Price ($)<span style="color:red">*</span></label>
+                                            <input id="model_saleprice" name="saleprice" class="form-control" type="number" min="0" step="0.01" />
+                                        </div>
+                                        <div class="col-md-3 form-group">
+                                            <label>Device Required </label>
+                                            <select id="model_device_required" name="device_required" class="form-control ">
+                                                <option value="true">Yes</option>
+                                                <option value="false">No</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4 form-group">
+                                            <label>Merchant Onboarding </label>
+                                            <select id="model_merchant_onboarding" name="merchant_onboarding" class="form-control ">
+                                                <option value="true">Yes</option>
+                                                <option value="false">No</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12" style="margin-bottom:10px">
+                                        <div class="input-group pull-right" id="active">
+                                            <span class="input-group-addon false" style="width:75px" onclick="checkactive(false)">Deactive</span>
+                                            <span class="input-group-addon active true" style="width:75px" onclick="checkactive(true)">Active</span>
+                                        </div>
+                                        <input name="active" type="hidden" />
+                                    </div>
+                                    <div class="col-md-12" style="margin-bottom:10px">
+                                        <div>
+                                            <button type="submit" class="btn btn-primary pull-right fa fa-check" id="form_edit_model_submit"> Save <img id="save_model_load" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" /></button>
+                                            <button type="button" class="btn btn-default pull-left fa fa-close" onclick="$('#form_edit_model').hide(300)"> Close</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+                <div id="vendor_modal_partial">
+
+                </div>
+                <div class="box-footer"></div>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+@section script{
+    <script>
+        $('.edit_product,.editmodel').click(function (e) {
+            e.stopPropagation();
+        });
+        $("#form_edit_product").on("submit", function () {
+            $("#form_edit_product_submit").trigger("click");
+            return false;
+        });
+
+        $.ajax({
+            method: "POST",
+            url: "/po/LoadColorlist",
+            dataType: "json"
+        })
+            .done(function (data) {
+
+                $('#model_color').autocomplete({
+                    source: data,
+                    minLength: 0
+                }).focus(function () {
+                    $(this).data("uiAutocomplete").search($(this).val());
+                });
+            })
+            .fail(function () {
+            });
+
+        var last_select = $('#product_line').val();
+        $('#product_line').on("click", function (e) { last_select = $('#product_line').val(); });
+        $('#product_line').on("change", function (e) {
+            if (this.value == 0) {
+                result = new_product_line();
+                if (!result) {
+                    this.value = last_select;
+                }
+            }
+        });
+        $('#model_image_input').on("change", function () {
+            $("#image_modified").val(1);
+            if ($(this).val()) {
+                var fileExtension = ['jpeg', 'jpg', 'png', 'gif', 'bmp'];
+                if ($.inArray($(this).val().split('.').pop().toLowerCase(), fileExtension) != -1) {
+                    document.getElementById('model_img').src = window.URL.createObjectURL(this.files[0])
+                } else {
+                    noty({ "text": "Please select image file", "layout": "topRight", "type": "error" });
+                    document.getElementById('model_img').src = '/Upload/Img/no_image.jpg';
+                    $(this).val("");
+                }
+            }
+            else {
+                document.getElementById('model_img').src = '/Upload/Img/no_image.jpg';
+            }
+        })
+        $('#model_img').on("load", function () {
+            if ($(this).attr("src") == "/Upload/Img/no_image.jpg") {
+                $('#no_image_btn').hide();
+            } else {
+                $('#no_image_btn').show();
+            }
+        });
+
+        /**
+         * show model cua prduct
+         * @@param code productcode
+         */
+        function show_model(code) {
+            $('.models_list').not('#models_' + code).not(":hidden").prev().prev().trigger("click");
+            $('#models_' + code + ',.sh_' + code).toggle(0);
+            $('#form_edit_product').hide(300);
+
+        }
+        //product update
+        function new_product() {
+            $("#edit_product_header").html("NEW PRODUCT");
+            $("#product_code").val("");
+
+            $("#form_edit_product").resetForm();
+            $('#form_edit_product').appendTo('#new_product_form').show(300);
+        }
+        function edit_product(code) {
+            $("#edit_product_header").html("EDIT PRODUCT");
+            $("#form_edit_product").resetForm();
+            $("#img_load_edit_prod").show();
+            $('#form_edit_product').appendTo('#edit_' + code).show(300);
+            $.ajax({
+                method: "POST",
+                url: "/ProductManage/getProductInfo",
+                data: { code },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    if (data[0]) {
+                        $('#product_code').val(data[1].Code);
+                        $('#product_name').val(data[1].Name);
+                        $('#product_line').val(data[1].ProductLineCode);
+                        $('#product_description').val(data[1].Description);
+                    } else {
+                        noty({ "text": data[1], "layout": "topRight", "type": "error" });
+                    }
+                })
+                .fail(function () {
+                    $('#form_edit_product').hide(300);
+                })
+                .always(function () {
+                    $("#img_load_edit_prod").hide();
+                });
+        }
+        function save_product(e_this) {
+            e_this.find("img").show();
+            var code = $('#product_code').val();
+            var name = $('#product_name').val();
+            var line = $('#product_line').val();
+            var des = $('#product_description').val();
+
+            $.ajax({
+                method: "POST",
+                url: "/productmanage/SaveProduct",
+                data: { code, name, line, des },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    if (data[0]) {
+                        if (code) {
+                            var e_prod = $('#prod_' + code);
+                            e_prod.find(".prod_name").html(name);
+                            e_prod.find(".prod_line").html(data[3]);
+                            e_prod.find(".prod_des").html(des);
+                        }
+                        else {
+                            $('.edit_product').click(function (e) {
+                                e.stopPropagation();
+                            });
+                            $('#tb_products>tbody').append(data[2]);
+                            var opt = new Option(name, data[3], false, false);
+                            $("#model_prod").append(opt);
+                        }
+                        noty({ "text": data[1], "layout": "topRight", "type": "success" });
+                    } else {
+                        noty({ "text": data[1], "layout": "topRight", "type": "error" });
+                    }
+                })
+                .fail(function () {
+
+                })
+                .always(function () {
+                    $('#form_edit_product').hide(300);
+                    e_this.find("img").hide();
+                });
+        }
+
+        //Model update
+        function new_model(pr_code) {
+            $("#edit_model_header").html("NEW MODEL");
+            $("#model_code").val("");
+            $("#form_edit_model").resetForm();
+            $('#model_prod').val(pr_code).closest(".form-group").hide();
+            $('#model_name').val("");
+            $('#form_edit_model').appendTo('#new_model_' + pr_code).show(300);
+            $('#model_img').attr("src", "/Upload/Img/no_image.jpg");
+            $('#model_status').parent().hide();
+            $("#active > .true").trigger("click");
+        }
+
+        /**
+         * sua model
+         * @@param code model code
+         */
+        function edit_model(code) {
+
+            //console.log(code);
+
+            var code_id = code.replace(/ /g, "_");
+
+            //console.log(code);
+
+            if ($('#edit_model_' + code_id).find("#form_edit_model").is(":visible")) {
+                $('#edit_model_' + code_id).find("#form_edit_model").hide(300);
+            } else {
+                $("#form_edit_model").resetForm();
+                $('#model_prod').closest(".form-group").show();
+
+                $("#img_load_edit_model").show();
+                $('#form_edit_model').appendTo('#edit_model_' + code_id).show(300);
+                $.ajax({
+                    method: "POST",
+                    url: "/ProductManage/getModelInfo",
+                    data: { code },
+                    dataType: "json"
+                })
+                    .done(function (data) {
+
+                        $("#edit_model_header").html("EDIT MODEL");
+
+                        if (data[0]) {
+
+                            $('#model_code').val(data[1].ModelCode);
+                            $('#model_prod').val(data[1].ProductCode);
+                            $('#model_name').val(data[1].ModelName);
+                            $('#model_color').val(data[1].Color);
+                            $('#model_price').val(Number.parseFloat(data[1].Price).toFixed(2));
+                            $('#model_saleprice').val(Number.parseFloat(data[1].SalePrice).toFixed(2));
+                            $('#model_status').val(data[1].Status).parent().show();
+                            $("#model_device_required").val(data[1].DeviceRequired.toString());
+                            $("#model_merchant_onboarding").val(data[1].MerchantOnboarding.toString());
+                            $("#active > ." + (data[1].Active == false ? "false" : "true")).trigger("click");
+                            $('#model_img').attr("src", data[1].Picture).on("error", function () {
+                                this.src = "/Upload/Img/no_image.jpg"; this.onerror = null;
+                            })
+                        }
+                        else {
+                            noty({ "text": data[1], "layout": "topRight", "type": "error" });
+                        }
+                    })
+                    .fail(function () {
+                        alert("edit_model fail");
+                        $('#form_edit_model').hide(300);
+                    })
+                    .always(function () {
+                        $("#img_load_edit_model").hide();
+                    });
+            }
+        }
+        //-- Save model (ajax form)
+        $("#form_edit_model").ajaxForm(function (data) {
+            //console.log(data);
+            //alert("save model");
+            if (data[0]) {
+                var code = $('#model_code').val();
+                if (code) {
+                    var e_model = $('#model_' + code.replace(/ /g, "_"));
+                    e_model.find(".model_picture").attr("src", data[2].Picture);
+                    e_model.find(".model_name").html(data[2].ModelName);
+                    //    e_model.find(".model_vendor").html(data[2].VendorName);
+                    e_model.find(".model_color").html(data[2].Color);
+                    var htmlPrice = '';
+                    if (data[2].SalePrice != '' && data[2].SalePrice > 0 && data[2].SalePrice!='null' ) {
+                        htmlPrice += '<span style="text-decoration: line-through;color: #8e8b8b;">';
+                        htmlPrice += Number.parseFloat(data[2].Price).toFixed(2);
+                        htmlPrice += '</span>';
+                        htmlPrice += '<br />';
+                        htmlPrice += '<span>' + Number.parseFloat(data[2].SalePrice).toFixed(2)+'</span>';
+                    }
+                    else {
+                        htmlPrice += data[2].Price;
+                    }
+                    e_model.find(".model_price").html(htmlPrice);
+                    e_model.find(".model_status").html(data[2].Status);
+                    e_model.find(".model_active").html(data[2].Active ? '<label class="label label-success">Active</label>' : '<label class="label label-danger">Deactive</label>')
+                    e_model.find(".model_device_required").html(data[2].DeviceRequired ? '<label class="label label-success">Yes</label>' : '<label class="label label-danger">No</label>')
+                    e_model.find(".model_merchant_onboarding").html(data[2].MerchantOnboarding ? '<label class="label label-success">Yes</label>' : '<label class="label label-danger">No</label>')
+                    if (data[3] == true) {
+                        e_model.appendTo("#models_" + data[2].ProductCode + " table tbody");
+                        $("#edit_model_" + data[2].ModelCode.replace(/ /g, "_")).appendTo("#models_" + data[2].ProductCode + " table tbody");
+
+                        var ocm = $("#prod_" + data[4]).find(".prod_num_model");
+                        var prd_model_num = parseInt(ocm.html()) - 1;
+                        if (prd_model_num > 0) {
+                            ocm.html(prd_model_num);
+                        }
+                        else {
+                            ocm.html(0);
+                        }
+                        var ncm = $("#prod_" + data[2].ProductCode).find(".prod_num_model");
+                        ncm.html(parseInt(ncm.html()) + 1);
+                        //$("#models_" + data[2].ProductCode).trigger("click");
+                        //$("#onhide_" + data[2].ProductCode).hide();
+                        //$("#onshow_" + data[2].ProductCode).show();
+                    }
+                } else {
+                    $("#models_" + $('#model_prod').val() + " table tbody").append(data[2]);
+                    $('.editmodel').click(function (e) {
+                        e.stopPropagation();
+                    });
+                }
+                $('#form_edit_model').resetForm().hide(300);
+                noty({ "text": data[1], "layout": "topRight", "type": "success" });
+            } else {
+                noty({ "text": data[1], "layout": "topRight", "type": "error" });
+            }
+            $('#save_model_load').hide()
+        });
+        function new_product_line() {
+            var line = prompt("New Product Line name");
+            if (line != null && line != "") {
+
+                $.ajax({
+                    method: "POST",
+                    url: "/productmanage/newline",
+                    data: { line },
+                    dataType: "json"
+                })
+                    .done(function (data) {
+                        if (data[0]) {
+                            noty({ "text": data[1], "layout": "topRight", "type": "success" });
+                            var opt = new Option(data[2].Name, data[2].Code, false, true);
+                            $("#product_line").prepend(opt);
+                            return true;
+                        } else {
+                            noty({ "text": data[1], "layout": "topRight", "type": "error" });
+                            return false;
+                        }
+                    })
+                    .fail(function () {
+                        alert("new_product_line fail!");
+                        return false;
+                    })
+                    .always(function () {
+                    });
+
+            }
+            else {
+                return false;
+            }
+        }
+
+        //Vendor manager
+        function show_modal_vendor() {
+            $("#show_modal_vendor_img").show();
+            $.ajax({
+                method: "POST",
+                url: "/productmanage/GetVendorModal",
+                dataType: "html"
+            })
+                .done(function (data) {
+                    $("#vendor_modal_partial").html(data);
+                    $('#vendor_modal').modal('show');
+                })
+                .fail(function () {
+                })
+                .always(function () {
+                    $("#show_modal_vendor_img").hide();
+                });
+
+        }
+        function checkactive(value) {
+            $("#active > .active").removeClass("active");
+            $("#active > ." + value).addClass("active");
+            $("[name=active]").val(value);
+        }
+        function deleteProduct(productcode) {
+            $.confirm({
+                title: "<span class='text-secondary'>Confirm</span>",
+                icon: 'fa fa-warning',
+                content: 'Are you sure ?',
+                type: 'blue',
+                closeIcon: true,
+                buttons: {
+                    confirm: {
+                        text: 'Confirm',
+                        btnClass: 'btn-confirm text-capitalize',
+                        action: function () {
+                            $.ajax({
+                                url: '/ProductManage/DeleteProduct',
+                                type: 'POST',
+                                dataType: 'json',
+                                data: { "ProductCode": productcode },
+                                success: function (rs) {
+                                    if (rs.status) {
+                                        noty({ "text": "Delete success !", "layout": "topRight", "type": "success" });
+                                        $('#prod_' + productcode).remove();
+                                        $('#models_' + productcode).remove();
+                                    }
+                                    else {
+                                        error(rs.message);
+                                    }
+                                },
+                                error: function (rs) {
+                                    alert("fail");
+                                }
+                            });
+                        }
+                    },
+                    cancel: {
+                        text: 'Cancel',
+                        btnClass: 'btn-cancel text-capitalize',
+                        action: function () {
+                        }
+                    }
+                }
+            });
+
+        }
+        function deleteProductModel(ProductModelCode) {
+            $.confirm({
+                title: "<span class='text-secondary'>Confirm</span>",
+                icon: 'fa fa-warning',
+                content: 'Are you sure ?',
+                type: 'blue',
+                closeIcon: true,
+                buttons: {
+                    confirm: {
+                        text: 'Confirm',
+                        btnClass: 'btn-confirm text-capitalize',
+                        action: function () {
+                            $.ajax({
+                                url: '/ProductManage/DeleteModel',
+                                type: 'POST',
+                                dataType: 'json',
+                                data: { "ProductModelCode": ProductModelCode },
+                                success: function (rs) {
+                                    if (rs.status) {
+                                        noty({ "text": "Delete success !", "layout": "topRight", "type": "success" });
+                                        $('#model_' + ProductModelCode).remove();
+                                    }
+                                    else {
+                                        error(rs.message);
+                                    }
+                                },
+                                error: function (rs) {
+                                    alert("fail");
+                                }
+                            });
+                        }
+                    },
+                    cancel: {
+                        text: 'Cancel',
+                        btnClass: 'btn-cancel text-capitalize',
+                        action: function () {
+                        }
+                    }
+                }
+            });
+
+        }
+    </script>
+}
+<style>
+    tr td, tr th {
+        border-top: solid 1px #ddd;
+        padding: 10px;
+        cursor: pointer;
+    }
+
+    tr.hover:hover {
+        background-color: #ddd !important;
+    }
+
+    .striped3 > tbody > tr:nth-of-type(6n+4) {
+        background-color: #eee;
+    }
+
+    .striped3 > tbody > tr:nth-of-type(6n+5) {
+        background-color: #eee;
+    }
+
+    .striped3 > tbody > tr:nth-of-type(6n+6) {
+        background-color: #eee;
+    }
+
+    #active > .active {
+        border: outset 1px !important;
+        color: white;
+    }
+
+        #active > .active.true {
+            background-color: #00a65a;
+        }
+
+        #active > .active.false {
+            background-color: #dd4b39;
+        }
+
+    #active > :not(.active) {
+        border: inset 1px !important;
+    }
+</style>

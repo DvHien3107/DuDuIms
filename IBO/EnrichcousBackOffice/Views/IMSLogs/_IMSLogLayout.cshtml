@@ -1,0 +1,204 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var Page = ViewBag.Page as string;
+    const string LogsPage = "Logs";
+    const string ApiRequestPage = "ApiRequest";
+}
+@section title{
+    @(Page==LogsPage? "Logs": " Api Request")
+} 
+@RenderSection("script", false)
+@RenderSection("style", false)
+@RenderSection("headscript", false)
+<style type="text/css">
+    .circular {
+        animation: rotate 2s linear infinite;
+        height: 50px;
+        transform-origin: center center;
+        width: 50px;
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        margin: auto;
+    }
+
+    .path {
+        stroke-dasharray: 1, 200;
+        stroke-dashoffset: 0;
+        animation: dash 1.5s ease-in-out infinite, color 6s ease-in-out infinite;
+        stroke-linecap: round;
+    }
+
+    @@keyframes rotate {
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    @@keyframes dash {
+        0% {
+            stroke-dasharray: 1, 200;
+            stroke-dashoffset: 0;
+        }
+
+        50% {
+            stroke-dasharray: 89, 200;
+            stroke-dashoffset: -35px;
+        }
+
+        100% {
+            stroke-dasharray: 89, 200;
+            stroke-dashoffset: -124px;
+        }
+    }
+
+    @@keyframes color {
+        100%, 0% {
+            stroke: #d62d20;
+        }
+
+        40% {
+            stroke: #0057e7;
+        }
+
+        66% {
+            stroke: #008744;
+        }
+
+        80%, 90% {
+            stroke: #ffa700;
+        }
+    }
+
+    div.dataTables_wrapper div.dataTables_processing {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 100%;
+        height: 100%;
+        margin-left: 0;
+        margin-top: 0;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        padding: 1em 0;
+        border: none;
+        background-color: #fffdfd80;
+    }
+
+    .select ul li.option {
+        background-color: #DEDEDE;
+        box-shadow: 0px 1px 0 #DEDEDE, 0px -1px 0 #DEDEDE;
+        -webkit-box-shadow: 0px 1px 0 #DEDEDE, 0px -1px 0 #DEDEDE;
+        -moz-box-shadow: 0px 1px 0 #DEDEDE, 0px -1px 0 #DEDEDE;
+    }
+
+    .inline-block {
+        display: inline-block;
+    }
+
+    .pt-1 {
+        padding-top: 8px;
+    }
+
+    .breadcrumb > li + li:before {
+        padding: 0 0px;
+    }
+
+    .select ul li.option {
+        z-index: 1;
+        padding: 5px;
+        display: none;
+        color: white;
+        list-style: none;
+        padding: 6px 12px;
+    }
+
+    .select ul li:first-child {
+        display: block;
+        color: black;
+    }
+
+    .select ul li {
+        cursor: pointer;
+    }
+
+
+
+    .tab-content {
+        background: white;
+        position: relative;
+    }
+
+    .breadcrumb {
+        background-color: transparent;
+        margin-bottom: 0px;
+    }
+
+    .nav-tabs-custom-ticket > ul > li.tab-nav-item {
+        font-size: 17px;
+        font-weight: 500;
+    }
+
+
+    .content-header h1 {
+        font-size: 20px;
+    }
+
+    .nav-tabs-custom {
+        background: #ecf0f5;
+        padding: 10px 10px 0px 10px;
+        margin-bottom: 0;
+    }
+
+
+
+        .nav-tabs-custom > ul > li.tab-nav-item {
+            font-size: 17px;
+            font-weight: 500;
+        }
+</style>
+
+<div class="nav-tabs-custom nav-tabs-custom">
+    <ul class="nav nav-tabs">
+
+
+
+
+        <li class="tab-nav-item @(Page==LogsPage?"active":"")">
+            <a href="/IMSLogs?Page=Logs">
+                Logs
+            </a>
+        </li>
+        @if (User.IsInRole("admin") == true)
+        {
+            <li class="tab-nav-item @(Page==ApiRequestPage?"active":"")">
+                <a href="/IMSLogs?Page=ApiRequest">
+                    Api Request
+                </a>
+            </li>
+        }
+
+        <li class="pull-right">
+            @if (IsSectionDefined("breadcrumb"))
+            {
+                @RenderSection("breadcrumb")
+            }
+            else
+            {
+
+                <ol class="breadcrumb" style=" transform:translate(18px,-2px);">
+                    <li><a href="/home"><i class="fa fa-dashboard"></i> Home</a></li>
+                    <li class="active">@(Page == LogsPage ? "Logs": "Api Request")</li>
+                </ol>
+
+            }
+        </li>
+
+    </ul>
+    <div class="tab-content">
+        @RenderBody()
+    </div>
+    <!-- /.tab-content -->
+</div>

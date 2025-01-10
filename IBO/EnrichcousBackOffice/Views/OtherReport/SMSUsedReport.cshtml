@@ -1,0 +1,327 @@
+﻿
+@{
+    ViewBag.Title = "SMSUsedReport";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@*<section class="content-header">
+        <h1>
+            SMS Used reports
+            <small>report</small>
+        </h1>
+        <ol class="breadcrumb">
+            <li><a href="/home"><i class="fa fa-dashboard"></i> Dashboard</a></li>
+            <li><i class="fa fa-bar-chart"></i> SMS Used reports</li>
+        </ol>
+    </section>*@
+
+<section class="content">
+    @if (TempData["e"] != null)
+    {
+        <div class="alert alert-warning alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+        </div>
+    }
+    else if (TempData["s"] != null)
+    {
+        <div class="alert alert-success alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+        </div>
+    }
+
+    <div class="nav-tabs-custom-ticket nav-tabs-custom">
+        <ul class="nav nav-tabs">
+            <li class="tab-nav-item">
+                <a href="/otherreport/smsreport">
+                    SMS REPORT
+                </a>
+            </li>
+            <li class="tab-nav-item active">
+                <a href="/otherreport/SMSUsedReport">
+                    SMS POS REPORT
+                </a>
+            </li>
+            <li class="tab-nav-item">
+                <a href="/otherreport/smsexport">
+                    SMS EXPORT FILES
+                </a>
+            </li>
+        </ul>
+        <br />
+        <div class="col-12 tab-content">
+            <div class="row">
+                <div class="col-md-4 col-sm-6 form-group">
+                    <div class="input-group">
+                        <div class="input-group-addon">
+                            From Date
+                            <div class="ico-help" title="The from date for the search."></div>
+                        </div>
+                        <input type="text" class="form-control datepicker" id="fromDate" name="fromDate" value="@(ViewBag.fromDate)" onchange="$('#table-sms').DataTable().ajax.reload()" />
+                    </div>
+                    <!-- /.input group -->
+                </div>
+                <div class="col-md-4 col-sm-6 form-group">
+                    <div class="input-group">
+                        <div class="input-group-addon">
+                            To Date
+                            <div class="ico-help" title="The to date for the search."></div>
+                        </div>
+                        <input type="text" class="form-control datepicker" id="toDate" name="toDate" value="@(ViewBag.toDate ?? DateTime.UtcNow.ToString("MM/dd/yyyy"))" onchange="$('#table-sms').DataTable().ajax.reload()" />
+                    </div>
+                    <!-- /.input group -->
+                </div>
+                <div class="col-md-4 col-sm-6 form-group">
+                    <div class="input-group" style="width:100%">
+                        <div class="input-group-addon">
+                            Store Code
+                        </div>
+                        <input class="form-control" name="storeCode" id="storeCode" value="@ViewBag.storeCode" placeholder="Input store code..."
+                               onchange="detailSMSStore()" />
+                    </div>
+                    <!-- /.input group -->
+                </div>
+            </div>
+
+            <div class="render-table">
+                <div class="btn-group grp_btn_recurring pull-right">
+                    <span style="font-size: 16px;">Total SMS used: <b id="total-sms">0</b></span>
+                </div>
+                <!--</p>-->
+                <table class="table table-bordered table-hover" id="table-sms" style="width:100%">
+                    @if (ViewBag.storeCode != null && ViewBag.storeCode != "")
+                    {
+                        <thead>
+                            <tr class="bg-info">
+                                <th>#</th>
+                                <th>From</th>
+                                <th>To</th>
+                                <th>Sent By</th>
+                                <th>Sent Date</th>
+                                <th style="max-width: 50%">Content SMS</th>
+                                <th>Segment</th>
+                                <th>Sent Status</th>
+                            </tr>
+                        </thead>
+                    }
+                    else
+                    {
+                        <thead>
+                            <tr class="bg-info">
+                                <th>#</th>
+                                <th>Store Name</th>
+                                <th>SMS used</th>
+                            </tr>
+                        </thead>
+                    }
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- /.tab-content -->
+    </div>
+</section>
+
+<script src="~/Content/Admin/bower_components/moment/moment.js"></script>
+
+@if (ViewBag.storeCode != null && ViewBag.storeCode != "")
+{
+    <script>
+        $(function () {
+            $('.datepicker').datepicker({
+                changeMonth: true,
+                changeYear: true,
+                yearRange: '1950:2050'
+            });
+
+            var t = $("#table-sms").DataTable({
+                "language": {
+                    "processing": '<img src="/Content/ajax-loaders/loading2.gif" width="60px" />',
+                    "paginate": {
+                        "first": '<i class="fa fa-angle-double-left" aria-hidden="true"></i>',
+                        "last": '<i class="fa fa-angle-double-right" aria-hidden="true"></i>',
+                        "next": '<i class="fa fa-angle-right" aria-hidden="true"></i>',
+                        "previous": '<i class="fa fa-angle-left" aria-hidden="true"></i>'
+                    },
+                },
+                'paging': true,
+                "pageLength": 10,
+                "serverSide": true, // for process server side
+                "processing": true, // for show progress bar
+                'lengthChange': true,
+                'searching': false,
+                'ordering': false,
+                'stateSave': false,
+                'info': false,
+                "scrollX": true,
+                'autoWidth': true,
+                "ajax": {
+                    "url": "/OtherReport/LoadDataSMSUsedReport",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (data) {
+                        data.fromDate = $('#fromDate').val();
+                        data.toDate = $('#toDate').val();
+                        data.storeCode = $('#storeCode').val();
+                        return data;
+                    },
+                    'dataSrc': function (data) {
+                        $('#total-sms').html(data.recordsTotal);
+                        return data.data;
+                    }
+                },
+                "columns": [
+                    {
+                        name: 'StoreCode',
+                        render: function (data, type, row, meta) {
+                            let html = `<b>#${row["s"].storeId}</b>`;
+                            return html;
+                        },
+                    },
+                    {
+                        name: 'From',
+                        render: function (data, type, row, meta) {
+                            let html = `${row['s'].sendFrom}`;
+                            return html;
+                        },
+                    },
+                    {
+                        name: 'To',
+                        render: function (data, type, row, meta) {
+                            let html = `${row['s'].sendTo}`;
+                            return html;
+                        },
+                    },
+                    {
+                        name: 'SendBy',
+                        render: function (data, type, row, meta) {
+                            let html = `${row['s'].sendBy}`;
+                            return html;
+                        },
+                    },
+                    {
+                        name: 'SendDate',
+                        render: function (data, type, row, meta) {
+                            let html = `${moment(row['s'].sendBy).format("MMM DD, YYYY hh:mm")}`;
+                            return html;
+                        },
+                    },
+                    {
+                        name: 'Content',
+                        render: function (data, type, row, meta) {
+                            let html = `<span>${row['s'].sendData}</span>`;
+                            return html;
+                        },
+                    },
+                    {
+                        name: 'Segment',
+                        render: function (data, type, row, meta) {
+                            let html = `${row['s'].smsSegment}`;
+                            return html;
+                        },
+                    },
+                    {
+                        name: 'Status',
+                        render: function (data, type, row, meta) {
+                            let html = ``;
+                            if (row['s'].isSuccess == true) {
+                                html = '<span class="label label-success">Success</span>'
+                            }
+                            else {
+                                html = `<span class="label label-danger">Error</span><br/><p style="margin:10px 0 0 0">Message: ${row['s'].errorReturn ?? "N/A"}</p>`
+                            }
+                            return html;
+                        },
+                    },
+                ]
+            });
+        })
+
+
+    </script>
+}
+else
+{
+    <script>
+        $(function () {
+            $('.datepicker').datepicker({
+                changeMonth: true,
+                changeYear: true,
+                yearRange: '1950:2050'
+            });
+
+            var t = $("#table-sms").DataTable({
+                "language": {
+                    "processing": '<img src="/Content/ajax-loaders/loading2.gif" width="60px" />',
+                    "paginate": {
+                        "first": '<i class="fa fa-angle-double-left" aria-hidden="true"></i>',
+                        "last": '<i class="fa fa-angle-double-right" aria-hidden="true"></i>',
+                        "next": '<i class="fa fa-angle-right" aria-hidden="true"></i>',
+                        "previous": '<i class="fa fa-angle-left" aria-hidden="true"></i>'
+                    },
+                },
+                'paging': true,
+                "pageLength": 10,
+                "serverSide": true, // for process server side
+                "processing": true, // for show progress bar
+                'lengthChange': true,
+                'searching': false,
+                'ordering': false,
+                'stateSave': false,
+                'info': false,
+                "scrollX": true,
+                'autoWidth': true,
+                "ajax": {
+                    "url": "/OtherReport/LoadDataSMSUsedReport",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (data) {
+                        data.fromDate = $('#fromDate').val();
+                        data.toDate = $('#toDate').val();
+                        data.storeCode = $('#storeCode').val();
+                        return data;
+                    },
+                    'dataSrc': function (data) {
+                        $('#total-sms').html(data.recordsTotal);
+                        if (data.message != null)
+                            noty({ "text": data.message, "layout": "topRight", "type": "error" });
+                        return data.data;
+                    }
+                },
+                "columns": [
+                    {
+                        name: 'StoreCode',
+                        render: function (data, type, row, meta) {
+                            let html = `<b>#${row["s"].storeId}</b>`;
+                            return html;
+                        },
+                    },
+                    {
+                        name: 'StoreName',
+                        render: function (data, type, row, meta) {
+                            let html = `<b class="text-green" onclick="detailSMSStore('${row['s'].storeId}')" style="cursor:pointer">${row['BusinessName'] ?? "N/A"}</b>`;
+                            return html;
+                        },
+                    },
+                    {
+                        name: 'TotalSMS',
+                        render: function (data, type, row, meta) {
+                            let html = `<span>${row["s"].totalSent}</span>`;
+                            return html;
+                        },
+                    }
+                ]
+            });
+        })
+    </script>
+}
+
+<script>
+    function detailSMSStore(storeCode) {
+        overlayOn();
+        window.location.href =
+            './smsusedreport?fromDate=' + $('#fromDate').val() + '&toDate=' + $('#toDate').val() + '&storeCode=' + (storeCode ?? $('#storeCode').val());
+    }
+</script>

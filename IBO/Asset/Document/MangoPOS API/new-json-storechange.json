@@ -1,0 +1,82 @@
+{
+    "timeZone": "+07:00",
+    "timeZoneName": "SE Asia Standard Time",
+    "StoreId": "S00775",
+    "StoreName": "HUY  2603",
+    //add
+    "StorePhone": "1283184184",
+    "StoreEmail": "huytest2603@gmail.com",
+    "StoreAddress": "11 long, HCM, CA, 22122 United States",
+    "ContactName": "HUY  2603",
+    "LastUpdate": "04/06/2021",
+    "UpdateBy": "Ngoc Bau",
+    //"Email": "huytest2603@gmail.com",
+    "Password": "f5bb0c8de146c67b44babbf4e6584cc0",
+    "RequirePassChange": "off",
+    
+    //"CreateBy": "IMS System",
+    //"CreateAt": "03/26/2021",
+    "Status": "Activated",
+    //"BusinessName": "HUY  2603",
+    //"BusinessPhone": "1283184184",
+    //"BusinessEmail": "huytest2603@gmail.com",
+    //"BusinessAddress": "11 long, HCM, CA, 22122 United States",
+    "NewLicense": "0",
+    //them vao ten goi
+    "SubscriptionName": "Mango Promotion",
+    "SubscriptionCode": "Mango_Promotion",
+    "CompanyPartner" : "",
+    "Licenses": [
+        {
+            "Rollover" : 1,
+            "LicenseCode": "SMS",
+            "LicenseType": "COUNT",
+            "Count_limit": "-1", //nhung chi số này trước đấy ims gửi Total. giờ sẽ chỉ gửi số lượng được phép sử dụng đi kèm với main license thôi. tức lượng ban đầu
+            "Start_period": "04/07/2021",
+            "End_period": "04/25/2021"
+        },
+        {
+            "Rollover" : 1,
+            "LicenseCode": "EMAIL",
+            "LicenseType": "COUNT",
+            "Count_limit": "1",
+            "Start_period": "03/26/2021",
+            "End_period": "04/25/2021"
+        },
+        {
+            "Rollover" : 1,
+            "LicenseCode": "CHECKIN",
+            "LicenseType": "COUNT",
+            "Count_limit": "10",
+            "Start_period": "03/26/2021",
+            "End_period": "04/25/2021"
+        },
+        {
+            "Rollover" : 1,
+            "LicenseCode": "SALONCENTER",
+            "LicenseType": "COUNT",
+            "Count_limit": "10",
+            "Start_period": "03/26/2021",
+            "End_period": "04/25/2021"
+        }
+    ]
+  	
+}
+
+/*
+***NOTE***
+
+Rollover:
+-1: khong thay doi
+0: reset lay theo ims
+1: cong don vo so ims truyen qua
+
+------------------
+Count_limit:
+-1: unlimited
+0: n/a
+--------------------------
+
+End_period: Empty là không giới hạn thời gian
+
+*/

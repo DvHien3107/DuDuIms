@@ -1,0 +1,71 @@
+﻿@model IEnumerable<Enrich.DataTransfer.T_EmailTemplate_customize>
+@using EnrichcousBackOffice.Models
+
+@foreach (var et in Model)
+{
+    <div class="box box-default box-solid" style="padding:0px; border-radius:unset; ">
+        <div class="box-header with-border">
+            <a href="#" onclick="$('#btn_@et.Id').trigger('click')">
+                <h4 class="box-title col-md-10" style="font-weight: normal">@et.Name</h4>
+            </a>
+            <div class="box-tools pull-right">
+                <a class="btn fa fa-caret-down" data-toggle="collapse" id="btn_@et.Id" href="#collapse_@et.Id" role="button" aria-expanded="false" title="Show content"
+                   onclick="ShowContent('@et.Id')">
+                </a>
+
+                <a class="btn fa fa-pencil" href="/EmailTemplate/Save?Id=@et.Id" title="Edit"></a>
+                <a class="btn fa fa-trash" onclick="DelEmailtemplate('@et.Id')" title="Delete"></a>
+            </div>
+        </div>
+
+        <div class="box-body ">
+            <div class="collapse" id="collapse_@et.Id" style="margin-left:10px">
+                <div style="height:30px"></div>
+            </div>
+        </div>
+    </div>
+}
+<script type="text/javascript">
+    function ShowContent(Id) {
+        $('#btn_' + Id).toggleClass('fa-caret-down fa-caret-up');
+        $.ajax({
+            method: "POST",
+            url: "/EmailTemplate/GetEmailContent",
+            data: { Id },
+            dataType: "json"
+        })
+            .done(function (data) {
+                $('#collapse_' + Id).html(
+                    data);
+
+            })
+            .fail(function () {
+                var Error = $.parseJSON('{"text":"Get content failure!", "layout":"topRight", "type":"error"}');
+                noty(Error);
+            })
+    }
+    function DelEmailtemplate(Id) {
+        if (!confirm("Do you want to delete this email template?")) {
+            return false;
+        }
+        $.ajax({
+            method: "POST",
+            url: "/EmailTemplate/DelEmailtemplate",
+            data: { Id },
+            dataType: "json"
+        })
+            .done(function (data) {
+                if (data[0] == true) {
+                    var Success = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"success"}');
+                    noty(Success);
+                    SearchEmailTemplate(true);
+                }
+                else {
+                    var Error = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"error"}');
+                    noty(Error);
+                }
+            });
+    }
+</script>
+
+

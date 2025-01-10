@@ -1,0 +1,155 @@
+﻿@import url("/Content/Anew/Main.css");
+
+.widgets-cards {
+    display: flex;
+    flex-direction: column;
+    padding: 8px 12px 8px 15px;
+    background-color: var(--gauzy-card-1);
+    min-width: 242px;
+    border: var(--card-border-width) var(--card-border-style) var(--card-border-color);
+    border-radius: var(--card-border-radius);
+    box-shadow: var(--card-shadow);
+    color: var(--card-text-color);
+    font-family: var(--card-text-font-family);
+    font-size: var(--card-text-font-size);
+    font-weight: var(--card-text-font-weight);
+    line-height: var(--card-text-line-height);
+    margin-bottom: var(--card-margin-bottom);
+}
+
+.widgets-card_header {
+    border-bottom: var(--card-divider-width) var(--card-divider-style) var(--card-divider-color);
+    border-top-left-radius: var(--card-border-radius);
+    border-top-right-radius: var(--card-border-radius);
+    color: var(--card-header-text-color);
+    font-family: var(--card-header-text-font-family);
+    font-size: var(--card-header-text-font-size);
+    font-weight: var(--card-header-text-font-weight);
+    line-height: var(--card-header-text-line-height);
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 16px;
+    letter-spacing: -0.009em;
+    color: var(--gauzy-text-color-2);
+    
+}
+
+.widgets-card_content {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.card-content {
+    font-size: 16px;
+}
+
+.widgets-containers {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.team-content {
+    padding: 18px;
+}
+
+.masonry {
+    column-gap: 1rem;
+    overflow-y: auto;
+    width: 100%;
+    padding-right: 0.5rem;
+}
+
+.ng-star-inserted {
+    width: 99%;
+    display: inline-flex;
+    flex-direction: column;
+}
+
+.masonry-header_title {
+    /* display: flex; */
+    /* flex-direction: row; */
+}
+
+.masonry-header_title div {
+    display: flex;
+    align-content: center;
+    align-items: center;
+    /* gap: 10px; */
+}
+
+.masonry-header_title span {
+    margin-left: 20px;
+}
+
+.masonry-header {
+    padding: 20px;
+}
+
+.masonry-header_action {
+    display: flex;
+    align-items: center;
+    background-color: var(--gauzy-card-1);
+    flex-direction: row;
+    border: var(--card-border-width) var(--card-border-style) var(--card-border-color);
+    border-radius: var(--card-border-radius);
+    box-shadow: var(--card-shadow);
+}
+
+.masonry-header_action div {
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    gap: 10px;
+    align-content: center;
+}
+
+.masonry-header_action .col-7.ng-star-inserted {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.masonry {
+    background-color: var(--gauzy-card-2);
+    margin-top: 23px;
+}
+
+
+
+.w-100.display-grid.card-tech {
+    grid-template-columns: 200px auto;
+}
+
+.names-wrapper {
+    width: 250px;
+}
+
+.image-outer-wrapper.ng-star-inserted {
+    width: 60px;
+}
+
+.image-container.md img {
+    width: 20px;
+    height: 20px;
+    object-fit: cover;
+    border-radius: var(--border-radius) !important;
+}
+
+
+
+span.status-indicator.ng-star-inserted {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-radius: 8px;
+    border: 2px solid #ebebeb;
+    right: 0;
+    top: 0;
+}
+
+.masonry-header_action {
+    padding: 16px;
+}

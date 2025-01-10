@@ -1,0 +1,1 @@
+{"Email":"ngocbauofficia66@gmail.com","Password":"0886432436","FName":"Pham","LName":"Bau","PhoneNumber":"0852522525","InfoSalon":null,"CreatedDate":"2020-10-02T13:59:46.1619068+07:00","Verify":false,"ErrorMessage":null}

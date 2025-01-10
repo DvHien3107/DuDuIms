@@ -1,0 +1,122 @@
+﻿@model EnrichcousBackOffice.Models.CustomizeModel.CurrentLicenseIsActivedCustomizeModel
+@if (Model != null)
+{
+    <div>
+        <label class="control-label" style="display:block;width:100%;text-align:center">
+            License Activated:
+        </label>
+        <div>
+            <table class="table table-bordered">
+                <tr>
+                    <th style="min-width:120px">License Name:</th>
+                    <td><span>@Model.ProductName</span></td>
+                </tr>
+                <tr>
+                    <th style="min-width:120px">Effective Date:</th>
+                    <td>
+                        <span>
+                            From: @Model.EffectiveDate.Value.ToString("MMM dd,yyyy") - To: @Model.RenewDate.Value.ToString("MMM dd,yyyy")
+                        </span>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Remain:</th>
+                    <td>
+                        @{
+                            var remainingTime = (Model.RenewDate != null ? EnrichcousBackOffice.AppLB.CommonFunc.LicenseRemainingTime(Model.RenewDate.Value) : "N/A");
+                        }
+                        @if (Model.EffectiveDate != null && Model.EffectiveDate > DateTime.UtcNow)
+                        {
+                            <label class="label label-default">N/A</label>
+                        }
+                        else
+                        {
+                            if (remainingTime == "Expires")
+                            {
+                                <label class="label" style="background-color: #EE0000"> @remainingTime</label>
+                            }
+                            else if (remainingTime == "N/A")
+                            {
+                                <label class="label label-default"> @remainingTime</label>
+                            }
+                            else
+                            {
+                                <label class="label label-success"> @remainingTime</label>
+                            }
+                        }
+
+                    </td>
+                </tr>
+                <tr>
+                    <th style="min-width:120px">Price:</th>
+                    <td><span>$@string.Format("{0:#,0.00}", Model.Price)</span></td>
+                </tr>
+                <tr>
+                    <th style="min-width:120px">Status:</th>
+                    <td>
+                        @if (Model.RenewDate < DateTime.UtcNow)
+                        {
+                            <label class="label label-danger" style="color:white"> Expires</label>
+                        }
+                        else if (Model.EffectiveDate != null && Model.EffectiveDate > DateTime.UtcNow)
+                        {
+                            <label class="label label-warning">Active on @(Model.EffectiveDate?.ToString("MMM dd, yyyy"))</label>
+                        }
+                        else if (Model.Status == 1)
+                        {
+                            <label class="label label-success"> Active</label>
+                        }
+                        else
+                        {
+                            <label class="label label-danger">Detactive</label>
+                        }
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+}
+else
+{
+    <div>
+        <label class="control-label" style="display:block;width:100%;text-align:center">
+            License Activated:
+        </label>
+        <div>
+            <table class="table table-bordered">
+                <tbody>
+                    <tr>
+                        <th style="min-width:120px">License Name:</th>
+                        <td><span>N/A</span></td>
+                    </tr>
+                    <tr>
+                        <th style="min-width:120px">Effective Date:</th>
+                        <td>
+                            <span>
+                                N/A
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Remain:</th>
+                        <td>
+
+                            <label class="label label-default">N/A</label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th style="min-width:120px">Price:</th>
+                        <td><span>N/A</span></td>
+                    </tr>
+                    <tr>
+                        <th style="min-width:120px">Status:</th>
+                        <td>
+                            <label class="label label-default">N/A</label>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+   
+}

@@ -1,0 +1,64 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.T_SupportTicket>
+@using EnrichcousBackOffice.AppLB
+<label style="font-size:20px">Select tickets for merge</label>
+<table class="table table-bordered table-striped">
+    <thead style="background-color: #aad3ea">
+        <tr>
+            <th>Ticket</th>
+            <th>Date</th>
+            <th>Select</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (TempData["e"] != null)
+        {
+            <tr><td colspan="10"><label class="fa fa-warning text-warning"> @TempData["e"]</label></td></tr>
+        }
+        else
+        {
+            foreach (var tk in Model)
+            {
+                <tr class="tr_ticket" style="cursor:pointer">
+                    <td>
+                        <label class="text-success"><a href="/ticket_new/detail/@tk.Id" target="_blank" title="Click to detail ticket" data-toggle="tooltip">#@CommonFunc.view_TicketId(tk.Id)</a></label>
+                        @if (ViewBag.cur_tk == tk.Id)
+                        {<label class="label label-success"> Current ticket</label>}
+                        <p>@tk.Name</p>
+                    </td>
+                    <td>
+                        Create at:
+                        <span id="localtime-@tk.Id">
+                            <script>convertLocalTime("@tk.Id", "@tk.CreateAt")</script>
+                        </span>
+                        by <b>@tk.CreateByName</b><br />
+                        @(!string.IsNullOrEmpty(tk.UpdateTicketHistory) ? tk.UpdateTicketHistory.Split('|').Last() : "")<br />
+                    </td>
+                    <td style="text-align:center">
+                        <input name="selected_tickets" value="@tk.Id" type="checkbox" style="width:16px; height:16px" />
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+<script>
+    $(".tr_ticket").on("click", function (event) {
+        if (event.target.type !== 'checkbox') {
+            $(':checkbox', this).trigger('click');
+        }
+    });
+    $("[name=selected_tickets]").on("click", function () {
+        if ($(this).is(":checked")) {
+            $(this).closest("tr").css("background-color", "#cce6ff");
+        }
+        else
+        {
+            $(this).closest("tr").css("background-color", "#f9f9f9");
+        }
+    });
+</script>
+<style>
+    .tr_ticket:hover {
+        background-color: #ddd !important;
+    }
+</style>

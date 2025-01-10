@@ -1,0 +1,290 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.Vendor>
+<div id="vendor_modal" class="modal fade" role="dialog">
+    <div class="modal-dialog" style="width:1000px">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">vendor Management</h4>
+            </div>
+            <div class="modal-body clearfix" style="max-height:80vh; overflow-y:scroll">
+                <div class="col-md-12" style="display:block">
+                    <table id="list_vendor" class="table_detail striped2 table">
+                        <thead style="background-color:#ddd">
+                            <tr>
+                                <th>Vendor</th>
+                                <th>Contact</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var v in Model)
+                            {
+                                <tr id="vendor_@v.Id" class="hover" onclick="vendor_edit('@v.Id')">
+                                    <td>
+                                        <b style="color:green">@v.CompanyName</b><br />
+                                        -Phone: @v.Phone<br />
+                                        -Email: @v.Email<br />
+                                        -Fax: @v.Fax<br />
+                                        -Website: @v.Website <br />
+                                        -Address: @(v.Address + ", " + v.State + ", " + v.City + ", " + v.Zipcode + ", " + v.Country)
+                                    </td>
+                                    <td>
+                                        <strong class="text-blue">@v.ContactFirstName @v.ContactLastName</strong><br />
+                                        -Phone: @v.Phone<br />
+                                        -Email: @v.Email<br />
+                                    </td>
+                                    @*<td>@v.VendorType</td>*@
+                                    <td>
+                                        @if (v.Active == true)
+                                        {
+                                            <b class="label label-success">Active</b>
+                                        }
+                                        else
+                                        {
+                                            <b class="label label-danger">Inactive</b>
+                                        }
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td id="vendor_edit_@v.Id" colspan="3" style="padding:0"></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                    <a id="newvendor_btn_0" class="btn btn-success btn-flat fa fa-plus" style="width:100%" onclick="new_vendor()"> New vendor</a>
+                    <a id="newvendor_btn_1" class="btn btn-default btn-flat fa fa-close" style="width:100%; display:none" onclick="new_vendor()"> Close</a>
+                    <div id="new_vendor" class="col-md-12" style="padding:0; border:2px">
+                        <form id="form_edit_vendor" action="/productmanage/Savevendor" method="post" onsubmit="$('#save_vendor_load').show()" class="col-md-12" style="display:none;border:3px inset #ccc; background-color: #fff">
+
+                            <div class="col-md-12">
+                                <h3 style="margin-bottom:0" id="vendor_form_title">Edit vendor</h3><img class="pull-left" id="img_load_edit_vendor" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                                <a class="pull-right fa fa-close" style="margin-top:-20px; padding:10px" onclick="$('#form_edit_vendor').hide(300)"></a>
+                            </div>
+                            <div class="col-md-12"><hr style="margin-top:0" /></div>
+                            <input type="hidden" name="Id" />
+                            <h4 style="text-align:center">Company info</h4>
+                            <div class="col-md-6 form-group">
+                                <label>Company Name <span style="color:red">*</span></label>
+                                <input name="CompanyName" class="form-control" required />
+                            </div>
+                            <div class="col-md-6 form-group">
+                                <label>Phone</label>
+                                <input name="Phone" class="form-control"/>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label>Address </label>
+                                    <input class="form-control" name="Address" placeholder="Address" />
+                                    <div class="row">
+                                        <div class="col-md-6" style="padding-right:0px; margin-top:-1px">
+                                            <input class="form-control" name="City" placeholder="City/Town"  />
+                                        </div>
+                                        <div class="col-md-6" style="padding-left:0px; margin-top:-1px;">
+                                            <input class="form-control state" name="State" placeholder="State/Province" style="border-left:none"  />
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6" style="padding-right:0px; margin-top:-1px">
+                                            <input class="form-control" name="Zipcode" placeholder="ZIP code" pattern="[0-9]+"  />
+                                        </div>
+                                        <div class="col-md-6" style="padding-left:0px; margin-top:-1px">
+                                            <input class="form-control country" name="Country" placeholder="Country" style="border-left:none"  />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 form-group">
+                                <label>Email</label>
+                                <input name="Email" class="form-control" />
+                            </div>
+                            <div class="col-md-6 form-group">
+                                <label>Fax</label>
+                                <input name="Fax" class="form-control" />
+                            </div>
+                            <div class="col-md-6 form-group">
+                                <label>Website</label>
+                                <input name="Website" class="form-control" />
+                            </div>
+                            @*<div class="col-md-6 form-group">
+                                <label>Type </label>
+                                <select name="VendorType" class="form-control">
+                                    <option value="Vendor device">Vendor device</option>
+                                </select>
+                            </div>*@
+                            <div class="col-md-12 form-group">
+                                <label>Description</label>
+                                <textarea name="Description" style="width:100%; border-color: #d2d6de"></textarea>
+                            </div>
+                            <h4 style="text-align:center; clear:both">Contact Info</h4>
+                            <div class="col-md-6 form-group">
+                                <label>First Name</label>
+                                <input name="ContactFirstName" class="form-control" />
+                            </div>
+                            <div class="col-md-6 form-group">
+                                <label>Last Name</label>
+                                <input name="ContactLastName" class="form-control" />
+                            </div>
+                            <div class="col-md-6 form-group">
+                                <label>Phone</label>
+                                <input name="ContactPhone" class="form-control" />
+                            </div>
+                            <div class="col-md-6 form-group">
+                                <label>Email</label>
+                                <input name="ContactEmail" class="form-control" />
+                            </div>
+                            <div class="col-md-12" style="margin-bottom:10px">
+                                <button type="submit" class="btn btn-primary pull-right fa fa-check" id="form_edit_vendor_submit"> Save <img id="save_vendor_load" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" /></button>
+                                <label class="pull-right" style=" padding-right:5px">
+                                    <input type="checkbox" style="width:15px; height:15px;" name="Active" value="true">
+                                    <span>Active</span>
+                                </label>
+                                <a class="btn btn-default pull-left fa fa-close" onclick="$('#form_edit_vendor').hide(300)"> close</a>
+                            </div>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    $("#form_edit_vendor").ajaxForm(function (data) {
+        if (data[0]) {
+            //update row vendor
+            if ($("#vendor_" + data[2].Id).length) {//update
+                $("#vendor_" + data[2].Id).html($(data[3]).find("#vendor_" + data[2].Id).html());
+                if (data[4].length) {
+                    for (var i = 0; i < data[4].length; i++) {
+                        $("#model_" + data[4][i]).find(".model_active").html('<label class="label label-danger">Deactive</label>');
+                    }
+                }
+            }
+            else {//add new
+                $("#list_vendor tbody").append($(data[3]).html());
+                $("#newvendor_btn_0").show();
+                $("#newvendor_btn_1").hide();
+            }
+            $('#form_edit_vendor').hide(300);
+            //update vendor select
+            o_opt = $("#model_vendor").find("option[value='" + data[2].Id + "']");
+            if (data[2].Active) {
+                if (o_opt.length) {
+                    o_opt.html(data[2].CompanyName);
+                } else {
+                    $("#model_vendor").append(new Option(data[2].CompanyName, data[2].Id, false, false))
+                }
+            } else {
+                o_opt.remove();
+            }
+            noty({ "text": data[1], "layout": "topRight", "type": "success" });
+        } else {
+            noty({ "text": data[1], "layout": "topRight", "type": "error" });
+        }
+        $("#save_vendor_load").hide();
+    });
+    autocomplete_state_country();
+    function show_form(id = null) {
+        var e_form = $("#form_edit_vendor").resetForm().hide();
+        e_form.find('input[name="Id"]').val('0');
+
+        //$("#form_edit_vendor").hide(300, function () { $(this).remove(); });
+        if (id) {
+            e_form.appendTo($("#vendor_edit_" + id));
+        }
+        else {
+            e_form.appendTo($("#new_vendor"));
+            e_form.find('input[name="Country"]').val("United States");
+            $("#newvendor_btn_0").hide();
+            $("#newvendor_btn_1").show();
+        }
+        e_form.show(300);
+    }
+    function new_vendor() {
+        $("#newvendor_btn_0").show();
+        $("#newvendor_btn_1").hide();
+        if ($("#new_vendor").find("#form_edit_vendor").not(":hidden").length == 0) {
+            show_form();
+
+        } else {
+            $("#form_edit_vendor").hide(300);
+        }
+        $('[name="Active"]').attr("checked", true);
+        $("#vendor_form_title").html("New vendor");
+    }
+    function vendor_edit(id) {
+        $("#newvendor_btn_0").show();
+        $("#newvendor_btn_1").hide();
+        if ($("#vendor_edit_" + id).find("#form_edit_vendor").not(":hidden").length == 0) {
+            show_form(id);
+            $("#vendor_form_title").html("Edit vendor");
+            $("#img_load_edit_vendor").show();
+            $.ajax({
+                method: "POST",
+                url: "/productmanage/getvendor",
+                data: { id },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    if (data[0]) {
+                        $("#vendor_form_title").html("Edit vendor <span style='color:green'>#" + data[1].CompanyName + "</span>");
+                        var e_form = $("#form_edit_vendor");
+                        $.each(data[1], function (key, value) {
+
+                            if (key == "Active") {
+                                $('[name="Active"]').attr("checked", value || false)
+                            } else {
+                                e_form.find('[name="' + key + '"]').val(value);
+                            }
+                        });
+                    }
+                })
+                .fail(function () {
+                    alert("getvendor fail");
+                })
+                .always(function () {
+                    $("#img_load_edit_vendor").hide();
+                });
+        } else {
+            $("#form_edit_vendor").hide(300);
+        }
+
+    }
+</script>
+<style>
+    .table_detail tr td, .table_detail tr th {
+        border: solid 1px #f9f9f9;
+        padding: 10px;
+        cursor: pointer;
+    }
+
+    tr.hover:hover {
+        background-color: #ddd !important;
+    }
+
+    .striped2 > tbody > tr:nth-of-type(4n+3) {
+        background-color: #eee;
+    }
+
+    .striped2 > tbody > tr:nth-of-type(4n+4) {
+        background-color: #eee;
+    }
+
+    ::-webkit-scrollbar-track {
+        -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+        background-color: #F5F5F5;
+    }
+
+    ::-webkit-scrollbar {
+        width: 6px;
+        background-color: #F5F5F5;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background-color: #000000;
+    }
+</style>

@@ -1,0 +1,184 @@
+﻿<style>
+    .custom-file-upload {
+        /*        margin-top: 10px;*/
+        background: #2b97e6;
+        color: white;
+        padding: 3px 10px;
+        font-size: 14px;
+        cursor: pointer;
+    }
+
+        .custom-file-upload i {
+            padding-right: 7px;
+        }
+
+    .image-upload {
+        max-width: 100%;
+        height: auto;
+        max-height: 75px;
+        border-radius: 3px;
+    }
+
+    .file-avatar {
+        max-height: 75px;
+        border-radius: 3px;
+    }
+
+    .upload-table td, .upload-table th {
+        /* border: 1px solid #ddd;*/
+        padding: 8px;
+    }
+
+    .upload-table tr:nth-child(even) {
+        /*  background-color: #f2f2f2;*/
+    }
+
+    .upload-table tr:hover {
+        /* background-color: #ddd;*/
+    }
+
+    .upload-table th {
+        padding-top: 12px;
+        padding-bottom: 12px;
+        text-align: left;
+        /*   background-color: #04AA6D;*/
+        color: white;
+    }
+
+    .files-upload-wrapper {
+        border: 2px dashed #ccc;
+        border-radius: 5px;
+    }
+
+    .upload-table {
+        width: 100%;
+    }
+
+        .upload-table tr td:first-child {
+            width: 30%;
+        }
+</style>
+
+<div class="modal fade" id="upload-payslip-modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">More Info</h4>
+            </div>
+            <div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div class="form-group">
+                                <label>Select Files: </label>
+                                <div>
+                                    <div id="divmorefiles-addFileRelated">
+                                        <div class="uploadfiles-wrapper" style="margin-bottom:5px;">
+                                            <label class="custom-file-upload">
+                                                <input type="file" name="uploadfiles-payslip[]" multiple="" style="display:none" onchange="uploadfilespayslip(this)">
+                                                <i class="fa fa-upload"></i> Upload Files
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-12">
+                            <table class="table table-bordered table-striped ">
+                                <thead>
+                                    <tr>
+                                        <th>File Name</th>
+                                        <th>Employee Id</th>
+                                        <th>Employee Name</th>
+                                      
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="content-upload-payslip">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-success pull-right" onclick="aprrovePayslipUpload()">Approve All <img src="/Content/ajax-loaders/ajax-loader-1.gif" style="display:none;" id="loading_add_more_info_submit"></button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+
+
+<script>
+    let UploadPayslipIds = [];
+    if (typeof UploadPayslipIds !== 'undefined') {
+        UploadPayslipIds = [];
+    }
+    function uploadfilespayslip(el) {
+        var data = new FormData();
+        $.each($(el)[0].files, function (i, file) {
+            data.append('file-' + i, file);
+        });
+        data.append('Date', '@ViewBag.Date');
+         $.ajax({
+            type: "POST",
+            url: "/Payroll/UploadPayslip",
+            contentType: false,
+            processData: false,
+            data: data, // serializes the form's elements.
+            success: function (data)
+            {
+                $.each(data, function (i, file) {
+                    UploadPayslipIds.push(file.Id);
+                    var row = `<tr id='upload_temp_${file.Id}'>
+                                <td style="vertical-align: middle;">
+                                    <span><img src="/upload/img/pdf.png" style="background:white" width="30">${file.FileName}</span>
+                                </td>
+                                <td style="vertical-align: middle;">
+                                    <span>${file.EmployeeId}</span>
+                                </td>
+                                 <td style="vertical-align: middle;">
+                                    <span>${file.EmployeeName}</span>
+                                </td>
+                                
+                                <td style="vertical-align: middle;">
+                                    <a href="${file.FilePath}" style="margin-right:5px" target="_blank" ><i class="fa fa-search"></i></a>
+                                    <a onclick="removeUploadRow(${file.Id})"><i class="fa fa-trash"></i></a>
+                                </td>
+                            </tr>`;
+                    $("#content-upload-payslip").append(row);
+                });
+            }
+      });
+    }
+    function removeUploadRow(Id) {
+        confirm('are you sure delete this payslip ?')
+        {
+            const index = UploadPayslipIds.indexOf(Id);
+            if (index > -1) {
+                UploadPayslipIds.splice(index, 1);
+            }
+            $(`#upload_temp_${Id}`).remove();
+            noty({ "text": "remove success", "layout": "topRight", "type": "success" });
+        }
+    }
+    function aprrovePayslipUpload() {
+        $.ajax({
+            type: "POST",
+            url: "/Payroll/AprrovePayslipUpload",
+            data: {
+                'UploadIds': UploadPayslipIds
+            },
+            success: function (data) {
+                $("#upload-payslip-modal").modal("hide");
+                $(".dataTable").DataTable().ajax.reload();
+            }
+        });
+    }
+</script>

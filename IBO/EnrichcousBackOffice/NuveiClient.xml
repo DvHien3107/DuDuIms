@@ -1,0 +1,1301 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>NuveiClient</name>
+    </assembly>
+    <members>
+        <member name="T:NuveiClient.CustomField">
+            <summary>
+            Base Class for Custom Fields.
+            </summary>
+        </member>
+        <member name="P:NuveiClient.CustomField.Value">
+            <summary>
+            Custom field value
+            </summary>
+        </member>
+        <member name="M:NuveiClient.CustomField.#ctor(System.String,System.String)">
+            <summary>
+            Constructor for Custom Fields
+            </summary>
+            <param name="name">
+            Custom field name
+            </param>
+            <param name="value">
+            Custom field value
+            </param>
+        </member>
+        <member name="T:NuveiClient.Request">
+            <summary>
+            Base Request Class holding common functionality for Request Types.
+            </summary>
+        </member>
+        <member name="M:NuveiClient.Request.SetRequestTimeout(System.Int32)">
+            <summary>
+            Sets the request timeout.
+            </summary>
+            <param name='timeout'>
+            Timeout in seconds. Defaults to 120 seconds in .NET.
+            </param>
+        </member>
+        <member name="M:NuveiClient.Request.DisableKeepAlive">
+            <summary>
+            Disables HTTP 1.1 keep alive.
+            </summary>
+        </member>
+        <member name="T:NuveiClient.Response">
+            <summary>
+            Base Response Class holding common functionality for Generating response Hash.
+            </summary>
+        </member>
+        <member name="T:NuveiClient.XmlAuthRequest">
+            <summary>
+            Used for processing XML Auth Authorisations through the Nuvei TPS XML Gateway.
+            
+            Basic request is configured on initialisation and optional fields can be configured.
+            </summary>
+        </member>
+        <member name="M:NuveiClient.XmlAuthRequest.#ctor(System.String,System.String,System.String,System.Double,System.String)">
+            <summary>
+            Creates the auth request less optional parameters for processing an XML Transaction
+            through the Nuvei XML Gateway
+            </summary>
+            <param name="terminalId">Terminal ID provided by Nuvei TPS</param>
+            <param name="orderId">A unique merchant identifier. Alpha numeric and max size 12 chars.</param>
+            <param name="currency">ISO 4217 3 Digit Currency Code, e.g. EUR / USD / GBP</param>
+            <param name="amount">Transaction Amount, Double formatted to 2 decimal places.</param>
+            <param name="cardType">
+            Card Type (Accepted Card Types must be configured in the Merchant Selfcare System.)
+            
+            Accepted Values :
+            
+            VISA
+            MASTERCARD
+            LASER
+            SWITCH
+            SOLO
+            AMEX
+            DINERS
+            MAESTRO
+            DELTA
+            ELECTRON
+            JCB
+            </param>
+        </member>
+        <member name="M:NuveiClient.XmlAuthRequest.SetCardNumber(System.String)">
+            <summary>
+            Setter for CardNumber
+            </summary>
+            <param name="cardNumber">A valid Card Number that passes the Luhn Check.</param>
+        </member>
+        <member name="M:NuveiClient.XmlAuthRequest.SetTrackData(System.String)">
+            <summary>
+            Setter for TrackData
+            </summary>
+            <param name="trackData">Track Data</param>
+        </member>
+        <member name="M:NuveiClient.XmlAuthRequest.SetDukptCardDetails(System.String,System.String,System.Int32)">
+            <summary>
+            Setter for Dukpt Card Details
+            </summary>
+            <param name="encryptedTrack">Encrypted Track</param>
+            <param name="ksn">KSN</param>
+            <param name="formatId">Format ID</param>
+        </member>
+        <member name="M:NuveiClient.XmlAuthRequest.SetApplePayload(System.String)">
+            <summary>
+            Setter for APPLEPAYLOAD
+            </summary>
+            <param name="applePayload">Apple Payload</param>
+        </member>
+        <member name="M:NuveiClient.XmlAuthRequest.SetAndroidPayload(System.String)">
+            <summary>
+            Setter for TrackData
+            </summary>
+            <param name="androidPayload">Android Payload</param>
+        </member>
+        <member name="M:NuveiClient.XmlAuthRequest.SetEmail(System.String)">
+            <summary>
+            Setter for Email
+            </summary>
+            <param name="email">Email</param>
+        </member>
+        <member name="M:NuveiClient.XmlAuthRequest.SetDescription(System.String)">
+            <summary>
+            Setter for Description
+            </summary>
+            <param name="description">Description of transaction</param>
+        </member>
+        <member name="M:NuveiClient.XmlAuthRequest.SetAutoReady(System.String)">
+            <summary>
+            Setter for Auto Ready Value
+            </summary>
+            <param name="autoReady">
+            Auto Ready is an optional parameter and defines if the transaction should be settled automatically.
+            
+            Accepted Values :
+            
+            Y   -   Transaction will be settled in next batch
+            N   -   Transaction will not be settled until user changes state in Merchant Selfcare Section
+            </param>
+        </member>
+        <member name="M:NuveiClient.XmlAuthRequest.SetNonSecureCardCardInfo(System.String,System.String)">
+            <summary>
+            Setter for Card Expiry and Card Holder Name values. These are mandatory for non-SecureCard transactions
+            </summary>
+            <param name="cardExpiry">Numeric field with a max of 4 characters.</param>
+            <param name="cardHolderName">String field with a max of 50 characters.</param>
+        </member>
+        <member name="M:NuveiClient.XmlAuthRequest.SetCvv(System.String)">
+            <summary>
+            Setter for Card Verification Value
+            </summary>
+            <param name="cvv">Numeric field with a max of 4 characters.</param>
+        </member>
+        <member name="M:NuveiClient.XmlAuthRequest.SetIssueNo(System.String)">
+            <summary>
+            Setter for Issue No
+            </summary>
+            <param name="issueNo">Numeric field with a max of 3 characters.</param>
+        </member>
+        <member name="M:NuveiClient.XmlAuthRequest.SetAvs(System.String,System.String,System.String)">
+            <summary>
+            Setter for Address Verification Values
+            </summary>
+            <param name="address1">First Line of address - Max size 50</param>
+            <param name="address2">Second Line of address - Max size 50</param>
+            <param name="postCode">Postcode - Max size 50</param>
+        </member>
+        <member name="M:NuveiClient.XmlAuthRequest.SetForeignCurrencyInformation(System.String,System.Double,System.Double)">
+            <summary>
+            Setter for Foreign Currency Information
+            </summary>
+            <param name="cardCurrency">ISO 4217 3 Digit Currency Code, e.g. EUR / USD / GBP</param>
+            <param name="cardAmount">(Amount X Conversion rate) Formatted to two decimal places</param>
+            <param name="conversionRate">Converstion rate supplied in rate response</param>
+        </member>
+        <member name="M:NuveiClient.XmlAuthRequest.SetAvsOnly(System.String)">
+            <summary>
+            Setter for AVS Only
+            </summary>
+            <param name="avsOnly">
+            Only perform an AVS check, do not store as a transaction.
+            
+            Accepted Values :
+            
+            Y   -   Transaction will be settled in next batch
+            N   -   Transaction will not be settled until user changes state in Merchant Selfcare Section
+            </param>
+        </member>
+        <member name="M:NuveiClient.XmlAuthRequest.SetMpiRef(System.String)">
+            <summary>
+            Setter for Mpi REF
+            </summary>
+            <param name="mpiRef">String holding MPI reference</param>
+        </member>
+        <member name="M:NuveiClient.XmlAuthRequest.SetMobileNumber(System.String)">
+            <summary>
+            Setter for Mobile Number
+            </summary>
+            <param name="mobileNumber">Mobile Number of cardholder. If sent an SMS receipt will be sent to them</param>
+        </member>
+        <member name="M:NuveiClient.XmlAuthRequest.SetDeviceId(System.String)">
+            <summary>
+            Setter for Device ID
+            </summary>
+            <param name="deviceId">Device ID to identify this source to the XML gateway</param>
+        </member>
+        <member name="M:NuveiClient.XmlAuthRequest.SetPhone(System.String)">
+            <summary>
+            Setter for Phone number
+            </summary>
+            <param name="phone">Phone number of cardholder for verification only</param>
+        </member>
+        <member name="M:NuveiClient.XmlAuthRequest.SetCountry(System.String)">
+            <summary>
+            Setter for Country
+            </summary>
+            <param name="country">Cardholders Country</param>
+        </member>
+        <member name="M:NuveiClient.XmlAuthRequest.SetMultiCur">
+            <summary>
+            Setter for Multi Currency flag
+            </summary>
+        </member>
+        <member name="M:NuveiClient.XmlAuthRequest.SetMotoTrans">
+            <summary>
+            Setter to flag transaction as Mail Order. If not used the transaction defaults to eCommerce
+            </summary>
+        </member>
+        <member name="M:NuveiClient.XmlAuthRequest.SetBillToFirstName(System.String)">
+            <summary>
+            Setter for billToFirstName
+            </summary>
+            <param name="billToFirstName">BillToFirstName</param>
+        </member>
+        <member name="M:NuveiClient.XmlAuthRequest.SetBillTolastName(System.String)">
+            <summary>
+            Setter for billTolastName
+            </summary>
+            <param name="billTolastName">BillTolastName</param>
+        </member>
+        <member name="M:NuveiClient.XmlAuthRequest.SetXid(System.String)">
+            <summary>
+            Setter for xid
+            </summary>
+            <param name="xid">XID</param>
+        </member>
+        <member name="M:NuveiClient.XmlAuthRequest.SetCavv(System.String)">
+            <summary>
+            Setter for cavv
+            </summary>
+            <param name="cavv">CAVV</param>
+        </member>
+        <member name="M:NuveiClient.XmlAuthRequest.SetCity(System.String)">
+            <summary>
+            Setter for city
+            </summary>
+            <param name="city">City</param>
+        </member>
+        <member name="M:NuveiClient.XmlAuthRequest.SetRegion(System.String)">
+            <summary>
+            Setter for region
+            </summary>
+            <param name="region">region</param>
+        </member>
+        <member name="M:NuveiClient.XmlAuthRequest.SetIpAddress(System.String)">
+            <summary>
+            Setter for ipAddress
+            </summary>
+            <param name="ipAddress">ipAddress</param>
+        </member>
+        <member name="M:NuveiClient.XmlAuthRequest.SetSignature(System.String)">
+            <summary>
+            Setter for signature
+            </summary>
+            <param name="signature">signature</param>
+        </member>
+        <member name="M:NuveiClient.XmlAuthRequest.SetCustomFields(System.Collections.Generic.IList{NuveiClient.CustomField})">
+            <summary>
+            Setter for Custom Fields list
+            </summary>
+            <param name="customFields">Should contain an IList of Custom Fields (maximum size 30).</param>
+        </member>
+        <member name="M:NuveiClient.XmlAuthRequest.SetRecurringTxnRef(System.String)">
+            <summary>
+            Setter for recurringTxnRef
+            </summary>
+            <param name="recurringTxnRef">Recurring Transaction Ref</param>
+        </member>
+        <member name="M:NuveiClient.XmlAuthRequest.ProcessRequest(System.String,System.Boolean)">
+            <summary>
+            Method to process transaction and return parsed response from the Nuvei TPS XML Gateway
+            </summary>
+            <param name="sharedSecret">
+            Shared secret either supplied by Nuvei TPS or configured under
+            Terminal Settings in the Merchant Selfcare System.
+            </param>
+            <param name="testAccount">
+            Boolean value defining Mode
+            true - This is a test account
+            false - Production mode, all transactions will be processed by Issuer.
+            </param>
+            <returns>
+            XmlAuthResponse containing an error or the parsed payment response.
+            </returns>
+        </member>
+        <member name="T:NuveiClient.XmlAuthResponse">
+            <summary>
+            Holder class for parsed response. If there was an error there will be an error string 
+            otherwise all values will be populated with the parsed payment response values.
+            
+            IsError should be checked before accessing any fields.
+            
+            ErrorString will contain the error if one occurred.
+            </summary>
+        </member>
+        <member name="T:NuveiClient.XmlRateRequest">
+            <summary>
+            Rate request to be performed if the terminal is eDCC activated.
+            
+            isError will hold a true value if eDCC is not applicable to this transaction.
+            </summary>
+        </member>
+        <member name="M:NuveiClient.XmlRateRequest.#ctor(System.String,System.String)">
+            <summary>
+            
+            </summary>
+            <param name="terminalId">Terminal ID Assigned by Nuvei TPS</param>
+            <param name="cardBin">The first 6 digits of the card number</param>
+        </member>
+        <member name="M:NuveiClient.XmlRateRequest.SetBaseAmount(System.Double)">
+            <summary>
+            
+            </summary>
+            <param name="baseAmount">The base amount</param>
+        </member>
+        <member name="T:NuveiClient.XmlRateResponse">
+            <summary>
+            Rate Response holder
+            </summary>
+        </member>
+        <member name="M:NuveiClient.XmlRateResponse.#ctor(System.String)">
+            <summary>
+            Response Holder for XMLRateRequest
+            </summary>
+            <param name="responseXml"></param>
+        </member>
+        <member name="T:NuveiClient.XmlRefundRequest">
+            <summary>
+            Used for processing XML Refund through the Nuvei TPS XML Gateway.
+            
+            Basic request is configured on initialisation and optional fields can be configured.
+            </summary>
+        </member>
+        <member name="M:NuveiClient.XmlRefundRequest.#ctor(System.String,System.Double,System.String,System.String)">
+            <summary>
+            Creates the auth request less optional parameters for processing an XML Transaction
+            through the Nuvei XML Gateway
+            </summary>
+            <param name="terminalId">Terminal ID provided by Nuvei TPS</param>
+            <param name="amount">Transaction Amount, Double formatted to 2 decimal places.</param>
+            <param name="operatorName">The operator actioning the refund</param>
+            <param name="reason">Refund Reason</param>
+        </member>
+        <member name="M:NuveiClient.XmlRefundRequest.#ctor(System.String,System.String,System.Double,System.String,System.String)">
+            <summary>
+            Creates the auth request less optional parameters for processing an XML Transaction
+            through the Nuvei XML Gateway
+            </summary>
+            <param name="terminalId">Terminal ID provided by Nuvei TPS</param>
+            <param name="orderId">A unique merchant identifier. Alpha numeric and max size 12 chars.</param>
+            <param name="amount">Transaction Amount, Double formatted to 2 decimal places.</param>
+            <param name="operatorName">The operator actioning the refund</param>
+            <param name="reason">Refund Reason</param>
+        </member>
+        <member name="M:NuveiClient.XmlRefundRequest.SetOrderID(System.String)">
+            <summary>
+            Setter for OrderID: Used for new merchants after Q2 2013 when UniqueRef was introduced as default refund identifier
+            </summary>
+            <param name="orderId">A unique merchant identifier. Alpha numeric and max size 12 chars.</param>
+        </member>
+        <member name="M:NuveiClient.XmlRefundRequest.SetUniqueRef(System.String)">
+            <summary>
+            Setter for UniqueRef
+            </summary>
+            <param name="uniqueRef">Unique Reference of transaction returned from gateway in authorisation response</param>
+        </member>
+        <member name="M:NuveiClient.XmlRefundRequest.SetAutoReady(System.String)">
+            <summary>
+            Setter for AutoReady value
+            </summary>
+            <param name="autoReady">Y/N</param>
+        </member>
+        <member name="M:NuveiClient.XmlRefundRequest.ProcessRequest(System.String,System.Boolean)">
+            <summary>
+            Method to process transaction and return parsed response from the Nuvei TPS XML Gateway
+            </summary>
+            <param name="sharedSecret">
+            Shared secret either supplied by Nuvei TPS or configured under
+            Terminal Settings in the Merchant Selfcare System.
+            </param>
+            <param name="testAccount">
+            Boolean value defining Mode
+            true - This is a test account
+            false - Production mode, all transactions will be processed by Issuer.
+            </param>
+            <returns>
+            XmlAuthResponse containing an error or the parsed payment response.
+            </returns>
+        </member>
+        <member name="T:NuveiClient.XmlRefundResponse">
+            <summary>
+            Holder class for parsed response. If there was an error there will be an error string 
+            otherwise all values will be populated with the parsed payment response values.
+            
+            IsError should be checked before accessing any fields.
+            
+            ErrorString will contain the error if one occurred.
+            </summary>
+        </member>
+        <member name="P:NuveiClient.XmlRefundResponse.Hash">
+            <summary>
+            MD5 Hash using for authenticating transaction
+            </summary>
+        </member>
+        <member name="T:NuveiClient.XmlPreAuthRequest">
+            <summary>
+            Used for processing XML Pre-authorisations through the Nuvei TPS XML Gateway.
+            
+            Basic request is configured on initialisation and optional fields can be configured.
+            </summary>
+        </member>
+        <member name="M:NuveiClient.XmlPreAuthRequest.#ctor(System.String,System.String,System.String,System.Double,System.String,System.String)">
+            <summary>
+            Creates the pre-auth request less optional parameters for processing an XML Transaction
+            through the Nuvei XML Gateway
+            </summary>
+            <param name="terminalId">Terminal ID provided by Nuvei TPS</param>
+            <param name="orderId">A unique merchant identifier. Alpha numeric and max size 12 chars.</param>
+            <param name="currency">ISO 4217 3 Digit Currency Code, e.g. EUR / USD / GBP</param>
+            <param name="amount">Transaction Amount, Double formatted to 2 decimal places.</param>
+            <param name="cardNumber">A valid Card Number that passes the Luhn Check.</param>
+            <param name="cardType">
+            Card Type (Accepted Card Types must be configured in the Merchant Selfcare System.)
+            
+            Accepted Values :
+            
+            VISA
+            MASTERCARD
+            LASER
+            SWITCH
+            SOLO
+            AMEX
+            DINERS
+            MAESTRO
+            DELTA
+            ELECTRON
+            JCB
+            </param>
+        </member>
+        <member name="M:NuveiClient.XmlPreAuthRequest.SetEmail(System.String)">
+            <summary>
+            Setter for Email
+            </summary>
+            <param name="email">Email Address of cardholder. If set a receipt will be sent to the cardholder from the payment gateway.</param>
+        </member>
+        <member name="M:NuveiClient.XmlPreAuthRequest.SetDescription(System.String)">
+            <summary>
+            Setter for Description
+            </summary>
+            <param name="description">Description of transaction</param>
+        </member>
+        <member name="M:NuveiClient.XmlPreAuthRequest.SetCvv(System.String)">
+            <summary>
+            Setter for Card Verification Value
+            </summary>
+            <param name="cvv">Numeric field with a max of 4 characters.</param>
+        </member>
+        <member name="M:NuveiClient.XmlPreAuthRequest.SetNonSecureCardCardInfo(System.String,System.String)">
+            <summary>
+            Setter for Card Expiry and Card Holder Name values. These are mandatory for non-SecureCard transactions
+            </summary>
+            <param name="cardExpiry">4 digit expiry date in the format MMYY.</param>
+            <param name="cardHolderName">Cardholders name.</param>
+        </member>
+        <member name="M:NuveiClient.XmlPreAuthRequest.SetIssueNo(System.String)">
+            <summary>
+            Setter for Issue No
+            </summary>
+            <param name="issueNo">Numeric field with a max of 3 characters.</param>
+        </member>
+        <member name="M:NuveiClient.XmlPreAuthRequest.SetAvs(System.String,System.String,System.String)">
+            <summary>
+            Setter for Address Verification Values
+            </summary>
+            <param name="address1">First Line of address - Max size 50</param>
+            <param name="address2">Second Line of address - Max size 50</param>
+            <param name="postCode">Postcode - Max size 50</param>
+        </member>
+        <member name="M:NuveiClient.XmlPreAuthRequest.SetForeignCurrencyInformation(System.String,System.String,System.Double)">
+            <summary>
+            Setter for Foreign Currency Information
+            </summary>
+            <param name="cardCurrency">ISO 4217 3 Digit Currency Code, e.g. EUR / USD / GBP</param>
+            <param name="cardAmount">(Amount X Conversion rate) Formatted to two decimal places</param>
+            <param name="conversionRate">Converstion rate supplied in rate response</param>
+        </member>
+        <member name="M:NuveiClient.XmlPreAuthRequest.SetCity(System.String)">
+            <summary>
+            Setter for city
+            </summary>
+            <param name="city">City</param>
+        </member>
+        <member name="M:NuveiClient.XmlPreAuthRequest.SetRegion(System.String)">
+            <summary>
+            Setter for region
+            </summary>
+            <param name="region">region</param>
+        </member>
+        <member name="M:NuveiClient.XmlPreAuthRequest.SetCountry(System.String)">
+            <summary>
+            Setter for Country
+            </summary>
+            <param name="country">Cardholders Country</param>
+        </member>
+        <member name="M:NuveiClient.XmlPreAuthRequest.SetIpAddress(System.String)">
+            <summary>
+            Setter for ipAddress
+            </summary>
+            <param name="ipAddress">ipAddress</param>
+        </member>
+        <member name="M:NuveiClient.XmlPreAuthRequest.SetCustomFields(System.Collections.Generic.IList{NuveiClient.CustomField})">
+            <summary>
+            Setter for Custom Fields list
+            </summary>
+            <param name="customFields">Should contain an IList of Custom Fields (maximum size 30).</param>
+        </member>
+        <member name="M:NuveiClient.XmlPreAuthRequest.SetRecurringTxnRef(System.String)">
+            <summary>
+            Setter for recurringTxnRef
+            </summary>
+            <param name="recurringTxnRef">Recurring Transaction Ref</param>
+        </member>
+        <member name="M:NuveiClient.XmlPreAuthRequest.SetMultiCur">
+            <summary>
+            Setter for Multi Currency flag
+            </summary>
+        </member>
+        <member name="M:NuveiClient.XmlPreAuthRequest.SetMotoTrans">
+            <summary>
+            Setter to flag transaction as Mail Order. If not used the transaction defaults to eCommerce
+            </summary>
+        </member>
+        <member name="M:NuveiClient.XmlPreAuthRequest.ProcessRequest(System.String,System.Boolean)">
+            <summary>
+            Method to process transaction and return parsed response from the Nuvei TPS XML Gateway
+            </summary>
+            <param name="sharedSecret">
+            Shared secret either supplied by Nuvei TPS or configured under
+            Terminal Settings in the Merchant Selfcare System.
+            </param>
+            <param name="testAccount">
+            Boolean value defining Mode
+            true - This is a test account
+            false - Production mode, all transactions will be processed by Issuer.
+            </param>
+            <returns>
+            XmlPreAuthResponse containing an error or the parsed payment response.
+            </returns>
+        </member>
+        <member name="M:NuveiClient.XmlPreAuthRequest.ProcessRequest(System.String,System.Boolean,System.String)">
+            <summary>
+            Method to process transaction and return parsed response from the Nuvei TPS XML Gateway
+            </summary>
+            <param name="sharedSecret">
+            Shared secret either supplied by Nuvei TPS or configured under
+            Terminal Settings in the Merchant Selfcare System.
+            </param>
+            <param name="testAccount">
+            Boolean value defining Mode
+            true - This is a test account
+            false - Production mode, all transactions will be processed by Issuer.
+            </param>
+            <param name="gateway">
+            string containing the name of the gateway
+            Must be one of the options in the switch in the Request::SendRequest method above
+            </param>
+            <returns>
+            XmlPreAuthResponse containing an error or the parsed payment response.
+            </returns>
+        </member>
+        <member name="T:NuveiClient.XmlPreAuthResponse">
+            <summary>
+            Holder class for parsed response. If there was an error there will be an error string 
+            otherwise all values will be populated with the parsed payment response values.
+            
+            IsError should be checked before accessing any fields.
+            
+            ErrorString will contain the error if one occurred.
+            </summary>
+        </member>
+        <member name="T:NuveiClient.XmlPreAuthCompletionRequest">
+            <summary>
+            Used for processing XML Pre-authorisation completions through the Nuvei TPS XML Gateway.
+            
+            Basic request is configured on initialisation and optional fields can be configured.
+            </summary>
+        </member>
+        <member name="M:NuveiClient.XmlPreAuthCompletionRequest.#ctor(System.String,System.Double)">
+            <summary>
+            Creates the pre-auth completion request less optional parameters for processing an XML Transaction
+            through the Nuvei XML Gateway
+            </summary>
+            <param name="terminalId">Terminal ID provided by Nuvei TPS</param>
+            <param name="amount">Transaction Amount, Double formatted to 2 decimal places.</param>
+        </member>
+        <member name="M:NuveiClient.XmlPreAuthCompletionRequest.#ctor(System.String,System.String,System.Double)">
+            <summary>
+            Creates the pre-auth completion request less optional parameters for processing an XML Transaction
+            through the Nuvei XML Gateway
+            </summary>
+            <param name="terminalId">Terminal ID provided by Nuvei TPS</param>
+            <param name="orderId">A unique merchant identifier. Alpha numeric and max size 12 chars.</param>
+            <param name="amount">Transaction Amount, Double formatted to 2 decimal places.</param>
+        </member>
+        <member name="M:NuveiClient.XmlPreAuthCompletionRequest.SetOrderId(System.String)">
+            <summary>
+            Setter for Card Verification Value
+            </summary>
+            <param name="orderId">A unique merchant identifier. Alpha numeric and max size 12 chars.</param>
+        </member>
+        <member name="M:NuveiClient.XmlPreAuthCompletionRequest.SetUniqueRef(System.String)">
+            <summary>
+            Setter for UniqueRef
+            </summary>
+            <param name="uniqueRef">Unique Reference of transaction returned from gateway in authorisation response</param>
+        </member>
+        <member name="M:NuveiClient.XmlPreAuthCompletionRequest.SetCvv(System.String)">
+            <summary>
+            Setter for Card Verification Value
+            </summary>
+            <param name="cvv">Numeric field with a max of 4 characters.</param>
+        </member>
+        <member name="M:NuveiClient.XmlPreAuthCompletionRequest.SetForeignCurrencyInformation(System.String,System.String,System.Double)">
+            <summary>
+            Setter for Foreign Currency Information
+            </summary>
+            <param name="cardCurrency">ISO 4217 3 Digit Currency Code, e.g. EUR / USD / GBP</param>
+            <param name="cardAmount">(Amount X Conversion rate) Formatted to two decimal places</param>
+            <param name="conversionRate">Converstion rate supplied in rate response</param>
+        </member>
+        <member name="M:NuveiClient.XmlPreAuthCompletionRequest.SetDescription(System.String)">
+            <summary>
+            Setter for Description
+            </summary>
+            <param name="description">Discretionary text value.</param>
+        </member>
+        <member name="M:NuveiClient.XmlPreAuthCompletionRequest.ProcessRequest(System.String,System.Boolean)">
+            <summary>
+            Method to process transaction and return parsed response from the Nuvei TPS XML Gateway
+            </summary>
+            <param name="sharedSecret">
+            Shared secret either supplied by Nuvei TPS or configured under
+            Terminal Settings in the Merchant Selfcare System.
+            </param>
+            <param name="testAccount">
+            Boolean value defining Mode
+            true - This is a test account
+            false - Production mode, all transactions will be processed by Issuer.
+            </param>
+            <returns>
+            XmlPreAuthCompletionResponse containing an error or the parsed payment response.
+            </returns>
+        </member>
+        <member name="T:NuveiClient.XmlPreAuthCompletionResponse">
+            <summary>
+            Holder class for parsed response. If there was an error there will be an error string 
+            otherwise all values will be populated with the parsed payment response values.
+            
+            IsError should be checked before accessing any fields.
+            
+            ErrorString will contain the error if one occurred.
+            </summary>
+        </member>
+        <member name="T:NuveiClient.XmlSecureCardRegRequest">
+            <summary>
+            Rate request to be performed if the terminal is eDCC activated.
+            
+            isError will hold a true value if eDCC is not applicable to this transaction.
+            </summary>
+        </member>
+        <member name="M:NuveiClient.XmlSecureCardRegRequest.#ctor(System.String,System.String,System.String,System.String,System.String,System.String)">
+            <summary>
+            Creates the SecureCard Registration request for processing
+            through the Nuvei XML Gateway
+            </summary>
+            <param name="merchantRef">A unique card identifier. Alpha numeric and max size 48 chars.</param>
+            <param name="terminalId">Terminal ID provided by Nuvei TPS</param>
+            <param name="cardNumber">A valid Card Number that passes the Luhn Check.</param>
+            <param name="cardExpiry">Card Expiry formatted MMYY</param>
+            <param name="cardType">Card Type (Accepted Card Types must be configured in the Merchant Selfcare System.)</param>
+            <param name="cardHolderName">Card Holder Name</param>
+        </member>
+        <member name="M:NuveiClient.XmlSecureCardRegRequest.SetDontCheckSecurity(System.String)">
+            <summary>
+            Setter for dontCheckSecurity setting
+            </summary>
+            <param name="dontCheckSecurity">Can be either "Y" or "N".</param>
+        </member>
+        <member name="M:NuveiClient.XmlSecureCardRegRequest.SetCvv(System.String)">
+            <summary>
+            Setter for Card Verification Value
+            </summary>
+            <param name="cvv">Numeric field with a max of 4 characters.</param>
+        </member>
+        <member name="M:NuveiClient.XmlSecureCardRegRequest.SetIssueNo(System.String)">
+            <summary>
+            Setter for Issue No
+            </summary>
+            <param name="issueNo">Numeric field with a max of 3 characters.</param>
+        </member>
+        <member name="M:NuveiClient.XmlSecureCardRegRequest.SetPermittedTerminals(System.Collections.Generic.IList{System.String})">
+            <summary>
+            Setter for Permitted Terminals list
+            </summary>
+            <param name="permittedTerminals">Should contain an IList of permitted terminal IDs.</param>
+        </member>
+        <member name="M:NuveiClient.XmlSecureCardRegRequest.SetCustomFields(System.Collections.Generic.IList{NuveiClient.CustomField})">
+            <summary>
+            Setter for Custom Fields list
+            </summary>
+            <param name="customFields">Should contain an IList of Custom Fields (maximum size 3).</param>
+        </member>
+        <member name="T:NuveiClient.XmlSecureCardRegResponse">
+            <summary>
+            Secure Card Reg Response holder
+            </summary>
+        </member>
+        <member name="M:NuveiClient.XmlSecureCardRegResponse.#ctor(System.String)">
+            <summary>
+            Response Holder for XmlSecureCardRegResponse
+            </summary>
+            <param name="responseXml"></param>
+        </member>
+        <member name="T:NuveiClient.XmlSecureCardUpdRequest">
+            <summary>
+            Rate request to be performed if the terminal is eDCC activated.
+            
+            isError will hold a true value if eDCC is not applicable to this transaction.
+            </summary>
+        </member>
+        <member name="M:NuveiClient.XmlSecureCardUpdRequest.#ctor(System.String,System.String,System.String,System.String,System.String,System.String)">
+            <summary>
+            Creates the SecureCard Update request for processing
+            through the Nuvei XML Gateway
+            </summary>
+            <param name="merchantRef">A unique card identifier. Alpha numeric and max size 48 chars.</param>
+            <param name="terminalId">Terminal ID provided by Nuvei TPS</param>
+            <param name="cardNumber">A valid Card Number that passes the Luhn Check.</param>
+            <param name="cardExpiry">Card Expiry formatted MMYY</param>
+            <param name="cardType">Card Type (Accepted Card Types must be configured in the Merchant Selfcare System.)</param>
+            <param name="cardHolderName">Card Holder Name</param>
+        </member>
+        <member name="M:NuveiClient.XmlSecureCardUpdRequest.SetDontCheckSecurity(System.String)">
+            <summary>
+            Setter for dontCheckSecurity setting
+            </summary>
+            <param name="dontCheckSecurity">Can be either "Y" or "N".</param>
+        </member>
+        <member name="M:NuveiClient.XmlSecureCardUpdRequest.SetCvv(System.String)">
+            <summary>
+            Setter for Card Verification Value
+            </summary>
+            <param name="cvv">Numeric field with a max of 4 characters.</param>
+        </member>
+        <member name="M:NuveiClient.XmlSecureCardUpdRequest.SetIssueNo(System.String)">
+            <summary>
+            Setter for Issue No
+            </summary>
+            <param name="issueNo">Numeric field with a max of 3 characters.</param>
+        </member>
+        <member name="M:NuveiClient.XmlSecureCardUpdRequest.SetPermittedTerminals(System.Collections.Generic.IList{System.String})">
+            <summary>
+            Setter for Permitted Terminals list
+            </summary>
+            <param name="permittedTerminals">Should contain an IList of permitted terminal IDs.</param>
+        </member>
+        <member name="M:NuveiClient.XmlSecureCardUpdRequest.SetCustomFields(System.Collections.Generic.IList{NuveiClient.CustomField})">
+            <summary>
+            Setter for Custom Fields list
+            </summary>
+            <param name="customFields">Should contain an IList of Custom Fields (maximum size 3).</param>
+        </member>
+        <member name="T:NuveiClient.XmlSecureCardUpdResponse">
+            <summary>
+            Secure Card Upd Response holder
+            </summary>
+        </member>
+        <member name="M:NuveiClient.XmlSecureCardUpdResponse.#ctor(System.String)">
+            <summary>
+            Response Holder for XmlSecureCardUpdResponse
+            </summary>
+            <param name="responseXml"></param>
+        </member>
+        <member name="T:NuveiClient.XmlSecureCardDelRequest">
+            <summary>
+            Rate request to be performed if the terminal is eDCC activated.
+            
+            isError will hold a true value if eDCC is not applicable to this transaction.
+            </summary>
+        </member>
+        <member name="M:NuveiClient.XmlSecureCardDelRequest.#ctor(System.String,System.String,System.String)">
+            <summary>
+            Creates the SecureCard Deletion request for processing
+            through the Nuvei XML Gateway
+            </summary>
+            <param name="merchantRef">A unique card identifier. Alpha numeric and max size 48 chars.</param>
+            <param name="terminalId">Terminal ID provided by Nuvei TPS</param>
+            <param name="secureCardMerchantRef">A valid, registered SecureCard Merchant Reference.</param>
+        </member>
+        <member name="T:NuveiClient.XmlSecureCardDelResponse">
+            <summary>
+            Secure Card Del Response holder
+            </summary>
+        </member>
+        <member name="M:NuveiClient.XmlSecureCardDelResponse.#ctor(System.String)">
+            <summary>
+            Response Holder for XmlSecureCardUpdResponse
+            </summary>
+            <param name="responseXml"></param>
+        </member>
+        <member name="T:NuveiClient.XmlSecureCardSearchRequest">
+            <summary>
+            Search for a secure card
+            </summary>
+        </member>
+        <member name="M:NuveiClient.XmlSecureCardSearchRequest.#ctor(System.String,System.String)">
+            <summary>
+            Creates the SecureCard Deletion request for processing
+            through the Nuvei XML Gateway
+            </summary>
+            <param name="merchantRef">A unique card identifier. Alpha numeric and max size 48 chars.</param>
+            <param name="terminalId">Terminal ID provided by Nuvei TPS</param>
+        </member>
+        <member name="M:NuveiClient.XmlSecureCardSearchRequest.SetPermittedTerminalsRequired">
+            <summary>
+            Setter for Permitted Terminals Required Flag. Determins if the host should return a list of terminals that this card is permitted to be used on.
+            </summary>
+        </member>
+        <member name="T:NuveiClient.XmlSecureCardSearchResponse">
+            <summary>
+            Secure Card Del Response holder
+            </summary>
+        </member>
+        <member name="M:NuveiClient.XmlSecureCardSearchResponse.#ctor(System.String)">
+            <summary>
+            Response Holder for XmlSecureCardSearchResponse
+            </summary>
+            <param name="responseXml"></param>
+        </member>
+        <member name="T:NuveiClient.XmlStoredSubscriptionRegRequest">
+            <summary>
+            Stored Subscription Registration Req
+            
+            </summary>
+        </member>
+        <member name="M:NuveiClient.XmlStoredSubscriptionRegRequest.SetCustomFields(System.Collections.Generic.IList{NuveiClient.CustomField})">
+            <summary>
+            Setter for Custom Fields list
+            </summary>
+            <param name="customFields">Should contain an IList of Custom Fields (maximum size 30).</param>
+        </member>
+        <member name="T:NuveiClient.XmlStoredSubscriptionUpdRequest">
+            <summary>
+            Stored Subscription Update Req
+            
+            </summary>
+        </member>
+        <member name="M:NuveiClient.XmlStoredSubscriptionUpdRequest.SetCustomFields(System.Collections.Generic.IList{NuveiClient.CustomField})">
+            <summary>
+            Setter for Custom Fields list
+            </summary>
+            <param name="customFields">Should contain an IList of Custom Fields (maximum size 30).</param>
+        </member>
+        <member name="T:NuveiClient.XmlStoredSubscriptionDelRequest">
+            <summary>
+            Stored Subscription Deletion Req
+            
+            </summary>
+        </member>
+        <member name="T:NuveiClient.XmlStoredSubscriptionRegResponse">
+            <summary>
+            Stored Subscription Reg Response
+            </summary>
+        </member>
+        <member name="M:NuveiClient.XmlStoredSubscriptionRegResponse.#ctor(System.String)">
+            <summary>
+            Response Holder for XmlStoredSubscriptionRegResponse
+            </summary>
+            <param name="responseXml"></param>
+        </member>
+        <member name="T:NuveiClient.XmlStoredSubscriptionUpdResponse">
+            <summary>
+            Stored Subscription Upd Response
+            </summary>
+        </member>
+        <member name="M:NuveiClient.XmlStoredSubscriptionUpdResponse.#ctor(System.String)">
+            <summary>
+            Response Holder for XmlStoredSubscriptionUpdResponse
+            </summary>
+            <param name="responseXml"></param>
+        </member>
+        <member name="T:NuveiClient.XmlStoredSubscriptionDelResponse">
+            <summary>
+            Stored Subscription Del Response
+            </summary>
+        </member>
+        <member name="M:NuveiClient.XmlStoredSubscriptionDelResponse.#ctor(System.String)">
+            <summary>
+            Response Holder for XmlStoredSubscriptionDelResponse
+            </summary>
+            <param name="responseXml"></param>
+        </member>
+        <member name="T:NuveiClient.XmlSubscriptionRegRequest">
+            <summary>
+            Subscription Registration Req
+            
+            </summary>
+        </member>
+        <member name="M:NuveiClient.XmlSubscriptionRegRequest.SetNewStoredSubscriptionValues(System.String,System.String,System.String,System.Int32,System.String,System.Double,System.Double,System.String,System.String,System.String)">
+            <summary>
+            Setter for New Stored Subscription info. Use this if you would like to register the Subscription under a new Stored Subscription
+            </summary>
+            <param name="name">The name of the Stored Subscription</param>
+            <param name="description">The description of the Stored Subscription</param>
+            <param name="periodType">DAILY/WEEKLY/FORTNIGHTLY/MONTHLY/QUARTERLY/YEARLY</param>
+            <param name="length">How many of the above periods should the subscriptions run for by default</param>
+            <param name="currency">ISO 4217 3 Digit Currency Code, e.g. EUR / USD / GBP / etc.</param>
+            <param name="recurringAmount">Amount that will be billed repeatedly</param>
+            <param name="initialAmount">Amount that will be authorised immediately as the setup fee</param>
+            <param name="type">Subscription automation type. AUTOMATIC/AUTOMATIC (WITHOUT AMOUNTS)/MANUAL</param>
+            <param name="onUpdate">What happens to the subscriptions under this stored subscription when the stored subscription us updated? UPDATE/CONTINUE</param>
+            <param name="onDelete">What happens to the subscriptions under this stored subscription when the stored subscription us deleted? DELETE/CONTINUE</param>
+        </member>
+        <member name="M:NuveiClient.XmlSubscriptionRegRequest.SetSecureCardMerchantRef(System.String)">
+            <summary>
+            Setter for secureCardMerchantRef.
+            </summary>
+            <param name="secureCardMerchantRef">A valid, registered SecureCard Merchant Reference.</param>
+        </member>
+        <member name="M:NuveiClient.XmlSubscriptionRegRequest.SetCardReference(System.String)">
+            <summary>
+            Setter for Card Reference.
+            </summary>
+            <param name="cardReference">Card Reference</param>
+        </member>
+        <member name="M:NuveiClient.XmlSubscriptionRegRequest.SetSubscriptionAmounts(System.Double,System.Double)">
+            <summary>
+            Setter for Subscription amounts (if using Stored Subscription type: AUTOMATIC (WITHOUT AMOUNTS))
+            </summary>
+            <param name="recurringAmount">Amount that will be billed repeatedly</param>
+            <param name="initialAmount">Amount that will be authorised immediately as the setup fee</param>
+        </member>
+        <member name="M:NuveiClient.XmlSubscriptionRegRequest.SetEndDate(System.DateTime)">
+            <summary>
+            Setter for Subscription end date.
+            </summary>
+            <param name="endDate">When the subscription should end</param>
+        </member>
+        <member name="M:NuveiClient.XmlSubscriptionRegRequest.SetEdccDecision(System.String)">
+            <summary>
+            Setter for when the cardholder has accepted the eDCC offering
+            </summary>
+            <param name="eDCCDecision">eDCC decision ("Y" or "N")</param>
+        </member>
+        <member name="M:NuveiClient.XmlSubscriptionRegRequest.SetCustomFields(System.Collections.Generic.IList{NuveiClient.CustomField})">
+            <summary>
+            Setter for Custom Fields list
+            </summary>
+            <param name="customFields">Should contain an IList of Custom Fields (maximum size 30).</param>
+        </member>
+        <member name="M:NuveiClient.XmlSubscriptionRegRequest.#ctor(System.String,System.String,System.String,System.DateTime)">
+            <summary>
+            Creates the SecureCard Registration/Update request for processing through the Nuvei XML Gateway
+            </summary>
+            <param name="merchantRef">A unique subscription identifier. Alpha numeric and max size 48 chars.</param>
+            <param name="terminalId">Terminal ID provided by Nuvei TPS</param>
+            <param name="storedSubscriptionRef">Name of the Stored subscription under which this subscription should run.</param>
+            <param name="startDate">Start date of the Subscription</param>
+        </member>
+        <member name="T:NuveiClient.XmlSubscriptionUpdRequest">
+            <summary>
+            Subscription Update Req
+            
+            </summary>
+        </member>
+        <member name="M:NuveiClient.XmlSubscriptionUpdRequest.SetSecureCardMerchantRef(System.String)">
+            <summary>
+            Setter for secureCardMerchantRef.
+            </summary>
+            <param name="secureCardMerchantRef">A valid, registered SecureCard Merchant Reference.</param>
+        </member>
+        <member name="M:NuveiClient.XmlSubscriptionUpdRequest.SetCardReference(System.String)">
+            <summary>
+            Setter for Card Reference.
+            </summary>
+            <param name="cardReference">Card Reference</param>
+        </member>
+        <member name="M:NuveiClient.XmlSubscriptionUpdRequest.SetDescription(System.String)">
+            <summary>
+            Setter for Subscription description.
+            </summary>
+            <param name="description">Subscription description</param>
+        </member>
+        <member name="M:NuveiClient.XmlSubscriptionUpdRequest.SetSubName(System.String)">
+            <summary>
+            Setter for Subscription name.
+            </summary>
+            <param name="name">Subscription name</param>
+        </member>
+        <member name="M:NuveiClient.XmlSubscriptionUpdRequest.SetLength(System.Int32)">
+            <summary>
+            Setter for Subscription length.
+            </summary>
+            <param name="length">Subscription length (number of periods)</param>
+        </member>
+        <member name="M:NuveiClient.XmlSubscriptionUpdRequest.SetSkipPeriodCount(System.Int32)">
+            <summary>
+            Setter for Skip Period Count.
+            </summary>
+            <param name="skipPeriodCount">Skip Period Count</param>
+        </member>
+        <member name="M:NuveiClient.XmlSubscriptionUpdRequest.SetRecurringAmount(System.Double)">
+            <summary>
+            Setter for Subscription recurring amount.
+            </summary>
+            <param name="recurringAmount">Recurring amount of Subscription</param>
+        </member>
+        <member name="M:NuveiClient.XmlSubscriptionUpdRequest.SetEDCCDecision(System.String)">
+            <summary>
+            Setter for edcc decision
+            </summary>
+            <param name="eDCCDecision">Should be set to true if accepted</param>
+        </member>
+        <member name="M:NuveiClient.XmlSubscriptionUpdRequest.SetStartDate(System.DateTime)">
+            <summary>
+            Setter for Subscription start date.
+            </summary>
+            <param name="startDate">When the subscription should start</param>
+        </member>
+        <member name="M:NuveiClient.XmlSubscriptionUpdRequest.SetEndDate(System.DateTime)">
+            <summary>
+            Setter for Subscription end date.
+            </summary>
+            <param name="endDate">When the subscription should end</param>
+        </member>
+        <member name="M:NuveiClient.XmlSubscriptionUpdRequest.SetCustomFields(System.Collections.Generic.IList{NuveiClient.CustomField})">
+            <summary>
+            Setter for Custom Fields list
+            </summary>
+            <param name="customFields">Should contain an IList of Custom Fields (maximum size 30).</param>
+        </member>
+        <member name="T:NuveiClient.XmlSubscriptionDelRequest">
+            <summary>
+            Subscription Deletion Req
+            
+            </summary>
+        </member>
+        <member name="T:NuveiClient.XmlSubscriptionRegResponse">
+            <summary>
+            Subscription Reg Response
+            </summary>
+        </member>
+        <member name="M:NuveiClient.XmlSubscriptionRegResponse.#ctor(System.String)">
+            <summary>
+            Response Holder for XmlSubscriptionRegResponse
+            </summary>
+            <param name="responseXml"></param>
+        </member>
+        <member name="T:NuveiClient.XmlSubscriptionUpdResponse">
+            <summary>
+            Subscription Upd Response
+            </summary>
+        </member>
+        <member name="M:NuveiClient.XmlSubscriptionUpdResponse.#ctor(System.String)">
+            <summary>
+            Response Holder for XmlSubscriptionUpdResponse
+            </summary>
+            <param name="responseXml"></param>
+        </member>
+        <member name="T:NuveiClient.XmlSubscriptionDelResponse">
+            <summary>
+            Subscription Del Response
+            </summary>
+        </member>
+        <member name="M:NuveiClient.XmlSubscriptionDelResponse.#ctor(System.String)">
+            <summary>
+            Response Holder for XmlSubscriptionDelResponse
+            </summary>
+            <param name="responseXml"></param>
+        </member>
+        <member name="T:NuveiClient.XmlSubscriptionPaymentRequest">
+            <summary>
+            Subscription Registration Req
+            
+            </summary>
+        </member>
+        <member name="M:NuveiClient.XmlSubscriptionPaymentRequest.SetDescription(System.String)">
+            <summary>
+            Setter for Description
+            </summary>
+            <param name="description">Description of Subscription Payment</param>
+        </member>
+        <member name="M:NuveiClient.XmlSubscriptionPaymentRequest.SetEmail(System.String)">
+            <summary>
+            Setter for Email Address Value for receipt to be sent to cardholder
+            </summary>
+            <param name="email">valid email address of cardholder</param>
+        </member>
+        <member name="M:NuveiClient.XmlSubscriptionPaymentRequest.SetForeignCurrencyInformation(System.String,System.String,System.Double)">
+            <summary>
+            Setter for Foreign Currency Information
+            </summary>
+            <param name="cardCurrency">ISO 4217 3 Digit Currency Code, e.g. EUR / USD / GBP</param>
+            <param name="cardAmount">(Amount X Conversion rate) Formatted to two decimal places</param>
+            <param name="conversionRate">Converstion rate supplied in rate response</param>
+        </member>
+        <member name="M:NuveiClient.XmlSubscriptionPaymentRequest.SetCustomFields(System.Collections.Generic.IList{NuveiClient.CustomField})">
+            <summary>
+            Setter for Custom Fields list
+            </summary>
+            <param name="customFields">Should contain an IList of Custom Fields (maximum size 30).</param>
+        </member>
+        <member name="M:NuveiClient.XmlSubscriptionPaymentRequest.#ctor(System.String,System.String,System.Double,System.String)">
+            <summary>
+            Creates the SecureCard Registration/Update request for processing through the Nuvei XML Gateway
+            </summary>
+            <param name="terminalId">Terminal ID provided by Nuvei TPS</param>
+            <param name="orderId">Name of the Stored subscription under which this subscription should run.</param>
+            <param name="amount">A valid, registered SecureCard Merchant Reference.</param>
+            <param name="subscriptionRef">Start date of the Subscription</param>
+        </member>
+        <member name="T:NuveiClient.XmlSubscriptionPaymentResponse">
+            <summary>
+            Subscription Del Response
+            </summary>
+        </member>
+        <member name="M:NuveiClient.XmlSubscriptionPaymentResponse.#ctor(System.String)">
+            <summary>
+            Response Holder for XmlSubscriptionDelResponse
+            </summary>
+            <param name="responseXml"></param>
+        </member>
+        <member name="T:NuveiClient.XmlUnreferencedRefundRequest">
+            <summary>
+            Subscription Registration Req
+            
+            </summary>
+        </member>
+        <member name="M:NuveiClient.XmlUnreferencedRefundRequest.#ctor(System.String,System.String,System.String,System.Double,System.String)">
+            <summary>
+            Creates the SecureCard Registration/Update request for processing through the Nuvei XML Gateway
+            </summary>
+            <param name="terminalId">Terminal ID provided by Nuvei TPS</param>
+            <param name="orderId">Name of the Stored subscription under which this subscription should run.</param>
+            <param name="currency">ISO 4217 3 Digit Currency Code, e.g. EUR / USD / GBP, could be Null</param>
+            <param name="amount">A valid, registered SecureCard Merchant Reference.</param>
+            <param name="operatorName">The operator actioning the refund</param>
+        </member>
+        <member name="M:NuveiClient.XmlUnreferencedRefundRequest.SetCardReference(System.String)">
+            <summary>
+            Setter for Card Reference
+            </summary>
+            <param name="secureCardMerchantRef">A valid, registered Card Reference.</param>
+        </member>
+        <member name="M:NuveiClient.XmlUnreferencedRefundRequest.SetCardDetails(System.String,System.String,System.String,System.String)">
+            <summary>
+            Setter for Dukpt Card Details
+            </summary>
+            <param name="encryptedTrack">Encrypted Track</param>
+            <param name="ksn">KSN</param>
+            <param name="formatId">Format ID</param>
+        </member>
+        <member name="M:NuveiClient.XmlUnreferencedRefundRequest.SetDescription(System.String)">
+            <summary>
+            Setter for Transaction Description
+            </summary>
+            <param name="description">Transaction Description</param>
+        </member>
+        <member name="M:NuveiClient.XmlUnreferencedRefundRequest.SetEmail(System.String)">
+            <summary>
+            Setter for Email Address Value for receipt to be sent to cardholder
+            </summary>
+            <param name="email">valid email address of cardholder</param>
+        </member>
+        <member name="M:NuveiClient.XmlUnreferencedRefundRequest.SetAutoReady(System.String)">
+            <summary>
+            Setter for AutoReady value
+            </summary>
+            <param name="autoReady">Y/N</param>
+        </member>
+        <member name="M:NuveiClient.XmlUnreferencedRefundRequest.SetAvs(System.String,System.String)">
+            <summary>
+            Setter for Address Verification Values
+            </summary>
+            <param name="address1">First Line of address - Max size 50</param>
+            <param name="address2">Second Line of address - Max size 50</param>
+            <param name="postCode">Postcode - Max size 50</param>
+        </member>
+        <member name="M:NuveiClient.XmlUnreferencedRefundRequest.SetCountry(System.String)">
+            <summary>
+            Setter for Country
+            </summary>
+            <param name="country">Cardholders Country</param>
+        </member>
+        <member name="M:NuveiClient.XmlUnreferencedRefundRequest.SetBillToFirstName(System.String)">
+            <summary>
+            Setter for billToFirstName
+            </summary>
+            <param name="billToFirstName">BillToFirstName</param>
+        </member>
+        <member name="M:NuveiClient.XmlUnreferencedRefundRequest.SetBillTolastName(System.String)">
+            <summary>
+            Setter for billTolastName
+            </summary>
+            <param name="billTolastName">BillTolastName</param>
+        </member>
+        <member name="M:NuveiClient.XmlUnreferencedRefundRequest.SetCity(System.String)">
+            <summary>
+            Setter for city
+            </summary>
+            <param name="city">City</param>
+        </member>
+        <member name="M:NuveiClient.XmlUnreferencedRefundRequest.SetRegion(System.String)">
+            <summary>
+            Setter for region
+            </summary>
+            <param name="region">region</param>
+        </member>
+        <member name="T:NuveiClient.XmlUnreferencedRefundResponse">
+            <summary>
+            Subscription Del Response
+            </summary>
+        </member>
+        <member name="P:NuveiClient.XmlUnreferencedRefundResponse.Hash">
+            <summary>
+            MD5 Hash using for authenticating transaction
+            </summary>
+        </member>
+        <member name="M:NuveiClient.XmlUnreferencedRefundResponse.#ctor(System.String)">
+            <summary>
+            Response Holder for XmlSubscriptionDelResponse
+            </summary>
+            <param name="responseXml"></param>
+        </member>
+        <member name="T:NuveiClient.XmlVoiceIDRequest">
+            <summary>
+            Subscription Registration Req
+            
+            </summary>
+        </member>
+        <member name="M:NuveiClient.XmlVoiceIDRequest.#ctor(System.String,System.String,System.String,System.String)">
+            <summary>
+            Creates the SecureCard Registration/Update request for processing through the Nuvei XML Gateway
+            </summary>
+            <param name="terminalId">Terminal ID provided by Nuvei TPS</param>
+            <param name="orderId">Name of the Stored subscription under which this subscription should run.</param>
+            <param name="mobileNumber">Mobile Number of cardholder. If sent an SMS receipt will be sent to them</param>
+            <param name="email">Email Address of cardholder.</param>
+        </member>
+        <member name="M:NuveiClient.XmlVoiceIDRequest.SetVoicePayInformation(System.Double,System.String)">
+            <summary>
+            Setter for payment details for a VoicePay transaction
+            </summary>
+            <param name="amount">value of the transaction</param>
+            <param name="currency">Currency of the transaction</param>
+        </member>
+        <member name="M:NuveiClient.XmlVoiceIDRequest.SetDescription(System.String)">
+            <summary>
+            Setter for Transaction Description
+            </summary>
+            <param name="description">Transaction Description</param>
+        </member>
+        <member name="T:NuveiClient.XmlVoiceIDResponse">
+            <summary>
+            Subscription Del Response
+            </summary>
+        </member>
+        <member name="P:NuveiClient.XmlVoiceIDResponse.Hash">
+            <summary>
+            MD5 Hash using for authenticating transaction
+            </summary>
+        </member>
+        <member name="M:NuveiClient.XmlVoiceIDResponse.#ctor(System.String)">
+            <summary>
+            Response Holder for XmlSubscriptionDelResponse
+            </summary>
+            <param name="responseXml"></param>
+        </member>
+    </members>
+</doc>

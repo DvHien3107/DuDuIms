@@ -1,0 +1,29 @@
+﻿@import url("/Content/Anew/root.css");
+
+
+.head-content_title {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 30px;
+    letter-spacing: 0em;
+    text-align: left;
+    padding: 1rem 1.5rem;
+}
+
+.offline {
+    background-color: #f44336;
+}
+
+.display-grid {
+    display: grid!important;
+}
+
+.dot-container {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: orange;
+}

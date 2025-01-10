@@ -1,0 +1,469 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.External_Embed>
+@using EnrichcousBackOffice.Models;
+@using EnrichcousBackOffice.AppLB;
+
+<section class="content-header">
+    <h1>
+        External Embed
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li class="active">External Embed</li>
+    </ol>
+</section>
+
+<!-- Main content -->
+<section class="content">
+    <div class="row">
+        <div class="col-md-12">
+
+            <div class="box box-primary" style="min-height:80vh;">
+                <div class="box-header with-border">
+                    <h3 class="box-title" style="font-weight:bold">External Embed</h3><button class="pull-right btn btn-success btn-sm" onclick="$('#create_embed').modal('show')" style="margin:-5px"><i class="fa fa-plus"></i> Add External Feature</button>
+                </div>
+
+                <div class="box-body">
+                    <div id="overlay" class="overlay" style="z-index:100;display:none"></div>
+                    <div class="row">
+                        <div class="col-md-12">
+
+                            <table id="table_item" class="table table-bordered table-hover" style="margin-bottom:0">
+                                <thead>
+                                    <tr style="background-color: var(--main-color-1); color:white">
+                                        <th></th>
+                                        <th style="width:70%">Embed Title</th>
+                                        <th style="text-align:center">Visible</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                @foreach (var item in Model.OrderBy(m => m.Name))
+                                {
+                                    <tbody id="embed_@item.Id" class="item" style="margin: 10px; padding:0; overflow: hidden;">
+                                        <tr style="padding:7px 20px; text-align:left; cursor:pointer; height:40px;" onclick="if (!$(event.target).closest('.btn').length) { $(this).closest('.item').toggleClass('active') }">
+                                            <td style="width:10px">
+                                                <i class="fa fa-plus pull-right" style="font-size:1.5em;margin:0"></i>
+                                                <i class="fa fa-minus pull-right" style="font-size:1.5em;margin:0"></i>
+                                            </td>
+                                            <td><b class="item_name text-green">@item.Name</b></td>
+                                            <td style="text-align:center">
+                                                <input class="item_visible" onchange="change_visible(this)" type="checkbox" data-toggle="toggle" data-size="small" value="@item.Id" data-onstyle="success" data-cur="@(item.Visible ==true?"true":"false")" @(item.Visible == true ? "checked" : "")>
+                                            </td>
+                                            <td>
+                                                <div class="pull-right">
+                                                    <button class="btn btn-warning btn-sm" onclick="Rename_embed('@item.Id')"><i class="fa fa-pencil"></i> Rename</button>
+                                                    <button class="btn btn-danger btn-sm" onclick="delete_embed('@item.Id')"><i class="fa fa-trash"></i> Delete</button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="90" style="padding:0px;">
+                                                <div class="item_contain" style="overflow:hidden">
+                                                    <textarea class="form-control embed_script" style="resize:none; border-radius:0;" rows="6" readonly onclick="edit_embedScript('@item.Id')">@item.EmbedScript</textarea>
+                                                    <div class="edit_btn" style="position:absolute; margin-top: 5px; display:none">
+                                                        <button class="btn btn-success btn-flat" style="width: 100px" onclick="save_embedScript('@item.Id')"><b>Save</b></button>
+                                                        <button class="btn btn-default btn-flat" style="width: 100px" onclick="edit_cancel()"><b>Cancel</b></button>
+
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                }
+                            </table>
+                        </div>
+
+                        <!--<div class="col-md-6">
+                        <div class="box box-primary box-solid item" style="margin-top: 10px; border-radius:unset">
+                            <div class="box-header" style="z-index:51">
+                                <h4 class="box-title" style="font-weight: normal"><i class="fa fa-th-large"></i> External: <b class="name">ABC</b></h4>
+                                <div class="box-tools pull-left">
+                                    <button class="btn btn-warning">Rename</button>
+                                </div>
+                            </div>
+                            <div class="box-body" style="padding:0">
+                                <textarea class=" form-control" style="resize:none; border-radius:0;" rows="6" readonly></textarea>
+                            </div>-->
+                        <!--/.End div list group-->
+                        <!--<div class="overlay edit_overlay" style="padding-top:20px;">
+                                    <a class="btn center-block" style="margin:auto">
+                                        [<i class="fa fa-pencil"></i> Edit]
+                                        <img id="addmorefile_loading" src="/Content/ajax-loaders/ajax-loader-1.gif" style="display:none">
+                                    </a>
+                                </div>
+                            </div>
+                        </div>-->
+                    </div>
+
+
+                </div>
+
+            </div>
+
+
+        </div>
+        <!-- /.col -->
+    </div>
+    <!-- /.row -->
+</section>
+
+<div class="modal fade in" id="create_embed" style="display: none;">
+    <div class="modal-dialog">
+        <form class="modal-content" action="/ExternalEmbed/new_embed" method="post">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <h4 id="modal-department-title" class="modal-title">Add New External Feature</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="form-group col-md-12">
+                        <label>External Title</label>
+                        <input class="form-control" name="Name" />
+                    </div>
+                    <div class="form-group col-md-12">
+                        <label>External Contain</label>
+                        <textarea rows="7" class="form-control" name="EmbedScript"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                <button type="submit" class="btn btn-primary">
+                    Create <img class="loading" src="/Content/ajax-loaders/ajax-loader-1.gif" style="display:none">
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section script
+{
+    <script src="~/Content/bootstrap-toggle/bootstrap-toggle.min.js"></script>
+    <script src="~/Scripts/jquery.form.min.js"></script>
+    <script>
+        $(function () {
+            $("#create_embed form").on("submit", function () {
+                $(this).find(".loading").show();
+            })
+            $("#create_embed form").ajaxForm(function (data) {
+                if (data[0]) {
+                    success(data[1]);
+                    var new_embed = $("#embed_template").html();
+                    new_embed = new_embed.replace(/{Id}/g, data[2].Id).replace(/{Name}/g, data[2].Name);
+                    $("#table_item").append($(new_embed));
+                    $("#embed_" + data[2].Id).find(".item_visible").bootstrapToggle();
+                    $("#embed_" + data[2].Id).find(".item_name").html(data[2].Name);
+                    $("#embed_" + data[2].Id).find(".embed_script").html(data[2].EmbedScript);
+                    $("#create_embed").modal("hide");
+                } else {
+                    error(data[1]);
+                    console.log(data);
+                }
+                $("#create_embed form").find(".loading").hide();
+            })
+        })
+        function Rename_embed(id) {
+            var name = prompt(id ? "Edit embed name:" : "Name the new embed: ", ($('#embed_' + id).find(".item_name").html() || "").trim());
+            if (name) {
+                overlayOn();
+                $.ajax({
+                    method: "POST",
+                    url: "/ExternalEmbed/Rename_embed",
+                    data: { id, name },
+                    dataType: "json"
+                })
+                    .done(function (data) {
+                        if (data[0]) {
+                            success(data[1]);
+                            $("#embed_" + data[2].Id).find(".item_name").html(data[2].Name);
+
+                        } else {
+                            error(data[1]);
+                            console.log(data);
+                        }
+                    })
+                    .fail(function () {
+                        alert("Rename_embed fail!");
+                    })
+                    .always(function () {
+                        overlayOff();
+                    });
+            }
+        }
+        var current = "";
+        function edit_embedScript(id) {
+            if ($(event.target).closest(".editting").length == 0) {
+                current = $("#embed_" + id).find(".embed_script").val();
+                $("#embed_" + id).find(".embed_script").prop("readonly", "").closest("td").addClass("editting");
+                $("#overlay").show();
+            }
+        }
+        function edit_cancel() {
+            $(".editting").find(".embed_script").val(current || "").prop("readonly", "readonly");
+            $(".editting").removeClass("editting");
+            current = "";
+            $("#overlay").hide();
+        }
+        function change_visible(checkbox) {
+            var e_checkbox = $(checkbox);
+            var id = e_checkbox.val();
+            var status = e_checkbox.is(":checked");
+            var cur_status = e_checkbox.data("cur");
+            if (status != cur_status) {
+                //change visible status
+                $.ajax({
+                    method: "POST",
+                    url: "/ExternalEmbed/SetVissibleEmbed",
+                    data: { id, status },
+                    dataType: "json"
+                })
+                    .done(function (data) {
+                        if (data[0]) {
+                            e_checkbox.data("cur", data[2] ? "true" : "false");
+                            success(data[1]);
+                        } else {
+                            e_checkbox.prop('checked', cur_status).change();
+                            error(data[1]);
+                            console.log(data);
+                        }
+                    })
+                    .fail(function () {
+                        e_checkbox.prop('checked', cur_status).change();
+                        alert("save_embedScript fail!");
+                    })
+                    .always(function () {
+                    });
+
+            }
+        }
+        function save_embedScript(id) {
+            var embed_script = $(".editting").find(".embed_script").val();
+            $.ajax({
+                method: "POST",
+                url: "/ExternalEmbed/save_embedScript",
+                data: { id, embed_script },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    if (data[0]) {
+                        current = data[2];
+                        edit_cancel();
+                        success(data[1]);
+
+                    } else {
+                        error(data[1]);
+                        console.log(data);
+                    }
+                })
+                .fail(function () {
+                    alert("save_embedScript fail!");
+                })
+                .always(function () {
+                });
+            $("#overlay").show();
+        }
+        function delete_embed(id) {
+            var name = ($('#embed_' + id).find(".item_name").html() || "").trim();
+            if (confirm("Are you sure to delete embed \"" + name + "\" ?")) {
+                $.ajax({
+                    method: "POST",
+                    url: "/ExternalEmbed/DeleteEmbed",
+                    data: { id },
+                    dataType: "json"
+                })
+                    .done(function (data) {
+                        if (data[0]) {
+                            $("#embed_" + id).remove();
+                            success(data[1]);
+                        } else {
+                            error(data[1]);
+                            console.log(data);
+                        }
+                    })
+                    .fail(function () {
+                        alert("save_embedScript fail!");
+                    })
+                    .always(function () {
+                    });
+            }
+        }
+    </script>
+    <script id="embed_template" type="text/template">
+        <tbody id="embed_{Id}" class="item" style="margin: 10px; padding:0; overflow: hidden;">
+            <tr style="padding:7px 20px; text-align:left; cursor:pointer; height:40px;" onclick="if (!$(event.target).closest('.btn').length) { $(this).closest('.item').toggleClass('active') }">
+                <td style="width:10px">
+                    <i class="fa fa-plus pull-right" style="font-size:1.5em;margin:0"></i>
+                    <i class="fa fa-minus pull-right" style="font-size:1.5em;margin:0"></i>
+                </td>
+                <td><b class="item_name text-green">{Name}</b></td>
+                <td style="text-align:center">
+                    <input class="item_visible" onchange="change_visible(this)" type="checkbox" data-toggle="toggle" data-size="small" value="{Id}" data-onstyle="success" data-cur="true" checked>
+                </td>
+                <td>
+                    <div class="pull-right">
+                        <button class="btn btn-warning btn-sm" onclick="Rename_embed('{Id}')"><i class="fa fa-pencil"></i> Rename</button>
+                        <button class="btn btn-danger btn-sm" onclick="delete_embed('{Id}')"><i class="fa fa-trash"></i> Delete</button>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="90" style="padding:0px;">
+                    <div class="item_contain" style="overflow:hidden">
+                        <textarea class="form-control embed_script" style="resize:none; border-radius:0;" rows="6" readonly onclick="edit_embedScript('{Id}')"></textarea>
+                        <div class="edit_btn" style="position:absolute; margin-top: 5px; display:none">
+                            <button class="btn btn-success btn-flat" style="width: 100px" onclick="save_embedScript('{Id}')"><b>Save</b></button>
+                            <button class="btn btn-default btn-flat" style="width: 100px" onclick="edit_cancel()"><b>Cancel</b></button>
+
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </script>
+}
+@section style
+{
+    <link href="~/Content/bootstrap-toggle/bootstrap-toggle.min.css" rel="stylesheet" />
+    <link href="~/Content/DualListMulti/multi.min.css" rel="stylesheet" />
+    <style>
+        .edit_overlay {
+            background-color: #fff;
+            opacity: 0;
+            display: flex;
+            transition: .3s all;
+        }
+
+        .item:hover > .edit_overlay {
+            opacity: .8;
+        }
+    </style>
+    <style>
+        /* add these two to your selector */
+        tbody td {
+            position: relative;
+            z-index: 1;
+        }
+
+        .editting {
+            z-index: 101;
+        }
+
+            .editting .edit_btn {
+                display: block !important;
+            }
+        /* create this new selector */
+        .multi-wrapper .non-selected-wrapper, .multi-wrapper .selected-wrapper {
+            height: 400px;
+        }
+
+            .multi-wrapper .non-selected-wrapper .selected {
+                display: none;
+            }
+
+        .multi-wrapper a {
+            color: #000;
+        }
+
+        .item td {
+            vertical-align: middle !important;
+        }
+
+        tr.strikeout {
+            text-decoration: line-through;
+        }
+
+        .item .fa {
+            cursor: pointer;
+        }
+
+            .item .fa.fa-plus {
+                display: inherit;
+            }
+
+            .item .fa.fa-minus {
+                display: none;
+            }
+
+        .item.active > tr:first-child {
+            background-color: #d9ecf6;
+        }
+
+            .item.active > tr:first-child:hover {
+                background-color: #c8d9e2;
+            }
+
+        .item.active .fa.fa-plus {
+            display: none;
+        }
+
+        .item.active .fa.fa-minus {
+            display: inherit;
+        }
+
+        .option_btn {
+            padding: 10px;
+            margin: -10px;
+            cursor: pointer;
+            border-radius: 5px;
+            display: none;
+        }
+
+            .option_btn:hover {
+                background-color: #0002;
+            }
+
+        .project {
+            cursor: pointer;
+        }
+
+            .project:hover {
+                background-color: #0002;
+            }
+
+                .project:hover .option_btn, .open > .option_btn {
+                    display: inline-block;
+                }
+
+        .dropdown-menu {
+            box-shadow: 5px 10px 8px #888888;
+        }
+
+            .dropdown-menu li a {
+                padding: 10px;
+            }
+
+        .project .set_active {
+            display: none;
+        }
+
+        .project .set_deactive {
+            display: block;
+        }
+
+        .project.disabled .set_active {
+            display: block;
+        }
+
+        .project.disabled .set_deactive {
+            display: none;
+        }
+
+        .item_contain {
+            overflow-y: auto;
+            max-height: 500px;
+            transition: .5s all;
+            margin: 0;
+            height: 0;
+            margin: 0 10px;
+            border: none;
+        }
+
+        .item.active .item_contain {
+            display: block;
+            height: 136px;
+            margin: 10px;
+            border: 1px solid var(--main-color-1);
+        }
+    </style>
+}

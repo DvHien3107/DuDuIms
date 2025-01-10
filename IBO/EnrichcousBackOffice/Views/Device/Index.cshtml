@@ -1,0 +1,772 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.O_Device>
+@using EnrichcousBackOffice.Models
+@{
+    ViewBag.Title = "Inventory";
+    Dictionary<string, bool> p = ViewBag.p;
+    List<EnrichcousBackOffice.Models.O_Device> WarehouseDevice = ViewBag.Warehouse;
+    var db = new WebDataModel();
+    var locations = new EnrichcousBackOffice.Models.WebDataModel().Locations.ToList();
+}
+<style>
+    .no-sort::after {
+        display: none !important;
+    }
+
+    .no-sort::before {
+        display: none !important;
+    }
+</style>
+<section class="content-header">
+    <h1>
+        Inventory
+        <small>Products</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li><i class="fa fa-television"></i> Products</li>
+        <li class="active">Inventory</li>
+    </ol>
+</section>
+
+<!-- Main content -->
+<section class="content">
+    <div class="row">
+
+        @if (TempData["error"] != null)
+        {
+            <div class="alert alert-warning alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-warning"></i> @TempData["error"]</span>
+            </div>
+        }
+        else if (TempData["success"] != null)
+        {
+            <div class="alert alert-success alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-check"></i> @TempData["success"]</span>
+            </div>
+        }
+
+        <div class="col-md-12">
+            <div class="box box-primary" style="min-height:300px">
+                <div class="box-header ">
+                    <h3 class="box-title">Inventory</h3>
+                    <div class="pull-right box-tools">
+                        <a class="btn btn-success" onclick="$('#import_sn_popup').modal('show')"><i class="fa fa-file"></i> Import Serial Number</a>
+                        <a class="btn btn-primary" onclick="$('#location_model').modal('show')"><i class="fa fa-gear"></i> Location manage</a>
+                    </div>
+                </div>
+                <div class="box-body" style="height: auto">
+                    <div class="form-group" style="margin-bottom: 0">
+                        <input type="hidden" id="SelectedTab" value="All" />
+                        <ul id="TabInventory" class="nav nav-pills">
+                            <li id="All" onclick="ChangeTab('All')"><a href="#">All</a></li>
+                            <li id="Assigned"><a href="#" onclick="ChangeTab('Assigned')">Assigned</a></li>
+                            <li id="Warehouse"><a href="#" onclick="ChangeTab('Warehouse')">Warehouse</a></li>
+                            <li id="Junkyard"><a href="#" onclick="ChangeTab('Junkyard')">Junkyard</a></li>
+                        </ul>
+                    </div>
+
+                    <!--disabled by thanhson 20200120-->
+                    <!--junkYark add-->
+                    @*<div id="junk_yard_group" style="display:none;">
+                            <div id="junk_yard_add" style="display:none; float:left; background-color: #fbfbfb; border: 1px solid lightblue; border-radius: 6px; padding: 20px; width:70%;">
+                                <div class="input-group" style="max-width:500px;">
+                                        <input type="text" class="form-control" id="Serial_number" onkeyup="SearchSN()" placeholder="Input serial number">
+                                        <span class="input-group-btn">
+                                            <button class="btn btn-default" type="button" onclick="" style="display: inline-block; float:left"><span class="glyphicon glyphicon-barcode"></span></button>
+                                        </span>
+                                    </div>
+                                <div class="list_device">
+                                    <table id="YYTable" class="table table-striped" style="width:100%; margin-top: 20px">
+                                        <thead>
+                                            <tr>
+                                                <th>Inv Number</th>
+                                                <th>Serial Number</th>
+                                                <th>Product name</th>
+                                                <th>Color</th>
+                                                <th>Vendor</th>
+                                                <th>Junkyard description</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @if (WarehouseDevice.Count > 0)
+                                            {
+                                                foreach (var item in WarehouseDevice)
+                                                {
+                                                    var m = db.O_Product_Model.Find(item.ModelCode);
+                                                    <tr id="YYrow-@item.DeviceId">
+                                                        <td>#@item.InvNumber</td>
+                                                        <td>@item.SerialNumber</td>
+                                                        <td>@item.ProductName</td>
+                                                        <td>@(m?.Color)</td>
+                                                        <td>@(m?.VendorName)</td>
+                                                        <td>@Html.Raw(item.JunkyardDescription)</td>
+                                                        <td><a href="#" onclick="OpenJunkModal('@item.DeviceId',1)" class="btn btn-warning"><span>Add to Junkyard</span></a></td>
+                                                    </tr>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <tr id="nodevice"><td colspan="6" style="text-align:center">(There have no device in Warehouse)</td></tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <button id="junk_yard_btn" style="float:left;" class="btn btn-success" type="button"><span class="glyphicon glyphicon-triangle-right"></span> Add</button>
+                        </div>
+                        <br style="clear: both" />*@
+                    <!--junkYard add-->
+                    <div class="" id="Partial_Device_List">
+
+                    </div>
+                    <div style="text-align:center">
+                        <img id="loading_tab" style="display:none" src="/Content/ajax-loaders/loading-partial.gif" />
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+<!--Vendor modal-->
+@Html.Partial("_Location_manage", db.Locations.ToList())
+<!--Device detail-->
+<div id="device_detail" class="modal fade" role="dialog">
+    <div class="modal-dialog" style="width:800px">
+
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Product detail</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group" style="max-height:70vh; overflow-y:auto">
+                    <div style="text-align:center">
+                        <img style="width:60%; padding:20px" id="picture" src="/Upload/Img/no_image.jpg" />
+                    </div>
+                    <input id="view_id" type="hidden" />
+                    <table class="table table-bordered table-striped">
+                        <tbody>
+                            <tr><th colspan="2" style="text-align:center"><h4>PRODUCT</h4></th></tr>
+                            <tr>
+                                <th width="30%">Product name</th>
+                                <td id="name"></td>
+                            </tr>
+                            <tr>
+                                <th>Line</th>
+                                <td id="line"></td>
+                            </tr>
+                            <tr><th colspan="2" style="text-align:center"><h4>MODEL</h4></th></tr>
+                            <tr>
+                                <th>Model code</th>
+                                <td id="model"></td>
+                            </tr>
+                            <tr>
+                                <th>Color</th>
+                                <td id="color"></td>
+                            </tr>
+
+                            <tr>
+                                <th>Price</th>
+                                <td id="price"></td>
+                            </tr>
+                            <tr>
+                                <th>Status</th>
+                                <td id="stats"></td>
+                            </tr>
+                            <tr><th colspan="2" style="text-align:center"><h4>DEVICE</h4></th></tr>
+                            <tr>
+                                <th>Inv number</th>
+                                <td id="invnumber"></td>
+                            </tr>
+                            <tr>
+                                <th>Serial number</th>
+                                <td id="serialnumber"></td>
+                            </tr>
+                            <tr>
+                                <th>Vendor</th>
+                                <td id="vendor"></td>
+                            </tr>
+                            <tr>
+                                <th>Location</th>
+                                <td>
+                                    <span id="location">
+
+                                    </span>
+                                    <div class="btn-group pull-right" id="location_btn">
+                                        <button type="button" class="btn btn-warning btn-sm dropdown-toggle" data-toggle="dropdown" aria-expanded="true">
+                                            <span class="fa fa-exchange"></span>
+                                        </button>
+                                        <ul id="location_change" class="dropdown-menu dropdown-menu-right dd_location">
+                                            <li style="padding:5px"><input type="text" placeholder="Search.." onkeyup="filter_location(this)" class="form-control input-sm dd_input" style="margin:0"></li>
+                                            @foreach (var loc in locations)
+                                            {
+                                                <li><a id="view_loc_@loc.Id" onclick="change_location($('#view_id').val(),'@loc.Id','@loc.Name',true)">@loc.Name</a></li>
+                                            }
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Status</th>
+                                <td>
+                                    <span id="d_status"></span>
+                                    <a id="jy_btn" class="location_btn btn btn-sm btn-primary pull-right"><i class="fa fa-sign-in"></i> Change to Warehouse</a>
+                                    <a id="wh_btn" class="location_btn btn btn-sm btn-danger pull-right"><i class="fa fa-sign-out"></i> Change to Junkyard</a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Assigned Date</th>
+                                <td id="assigneddate"></td>
+                            </tr>
+                            <tr>
+                                <th>Assigned Salon</th>
+                                <td><span id="salonname"></span><a id="unassigned" class="btn btn-sm btn-success pull-right"><i class="fa fa-undo"></i> Return to warehouse</a></td>
+                            </tr>
+                            <tr>
+                                <th>Check in date</th>
+                                <td id="date"></td>
+                            </tr>
+
+                            <tr>
+                                <th>Active</th>
+                                <td id="active"></td>
+                            </tr>
+                            <tr>
+                                <th style="vertical-align:top">Log</th>
+                                <td>
+                                    <div id="desc" style="max-height:230px; overflow-y: auto">
+                                  </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th style="vertical-align:top">Comment</th>
+                                <td class="td-comment">
+                                    <textarea class="form-control" rows="4" name="comment" id="comment" style="width:100%;display:inline-block"></textarea>
+                                    <div style="display: inline-block;vertical-align:top;">
+                                        <button class="btn btn-sm btn-warning btn-comment-update" onclick="updateCommentClick();" style="margin-right:5px"><i class="fa fa-pencil"></i></button>
+                                        <button class="btn btn-sm btn-success btn-comment-submit" onclick="submitCommentClick();" style="margin-right:5px;display:none;"><i class="fa fa-check"></i></button>
+                                        <button class="btn btn-sm btn-danger btn-comment-cancel" onclick="cancelCommentClick();" style="margin-right:5px;display:none;"><i class="fa fa-times"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="btn-redirect-ticket" class="btn btn-primary pull-left" style="display: none"></button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+<!--Modal-->
+<div id="modal_junkyard_desc" class="modal fade" role="dialog">
+    <div class="modal-dialog" style="width:800px">
+
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Junkyard decription</h4>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="JunkDeviceId" />
+                <textarea id="JunkDeviceDesc" name="JunkDeviceDesc" rows="3" style="width:100%"></textarea>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button id="submit_junk" type="button" onclick="SendToJunk($(this).val())" class="btn btn-primary">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+@Html.Partial("_Partial_ImportSerialNumber")
+
+
+
+<script>
+    let mParamsListModel = {
+        LayOutContent: '#content-product',
+        MasterCheckbox: "CheckBoxMaster",
+        SelectItemClass: ".SelectedItem",
+        DeleteButtonClass: ".delete-button",
+        UrlDeleteModel: '/Device/DeleteDevice',
+        Mastercheckbox_Junkyard: '#SelectedItemMaster_Junkyard',
+        DeleteButtonId_Junkyard: '#Delete_Junkyard',
+        SelectedItem_Junkyard:'.SelectedItem_Junkyard',
+    }
+    let DeleteHandle = {
+        init: function () {
+            $(document).ready(function () {
+                this.register_event = function () {
+                    $(mParamsListModel.LayOutContent + ' [name=' + mParamsListModel.MasterCheckbox + ']').on('click', function () {
+                        $(mParamsListModel.LayOutContent + ' [name=CheckBoxItem_' + $(this).val() + ']').prop('checked', $(this).is(':checked')).change();
+                    });
+                    $(mParamsListModel.Mastercheckbox_Junkyard).on('click', function () {
+                        $(mParamsListModel.SelectedItem_Junkyard).prop('checked', $(this).is(':checked')).change();
+                    });
+                    $(mParamsListModel.DeleteButtonClass).on('click', function () {
+                        var ProductCode = $(this).attr("data-product-code");
+                        if (confirm('Are you sure to delete the selected item !')) {
+                            var DeviceSelected = DeleteHandle.GetDeviceSelected(ProductCode);
+                            if (DeviceSelected.length == 0) {
+                                noty({ "text": "No Item Is Selected !", "layout": "topRight", "type": "warning" });
+                                return false;
+                            }
+                            $.ajax({
+                                url: mParamsListModel.UrlDeleteModel,
+                                type: 'POST',
+                                dataType: 'Json',
+                                data: { seletedIds: DeviceSelected },
+                                success: function (res) {
+                                    if (res.status) {
+                                        noty({ "text": res.message, "layout": "topRight", "type": "success" });
+                                        DeviceSelected.forEach(function (DeviceId) {
+                                            $("#device_" + DeviceId).remove();
+                                        });
+                                       
+                                    }
+                                    else {
+                                        noty({ "text": res.message, "layout": "topRight", "type": "error" });
+                                    }
+                                },
+                                error: function (res) {
+                                    console.log(res.message);
+                                }
+                            });
+                        }
+                    })
+                    $(mParamsListModel.DeleteButtonId_Junkyard).on('click', function () {
+                        if (confirm('Are you sure to delete the selected item !')) {
+                            var DeviceSelected = DeleteHandle.GetDeviceSelected_Junkyard();
+                            if (DeviceSelected.length == 0) {
+                                noty({ "text": "No Item Is Selected !", "layout": "topRight", "type": "warning" });
+                                return false;
+                            }
+                            $.ajax({
+                                url: mParamsListModel.UrlDeleteModel,
+                                type: 'POST',
+                                dataType: 'Json',
+                                data: { seletedIds: DeviceSelected },
+                                success: function (res) {
+                                    if (res.status) {
+                                        noty({ "text": res.message, "layout": "topRight", "type": "success" });
+                                        DeviceSelected.forEach(function (DeviceId) {
+                                            $("#device_" + DeviceId).remove();
+                                        });
+                                        $(mParamsListModel.Mastercheckbox_Junkyard).prop('checked',false);
+                                    }
+                                    else {
+                                        noty({ "text": res.message, "layout": "topRight", "type": "error" });
+                                    }
+                                },
+                                error: function (res) {
+                                    console.log(res.message);
+                                }
+                            });
+                        }
+                    })
+                };
+                this.register_event();
+            })
+        },
+        GetDeviceSelected: function (productCode) {
+            var SelectedIds = [];
+            console.log(productCode);
+            $(mParamsListModel.SelectItemClass + "[name=CheckBoxItem_" + productCode+"][type=checkbox]:checked").each(function () {
+                SelectedIds.push($(this).val());
+            });
+            return SelectedIds;
+        },
+        GetDeviceSelected_Junkyard: function () {
+            var SelectedIds = [];
+            $(mParamsListModel.SelectedItem_Junkyard + "[type=checkbox]:checked").each(function () {
+                SelectedIds.push($(this).val());
+            });
+            return SelectedIds;
+        }
+    }
+</script>
+@section script{
+    <!-- CK Editor -->
+    <script src="~/Content/admin/bower_components/ckeditor/ckeditor.js"></script>
+
+
+    <script type="text/javascript">
+
+
+        $(function () {
+            CKEDITOR.replace('JunkDeviceDesc');
+            $("#YYTable").DataTable();
+
+            //Set active tab
+            var activeTab = localStorage.getItem('activeTab');
+            if (activeTab) {
+                ChangeTab(activeTab);
+            }
+            else {
+                ChangeTab("All");
+            }
+
+            //Auto close alert
+            $(".alert-dismissible").fadeTo(2000, 500).slideUp(500, function () {
+                $(".alert-dismissible").slideUp(500);
+            });
+
+            //$('#importExcelForm').on("submit", function () {
+            //    var filename = $("#Excelfile").val();
+            //    var extension = filename.replace(/^.*\./, '');
+            //    if (extension.toLowerCase() != "xlsx") {
+            //        var error = $.parseJSON('{"text":"Only excel files can be uploaded!", "layout":"topRight", "type":"error"}');
+            //        noty(error);
+            //        return false;
+            //    }
+            //});
+        });
+
+
+        function OpenJunkModal(Id, status, show_detail = false) {
+            $("#submit_junk").val(status);
+            getDescProduct(Id);
+            $("#JunkDeviceId").val(Id);
+            $("#modal_junkyard_desc").modal('show');
+            //if (show_detail) {
+            //    $("#modal_junkyard_desc").on('hide.bs.modal', function () {
+            //        view_device(Id)
+            //    });
+            //} else {
+            //    $("#modal_junkyard_desc").off('hide.bs.modal');
+            //}
+        };
+        function SendToJunk(status) {
+            var Id = $("#JunkDeviceId").val();
+            var desc = CKEDITOR.instances['JunkDeviceDesc'].getData();
+            $.ajax({
+                method: "POST",
+                url: "/Device/SendToJunk",
+                data: { Id, desc, status },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    if (data[0]) {
+                        if (status == 1) { ChangeTab("Junkyard"); }
+                        else { ChangeTab("Warehouse"); }
+
+                        var Success = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"success"}');
+                        noty(Success);
+                        $("#modal_junkyard_desc").modal('hide');
+                        if (status == "0") {
+                            $('#YYTable tr:last').after('<tr id="YYrow-' + data[2].DeviceId + '"><td>#' + data[2].InvNumber + '</td><td>' + (data[2].SerialNumber || "") + '</td><td>' + data[2].ProductName + '</td><td>' + data[2].Color + '</td><td>' + data[2].VendorName + '</td><td>' + data[2].JunkyardDescription + '</td><td><a href="#" onclick="OpenJunkModal(' + data[2][0] + ',1)" class="btn btn-warning"><span>Add to Junkyard</span></a></td></tr>');
+                        }
+                        else {
+                            $("#YYrow-" + Id).remove();
+                        }
+
+                    }
+                    else {
+                        var error = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"error"}');
+                        noty(error);
+                    }
+                })
+                .fail(function () {
+                    alert("Something wrong!");
+                });
+        }
+        function ChangeTab(TabName) {
+            if (!TabName) {
+                TabName = $("#SelectedTab").val();
+            }
+            localStorage.setItem('activeTab', TabName);
+            if (TabName == "Junkyard") {
+                $("#junk_yard_group").show(300);
+            }
+            else {
+                $("#junk_yard_group").hide(300);
+            }
+            var oldTab = $("#SelectedTab").val();
+            $("#SearchText").val("");
+            $("#Partial_Device_List").empty();
+            $("#loading_tab").show();
+            $.ajax({
+                method: "POST",
+                url: "/Device/ChangeTab",
+                data: { TabName },
+                dataType: "html"
+            })
+                .done(function (data) {
+                    $("#SelectedTab").val(TabName);
+                    $("#Partial_Device_List").append(data);
+                    $("#" + oldTab).removeClass("active");
+                    $("#" + TabName).addClass("active");
+                })
+                .fail(function () {
+                    alert("ChangeTab fail");
+                })
+                .always(function () {
+                    $("#loading_tab").hide();
+                });
+        }
+
+        // Move save page
+        function addeditpage() {
+            sessionStorage.setItem("Tab", $("#SelectedTab").val());
+            location.href = '/device/save';
+        };
+
+
+        $('#junk_yard_btn').click(function () {
+            $("#junk_yard_add").toggle(200);
+            var bt = $(this);
+            bt.toggleClass('SeeMore2');
+            if (bt.hasClass('SeeMore2')) {
+                bt.html('<span class="glyphicon glyphicon-triangle-left"></span> Done');
+            } else {
+                bt.html('<span class="glyphicon glyphicon-triangle-right"></span> Add');
+            }
+        });
+        function getDescProduct(Id) {
+            $.ajax({
+                method: "POST",
+                url: "/Device/GetDescProduct",
+                data: { Id },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    if (data[0] == true) {
+                        CKEDITOR.instances['JunkDeviceDesc'].setData(data[1]);
+
+                    }
+                    else {
+                        var Error = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"error"}');
+                        noty(Error);
+                    }
+
+                })
+                .fail(function () {
+                    alert("getDescProduct fail!");
+                });
+        }
+
+
+        //view device
+        function view_device(id, assg = false) {
+            $.ajax({
+                method: "POST",
+                url: "/device/getDevice",
+                data: { id },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    console.log(data[1]);
+                    if (data[0]) {
+                        $("#view_id").val(data[5]);
+                        $("#picture").attr("src", data[2].Picture);
+                        $("#picture").on("error", function () {
+                            $(this).unbind('error');
+                            this.src = '/Upload/Img/no_image.jpg';
+                        })
+                        $("#name").html(data[1].ProductName);
+                        $("#line").html(data[4]);
+                        $("#model").html(data[1].ModelName);
+                        $("#color").html(data[2].Color || "N/A");
+                        $("#vendor").html(data[1].VendorName);
+                        $("#price").html(data[2].Price);
+                        $("#stats").html(data[2].Status);
+                        $("#invnumber").html(data[1].InvNumber);
+                        $("#serialnumber").html(data[1].SerialNumber);
+                        $("#comment").val(data[1].Comment??'');
+                        $("#comment").attr("readonly",true);
+                        $('.btn-comment-update').show();
+                        $('.btn-comment-submit').hide();
+                        $('.btn-comment-cancel').hide();
+                        $("#d_status").html(data[3]);
+                        $("#location").html(data[1].LocationName);
+                        $("#location_change .disabled_location").removeClass("disabled_location");
+                        $("#view_loc_" + data[1].LocationId).addClass("disabled_location");
+                        var nowDate = new Date(parseInt(data[1].CreateAt.substr(6)));
+                        $("#date").html(nowDate.format("mmm dd, yyyy"));
+                        $("#active").html(data[1].Active ? "Active" : "Inactive");
+                        $("#desc").html(data[1].Description);
+                        if (assg) {
+                            $("#location_btn").hide();
+                        } else {
+                            $("#location_btn").show();
+                        }
+                        if (data[1].Inventory == 0) {
+                            $("#unassigned").show().off("click").on("click", function () { unassignedDevice(data[1].InvNumber, id) });
+                        } else {
+                            $("#unassigned").hide().off();
+                        }
+                        //
+                        if (data[3] == "Junkyard") {
+                            $('#wh_btn').hide();
+                            $('#jy_btn').show().on("click", function () { $('#device_detail').modal('hide'); OpenJunkModal(data[5], 0, true) });
+                        }
+
+                        else {
+                            $('#wh_btn').show().on("click", function () { $('#device_detail').modal('hide'); OpenJunkModal(data[5], 1, true) });
+                            $('#jy_btn').hide();
+                        }
+                        //else {
+                        //    $('#jy_btn').hide();
+                        //    $('#wh_btn').hide();
+                        //}
+
+                        if (data[6]) {
+                            var assigneddate = new Date(parseInt(data[6].CreateAt.substr(6)));
+                            $('#assigneddate').html(assigneddate.format("mmm dd, yyyy"));
+                            $('#salonname').html(data[6].CustomerName);
+                        }
+                        else {
+                            $('#assigneddate').html('');
+                            $('#salonname').html('');
+                        }
+                        if (data[7]) {
+                            $('#btn-redirect-ticket').off();
+                            $('#btn-redirect-ticket').html("Ticket #" + data[8]);
+                            $('#btn-redirect-ticket').show().click(function () {
+                                window.open(data[7]);
+                            });
+                        }
+                        else {
+                            $('#btn-redirect-ticket').off();
+                            $('#btn-redirect-ticket').hide();
+                        }
+
+                        $('#device_detail').modal('show');
+                    }
+                })
+                .fail(function () {
+                    alert("view_device fail");
+                })
+                .always(function () {
+                });
+
+        }
+        function unassignedDevice(Invs, id) {
+            if (confirm("Do you want to return warehouse?")) {
+                overlayOn();
+                $.ajax({
+                    method: "POST",
+                    url: "/device/unassignedDevice",
+                    data: { Invs },
+                    dataType: "json"
+                })
+                    .done(function (data) {
+                        if (data) {
+                            success("Set Returned Warehouse completed!");
+                            //$("#device_detail").modal("hide");
+                            view_device(id, false)
+                        } else {
+                            error("Set Returned Warehouse fail! Error Logged.");
+                        }
+                    })
+                    .fail(function () {
+                    })
+                    .always(function () {
+                        overlayOff();
+                    });
+            }
+
+        }
+        function export_excel() {
+            //$("#export_excel_load_img").show();
+            //var TabName = $("#SelectedTab").val();
+            var SearchText = $("#SearchText").val();
+            var search_location = $("#search_location").val();
+            window.location = "/Device/ExportExcel/?s=" + SearchText + "&l=" + search_location;
+            //$.ajax({
+            //    method: "POST",
+            //    url: "/Device/ExportExcel",
+            //    data: { SearchText, search_location },
+            //    dataType: "json"
+            //})
+            //    .done(function (data) {
+            //        if (data[0]) {
+            //            noty({ "text": data[1], "layout": "topRight", "type": "success" });
+            //            window.location = '/Upload/DownloadFile_?file=' + data[2];
+            //        } else {
+            //            noty({ "text": data[1], "layout": "topRight", "type": "error" });
+            //        }
+            //    })
+            //    .fail(function () {
+            //        alert("Oops! Something went wrong");
+            //    })
+            //    .always(function () {
+            //        $("#export_excel_load_img").hide();
+            //    });
+        }
+        function viewdetail(mn) {
+            $("#modal-default").modal('show');
+            $.ajax({
+                method: "POST",
+                url: "/account/GetMemberInfoSimple",
+                data: { "mn": mn },
+                dataType: "html"
+            })
+                .done(function (data) {
+                    $("#modal-content").html(data);
+                })
+                .fail(function () {
+                    alert("Oops! Something went wrong");
+                    $("#modal-default").modal('hide');
+                })
+                .always(function () {
+                    $("#loading").hide();
+                });
+        }
+
+        // update comment
+        var saveComment;
+        function updateCommentClick() {
+            $('#comment').attr('readonly', false);
+            saveComment = $('#comment').val();
+            $('.btn-comment-update').hide();
+            $('.btn-comment-submit').show();
+            $('.btn-comment-cancel').show();
+        }
+        function cancelCommentClick() {
+            $('#comment').attr('readonly', true);
+            $('#comment').val(saveComment);
+            $('.btn-comment-update').show();
+            $('.btn-comment-submit').hide();
+            $('.btn-comment-cancel').hide();
+        }
+        function submitCommentClick() {
+            var DeviceId = $("#view_id").val();
+            var Comment = $('#comment').val();
+            $.ajax({
+                url: "/Device/UpdateCommentDevice",
+                type: 'POST',
+                dataType: 'Json',
+                data: { DeviceId, Comment },
+                success: function (res) {
+                    if (res.status) {
+                        noty({ "text": res.message, "layout": "topRight", "type": "success" });
+                        $('#comment').attr('readonly', true);
+                        $('.btn-comment-update').show();
+                        $('.btn-comment-submit').hide();
+                        $('.btn-comment-cancel').hide();
+                    }
+                    else {
+                        noty({ "text": res.message, "layout": "topRight", "type": "error" });
+                    }
+                },
+                error: function (res) {
+                    console.log(res.message);
+                }
+            });
+        }
+    </script>
+
+
+}
+

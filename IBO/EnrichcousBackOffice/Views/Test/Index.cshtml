@@ -1,0 +1,122 @@
+﻿<div style="width:500px; margin:10px; padding:10px">
+    <label>Method</label>
+    <select id="method" class="form-control">
+        <option>Post</option>
+        <option>Get</option>
+    </select>
+    <label>Url</label>
+    <input id="url" class="form-control" value="https://ims-uatvn.enrichcous.com:4443/api/ticket/" />
+    <label>Json</label>
+<textarea class="form-control" rows="10" id="json">{
+    "id": null,
+    "title": "TestAPI",
+    "description": " Test ticket API ",
+    "storeid": "00006",
+    "priority": "Low",
+    "attachments": "",
+    "type": "sales"
+}</textarea>
+    <button class="center-block btn btn-success" id="test_post_api">SUBMIT</button>
+<label>result</label>
+<textarea  rows="10" class="form-control" id="result"></textarea>
+</div>
+
+
+
+
+
+
+
+
+<script>
+    $("#test_post_api").on("click", function () {
+
+        $.ajax({
+            type: $("#method").val(),
+            url: $("#url").val(),
+            data: $("#json").val(),
+            //success: success,
+            //fail: fail,
+            contentType: "application/json",
+            dataType: "json"
+        })
+            .done(function(data) {
+                $("#result").val(JSON.stringify(data, null, '\t')).css("background-color", "#90ee90");
+            })
+            .fail(function (data) {
+            $("#result").val(JSON.stringify(data.responseJSON, null, '\t')).css("background-color", "#FFA6A6");
+        });
+        //function success(data) {
+        //    $("#result").val(JSON.stringify(data, null, '\t')).css("background-color", "#90ee90");
+        //}
+        //function fail(data) {
+        //    $("#result").val(JSON.stringify(data.responseJSON, null, '\t')).css("background-color", "#FFA6A6");
+        //}
+        //if ($("#method").val() == "Post") {
+        //    console.log(JSON.parse($("#json").val()));
+
+
+        //    $.post($("#url").val(), JSON.parse($("#json").val())).done(function (data) {
+        //        $("#result").val(JSON.stringify(data, null, '\t')).css("background-color", "#90ee90");
+        //    })
+        //        .fail(function (data) {
+        //            $("#result").val(JSON.stringify(data.responseJSON, null, '\t')).css("background-color", "#FFA6A6");
+        //        })
+        //        .always(function () {
+        //        });
+        //} else {
+        //    $.get($("#url").val()).done(function (data) {
+        //        $("#result").val(JSON.stringify(data, null, '\t')).css("background-color", "#90ee90");
+        //    })
+        //        .fail(function (data) {
+        //            $("#result").val(JSON.stringify(data.responseJSON, null, '\t')).css("background-color", "#FFA6A6");
+        //        })
+        //        .always(function () {
+        //        });
+        //}
+    })
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // var ck = document.cookie;
+    //    alert("cookie:" +   ck);
+
+    //$.ajax({
+    //                    method: "POST",
+    //                    url: "/merchantman/test",
+    //                    data: {},
+    //                    dataType: "json"
+    //                })
+    //                    .done(function (data) {
+    //                    })
+    //                    .fail(function () {
+    //                    })
+    //                    .always(function () {
+    //                    });
+</script>
+

@@ -1,0 +1,203 @@
+﻿@model  IEnumerable<EnrichcousBackOffice.Models.CustomizeModel.PO_manager_view>
+@{
+    var locations = new EnrichcousBackOffice.Models.WebDataModel().Locations.ToList();
+    List<EnrichcousBackOffice.Models.PO_Detail_Checkin> checkedin_list = ViewBag.checkedin;
+}
+
+<table class="dataTable table table-bordered table-hover table-striped load-data-checkin" style="width: 100%;">
+    <thead>
+        <tr class="bg-light-blue">
+            <th>PO#</th>
+            <th>Vendor</th>
+            <th>SO#</th>
+            <th>Last Updated</th>
+            <th>Check In All</th>
+        </tr>
+    </thead>
+    <tbody>
+    </tbody>
+</table>
+
+<script src="~/Scripts/jquery.form.min.js"></script>
+<script>
+    var _dataPO = null;
+    $(function () {
+        var tableStore = $('.load-data-checkin').DataTable({
+            "language": {
+                "processing": '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>',
+                "paginate": {
+                    "first": '<i class="fa fa-angle-double-left" aria-hidden="true"></i>',
+                    "last": '<i class="fa fa-angle-double-right" aria-hidden="true"></i>',
+                    "next": '<i class="fa fa-angle-right" aria-hidden="true"></i>',
+                    "previous": '<i class="fa fa-angle-left" aria-hidden="true"></i>'
+                },
+            },
+            "pageLength": 10,
+            "serverSide": true, // for process server side
+            "processing": true, // for show progress bar
+            'paging': true,
+            'lengthChange': true,
+            'searching': false,
+            'ordering': true,
+            'info': false,
+            'autoWidth': true,
+            'stateSave': false,
+            "order": [[3, "desc"]],
+            "ajax": {
+                "url": "/po/loadcheckininventory",
+                "type": "POST",
+                "datatype": "json",
+                data: function (data) {
+                    data.fdate = $('#FDate').val();
+                    data.tdate = $('#TDate').val();
+                    data.vendor = $("#SVendor").val();
+                    data.status = $("#SStatus").val();
+                    data.searchtext = $("#SearchText").val();
+                    return data;
+                },
+                'dataSrc': function (data) {
+                    return data.data;
+                }
+            },
+            'fnCreatedRow': function (nRow, aData, iDataIndex) {
+                $(nRow).attr('onclick', `loadDetailPO('${aData.POCode}', $(this))`);
+                $(nRow).css('cursor', 'pointer');
+            },
+            "columns": [
+                {
+                    "name": "POCode",
+                    "render": function (data, type, row) {
+                        return `<span><b>#${row["POCode"]}</b></span>`;
+                    },
+                    "className": 'align-middle',
+                },
+                {
+                    "name": "Vendor",
+                    "render": function (data, type, row) {
+                        return `<span>${row["VendorName"]}</span>`;
+                    },
+                },
+                {
+                    "name": "SaleOrderNumber",
+                    "render": function (data, type, row) {
+                        return `<span>${row["SaleOrderNumber"]}</span>`;
+                    },
+                },
+                {
+                    "name": "LastUpdate",
+                    "render": function (data, type, row) {
+                        let offset = moment().utcOffset();
+                        let local = moment.utc(moment(row["UpdatedAt"]).format("MMM DD, YYYY LT")).utcOffset(offset).format("MMM DD, YYYY LT");
+                        return `<span>${local} by ${row["UpdatedBy"]}</span>`;
+                    },
+                    "className": 'align-middle',
+                },
+                {
+                    "name": "CheckinAll",
+                    "render": function (data, type, row) {
+                        let html = '';
+                        if (row["AllCheckedIn"] == true)
+                            html = `<label class="label label-success"><i class="fa fa-check"></i> ALL checked in</label>`;
+                        return html;
+                    },
+                    "className": 'align-middle',
+                }
+            ]
+        });
+    });
+    $('#SearchButton').on("click", function () {
+        $(".load-data-checkin").DataTable().ajax.reload();
+    })
+    // set event change input auto reload datatable
+    $('.input_change').on("change", function () {
+        $(".load-data-checkin").DataTable().ajax.reload();
+    })
+    $(".check").click(function (e) {
+        if ($(this).closest('tr').find('.create_model_alert').length) {
+            noty({ "text": "This model not existed, Please set up this new model before check-in.", "layout": "topRight", "type": "warning" });
+
+            //alert($("#po_manage").val());
+            if (Boolean($("#po_manage").val()) == true) {
+                $(this).closest('tr').find('.create_model_alert a').trigger('click');
+            }
+
+            e.preventDefault();
+            return false;
+        }
+        var e_checkall = $(this).closest('table').closest('tr').prev('tr').find('.checkall');
+        if ($(".check:checked").length > 0) {
+            $(this).closest('form').find(".check_in_submit").show(200);
+        }
+        else {
+            $(this).closest('form').find(".check_in_submit").hide(200);
+            if (e_checkall.is(":checked"))
+                e_checkall.trigger('click');
+        }
+        if ($(this).is(":checked")) {
+            $(this).closest('tr').find(".status_enroute").hide(300);
+            $(this).closest('tr').find(".status_rtg").show(300);
+            $(this).closest('tr').find(".ci_info").show(300);
+        }
+        else {
+
+            $(this).closest('tr').find(".status_enroute").show(300);
+            $(this).closest('tr').find(".status_rtg").hide(300);
+            $(this).closest('tr').find(".ci_info").hide(300);
+        }
+        e.stopPropagation();
+    });
+
+    function download_excel(po_code) {
+        //$(e).find('.img_load').show();
+        window.location.href = "/po/ExportExcel/?po_code=" + po_code;
+        //$.ajax({
+        //    method: "POST",
+        //    url: "/po/ExportExcel",
+        //    data: { po_code },
+        //    dataType: "json"
+        //})
+        //    .done(function (data) {
+        //        //if (data[0]) {
+        //        //    console.log(data);
+        //            window.location.href = data;
+        //        //}
+        //        //else {
+        //        //    noty({ "text": data[1], "layout": "topRight", "type": "error" });
+
+        //        //}
+        //    })
+        //    .fail(function () {
+        //        console.log("download_excel fail");
+        //    })
+        //    .always(function () {
+        //        $(e).find('.img_load').hide();
+        //    });
+    }
+
+
+    function loadDetailPO(code, e) {
+        if ($('#detail_' + code).length) {
+            $('#detail_' + code).remove();
+        }
+        else {
+            overlayOn();
+            $.ajax({
+                method: "get",
+                url: `/po/loaddetailcheckininventory?pocode=${code}`
+            })
+                .done(function (data) {
+                    $(".st_detail").remove();
+                    e.after(data);
+                    $(".div-detail-" + code).slideDown();
+                    //e.next("tr").show();
+                    overlayOff();
+                })
+                .fail(function () {
+                    alert("Oops! Something went wrong");
+                    overlayOff();
+                })
+                .always(function () {
+                });
+        }
+    }
+</script>

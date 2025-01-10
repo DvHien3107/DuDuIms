@@ -1,0 +1,41 @@
+﻿@model EnrichcousBackOffice.Areas.Page.Models.Customize.Ticket.CompleteModel
+@{
+    Layout = "~/Areas/Page/Views/Shared/_TicketLayout.cshtml";
+    ViewBag.Title = "Create Ticket | IMS System";
+}
+
+
+    @Html.Action("TicketProgress", new { step = EnrichcousBackOffice.Areas.Page.Models.Customize.Ticket.TicketProgressStep.Complete })
+    <div class="page-body">
+
+        <div class="complete-wrapper">
+            <span>
+
+                @if (Model.ShowLinkDetail == true)
+                {
+
+                    <text>
+                        You Ticket: <a href="/ticket/detail/@Model.TicketId"><b>#@Model.TicketId </b></a>
+                    </text>
+                }
+                else
+                { 
+                    <text>
+                        You Ticket: <b>#@Model.TicketId </b>
+                   </text>
+            }
+                <br />
+                Thank you for contacting our support team !
+            </span>
+        </div>
+        <div class="text-center">
+            <a href="/" class="btn btn-next btn-custom"><i class="fa fa-angle-double-left"></i> Back To IMS</a>
+        </div>
+    </div>
+
+
+
+@section scripts{
+
+}
+

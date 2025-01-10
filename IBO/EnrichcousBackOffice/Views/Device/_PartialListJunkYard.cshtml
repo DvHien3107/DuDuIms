@@ -1,0 +1,73 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.CustomizeModel.Device_Product_view>
+@using EnrichcousBackOffice.Models
+@{
+    var _access = EnrichcousBackOffice.AppLB.Authority.GetAccessAuthority();
+    var accessDelete = (_access.Any(k => k.Key.Equals("products_deletedevice")) == true && _access["products_deletedevice"] == true);
+}
+<div class="form-group">
+    <div id="list_device-junkyard" class="col">
+        <div class="col-md-12" style="float:left; background-color: #fbfbfb; border: 1px solid lightblue; border-radius: 6px; padding: 20px;">
+            <div style="text-align:right;margin-bottom:5px;">
+                @if (accessDelete)
+                {
+                    <button type="button" id="Delete_Junkyard" class=" btn btn-sm btn-danger"><i class="fa fa-trash" aria-hidden="true"></i> Delete</button>
+                }
+                </div>
+            <table class="table table-striped" id="junktable" style="width:100%; margin-top: 20px">
+                <thead>
+                    <tr>
+                        @if (accessDelete)
+                        {
+                            <th width="10"><input type="checkbox" id="SelectedItemMaster_Junkyard" /></th>
+                        }
+
+                        <th>Inv Number</th>
+                        <th>Serial Number</th>
+                        <th>Product Name</th>
+                        <th>Color</th>
+                        <th>Vendor</th>
+                        <th>Date ordered</th>
+                        <th>Junkyard description</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var product_view in Model)
+                    {
+                        foreach (var item in product_view.item)
+                        {
+                    <tr id="device_@item.Device.DeviceId">
+                        @if (accessDelete)
+                        {
+                            <td><input type="checkbox" class="SelectedItem_Junkyard" name="CheckBoxItem_Junkyard" value="@item.Device.DeviceId" /></td>
+                        }
+                            <td>#@item.Device.InvNumber</td>
+                            <td>@item.Device.SerialNumber</td>
+                            <td>@item.Device.ProductName</td>
+                            <td>@item.Color</td>
+                            <td>@item.Device.VendorName</td>
+                            <td></td>
+                            <td>@Html.Raw(item.Device.JunkyardDescription)</td>
+                            <td>
+                                <a href="#" onclick="OpenJunkModal('@item.Device.DeviceId',0)" class="btn btn-success jy-class"><span class="glyphicon glyphicon-repeat"></span> Return</a>
+                            </td>
+                        </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <hr />
+</div>
+<script type="text/javascript">
+    $(function () {
+        $('#junktable').DataTable({
+            "columnDefs": [
+                { "orderable": false, "targets": 0 }
+            ]
+        });
+    });
+    DeleteHandle.init();
+</script>
+

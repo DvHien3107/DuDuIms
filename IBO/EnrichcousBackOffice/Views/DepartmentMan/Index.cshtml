@@ -1,0 +1,1279 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.P_Department>
+@using EnrichcousBackOffice.Models
+@using EnrichcousBackOffice.Models.CustomizeModel
+@using EnrichcousBackOffice.AppLB
+@{
+    ViewBag.Title = "Department management";
+    WebDataModel db = new WebDataModel();
+    Dictionary<string, bool> p = ViewBag.p;
+    List<C_Partner> Partners = ViewBag.Partner as List<C_Partner>;
+    var Members = ViewBag.Members as List<P_Member>;
+    P_Member cMem = Authority.GetCurrentMember();
+}
+@section style
+        {
+    <!--DataTables-->
+    <link rel="stylesheet" href="~/content/admin/bower_components/datatables.net-bs/css/dataTables.bootstrap.min.css">
+    <!--icheck-->
+    <link rel="stylesheet" href="/content/admin/plugins/iCheck/all.css" />
+    <!--noty-->
+    <link href="~/Content/noty/jquery.noty.css" rel="stylesheet" />
+    <link href="~/Content/noty/noty_theme_default.css" rel="stylesheet" />
+    <style>
+        @@media (min-width: 992px) {
+            .modal-lg-custom {
+                width: 85vw;
+            }
+        }
+        .select2-container--default .select2-results__option[aria-disabled=true] {
+            display: none;
+        }
+        .table td {
+            vertical-align: middle !important;
+        }
+
+        .dropdown-dot {
+            transition-duration: .28s;
+            transition-property: box-shadow,transform,opacity;
+            transition-timing-function: cubic-bezier(.4,0,.2,1);
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+        }
+
+            .dots-menu.open .dropdown-dot, .dropdown-dot:hover {
+                background: #ccd0d5;
+            }
+
+            .dropdown-dot:after {
+                content: '\2807';
+                font-size: 22px;
+                left: 12px;
+                top: 3px;
+                cursor: pointer;
+                color: #686868;
+                position: absolute;
+            }
+
+            .dropdown-dot:hover:after {
+                color: black;
+            }
+
+        .fa-onclick:hover {
+            opacity: 0.8;
+        }
+        /* .content-stage-member {
+            max-height: 70vh;
+            overflow-y: scroll;
+            min-height: 70vh;
+        }*/
+        .table-member-stage thead tr th {
+            white-space: nowrap;
+        }
+        /* width */
+        .content-stage-member::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        /* Track */
+        .content-stage-member::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 5px;
+        }
+
+        /* Handle */
+        .content-stage-member::-webkit-scrollbar-thumb {
+            background: #566170;
+            border-radius: 5px;
+        }
+
+            /* Handle on hover */
+            .content-stage-member::-webkit-scrollbar-thumb:hover {
+                background: #566170;
+            }
+
+        .partner-wrapper {
+            display: inline-block;
+        }
+
+        .title-table-member {
+            padding: 3px 10px;
+            transform: translateY(-15px );
+            font-size: 1.2em;
+            display: inline-block;
+            margin: -10px 20px;
+            background-color: #f5f5f5;
+            color: #076aa4;
+        }
+
+        .partner-content span:not(:last-child) {
+            padding-right: 10px;
+            align-items: center;
+        }
+
+        .modal {
+            overflow-y: auto;
+        }
+
+        .partner-content {
+            display: flex;
+        }
+
+            .partner-content span label {
+                padding: 5px 10px;
+                border: 1px solid #ccd0d5;
+                border-radius: 3px;
+                font-weight: normal;
+                cursor: pointer;
+            }
+
+                .partner-content span label input {
+                    margin-left: 5px;
+                    transform: translateY(2px)
+                }
+
+        #state_select {
+            background-color: #fff;
+            width: 100%;
+            height: calc(100% - 56px);
+            position: absolute;
+            z-index: 2;
+            left: 100%;
+            transition: left .5s;
+        }
+
+            #state_select.active {
+                left: 0 !important;
+            }
+
+            #state_select tr.actived {
+                background-color: #00a65a;
+                color: #fff;
+            }
+
+                #state_select tr.actived td {
+                    border-left: none;
+                    border-right: none;
+                }
+
+                #state_select tr.actived:hover {
+                    background-color: #008d4c;
+                }
+
+        .department-category :hover, .department-category.active {
+            background: var(--main-color-1);
+            color: white;
+        }
+
+            .department-category.active h4 {
+                color: white;
+            }
+
+        .box-title {
+            font-weight: 500;
+        }
+
+        .box-title-category, .box-title-info {
+            line-height: 35px !important;
+        }
+
+        .department-detail.active {
+            display: block !important;
+        }
+
+        .btn-custom {
+            transform: translateY(-3px);
+        }
+
+        .department-category.active .btn-custom, .department-category:hover .btn-custom {
+            display: inline-block;
+            color: white;
+        }
+
+        .table-group tbody tr:hover .edit-group {
+            visibility: visible !important;
+        }
+
+        .edit-group {
+            color: #4e4e4e;
+        }
+
+            .edit-group:hover {
+                color: #4e4e4e;
+                opacity: 0.8;
+            }
+
+        .circular {
+            animation: rotate 2s linear infinite;
+            height: 50px;
+            transform-origin: center center;
+            width: 50px;
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            margin: auto;
+        }
+
+        .path {
+            stroke-dasharray: 1, 200;
+            stroke-dashoffset: 0;
+            animation: dash 1.5s ease-in-out infinite, color 6s ease-in-out infinite;
+            stroke-linecap: round;
+        }
+
+        @@keyframes rotate {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @@keyframes dash {
+            0% {
+                stroke-dasharray: 1, 200;
+                stroke-dashoffset: 0;
+            }
+
+            50% {
+                stroke-dasharray: 89, 200;
+                stroke-dashoffset: -35px;
+            }
+
+            100% {
+                stroke-dasharray: 89, 200;
+                stroke-dashoffset: -124px;
+            }
+        }
+
+        @@keyframes color {
+            100%, 0% {
+                stroke: #d62d20;
+            }
+
+            40% {
+                stroke: #0057e7;
+            }
+
+            66% {
+                stroke: #008744;
+            }
+
+            80%, 90% {
+                stroke: #ffa700;
+            }
+        }
+
+        .td_click_detail {
+            cursor: pointer;
+        }
+    </style>
+}
+
+<section class="content-header">
+    <h1>
+        Department management
+        <small>Department</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Dashboard</a></li>
+        <li class="active">Department|Groups</li>
+    </ol>
+</section>
+
+<!-- Main content -->
+<section class="content">
+
+
+    @if (TempData["error"] != null)
+    {
+        <div class="alert alert-warning alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <span><i class="icon fa fa-warning"></i> @TempData["error"]</span>
+        </div>
+    }
+    else if (TempData["success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <span><i class="icon fa fa-check"></i> @TempData["success"]</span>
+        </div>
+    }
+    <div class="row">
+        <div class="col-sm-3">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title box-title-category">
+                        <svg xmlns="http://www.w3.org/2000/svg" style="width:18px;transform:translateY(1px)" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
+                        </svg> Department
+
+                    </h3>
+                    <button type="button" style="transform:translateY(2px)" class="btn btn-success btn-sm pull-right" onclick="add_edit_department('add')" data-toggle="tooltip" title="Add new" data-original-title="Add new">
+                        <i class="fa fa-plus"></i> Add
+                    </button>
+                </div>
+                <div class="box-body">
+                    <div style="border:1px solid #eee;" id="category-container">
+                        @foreach (var item in Model)
+                        {
+                            <div class="department-category" id="department_@item.Id">
+                                <div class="" style="padding:0px; border-radius:unset">
+                                    <div class="box-header with-border" style="padding: 0">
+                                        <div style="height: 40px; cursor:pointer" onclick="showDetailDepartment('@item.Id')">
+                                            <h4 class="box-title" id="Department_Name_@item.Id" style="font-weight: normal;font-size:14px;line-height:40px;padding-left:10px;">@item.Name</h4>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-9" id="department-container">
+
+
+            @foreach (var item in Model)
+            {
+                <div class="box box-primary  department-detail" id="detail_@item.Id" style="display: none">
+                    <div class="box-header with-border">
+                        <h3 class="box-title box-title-info" style="display:inline-block">
+                            <i class="fa fa-info"></i> @item.Name
+                        </h3>
+                        <div style="display:inline-block;margin-left:8px;">
+                            @if (p.Any(k => k.Key.Equals("department_update")) == true && p["department_update"] == true)
+                            {
+                                <span class="btn btn-sm btn-warning btn-custom" style="cursor:pointer" title="Edit" data-toggle="tooltip" data-original-title="Edit" onclick="add_edit_department('edit', @item.Id)">
+                                    <i class="fa fa-pencil"></i>
+                                </span>
+
+                            }
+
+                            @if (p.Any(k => k.Key.Equals("department_delete")) == true && p["department_delete"] == true && String.IsNullOrWhiteSpace(item.Type) == true)
+                            {
+                                <a class="btn btn-sm btn-danger btn-custom" href="/departmentman/delete/@item.Id" style="cursor:pointer" title="Delete" data-toggle="tooltip" data-original-title="Delete" onclick="return confirm('You want to delete this department?')">
+                                    <i class="fa fa-trash-o"></i>
+                                </a>
+
+                            }
+
+                        </div>
+                    </div>
+                    <div class="box-body box-body-data" id="detail_group_@item.Id" style="min-height:200px;">
+
+
+                    </div>
+                    <div class="loading-group" id="loading-group-@item.Id" style="position: absolute;right: 50%;top: 60%;transform: translate(-50%, -50%);color: #797979;display:none">
+                        <svg class="circular" viewBox="25 25 50 50">
+                            <circle class="path" cx="50" cy="50" r="20" fill="none" stroke-width="2" stroke-miterlimit="10" />
+                        </svg>
+                    </div>
+                </div>
+
+            }
+        </div>
+    </div>
+
+</section>
+
+
+<!--Modal add department-->
+<div class="modal fade" role="dialog" id="modal-department">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 id="modal-department-title" class="modal-title">Modal Title</h4>
+            </div>
+            <form action="/departmentman/save" method="post">
+                <div class="modal-body">
+                    <input type="hidden" name="hd_d_id" />
+                    <p>
+                        <label>Department name <span style="color:red">*</span></label>
+                        <input type="text" class="form-control" name="d_name" placeholder="Department name" required />
+                    </p>
+                    <p>
+                        <label>Type</label>
+                        <select class="form-control" name="d_type" id="d_type">
+                            <option value="">N/A</option>
+                            <option value="DEPLOYMENT">DEPLOYMENT</option>
+                            <option value="SUPPORT">SUPPORT</option>
+                            <option value="SALES">SALES</option>
+                            <option value="FINANCE">FINANCE</option>
+                            <option value="ONBOARDING">ONBOARDING</option>
+                            <option value="DEVELOPMENT">DEVELOPMENT</option>
+                        </select>
+                    </p>
+                    <p>
+                        <label>Department director</label>
+                        <select class="form-control" id="d_director" name="d_director" multiple="multiple" style="width:100%">
+                            @foreach (var item in ViewBag.ListEmployees as List<MemberSelect_View>)
+                            {
+                                <option value="@item.MemberNumber">@(item.Name?.ToUpper()) - @(item.MemberNumber)</option>
+                            }
+                        </select>
+                    </p>
+                    <p>
+                        <input type="checkbox" class="minimal" id="Active" name="Active" value="1" />&nbsp;
+                        <label>- Active</label>
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary" onclick="return save_department()">
+                        <img id="loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" /> Save
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<!--/.End-->
+<!--Modal add group-->
+<div class="modal fade" id="modal-group">
+    <div class="modal-dialog">
+        <div class="modal-content" style="overflow:hidden">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 id="modal-group-title" class="modal-title">Modal Title</h4>
+            </div>
+            <form action="/departmentman/savegroup" id="crud-group" method="post">
+
+                <div id="state_select">
+                    <div class="col-md-12 custom-scroll" style="height: calc(100% - 65px);overflow-y:auto;border-bottom: 1px solid #eee; padding-top:10px">
+                        <label style="position:absolute; padding:5px 10px; border: 1px solid #ddd"><input type="checkbox" name="state_selected" value="Other" title='Include undefined' /> Include undefined</label>
+                        <table class="table table-bordered table-striped table-hover" style="background-color: #fff;margin-top:10px;">
+                            <thead>
+                                <tr>
+                                    <th onclick="$('#check_all').trigger('click')"><input id="check_all" type="checkbox" onclick="check_all_states(this.checked)" /></th>
+                                    <th>State Code</th>
+                                    <th>State Name</th>
+                                </tr>
+                            </thead>
+                            <tbody style="cursor:pointer">
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="col-md-12" style="height: 50px; margin-top: 15px">
+                        <button type="button" class="btn btn-default" onclick="$('#state_select').removeClass('active')">Cancel</button>
+                        <button type="button" class="btn btn-success pull-right" onclick="select_state_done()">OK</button>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="hd_dg_id" />
+                    <input type="hidden" name="hd_g_id" />
+                    <p>
+                        <label>Department name <span style="color:red">*</span></label>
+                        <input type="text" class="form-control" name="dg_name" readonly />
+                    </p>
+                    <p>
+                        <label>Group name <span style="color:red">*</span></label>
+                        <input type="text" class="form-control" name="g_name" placeholder="Group name" required />
+                    </p>
+                  
+                    <p>
+                        <label>Member</label>
+                      
+                        <select class="form-control" id="g_member" name="g_member" multiple="multiple" style="width:100%">
+                            @foreach (var item in ViewBag.ListEmployees as List<MemberSelect_View>)
+                            {
+                                <option data-depar="@item.Department" value="@item.MemberNumber">@(item.Name?.ToUpper()) - @(item.MemberNumber)</option>
+                            }
+                        </select>
+
+                        <script>
+                            $("#g_member").on('change', function () {
+                                let currentLeaderValue = $(`#g_leader`).val();
+                                var m = $(this).val();
+                                
+                                $(`#g_leader option:not([value=''])`).attr("disabled", true).attr("hidden", true);
+                                for (var i in m) {
+                                    $(`#g_leader option[value=${m[i]}]`).removeAttr("disabled hidden");
+                                }
+                                 $(`#g_leader`).val(currentLeaderValue).trigger("change");
+                                // append for magager select
+                                if ($.inArray($(`#g_manager`).val(), m) == -1) {
+                                    $(`#g_manager`).val('');
+                                }
+                                $(`#g_manager option:not([value=''])`).attr("disabled", true).attr("hidden", true);
+                                for (var i in m) {
+                                    $(`#g_manager option[value=${m[i]}]`).removeAttr("disabled hidden");
+                                }
+                            })
+                        </script>
+                    </p>
+                    <p>
+                        <label>Leader</label>
+                        <select class="form-control" id="g_leader" name="g_leader" multiple="multiple" style="width:100%">
+                            @foreach (var item in ViewBag.ListEmployees as List<MemberSelect_View>)
+                            {
+                                <option value="@item.MemberNumber" disabled hidden>@(item.Name?.ToUpper()) - @(item.MemberNumber)</option>
+                            }
+                        </select>
+                    </p>
+                    <p>
+                        <label>Manager</label>
+                        <select class="form-control" id="g_manager" name="g_manager" style="width:100%">
+                            <option value="">N/A</option>
+                            @foreach (var item in ViewBag.ListEmployees as List<MemberSelect_View>)
+                            {
+                                <option value="@item.MemberNumber" disabled hidden>@(item.Name?.ToUpper()) - @(item.MemberNumber)</option>
+                            }
+                        </select>
+                    </p>
+
+                    <div id="edit_sale_states" class="form-group">
+                        <label>States</label>
+                        <a class="btn btn-default btn-xs" onclick="loadstate()" style="margin-left:10px">assign</a>
+                        <div id="list_states">
+                        </div>
+                        <input id="g_states" name="g_states" type="hidden" />
+                    </div>
+                    <p>
+                        <input type="checkbox" class="minimal" id="g_active" name="g_active" value="1" />&nbsp;
+                        <label>- Active</label>
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<!--/.End-->
+<!--Modal Group Detail-->
+<div class="modal fade" id="modal-group_detail">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 id="modal-group_detail-title" class="modal-title">Group Detail</h4>
+            </div>
+            <form>
+                <div class="modal-body">
+                    <p class="col-md-6" style="padding-left: 0">
+                        <label>Group name:</label> <span id="sp_group_name">Name</span>
+                    </p>
+                    <p class="col-md-6" id="partner-detail" style="padding-left: 0">
+                        <label>Partner:</label> <span id="sp_group_partner">Simply Pos</span>
+                    </p>
+                    <p class="col-md-6" style="padding-left: 0">
+                        <label>Manager:</label> <span id="sp_group_manager">Name</span>
+                    </p>
+                    <p class="col-md-6" style="padding-left: 0">
+                        <label>Leader:</label> <span id="sp_group_leader">Name</span>
+                    </p>
+                    <p class="col-md-6" style="padding-left: 0">
+                        <label>State:</label><br /> <span id="sp_group_states"></span>
+                    </p>
+                    <p class="col-md-6" style="padding-left: 0">
+                        <label>Status:</label> <span id="sp_group_status">Active</span>
+                    </p>
+                    <p class="col-md-12" style="padding-left: 0">
+                        <label>Total member:</label> <span id="sp_group_total">N/A</span>
+                    </p>
+                    <p>
+                        <table class="table table-bordered table-striped table-hover" id="table_detail">
+                            <thead>
+                                <tr>
+                                    <th>Member Number</th>
+                                    <th>Member Name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody_group_member">
+                                <!--List member in group-->
+                            </tbody>
+                        </table>
+                    </p>
+
+                    <input type="hidden" id="current_view_group" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                    <a class="btn btn-danger" onclick="delete_group(this,$('#current_view_group').val())">Delete</a>
+                    <button type="button" class="btn btn-warning" data-dismiss="modal" onclick="edit_group($('#current_view_group').val())">Edit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<!--Xem chi tiet thong tin nhan vien-->
+<div class="modal fade" id="modal-default">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Member profile</h4>
+            </div>
+            <div class="modal-body">
+                <p id="loading-member"><img src="/Content/ajax-loaders/ajax-loader-1.gif" /></p>
+                <div id="modal-content">
+                    <!--_MemberProfileSimplePartial Partial-->
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+<!-- Modal project edit-->
+<div id="project_form_modal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <form action="/ProjectManagement/Project_save" method="post" class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">New Project</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <input name="project_id" hidden />
+                        <input name="Id" hidden />
+                        <div class="form-group">
+                            <label>Project name <span class="text-red">*</span></label>
+                            <input name="Name" class="form-control" required />
+                        </div>
+                        @*<div class="form-group">
+                                <label>Leader <span class="text-red"></span></label>
+                                <select class="form-control" name="Leader">
+                                    <option>N/A</option>
+                                    @foreach (var item in ViewBag.ListEmployees as List<MemberSelect_View>)
+                                    {
+                                        <option data-depar="@item.Department" value="@item.MemberNumber">@(item.Name) - @(item.MemberNumber)</option>
+                                    }
+                                </select>
+                            </div>*@
+                        <div class="form-group">
+                            <label>Member</label>
+                            <select class="form-control select2" name="Member" style="width:100%" multiple>
+                                @foreach (var item in ViewBag.ListEmployees as List<MemberSelect_View>)
+                                {
+                                    <option value="@item.MemberNumber">@(item.Name) - @(item.MemberNumber)</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Manager</label>
+                            <select class="form-control select2" name="ManagerNumber" style="width:100%">
+                                <option value="">N/A</option>
+                                @foreach (var item in ViewBag.ListEmployees as List<MemberSelect_View>)
+                                {
+                                    <option value="@item.MemberNumber">@(item.Name) - @(item.MemberNumber)</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Leader</label>
+                            <select class="form-control select2" name="LeaderNumber" style="width:100%">
+                                <option value="">N/A</option>
+                                @foreach (var item in ViewBag.ListEmployees as List<MemberSelect_View>)
+                                {
+                                    <option value="@item.MemberNumber">@(item.Name) - @(item.MemberNumber)</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Project description</label>
+                            <textarea name="Description" class="form-control" rows="4" style="resize:none"></textarea>
+                        </div>
+                        <div class="form-group" style="font-size: 16px">
+                            <label class="label label-success" style="cursor:pointer"><span style="padding: 0 10px">Active</span> <input type="checkbox" name="Active" value="True" style="vertical-align: sub; border:1px solid #fff"> </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+<!-- render project detail -->
+<div id="project-detail-content"></div>
+<!--/.End-->
+
+@section script
+        {
+    <!-- DataTables -->
+    <script src="~/content/admin/bower_components/datatables.net/js/jquery.dataTables.min.js"></script>
+    <script src="~/content/admin/bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js"></script>
+    <!--icheck-->
+    <script src="/content/admin/plugins/iCheck/icheck.min.js"></script>
+    <!--noty-->
+    <script src="~/Content/noty/jquery.noty.js"></script>
+
+
+    <script type="text/javascript">
+        $(function () {
+            //$('#example1').DataTable()
+            $('#example1').DataTable({
+                'paging': true,
+                'lengthChange': true,
+                'searching': true,
+                'ordering': true,
+                'info': false,
+                'autoWidth': true
+            })
+
+            //select 2
+            $('#d_director').select2();
+            $('#g_member').select2();
+            $('#g_leader').select2();
+            //iCheck for checkbox and radio inputs
+            $('input[type="checkbox"].minimal').iCheck({
+                checkboxClass: 'icheckbox_minimal-blue'
+            })
+
+            $("#table_detail").DataTable({
+                'paging': true,
+                'searching': true,
+                'ordering': true,
+                'info': false,
+                'autoWidth': true,
+                "language": {
+                    "paginate": {
+                        "first": '<i class="fa fa-angle-double-left" aria-hidden="true"></i>',
+                        "last": '<i class="fa fa-angle-double-right" aria-hidden="true"></i>',
+                        "next": '<i class="fa fa-angle-right" aria-hidden="true"></i>',
+                        "previous": '<i class="fa fa-angle-left" aria-hidden="true"></i>'
+                    },
+                },
+            });
+        })
+
+
+
+        //** DEPARTMENT **
+        function add_edit_department(key, d_id) {
+            if (key == "add") {
+                $("#modal-department-title").html("Add new department");
+                $("input[name='hd_d_id']").val("0");
+                $("input[name='d_name']").val("");
+                $("select[name='d_director']").val("");
+                $("select[name='d_type']").val("");
+                $('#d_director').select2();// update select2
+                $("#Active").prop("checked", true);
+                $("#Active").iCheck('update');// checked cho icheck
+                $("#modal-department").modal("show");
+            }
+
+            if (key == "edit") {
+                $.ajax({
+                    method: "GET",
+                    url: "/departmentman/GetDepartmentInfo",
+                    data: { "id": d_id },
+                    dataType: "json"
+                })
+                    .done(function (data) {
+                        //data: object[] {true/false, department/message, list_director}
+                        if (data[0] == true) {
+                            $("#modal-department-title").html("Edit department: " + data[1].Name.toUpperCase());
+                            $("input[name='hd_d_id']").val(data[1].Id);
+                            $("input[name='d_name']").val(data[1].Name);
+                            $("#Active").prop("checked", data[1].Active);
+                            $("#Active").iCheck('update');// update cho icheck
+                            $("select[name='d_type']").val(data[1].Type);
+                            $("select[name='d_director']").val(data[1].LeaderNumber);
+                            //$("select[name='d_director']").empty();
+                            var _option = "";
+                            var _valueSelect = new Array();//mang luu lai cac gia tri selected
+
+                            for (var i in data[2]) {
+
+                                if (data[1].LeaderNumber == null || data[1].LeaderNumber == "") {
+                                    _option = _option + "<option value='" + data[2][i].MemberNumber + "'>" + data[2][i].FullName.toUpperCase() + " - " + data[2][i].MemberNumber + "</option>";
+                                }
+                                else {
+
+                                    if (data[1].LeaderNumber.includes(data[2][i].MemberNumber) == true) {
+                                        _valueSelect.push(data[2][i].MemberNumber);
+                                        _option = _option + "<option selected value='" + data[2][i].MemberNumber + "'>" + data[2][i].FullName.toUpperCase() + " - " + data[2][i].MemberNumber + "</option>";
+                                    }
+                                    else {
+                                        _option = _option + "<option value='" + data[2][i].MemberNumber + "'>" + data[2][i].FullName.toUpperCase() + " - " + data[2][i].MemberNumber + "</option>";
+                                    }
+                                }
+                            }
+
+                        /*    $("select[name='d_director']").append(_option);*/
+                            $("#d_director").val(_valueSelect).trigger('change');//cap nhat lai cac gia tri duoc select cho select2
+
+                            $("#modal-department").modal("show");
+                        }
+                        else {
+                            var optionsErr = $.parseJSON('{"text":"' + data[1] + '","layout":"topRight","type":"error"}');
+                            noty(optionsErr);
+                        }
+                    })
+                    .fail(function () {
+                        alert("Oops! Something went wrong");
+                        //$("#modal-default").modal('hide');
+                    })
+                    .always(function () {
+                        //$("#loading").hide();
+                    });
+            }
+        }
+
+        function save_department() {
+            $("#loading").show();
+            var d_name = $("input[name='d_name']").val();
+
+            if (d_name == null || d_name == "") {
+                $("#loading").hide();
+                var optionsErr = $.parseJSON('{"text":"Error: Department name is required.","layout":"topRight","type":"error"}');
+                noty(optionsErr);
+                return false;
+            }
+
+            return true;
+        }
+
+        function GroupDetail(group_id) {
+
+            $.ajax({
+                method: "GET",
+                url: "/departmentman/GetGroupDetail",
+                data: { "id": group_id },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    //data: object[] {true/false, group/message, list_member}
+                    if (data[0] == true) {
+                        //$("#modal-group_detail-title").html("Group detail: " + data[1].Name.toUpperCase());
+                        $("#sp_group_name").html(data[1].Name.toUpperCase());
+                        $("#sp_group_leader").html(data[1].LeaderNumber ? ((data[1].LeaderName || "")) : "N/A");
+                        $("#sp_group_manager").html(data[1].SupervisorNumber ? ((data[1].SupervisorName || "") + " (#" + data[1].SupervisorNumber + ")") : "N/A");
+                        if (data[1].Active == true) {
+                            $("#sp_group_status").html("Active");
+                        }
+                        else {
+                            $("#sp_group_status").html("InActive");
+                        }
+                        if (data[1].Type == "ONBOARDING" || data[1].Type == "DEPLOYMENT" || data[1].Type == "SUPPORT") {
+                            $("#partner-detail").show();
+                            $("#sp_group_partner").html(data[1].PartnerName ?? "Simply Pos");
+                        }
+                        else {
+                            $("#partner-detail").hide();
+                        }
+                        if (data[1].ParentDepartmentId == 19120010) {
+                            $("#sp_group_states").empty().closest("p").show();
+                            if (data[3].length > 0) {
+                                for (var i in data[3]) {
+                                    $("#sp_group_states").append("<label class='label label-success'>" + data[3][i].name + "</label> ");
+                                }
+                            } else {
+                                $("#sp_group_states").append("N/A");
+                            }
+                        } else {
+                            $("#sp_group_states").empty().closest("p").hide();
+                        }
+
+                        $("#tbody_group_member").empty();
+                        var _body = "";
+                        if (data[2] == "" || data[2] == null) {
+                            _body = _body + "<tr><td colspan='4'><center><span>No member</span></center></td></tr>";
+                        }
+                        else {
+                            $("#sp_group_total").html(data[2].length);
+                            $("#table_detail").DataTable().clear();
+                            for (var i in data[2]) {
+                                var xData = [data[2][i].MemberNumber, data[2][i].Name, data[2][i].PersonalEmail, data[2][i].CellPhone];
+                                $("#table_detail").DataTable().row.add(xData).draw();
+                                //_body = _body + "<tr><td>#" + data[2][i].MemberNumber + "</td><td>" + data[2][i].Name + "</td><td>" + data[2][i].PersonalEmail + "</td><td>" + data[2][i].CellPhone + "</td></tr>";
+                            }
+                        }
+                        $("#current_view_group").val(group_id);
+                        //$("#tbody_group_member").append(_body);
+                        /*$("#table_detail").DaIdtaTable().data(_body).draw();*/
+                        $("#modal-group_detail").modal("show");
+
+                    }
+                    else {
+                        var optionsErr = $.parseJSON('{"text":"' + data[1] + '","layout":"topRight","type":"error"}');
+                        noty(optionsErr);
+                    }
+                })
+                .fail(function () {
+                    alert("Oops! Something went wrong");
+                    //$("#modal-default").modal('hide');
+                })
+                .always(function () {
+                    //$("#loading").hide();
+                });
+
+        }
+
+        function add_group(d_id, d_name, d_type) {
+            $("#modal-group-title").html("Add New Group");
+            //if (d_type == "DEPLOYMENT" || d_type == "ONBOARDING" || d_type == "SUPPORT") {
+            //    $('#Mango').prop('checked', true);
+            //    $("#partner-container").show();
+            //}
+            //else {
+            //    $("#partner-container").hide();
+            //}
+            $("input[name='hd_dg_id']").val(d_id);
+            $("input[name='dg_name']").val(d_name.toUpperCase());
+            $("input[name='hd_g_id']").val("0");
+            $("input[name='g_name']").val("");
+            $("select[name='g_member']").val("");
+            $("select[name='g_manager']").val("");
+           $('#g_member').select2();// update select2
+            $("#g_active").prop("checked", true);
+            $("#g_active").iCheck('update');// checked cho icheck
+           // $("#g_member").empty();
+           //   $("#g_manager").empty();
+
+            //$("#g_manager").append('<option value="">N/A</option>');
+            //$("#g_member_temp option").each(function () {
+            //    if (($(this).data("depar") + "").indexOf(d_id) != -1) {
+            //   //     $("#g_member").append($(this).clone());
+            //        $("#g_manager").append($(this).clone());
+            //    }
+            //});
+            if (d_id == 19120010) {
+                $("#edit_sale_states").show();
+                $("input[name='g_states']").val('').trigger("change");
+            } else {
+                $("#edit_sale_states").hide();
+            }
+            $("#g_leader").val("");
+            $("#modal-group").modal("show");
+        }
+        function delete_group(g_id) {
+            if (confirm("You want to delete this group?")) {
+
+                overlayOn();
+                $.ajax({
+                    method: "post",
+                    url: "/departmentman/DeleteGroup",
+                    data: { "id": g_id },
+                    dataType: "json"
+                })
+                    .done(function (data) {
+                        if (data.status == true) {
+                            $("#modal-group_detail").modal("hide");
+                            success(data.message);
+                            loadDepartment(data.departmentId);
+                        }
+                        else {
+                            var optionsErr = $.parseJSON('{"text":"' + data.message + '","layout":"topRight","type":"error"}');
+                            noty(optionsErr);
+                        }
+                    })
+                    .fail(function () {
+                        alert("Oops! Something went wrong");
+
+                    })
+                    .always(function () {
+                        overlayOff();
+                    });
+            }
+        }
+
+        function edit_group(g_id) {
+            overlayOn();
+            $.ajax({
+                method: "GET",
+                url: "/departmentman/GetGroupInfo",
+                data: { "id": g_id },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    //data: object[] {true/false, group/message, list_member}
+                    if (data[0] == true) {
+                        $("#modal-group-title").html("Edit Group: " + data[1].Name.toUpperCase());
+                        $("input[name='hd_dg_id']").val(data[1].ParentDepartmentId);
+                        $("input[name='dg_name']").val(data[1].ParentDepartmentName.toUpperCase());
+                        $("input[name='hd_g_id']").val(data[1].Id);
+                        $("input[name='g_name']").val(data[1].Name);
+                        //if (data[1].Type == "DEPLOYMENT" || data[1].Type == "ONBOARDING" || data[1].Type == "SUPPORT") {
+                        //    if (data[1].PartnerCode) {
+                        //        $('#' + data[1].PartnerCode + '', '#crud-group').prop('checked', true);
+                        //    }
+                        //    else {
+                        //        $('#Mango').prop('checked', true);
+                        //    }
+                        //    $("#partner-container").show();
+                        //}
+                        //else {
+                        //    $("#partner-container").hide();
+                        //}
+
+                        $("#g_active").prop("checked", data[1].Active);
+                        $("#g_active").iCheck('update');// update cho icheck
+
+                        //$("select[name='d_director']").val(data[1].LeaderNumber);
+
+                        if (data[1].ParentDepartmentId == 19120010) {
+                            $("#edit_sale_states").show();
+                            $("input[name='g_states']").val(data[1].SaleStates).trigger("change");
+                        } else {
+                            $("#edit_sale_states").hide();
+                        }
+                       /* $("#g_member").empty();*/
+                        //$("#g_manager").empty();
+                        //$("#g_manager").append('<option value="">N/A</option>');
+                        //$("#g_member_temp option").each(function () {
+                        //    if (($(this).data("depar") + "").indexOf(data[1].ParentDepartmentId) != -1) {
+                        //     //   $("#g_member").append($(this).clone());
+                        //        $("#g_manager").append($(this).clone());
+                        //    }
+                        //});
+
+                        if (data[1].GroupMemberNumber) {
+                            $("#g_member").val(data[1].GroupMemberNumber.split(",")).trigger("change");//cap nhat lai cac gia tri duoc select cho select2
+                        }
+                        $("#g_leader").val(data[1].LeaderNumber?.split(","));
+                        $(`#g_leader`).trigger('change');
+                        $("#g_manager").val(data[1].SupervisorNumber);
+                        $("#modal-group").modal("show");
+                    }
+                    else {
+                        var optionsErr = $.parseJSON('{"text":"' + data[1] + '","layout":"topRight","type":"error"}');
+                        noty(optionsErr);
+                    }
+                })
+                .fail(function () {
+                    alert("Oops! Something went wrong");
+                    //$("#modal-default").modal('hide');
+                })
+                .always(function () {
+                    overlayOff();
+                });
+        }
+        //** END GROUP **
+        async function loadstate(show = true) {
+
+            if ($('#state_select tbody tr').length == 0) {
+                overlayOn();
+                await $.ajax({
+                    method: "POST",
+                    url: "/departmentman/GetState",
+                    dataType: "json"
+                })
+                    .done(function (data) {
+                        //data: object[] {true/false, group/message, list_member}
+                        if (data[0] == true) {
+                            if (show) {
+                                $('#state_select').addClass('active');
+                            }
+                            $.each(data[1], function (i) {
+                                $('#state_select tbody').append(`
+                                            <tr class="state_tr" onclick="$(this).find('[name=state_selected]').trigger('click')">
+                                            <td ><input onclick='on_state_selected(this)' type='checkbox' name='state_selected' value='${data[1][i].abbreviation}' title='${data[1][i].name}'></td><td>${data[1][i].abbreviation}</td><td>${data[1][i].name}</td>
+                                            </tr>`);
+                            })
+                            $('#state_select table').dataTable({
+                                "columnDefs": [
+                                    { "orderable": false, "targets": 0 }
+                                ],
+                                "order": [[1, 'asc']],
+                                "paging": false
+                            });
+                        }
+                        else {
+                            error(data[1]);
+                        }
+                    })
+                    .fail(function () {
+                        alert("Oops! Something went wrong");
+                    })
+                    .always(function () {
+                        console.log("load done");
+                        overlayOff();
+                        return true;
+                    });
+            } else if (show) {
+                $('#state_select').addClass('active');
+                return true;
+            }
+        }
+        function select_state_done() {
+            var g_states = [];
+            $('input[name="state_selected"]:checked').each(function () {
+                g_states.push(this.value);
+            });
+            $("#state_select").removeClass('active');
+            $("#g_states").val(g_states.join(',')).trigger("change");
+        }
+        $("#g_states").on("change", function () {
+
+            var states = this.value.split(",");
+            loadstate(false).then(function (result) {
+                $(".state_tr.actived").removeClass("actived"); $("[name=state_selected]").prop("checked", false);;
+                $("#list_states").empty();
+                for (var i in states) {
+                    if (!states[i]) { continue; }
+                    var el = $('input[name="state_selected"][value=' + states[i] + ']')[0];
+                    if (!el.checked) {
+                        $(el).prop("checked", "checked");
+                        $(el).closest(".state_tr").addClass("actived")
+                    }
+                    $("#list_states").append('<label class="label" style="background-color:#2itemab4a">' + el.title + '</label> ');
+                }
+            });
+        })
+        function on_state_selected(el) {
+            event.stopPropagation();
+            if (el.checked) {
+                $(el).closest(".state_tr").addClass("actived");
+            } else {
+                $(el).closest(".state_tr").removeClass("actived");
+            }
+        };
+        function check_all_states(check) {
+            event.stopPropagation();
+            $("[name=state_selected]").prop('checked', check).closest(".state_tr").toggleClass("actived", check);
+        }
+        function viewdetail(mn) {
+            $("#modal-default").modal('show');
+            $.ajax({
+                method: "POST",
+                url: "/account/GetMemberInfoSimple",
+                data: { "mn": mn },
+                dataType: "html"
+            })
+                .done(function (data) {
+                    $("#modal-content").html(data);
+                })
+                .fail(function () {
+                    alert("Oops! Something went wrong");
+                    $("#modal-default").modal('hide');
+                })
+                .always(function () {
+                    $("#loading-member").hide();
+                });
+        }
+
+
+        function showDetailDepartment(id) {
+            $(".department-category").removeClass('active');
+            $(`#department_${id}`).addClass('active');
+            $(".department-detail").removeClass('active');
+            $(`#detail_${id}`).addClass('active');
+            loadDepartment(id);
+        }
+        @if (Model.Count() > 0)
+        {
+            <text>
+               showDetailDepartment('@(Model.First().Id)')
+              </text>
+        }
+
+
+        function loadDepartment(id) {
+            $(`#detail_group_${id}`).html("");
+            $(`#loading-group-${id}`).show();
+            $.ajax({
+                method: "POST",
+                url: "/DepartmentMan/ReLoadDepartment",
+                data: { "id": id },
+                dataType: "html"
+            })
+                .done(function (data) {
+                    $(`#detail_group_${id}`).html(data);
+                })
+                .fail(function () {
+                    alert("Oops! Something went wrong");
+                })
+                .always(function () {
+                    $(`#loading-group-${id}`).hide();
+                });
+        }
+
+        $("#modal-group form").ajaxForm(function (data) {
+            overlayOn();
+            if (data.status) {
+                success(data.message);
+                $("#modal-group").modal("hide");
+                loadDepartment(data.departmentId);
+            }
+            else {
+                error(data.message);
+            }
+            overlayOff();
+        })
+        function appendDepartment(id) {
+            overlayOn();
+            $.ajax({
+                method: "POST",
+                url: "/DepartmentMan/ReloadDepartment",
+                data: { "id": id },
+                dataType: "html"
+            })
+                .done(function (data) {
+                    let html = '';
+
+                    html += `<div class="box box-primary  department-detail" id="detail_${id}" style="display: none">`,
+                        html += data,
+                        html += `</div>`,
+                        $("#department-container").append(html);
+                        showDetailDepartment(id)
+
+                })
+                .fail(function () {
+                    alert("Oops! Something went wrong");
+                })
+                .always(function () {
+                    overlayOff();
+                });
+        }
+
+        $("#modal-department form").ajaxForm(function (data) {
+
+            if (data.status) {
+                success(data.message);
+                $("#modal-department").modal("hide");
+                if (data.action == "edit") {
+                    $(`#Department_Name_${data.Department.Id}`).html(data.Department.Name);
+                    loadDepartment(data.Department.Id);
+                }
+                else {
+
+                    let html = `<div class="department-category" id="department_${data.Department.Id}">
+                                <div class="" style="padding:0px; border-radius:unset">
+                                    <div class="box-header with-border" style="padding: 0">
+                                        <div style="height: 40px; cursor:pointer"  onclick="showDetailDepartment('${data.Department.Id}')" >
+                                            <h4 class="box-title" style="font-weight: normal;font-size:14px;line-height:40px;padding-left:10px;">${data.Department.Name}</h4>
+                                        </div>
+                                    </div>
+                                </div>
+                    </div>`
+                    $('#category-container').append(html);
+                    appendDepartment(data.Department.Id);
+
+                }
+            }
+            else {
+                error(data.message);
+            }
+            $("#modal-department").find("#loading").hide();
+        })
+    </script>
+
+}
+

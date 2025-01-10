@@ -1,0 +1,241 @@
+﻿<table class="table table-bordered table-hover table-responsive table-dark">
+    <thead style="background-color:gray;color:white">
+        <tr>
+            <td>PACKAGE</td>
+            <td>WEIGHT(LBS)</td>
+            <td>TYPE</td>
+            <td>READY FOR PRINT</td>
+        </tr>
+    </thead>
+
+
+
+    <tbody id="tbody_ups">
+        <!---->
+
+    </tbody>
+
+    <tfoot id="tfoot_ups" style="padding:10px;background-color:bisque">
+        <tr id="ups_tr_servicecode">
+            <td colspan="4">
+                <label style="width:25%">Shipping Service: </label>
+                <select style="width:65%" id="upsServiceCode" name="upsServiceCode" onchange="btnSaveChange()">
+                    <option>01- The UPS United States Next Day Air (“Red”)</option>
+                    <option>02- UPS United States 2nd Day Air (“Blue”)</option>
+                    <option selected>03- UPS United States Ground</option>
+                    <option>04- UPS Canada Express Saver (typically next day)</option>
+                    <option>12- The UPS United States 3 Day Select (“Orange”)</option>
+                    <option>13- The UPS United States Next Day Air Saver (“Red Saver”)</option>
+                    <option>14- UPS Canada Express</option>
+                    <option>15- UPS United States Next Day Air Early A.M.</option>
+                    <option>17- UPS Canada Expedited (typically 2-day)</option>
+                    <option>20- UPS Canada Standard (Ground)</option>
+                    <option>22- UPS United States Ground – Returns Plus – Three Pickup Attempts</option>
+                    <option>32- UPS United States Next Day Air Early A.M. – COD</option>
+                    <option>33- UPS United States Next Day Air Early A.M. – Saturday Delivery, COD</option>
+                    <option>41- UPS United States Next Day Air Early A.M. – Saturday Delivery</option>
+                    <option>42- UPS United States Ground – Signature Required</option>
+                    <option>44- UPS United States Next Day Air – Saturday Delivery</option>
+                    <option>66- UPS United States Worldwide Express</option>
+                    <option>72- UPS United States Ground – Collect on Delivery</option>
+                    <option>78- UPS United States Ground – Returns Plus – One Pickup Attempt</option>
+                    <option>90- UPS United States Ground – Returns – UPS Prints and Mails Label</option>
+                    <option>A0- UPS United States Next Day Air Early A.M. – Adult Signature Required</option>
+                    <option>A1- UPS United States Next Day Air Early A.M. – Saturday Delivery, Adult Signature Required</option>
+                    <option>A2- UPS United States Next Day Air – Adult Signature Required</option>
+                    <option>A8- UPS United States Ground – Adult Signature Required</option>
+                    <option>A9- UPS United States Next Day Air Early A.M. – Adult Signature Required, COD</option>
+                    <option>AA- UPS United States Next Day Air Early A.M. – Saturday Delivery, Adult Signature Required, COD.</option>
+                </select>
+            </td>
+        </tr>
+        <tr id="ups_tr_desc">
+            <td colspan="4">
+                <label style="width:25%">Shipment description: </label>
+                <input maxlength="50"  style="display:inline-block;width:65%;border:none;border-bottom:1px solid" id="upsDescription" onchange="btnSaveChange()" />
+            </td>
+        </tr>
+
+    </tfoot>
+
+</table>
+
+<div class="col-md-12">
+    <input type="hidden" id="ups_trackingnumber" value="0" />
+    <div class="col-md-4">
+        <button type="button" id="ups_package_add" class="btn btn-primary">Add package</button>
+        <button title="Cancel the UPS package" id="upscancel_button" style="display:none" type="button" class="btn btn-danger">Cancel <i class="glyphicon glyphicon-remove"></i></button>
+    </div>
+    <div class="col-md-4"></div>
+    <div class="col-md-4"><button id="upssubmit_button" type="button" class="btn btn-info">Submit to UPS </button></div>
+
+</div>
+
+
+<table style="display: none;" id="table_template">
+    <tr>
+        <td>Package {number}</td>
+        <td><input type="number" min="0" step="0.01" name="package_{number}" onchange="btnSaveChange()"
+                   style="display:block;width: 100%;box-sizing: border-box;border:none;border-bottom:2px solid red" /></td>
+        <td>
+            <select name="type_{number}">
+                <option>01- Bag</option>
+                <option selected>02- Box</option>
+                <option>03- Carton/Piece</option>
+                <option>04- Crate</option>
+                <option>05- Drum</option>
+                <option>06- Pallet/Skid</option>
+                <option>07- Roll</option>
+                <option>08- Tube</option>
+            </select>
+        </td>
+        <td id="print_package_{number}">{print_label}</td>
+    </tr>
+</table>
+
+<script type="text/javascript">
+    $("#ups_package_add").on("click", function () {
+
+        //alert("add more");
+
+        var upsbodycontent = $("#table_template tbody").html();
+        //console.log(upsbodycontent);
+        upsbodycontent = upsbodycontent.replace(/\{number\}/igm, Number($("#tbody_ups tr").length) + 1);
+        upsbodycontent = upsbodycontent.replace(/\{print_label\}/igm, "");
+        $("#tbody_ups").append(upsbodycontent);
+        $("#upssubmit_button").removeAttr("disabled");
+    });
+
+    $("#upssubmit_button").click(function () {
+
+        $("#upssubmit_button").append('<img style="width:25px" src="/Content/ajax-loaders/loading-partial.gif"/>');
+        $("#upssubmit_button").attr("disabled", true);
+
+        var ordid = $('#update_order_id').val();
+        var scode = $('#upsServiceCode').val();
+        var desc = $("#upsDescription").val();
+        var ship_address = $("input[name='sh_street']").val() + "|" + $("input[name='sh_city']").val() + "|" + $("input[name='sh_state']").val() + "|" + $("input[name='sh_zip']").val() + "|" + $("input[name='sh_country']").val()
+        var packageWeight = "";
+        $("#tbody_ups input[type=number]").each(function () {
+            if ($(this).val() > 0) {
+                var select_name = $(this).attr("name").replace("package", "type");
+                var type = $("select[name=" + select_name + "]").val();
+                packageWeight += $(this).val() + "-" + type + "|";
+            }
+
+        });
+
+        console.log(packageWeight);
+
+        $.ajax({
+            method: "POST",
+            url: "/device/UPS_PackageSubmit",
+            data: { ordid, packageWeight,scode, desc, ship_address },
+            dataType: "json"
+        })
+            .done(function (data) {
+
+                //console.log("ups submit result: ");
+                //console.log(data);
+               
+                if (data["Result"] == "1") {
+                    var i = 0;
+                    $("#tbody_ups input[type=number]").each(function () {
+                        if ($(this).val() > 0) {
+                            $("#print_" + this.name).html("<a href='/device/upslabelprinter/" + data["Data"][i] + "' target='_blank' class='btn btn-danger'><i class='glyphicon glyphicon-print'></i> Print label</a>");
+                            i++;
+                        }
+
+                    });
+                    
+                    var tracking_number = data["TrackingNumber"];
+                    $("#tfoot_ups").append("<tr id='tr_trackingnumber'><td colspan='4' style='text-align:center;font-size:1.2em;border-bottom:2px solid red;'>TRACKING NUMBER:  <strong>" + tracking_number + "</strong></td ></tr>");
+                    noty({ "text": "Submit successful", "layout": "top", "type": "success" });
+                    //update button status & tracking number
+                    offSubmitUPS(tracking_number);
+                }
+                else {
+                    noty({ "text": data["Msg"], "layout": "top", "type": "error","timeout": "8000"});
+                    onSubmitUPS();
+                }
+
+
+            })
+            .fail(function () {
+                console.log("UPS_PackageSubmit error!!!")
+            })
+            .always(function () {
+                $("#upssubmit_button img").remove();
+            });
+
+    });
+
+    $("#upscancel_button").click(function () {
+        if (confirm("Are you sure you want cancel this shipment?")) {
+            var tn = $("#ups_trackingnumber").val();
+            $("#upscancel_button").append('<img style="width:25px" src="/Content/ajax-loaders/loading-partial.gif"/>');
+            $("#upscancel_button").attr("disabled", true);
+
+            $.ajax({
+                method: "POST",
+                url: "/device/UPS_Cancel",
+                data: { tn },
+                dataType: "json"
+            })
+                .done(function (data) {
+
+                    //console.log("ups cancel result: ");
+                    //console.log(data);
+                    
+                    if (data["Result"] == 1) {
+
+                        $("#tbody_ups").empty();
+                        noty({ "text": "Shipment has been canceled successful", "layout": "top", "type": "success" });
+                        $("#tbody_ups").empty();
+                        $("#upscancel_button").hide();
+                        $("#ups_trackingnumber").val("");
+                        $("#upsDescription").val("");
+                        $("#tfoot_ups").last().remove();
+                        onSubmitUPS();
+                    }
+                    else {
+                        //noty({ "text": "The shipment is not yet available for deletion/void. Please try to void later.", "layout": "topRight", "type": "warning" });
+                        if (confirm("UPS does not allow you to cancel the shipment now.\nYOU CAN TO DO IT DIRECTLY ON THE UPS SITE.\nNOW, do you want to recreate packages?")) {
+                            $.ajax({
+                                method: "POST",
+                                url: "/device/UPS_Cancel",
+                                data: { tn, update: true },
+                                dataType: "json"
+                            })
+                                .done(function (data) {
+                                    if (data == true) {
+                                        noty({ "text": "Ready for create new a shipment", "layout": "top", "type": "success" });
+                                        $("#tbody_ups").empty();
+                                        $("#upscancel_button").hide();
+                                        $("#ups_trackingnumber").val("");
+                                        $("#upsDescription").val("");
+                                        $("#tfoot_ups tr").last().remove();
+                                        onSubmitUPS();
+                                    }
+                                })
+                                .fail(function () { noty({ "text": "uhh...Something went wrong. Please try again later", "layout": "top", "type": "error" }); });
+                        }
+                    }
+
+
+                })
+                .fail(function () {
+                    console.log("UPS_Cancel error!!!")
+                })
+                .always(function () {
+                    $("#upscancel_button img").remove();
+                    $("#upscancel_button").removeAttr("disabled");
+                });
+
+        }
+
+    });
+
+</script>
+
+

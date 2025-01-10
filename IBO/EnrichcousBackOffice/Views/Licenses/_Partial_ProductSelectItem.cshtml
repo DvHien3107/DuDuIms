@@ -1,0 +1,175 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.CustomizeModel.LicensesItemGroup>
+@{
+    List<EnrichcousBackOffice.Models.License_Product_Item> lp_items = ViewBag.lp_items;
+    var isAddon = ViewBag.isAddon;
+}
+<div class="modal fade in" id="select_item_modal" style="display: none;">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <h4 id="modal-department-title" class="modal-title">Edit</h4>
+            </div>
+            <form id="LP_Item" action="/Licenses/Save_LicenseProductItem" method="post">
+                <div class="modal-body" style="overflow-y:auto; max-height:80vh">
+                    <input type="hidden" name="ProductId" />
+                    <input type="hidden" name="update" id="update" value="true" />
+                    <table class="table table-bordered table-striped table-hover" style="margin:0px; background-color:#fff">
+                        <thead>
+                            <tr style="background-color: lightskyblue">
+                                <th colspan="2">License</th>
+                                <th>Status</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @foreach (var group in Model)
+                            {
+                                <tr class="item">
+                                    <td colspan="4">
+                                        <div class="pull-left">
+                                            <b class="pull-left" style="margin:0">@group.Group.Name</b>
+                                        </div>
+
+                                    </td>
+                                </tr>
+
+                                foreach (var item in group.Items)
+                                {
+                                    var lp_item = lp_items?.Where(i => i.License_Item_Code == item.Code).FirstOrDefault();
+                                    <tr class="group_@group.Group.ID item" id="item_@item.ID">
+                                        <td></td>
+                                        <td onclick="edit_item('@item.ID')">
+                                            <span id="item_name_@item.ID">
+                                                @item.Name
+                                                @if (group.Group.ID != 1000000)
+                                                {
+                                                    <span style="color: blue"><b>*</b></span>
+                                                }
+                                            </span>
+                                        </td>
+                                        <td style="text-align:left; font-weight:bold">
+
+                                            @if (isAddon || (!"Base Services".Equals(item.GroupName) && !isAddon))
+                                            {
+                                                <label class="switch" style="vertical-align: text-top;">
+                                                    <input class="enable_item_checkbox" name="enabled_item" type="checkbox" value="@item.Code" @(lp_item?.Enable == true ? "checked" : "")>
+                                                    <span class="slider round"></span>
+                                                </label>
+                                            }
+                                            else
+                                            {
+                                                <input class="" name="enabled_item" type="checkbox" min="-1" value="@item.Code" style="display: none" checked />
+                                            }
+
+                                        </td>
+                                        <td style="vertical-align:middle;">
+                                            @if (item.Type == "FEATURE")
+                                            {
+                                                if ("Base Services".Equals(item.GroupName))
+                                                {
+                                                    <select class="form-control" name="select_@item.Code" onchange="$(this).closest('td').prev().find('[type=checkbox]').prop('checked',true)">
+                                                        <option value="1" @(lp_item?.Value == 1 ? "selected" : "")>Yes</option>
+                                                        <option value="0" @(lp_item?.Value == 0 ? "selected" : "")>No</option>
+                                                    </select>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                if ((item.Code == "SALONCENTER" || item.Code == "CHECKIN") && !isAddon)
+                                                {
+                                                    <input class="form-control" type="number" name="select_@item.Code"
+                                                           oninput="$(this).closest('td').prev().find('[type=checkbox]').prop('checked',true)"
+                                                           value="@(lp_item?.Value ?? 1)" min="-1" />
+                                                }
+                                                else
+                                                {
+                                                    <input class="form-control" type="number" name="select_@item.Code"
+                                                           oninput="$(this).closest('td').prev().find('[type=checkbox]').prop('checked',true)"
+                                                           value="@(lp_item?.Value ?? 0)" min="-1" />
+                                                }
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+
+                                foreach (var childgroup in group.ChildGroups)
+                                {
+                                    <tr class="group_@group.Group.ID group_@childgroup.Group.ID">
+                                        <td></td>
+                                        <td colspan="2" onclick="edit_group('@childgroup.Group.ID')">
+                                            <b id="group_name_@childgroup.Group.ID" class="pull-left">@childgroup.Group.Name</b>
+                                        </td>
+                                        <td></td>
+                                    </tr>
+
+                                    foreach (var item in childgroup.Items)
+                                    {
+                                        var lp_item = lp_items?.Where(i => i.License_Item_Code == item.Code).FirstOrDefault();
+                                        <tr class="group_@group.Group.ID item" id="item_@item.ID">
+                                            <td></td>
+                                            <td onclick="edit_item('@item.ID')">
+                                                <span id="item_name_@item.ID">@item.Name</span>
+                                            </td>
+                                            <td style="text-align:left; font-weight:bold">
+                                                <label class="switch" style="vertical-align: text-top;">
+                                                    <input class="enable_item_checkbox" name="enabled_item" type="checkbox" value="@item.Code" @(lp_item?.Enable == true ? "checked" : "")>
+                                                    <span class="slider round"></span>
+                                                </label>
+                                            </td>
+                                            <td style="vertical-align:middle;">
+                                                @if (item.Type == "FEATURE")
+                                                {
+                                                    <select class="form-control" name="select_@item.Code" onchange="$(this).closest('td').prev().find('[type=checkbox]').prop('checked',true)">
+                                                        <option value="1" @(lp_item?.Value == 1 ? "selected" : "")>Yes</option>
+                                                        <option value="0" @(lp_item?.Value == 0 ? "selected" : "")>No</option>
+                                                    </select>
+                                                }
+                                                else
+                                                {<input class="form-control" type="number" name="select_@item.Code"
+                                                        oninput="$(this).closest('td').prev().find('[type=checkbox]').prop('checked',true)"
+                                                        value="@(lp_item?.Value)" />}
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            }
+
+                        </tbody>
+                    </table><br />
+                    <span style="color: blue">(<b>*</b>)<i> Unlimited value is -1.</i></span>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                    @if (ViewBag.hasItem == true)
+                    {
+                        <button type="submit" class="btn btn-primary pull-right">
+                            <img id="loading" src="/Content/ajax-loaders/ajax-loader-1.gif" style="display:none"> Save
+                        </button>
+                    }
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    $("#LP_Item").ajaxForm(function (data) {
+        if (data[0]) {
+            noty({ "text": data[1], "layout": "topRight", "type": "success" });
+            $("#select_item_modal").modal("hide");
+            if (data[2] != "0" && data[2] != null) {
+                show_stores_actived(data[2], false);
+            }
+            else {
+                load_tab();
+            }
+        } else {
+            noty({ "text": data[1], "layout": "topRight", "type": "error" });
+        }
+    });
+</script>

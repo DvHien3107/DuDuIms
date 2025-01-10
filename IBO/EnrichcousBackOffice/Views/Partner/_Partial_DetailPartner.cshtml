@@ -1,0 +1,165 @@
+﻿@model EnrichcousBackOffice.Models.C_Partner
+@using EnrichcousBackOffice.Models
+@using EnrichcousBackOffice.AppLB
+@{
+    var SaleMembers = ViewBag.SaleMembers as List<P_Member>;
+}
+
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+    <h4 id="modal-group_detail-title" class="modal-title">@(string.IsNullOrEmpty(Model.Id) ? "Create New Partner" : "Detail Partner") <b>@(string.IsNullOrEmpty(Model.Id) ? "" : ("#" + Model.Code))</b></h4>
+</div>
+<div class="modal-body">
+    <div class="row">
+        <form id="form_save_partner" action="/partner/save" method="post" onsubmit="overlayOn()">
+            <input type="hidden" class="form-control" id="Id" name="Id" value="@Model.Id" />
+            <div class="form-group col-md-12">
+                <label class="control-label" style="">Company logo</label>
+                <div class="col-12">
+                    <input type="file" accept="image/png, image/gif, image/jpeg" id="pic0" name="pic0" onchange="reviewUpload(this)" />
+                    <div style="padding:0px;display:@(string.IsNullOrEmpty(Model.Logo) ? "none" : "block")" class="col-sm-12" id="review_pic0">
+                        <p class="col-sm-12" style="border:1px dotted red; padding:3px;margin-bottom:0">
+                            <img id="img_pic0" src="@Model.Logo" onerror="this.src='../Content/Img/noimage.png'" style="height:100px;margin-left:0" alt="Preview" />
+                            <i style="padding-left:5px" id="fname_pic0"></i>
+                            <a onclick="upload_delete('pic0')" href="#" data-toggle="tooltip" id="btn_remove_img" title="Delete file" class="pull-right text-danger">
+                                <i class="fa fa-trash"></i>
+                            </a>
+                        </p>
+                        <input type="hidden" name="hdPicDelete_pic0" id="hdPicDelete_pic0" value="0" />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group col-md-12">
+                <label class="control-label" style="">Name <span style="color:red">*</span></label>
+                <input tabindex="1" type="text" class="form-control" id="Name" name="Name" value="@Model.Name" required />
+            </div>
+            <div class="form-group col-md-12">
+                <label class="control-label" style="">Partner code <span style="color:red">*</span></label>
+                <input tabindex="2" type="text" class="form-control" id="Code" name="Code" value="@(Model.Code ?? ViewBag.NewPartnerCode)" required />
+            </div>
+            <div class="form-group col-md-12">
+                <label class="control-label" style="">Key for license <span style="color:red">*</span></label>
+                <input tabindex="2" type="text" class="form-control" id="KeyLicense" name="KeyLicense" value="@Model.KeyLicense" required />
+            </div>
+            <div class="form-group col-md-6">
+                <label class="control-label" style="">Email <span style="color:red">*</span></label>
+                <input tabindex="3" type="email" class="form-control" id="Email" name="Email" value="@Model.Email" required />
+            </div>
+            <div class="form-group col-md-6">
+                <label class="control-label" style="">Hotline</label>
+                <input tabindex="4" type="text" class="form-control" id="Hotline" name="Hotline" value="@Model.Hotline" />
+            </div>
+            <div class="form-group col-md-6">
+                <label class="control-label" style="">Contact name</label>
+                <input tabindex="5" type="text" class="form-control" id="ContactContactNamePerson" name="ContactName" value="@Model.ContactName" />
+            </div>
+            <div class="form-group col-md-6">
+                <label class="control-label" style="">Phone number</label>
+                <input tabindex="6" type="text" class="form-control" id="Phone" name="Phone" value="@Model.Phone" />
+            </div>
+            <div class="form-group col-md-12">
+                <label class="control-label" style="">Address</label>
+                <input tabindex="7" type="text" class="form-control" id="Address" name="Address" value="@Model.Address" />
+            </div>
+            <div class="form-group col-md-12">
+                <label class="control-label" style="">Partner website</label>
+                <input tabindex="7" type="text" class="form-control" id="Url" name="Url" value="@Model.Url" />
+            </div>
+            <div class="form-group col-md-6">
+                <label class="control-label" style="">Checkin Url</label>
+                <input tabindex="7" type="text" class="form-control" id="Url" name="CheckinUrl" value="@Model.CheckinUrl" />
+            </div>
+            <div class="form-group col-md-6">
+                <label class="control-label" style="">Login Url</label>
+                <input tabindex="7" type="text" class="form-control" id="Url" name="LoginUrl" value="@Model.LoginUrl" />
+            </div>
+            <div class="form-group col-md-6">
+                <label class="control-label" style="">Manage Url</label>
+                <input tabindex="7" type="text" class="form-control" id="Url" name="ManageUrl" value="@Model.ManageUrl" />
+            </div>
+            <div class="form-group col-md-6">
+                <label class="control-label" style="">Pos Api Url</label>
+                <input tabindex="7" type="text" class="form-control" id="Url" name="PosApiUrl" value="@Model.PosApiUrl" />
+            </div>
+            <div class="form-group col-md-12">
+                <label class="control-label" style="">Description</label>
+                <textarea tabindex="9" type="text" class="form-control" id="Description" name="Description" style="resize:vertical; min-height: 100px">@Model.Description</textarea>
+            </div>
+            @*<div class="form-group col-md-12">
+                <label class="control-label" style="">Sale share percent</label>
+                <input tabindex="10" type="number" min="0" max="100" class="form-control" id="SalesSharePercent" name="SalesSharePercent" value="@(Model.SalesSharePercent ?? 0)" />
+            </div>*@
+            <div class="form-group col-md-6">
+                <label class="control-label" style="">
+                    <input type="checkbox" class="flat-red form-control" name="Active" id="Active" @(Model.Status == 0 ? "" : "checked") /> Active
+                </label>
+            </div>
+            <div class="form-group col-md-6">
+                <label class="control-label" style="margin-right: 10px">
+                    <input type="radio" class="flat-red form-control" name="PriceType" id="PriceType" value="partner" @(string.IsNullOrEmpty(Model.PriceType) || Model.PriceType == "partner" ? "checked" : "") /> Partner
+                </label>
+                <label class="control-label" style="">
+                    <input type="radio" class="flat-red form-control" name="PriceType" id="PriceType" value="membership" @(Model.PriceType == "membership" ? "checked" : "") /> Membership
+                </label>
+                <label class="control-label" style="">
+                    <input type="radio" class="flat-red form-control" name="PriceType" id="PriceType" value="membership" @(Model.PriceType == "agent" ? "checked" : "") /> Agent
+                </label>
+            </div>
+            <div class="col-md-12" style="padding-top: 15px; border-top: 1px solid #f4f4f4">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                @*<button type="button" class="btn btn-danger" onclick="removePartner('@Model.Id', '@Model.Code')">Delete</button>*@
+                @if (string.IsNullOrEmpty(Model.Id))
+                {
+                    <button type="submit" class="btn btn-primary pull-right"><i class="fa fa-floppy-o" aria-hidden="true"></i> Save</button>
+                }
+                else
+                {
+                    <button type="submit" class="btn btn-primary pull-right" id="btn_save_change" @*style="display: none"*@><i class="fa fa-floppy-o" aria-hidden="true"></i> Save change</button>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+<!--<div class="modal-footer">-->
+   
+    
+<!--</div>-->
+
+<script>
+    $(function () {
+        $("#form_save_partner").ajaxForm(function (data) {
+            if (data[0]) {
+                var mess = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"success"}');
+                noty(mess);
+                $('#list_partner').DataTable().ajax.reload();
+                $('#modal_save_partner').modal("hide");
+            } else {
+                var mess = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"error"}');
+                noty(mess);
+            }
+            overlayOff();
+        });
+
+        //$('#form_save_partner')
+        //    .on('keyup change paste', 'input, select, textarea', function () {
+        //        $('#btn_save_change').show();
+        //    })
+        //    .on('click', '#btn_remove_img', function () {
+        //        $('#btn_save_change').show();
+        //    });
+        //$('#Active').on('ifChanged', function (event) {
+        //    $('#btn_save_change').show();
+        //});
+    })
+
+    $('input[type="checkbox"].flat-red, input[type="radio"].flat-red').iCheck({
+        checkboxClass: 'icheckbox_flat-blue',
+        radioClass: 'iradio_flat-blue'
+    })
+
+    $('#Phone').inputmask("(999) 999-9999");
+    $('#Hotline').inputmask("(9999) 9999-9999");
+
+</script>

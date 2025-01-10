@@ -1,0 +1,241 @@
+﻿
+@{
+    ViewBag.Title = "Invoice";
+    Dictionary<string, bool> p = ViewBag.p;
+}
+@section style
+{
+    <!-- datepicker jquery -->
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <!-- DataTables -->
+    <link rel="stylesheet" href="~/content/admin/bower_components/datatables.net-bs/css/dataTables.bootstrap.min.css">
+    <!--noty-->
+    <link href="~/Content/noty/jquery.noty.css" rel="stylesheet" />
+    <link href="~/Content/noty/noty_theme_default.css" rel="stylesheet" />
+    <link href="~/Content/Admin/bower_components/bootstrap-daterangepicker/daterangepicker.css" rel="stylesheet" />
+}
+
+
+<style>
+    /*.select2 {
+        width: 100% !important;
+    }*/
+    #searchtext-autocomplete {
+        display: block;
+        position: relative
+    }
+
+    .ui-autocomplete {
+        position: absolute;
+    }
+
+    #order_table .change-sales-person-td:hover .change-sales-person {
+        opacity: 1 !important;
+        -webkit-transition: opacity .15s ease-in-out;
+        -moz-transition: opacity .15s ease-in-out;
+        -ms-transition: opacity .15s ease-in-out;
+        -o-transition: opacity .15s ease-in-out;
+        transition: opacity .15s ease-in-out;
+    }
+
+    .circular {
+        animation: rotate 2s linear infinite;
+        height: 50px;
+        transform-origin: center center;
+        width: 50px;
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        margin: auto;
+    }
+
+    .path {
+        stroke-dasharray: 1, 200;
+        stroke-dashoffset: 0;
+        animation: dash 1.5s ease-in-out infinite, color 6s ease-in-out infinite;
+        stroke-linecap: round;
+    }
+
+    @@keyframes rotate {
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    @@keyframes dash {
+        0% {
+            stroke-dasharray: 1, 200;
+            stroke-dashoffset: 0;
+        }
+
+        50% {
+            stroke-dasharray: 89, 200;
+            stroke-dashoffset: -35px;
+        }
+
+        100% {
+            stroke-dasharray: 89, 200;
+            stroke-dashoffset: -124px;
+        }
+    }
+
+    @@keyframes color {
+        100%,
+        0% {
+            stroke: #d62d20;
+        }
+
+        40% {
+            stroke: #0057e7;
+        }
+
+        66% {
+            stroke: #008744;
+        }
+
+        80%,
+        90% {
+            stroke: #ffa700;
+        }
+    }
+</style>
+<section class="content-header">
+    <h1>
+        Invoice Management
+        <small>Invoice</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Dashboard</a></li>
+        <li><i class="fa fa-credit-card"></i> Sale</li>
+        <li><i class="fa fa-file-o"></i> Invoice</li>
+    </ol>
+</section>
+
+<section class="content">
+    <div class="row">
+
+        @if (TempData["e"] != null)
+        {
+            <div class="alert alert-warning alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+            </div>
+        }
+        else if (TempData["s"] != null)
+        {
+            <div class="alert alert-success alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+            </div>
+        }
+        <div class="box box-primary">
+            <div class="box-body" style="background:#ecf0f5;">
+                <div class="nav-tabs-custom">
+                    <ul class="nav nav-tabs" id="main_tab" style="margin:10px 0px;">
+                        <li id="invoice" class="active"><a style="cursor: pointer;font-size:18px;" class="tabs" data-toggle="tab" data-tab='invoice'>Invoice Management</a></li>
+                        <li id="report"><a style="cursor: pointer;font-size:18px;" class="tabs" data-toggle="tab" data-tab='report'> Report </a></li>
+                    </ul>
+                    <div class="content" style="position:relative">
+                        <div class="tab-content">
+
+                        </div>
+                        <div class="loadding-tab" style="position: absolute;right: 50%;top: 50%;transform: translate(-50%, -50%);color: #797979;">
+                            <svg class="circular" viewBox="25 25 50 50">
+                                <circle class="path" cx="50" cy="50" r="20" fill="none" stroke-width="2" stroke-miterlimit="10" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<div class="loading" style="display:none;position: fixed;top: 50%;left: 50%;transform: translate(-50%, -50%);"><img src="/Content/ajax-loaders/loading2.gif" width="60"></div>
+<div class="modal fade" id="change-sales-person-modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title"></h4>
+            </div>
+            <div class="modal-body">
+                <p>
+                    <input type="hidden" class="OrderCode" id="OrderCode" name="OrderCode" value="" />
+                    <label>Sales Person</label>
+                    <select class="form-control col-12" name="SalesPerson" id="SalesPerson" style="width: 100%">
+                        <option value="">N/A</option>
+                        @foreach (var item in ViewBag.ListMember as List<SelectListItem>)
+                        {
+                            <option value="@item.Value">@item.Text</option>
+                        }
+                    </select>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Cancel</button>
+                <button type="button" onclick="changeSalesPerson()" class="btn btn-primary">Save</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+
+
+@section script
+{
+    <!-- DataTables -->
+    <script src="~/content/admin/bower_components/datatables.net/js/jquery.dataTables.min.js"></script>
+    <script src="~/content/admin/bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.bundle.min.js"></script>
+    <script src="https://emn178.github.io/chartjs-plugin-labels/src/chartjs-plugin-labels.js"></script>
+    <script src="https://code.jquery.com/jquery-migrate-1.4.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/waypoints/4.0.1/jquery.waypoints.js"></script>
+    <script src="~/Content/Admin/bower_components/counter/jquery.counterup.min.js"></script>
+    <!--noty-->
+    <script src="~/Content/noty/jquery.noty.js"></script>
+    <script src="~/Content/Admin/bower_components/bootstrap-daterangepicker/daterangepicker.js"></script>
+    <!-- datepicker jquery -->
+    @*<script src="~/Content/Admin/plugins/jQueryUI/jquery-ui.min.js"></script>*@
+    <script>
+        $('#main_tab li a').on("click", function (e) {
+            var TabName = $(this).attr('data-tab');
+            var CurrentTab = localStorage.getItem('lastTabOrder');
+            if (TabName !== CurrentTab) {
+                localStorage.setItem('lastTabOrder', TabName);
+                LoadTabContent();
+            }
+        })
+        function LoadTabContent() {
+            $(".tab-content").html('')
+            $('.loadding-tab').show();
+            var CurrentTab = localStorage.getItem('lastTabOrder');
+            if (!($('#main_tab').find('#' + CurrentTab)[0])) {
+                CurrentTab = $('#main_tab').find('li').first().attr('id');
+                localStorage.setItem('lastTabOrder', CurrentTab);
+            }
+            $('#' + CurrentTab).tab('show');
+            $.ajax({
+                url: '/Order/ChangeTab',
+                type: 'POST',
+                dataType: 'html',
+                data: { "TabName": CurrentTab },
+                success: function (data) {
+                    $(".tab-content").html(data)
+                },
+                error: function (data) {
+                    console.log(data.text);
+                },
+                complete: function () {
+                    $('.loadding-tab').hide();
+                }
+            });
+        }
+        LoadTabContent();
+      
+  
+    </script>
+}

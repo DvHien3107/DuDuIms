@@ -1,0 +1,436 @@
+﻿@model EnrichcousBackOffice.Models.C_Customer
+
+@using EnrichcousBackOffice.Models;
+@using EnrichcousBackOffice.Models.CustomizeModel;
+@using EnrichcousBackOffice.AppLB
+@{
+    var customers = (List<Merchant_IndexView>)ViewBag.otherStores;
+    var boss = (C_BossStore)ViewBag.Boss;
+    var listBoss = (List<C_BossStore>)ViewBag.ListBoss;
+}
+
+
+<div class="box box-primary box-solid" style="border-radius:unset">
+    <div class="box-header with-border">
+        <h4 class="box-title">BOSS infomation</h4>
+    </div>
+    <div class="box-body">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="control-label">Owner:</label>
+                    <span><b class="text-primary">  @(boss?.Owner ?? "___")</b></span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="control-label">Contact person:</label>
+                    <span>@(boss?.ContactPerson ?? "___")</span>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="control-label">Phone number:</label>
+                    <span>@(boss?.Phone ?? "___")</span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="control-label">Email:</label>
+                    <span>@(boss?.Email ?? "___")</span>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="control-label">
+                        Url connect:
+                    </label>
+                    <span>
+                        <a href="@(boss?.UrlConnect)" target="_blank">@(boss?.UrlConnect)</a>
+                    </span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="control-label">Desctiption:</label>
+                    <span>@(boss?.Description ?? "___")</span>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                @if (boss == null)
+                {
+                    <a @*onclick="addBoss()"*@ data-toggle="modal" data-placement="bottom" title="Add to BOSS" data-target="#add_to_boss"
+                       class="btn btn-success fa fa-user-circle-o on_row pull-left">
+                        Add to BOSS
+                        <img class="loading_img" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                    </a>
+                }
+                else
+                {
+                    <a onclick="open_modal_boss('@boss.Id', this)" data-toggle="tooltip" data-placement="bottom" title="Edit"
+                       class="btn btn-default text-green on_row">
+                        <i class="fa fa-pencil"></i>
+                        Edit Boss
+                        <img class="loading_img" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                    </a>
+                    <a data-placement="bottom" data-toggle="modal" data-target="#modal_change_pass"
+                       class="btn btn-default text-yellow">
+                        <i class="fa fa-key" aria-hidden="true"></i> Change password
+                    </a>
+                    <a onclick="leaveBoss(this)" data-toggle="tooltip" data-placement="bottom" title="Leave boss"
+                       class="btn btn-default text-red on_row pull-right">
+                        <i class="fa fa-sign-out"></i>
+                        Leave
+                        <img class="loading_img" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                    </a>
+                }
+            </div>
+        </div>
+
+        <hr />
+        <h4>Stores of Boss</h4>
+        <div class="tab-pane">
+            <table id="other_store" class="table table-bordered table-striped" data-order='[[ 0, "desc" ]]' style="margin: 0">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Business</th>
+                        <th>Owner</th>
+                        <th>Remaining days</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (customers?.Count() > 0)
+                    {
+                        var i = 1;
+                        foreach (var item in customers)
+                        {
+                            <tr style="background-color: @(item.Customer.StoreCode.Equals(Model.StoreCode) ? "lightcyan" : "" )">
+                                <td>
+                                    <B>
+                                        @item.Customer.CustomerCode@if (string.IsNullOrWhiteSpace(item.Customer.WordDetermine) == false)
+                                        {@Html.Raw("-" + item.Customer.WordDetermine)}
+                                    </B>
+                                </td>
+                                <td>
+                                    <a href="/merchantman/detail/@item.Customer.Id" target="_blank">
+                                        <b>@(item.Customer.BusinessName?.ToUpper())</b>
+                                    </a>
+                                    <br />
+                                    <span style="color:grey">@(item.Customer.BusinessAddressStreet), @(item.Customer.BusinessCity), @(item.Customer.BusinessState) @(item.Customer.BusinessZipCode), @item.Customer.BusinessCountry</span>
+
+                                </td>
+                                <td>
+                                    <a href="/merchantman/detail/@item.Customer.Id" target="_blank" style="cursor:pointer; color:#258e4f">
+                                        <b>@(item.Customer.OwnerName?.ToUpper())</b>
+                                    </a>
+                                    <br />
+                                    <span style="color:grey">Phone: @(string.IsNullOrEmpty(item.Customer.OwnerMobile) ? item.Customer.BusinessPhone : item.Customer.OwnerMobile)</span>
+                                    @if (string.IsNullOrWhiteSpace(item.Customer.PreferredLanguage) == false)
+                                    {
+                                        <br /><span style="color:grey">Preferred language: @(item.Customer.PreferredLanguage)</span>
+                                    }
+
+                                </td>
+                                <td style="font-size:16px !important">
+                                    @if (item.Remaning >= 0)
+                                    {
+                                        <label class="label" style="background-color: #00CC00"> @CommonFunc.LicenseRemainingTime(item.RenewDate.Value)</label>
+                                    }
+                                    else if (item.Remaning < 0)
+                                    {
+                                        <label class="label" style="background-color: #EE0000"> Expires</label>
+                                    }
+                                    else
+                                    {
+                                        <label class="label label-default"> N/A</label>
+                                    }
+                                </td>
+                            </tr>
+                            i++;
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+        <br />
+    </div>
+</div>
+
+<div id="modal_addBoss">
+</div>
+
+<!--Modal boss-->
+<div class="modal fade" id="modal_change_pass">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Change password</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <div class="nav-tabs-custom" style="margin-bottom: 0">
+                            <div class="tab-content box box-primary box-solid" style="height: auto; margin-bottom: 0">
+                                <div class="form-group">
+                                    <label class="control-label">New password <span style="color:red">*</span></label>
+                                    <input type="password" placeholder="Password..." class="form-control" id="password" name="password" value="" required />
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label">Confirm new password <span style="color:red">*</span></label>
+                                    <input type="password" placeholder="Confirm..." class="form-control" id="cf_password" name="cf_password" value="" required />
+                                </div>
+                                <span style="color: red;" id="msg_change_pass"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal" style="float:left">Close</button>
+                <button type="submit" class="btn btn-primary" onclick="changePass(this)">
+                    Save
+                    <img class="img_loading_save" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<!--/.End-->
+
+<div id="add_to_boss" class="modal modal-select-member" role="dialog">
+    <div class="modal-dialog modal-lg" style="background:white;">
+        <!-- Modal content-->
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+            <h4 class="modal-title">Select Boss Owner</h4>
+        </div>
+        <div class="modal-body">
+            <div id="modal-content">
+                <table id="dataTable_boss" class="table table-hover table-bordered table-striped" data-order='[[ 0, "desc" ]]'>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Owner</th>
+                            <th>Email</th>
+                            <th>Total stores</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var m in listBoss)
+                        {
+                            <tr onclick="pickBoss('@m.IdBossManage', this)">
+                                <td>@m.IdBossManage</td>
+                                <td>@m.Owner</td>
+                                <td>@m.Email</td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(m.StoreCodes))
+                                    {
+                                        <b class="">@(m.StoreCodes.Split(',').Count())</b>
+                                    }
+                                </td>
+                                <td>
+                                    <input id="boss_option" type="radio" name="boss" value="@m.IdBossManage">
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" onclick="saveAddBoss(this)">
+                Save
+                <img class="loading_img" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+            </button>
+        </div>
+
+        @*<div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <select multiple class="form-control" id="select_boss" rows="6">
+                                @foreach (var m in listBoss)
+                                {
+                                    <option value="@m.IdBossManage">@m.Owner</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="saveAddBoss(this)">
+                    Save
+                    <img class="loading_img" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                </button>
+            </div>*@
+    </div>
+</div>
+
+<script>
+    $(function () {
+        var other_store = $('#other_store').DataTable({
+            'paging': true,
+            'searching': false,
+            'ordering': true,
+            'info': false
+        });
+
+        $('#dataTable_boss').DataTable({
+            'paging': true,
+            'searching': true,
+            'ordering': true,
+            'info': false
+        });
+    });
+
+    function saveAddBoss(e) {
+        $(e).find('.loading_img').show();
+        let key = $("#boss_option").val();
+        let store = '@Model.StoreCode';
+        let url = "/bossmanagement/addtoboss";
+        url += `?store=${store}&key=${key}`;
+        $.ajax({
+            method: "GET",
+            url: url
+        })
+            .done(function (data) {
+                $(e).find('.loading_img').hide();
+                if (data[0]) {
+                    $("#add_to_boss").modal('hide');
+                    ChangeSubTab('StoreBoss', '@Model.Id');
+                    var mess = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"success"}');
+                    noty(mess);
+                }
+                else {
+                    var mess = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"error"}');
+                    noty(mess);
+                }
+            })
+            .fail(function () {
+                $(e).find('.loading_img').hide();
+                $("#add_to_boss").modal('hide');
+                alert("Oops! Something went wrong");
+            })
+            .always(function () {
+                //$("#loading").hide();
+            });
+    }
+
+    function leaveBoss(e) {
+        if (confirm("Are you sure you want leave this Store out from @(boss?.Owner)?")) {
+            $(e).find('.loading_img').show();
+            let key = '@(boss?.IdBossManage)';
+            let store = '@Model.StoreCode';
+            let url = "/bossmanagement/storeleaveboss";
+            url += `?store=${store}&key=${key}`;
+            $.ajax({
+                method: "GET",
+                url: url
+            })
+                .done(function (data) {
+                    $(e).find('.loading_img').hide();
+                    if (data[0]) {
+                        $("#add_to_boss").modal('hide');
+                        ChangeSubTab('StoreBoss', '@Model.Id');
+                        var mess = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"success"}');
+                        noty(mess);
+                    }
+                    else {
+                        var mess = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"error"}');
+                        noty(mess);
+                    }
+                })
+                .fail(function () {
+                    $(e).find('.loading_img').hide();
+                    $("#add_to_boss").modal('hide');
+                    alert("Oops! Something went wrong");
+                })
+                .always(function () {
+                    //$("#loading").hide();
+                });
+            }
+    }
+
+    function pickBoss(id, e) {
+        $(e).find('td input[type=radio]').prop('checked', true);
+    }
+
+    function open_modal_boss(id) {
+        let store = '@Model.StoreCode';
+        overlayOn();
+        let url = "/BossManagement/create";
+        if (id) url += `?key=${id}&store=${store}`;
+        $.ajax({
+            method: "GET",
+            url: url,
+        })
+            .done(function (data) {
+                overlayOff();
+                $("#modal_addBoss").html(data);
+                $("#modal_add_new_boss").modal('show');
+            })
+            .fail(function () {
+                overlayOff();
+                alert("Oops! Something went wrong");
+                $("#modal_add_new_boss").modal('hide');
+            })
+            .always(function () {
+                //$("#loading").hide();
+            });
+    }
+
+    function changePass(e) {
+        $(e).find('.img_loading_save').show();
+        if ($('#password').val() != $('#cf_password').val()) {
+            $('#msg_change_pass').html("Password not match");
+            $(e).find('.img_loading_save').hide();
+            return;
+        }
+
+        let id = '@(boss?.Id)';
+        let password = $('#password').val()
+        let url = "/bossmanagement/changepassword";
+        if (id) url += `?key=${id}`;
+        $.ajax({
+            method: "POST",
+            url: url,
+            data: { password: password}
+        })
+            .done(function (data) {
+                $(e).find('.img_loading_save').hide();
+                $("#modal_change_pass").modal('hide');
+                $('#msg_change_pass').html("");
+                if (data[0]) {
+                    var mess = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"success"}');
+                    noty(mess);
+                }
+                else {
+                    var mess = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"error"}');
+                    noty(mess);
+                }
+            })
+            .fail(function () {
+                overlayOff();
+                $('#msg_change_pass').html("");
+                $(e).find('.img_loading_save').hide();
+                alert("Oops! Something went wrong");
+                $("#modal_change_pass").modal('hide');
+            })
+            .always(function () {
+                //$("#loading").hide();
+            });
+    }
+
+</script>

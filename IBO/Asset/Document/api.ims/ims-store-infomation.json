@@ -1,0 +1,92 @@
+ {
+            "storeId": "S00875",
+            "storeName": "PANDORA NAILS & SPA",
+            "contactName": "DEP T Tran",
+            "lastUpdate": "01/14/2021",
+            "updateBy": "Nancy Zagha",
+            "email": "trantdep0306@gmail.com",
+            "password": "e10adc3949ba59abbe56e057f20f883e",
+            "cellPhone": "4702923700",
+            "createBy": "Hoàng Lê Duyên H?nh",
+            "createAt": "01/14/2021",
+            "status": "Activated",
+            "businessName": "Ten Perfect Nails",
+            "businessPhone": "(470) 292-3700",
+            "businessEmail": "trantdep0306@gmail.com",
+            "businessAddress": "1475 Holcomb Bridge Rd #179 ,Roswell ,GA ,30076",
+            "baseservice": [
+                {
+                    "licenseCode": "EMAIL",
+                    "licenseType": "COUNT",
+                    "subscription_warning_date": null,
+                    "subscription_warning_msg": null,
+                    "count_warning_value": 0,
+                    "count_limit": 3000,
+                    "start_period": "01/01/2020",
+                    "end_period": "01/01/2021",
+                    "status": active,
+                },
+                {
+                    "licenseCode": "SMS",
+                    "licenseType": "COUNT",
+                    "subscription_warning_date": null,
+                    "subscription_warning_msg": null,
+                    "count_warning_value": 0,
+                    "count_limit": 1000,
+                    "start_period": "01/01/2020",
+                    "end_period": "01/01/2021",
+                    "status": active,
+                },
+                {
+                    "licenseCode": "SALONCENTER",
+                    "licenseType": "COUNT",
+                    "subscription_warning_date": null,
+                    "subscription_warning_msg": null,
+                    "count_warning_value": 0,
+                    "count_limit": 5,
+                    "start_period": "01/01/2020",
+                    "end_period": "01/01/2021",
+                    "status": active
+				},
+                {
+                    "licenseCode": "CHECKIN",
+                    "licenseType": "COUNT",
+                    "subscription_warning_date": null,
+                    "subscription_warning_msg": null,
+                    "count_warning_value": 0,
+                    "count_limit": 5,
+                    "start_period": "01/01/2020",
+                    "end_period": "01/01/2021",
+                    "status": active,
+                   
+                }
+            ],
+			"features":[
+				{
+					"IdKey": "AdvancedPayroll",
+					"FeatureNames": null,
+					"Category": "Payroll",
+					"Description": "Have Adjustment, and run payroll and Payroll record",
+					"RequestNum": false,
+					"NumRequest": 0
+				},
+				{
+					"IdKey": "Combo",
+					"FeatureNames": null,
+					"Category": "Salon Setting",
+					"Description": "Menu Combo",
+					"RequestNum": false,
+					"NumRequest": 0
+				},
+				{
+					"IdKey": "CusChooseService",
+					"FeatureNames": null,
+					"Category": "Check In",
+					"Description": "Customer Check-in (Service Specific)",
+					"RequestNum": false,
+					"NumRequest": 0
+				}
+			]
+			
+}
+

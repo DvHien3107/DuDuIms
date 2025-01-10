@@ -1,0 +1,29 @@
+﻿@model EnrichcousBackOffice.Models.Order_UPSPackage
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>@Model.OrderUPSTrackingId</title>
+    <script src="~/Scripts/jquery-3.4.1.min.js"></script>
+</head>
+<body>
+    <!--style="margin:300px 0 auto;transform: rotate(90deg);-moz-transform: rotate(90deg);"-->
+    <img src="data:image/gif;base64,@Model.ImageLabelBase64" />
+
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            window.print();
+            //window.close();
+        });
+         
+       
+    </script>
+</body>
+
+</html>

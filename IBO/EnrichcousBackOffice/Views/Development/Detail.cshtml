@@ -1,0 +1,784 @@
+﻿@model EnrichcousBackOffice.Models.T_SupportTicket
+@using EnrichcousBackOffice.AppLB
+@using EnrichcousBackOffice.Models
+@{
+    ViewBag.Title = "Ticket #" + Model.Id.ToString();
+    var attachfile = ViewBag.attachments as List<EnrichcousBackOffice.Models.UploadMoreFile>;
+
+    var group = ViewBag.group as List<P_Department>;
+    //membernumber1,membernumber2|membername1,membername2
+    string memberInGroup = ViewBag.memberInGroup;
+    T_Project_Stage stage = ViewBag.stage;
+    var cmem = EnrichcousBackOffice.AppLB.Authority.GetCurrentMember();
+    string controller = ViewContext.RouteData.Values["controller"].ToString().ToLower();
+}
+
+
+
+@section style{
+    <!--Thu vien de chay _TagsPopupPartial-->
+    <link href="~/Content/Scrollbar/style_Scrollbar.css" rel="stylesheet" />
+    <link href="~/Content/Admin/plugins/iCheck/all.css" rel="stylesheet" />
+    <link href="~/Content/Admin/bower_components/bootstrap-colorpicker/dist/css/bootstrap-colorpicker.min.css" rel="stylesheet" />
+    <style>
+        .noi-dung-ticket img,
+        .noi-dung-ticket table {
+            max-width: 70% !important;
+            height: auto !important;
+        }
+    </style>
+    @* bootstrap-toggle *@
+    <link href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css" rel="stylesheet">
+    @* Zoom image *@
+    <link href="~/Content/plugins/simpleLightbox.min.css" rel="stylesheet" />
+}
+
+
+
+<section class="content-header">
+    <h1 @if (Model.DateClosed != null) { @Html.Raw(@"style='text-decoration:line-through'") } )>
+        Ticket #@CommonFunc.view_TicketId(Model.Id)
+        <small>@(stage?.ProjectName) / @(stage?.Name)</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li><i class="fa fa-life-ring"></i> Development</li>
+        <li>Tickets</li>
+        <li class="active">Ticket #@CommonFunc.view_TicketId(Model.Id)</li>
+    </ol>
+</section>
+
+<section class="content">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="box box-info" style="border-bottom:1px solid gray;">
+                <div class="box-header with-border">
+                    <h3 class="box-title" @if (Model.DateClosed != null) { @Html.Raw(" style='text-decoration:line-through'") }>@Model.Name</h3>
+                    <input type="hidden" id="hd_controller" value="@controller" />
+
+                    <div class="box-tools pull-right">
+                        <a href="@ViewBag.urlback" class="btn" data-toggle="tooltip" title="Go back" data-original-title="Go back">
+                            <i class="fa fa-arrow-left"></i> Go back
+                        </a>
+                        <input type="hidden" value="@ViewBag.urlback" name="urlback" />
+                    </div>
+                </div>
+                <!-- /.box-body -->
+                <div class="box-body no-padding">
+                    <div class="col-md-12 ticket-description" style="overflow:auto;max-height:400px">
+                        <div class="noi-dung-ticket">
+                            @Html.Raw(Model.Description)
+                        </div>
+                        <br /> <br />
+                        @Html.Partial("_UploadMoreFilesPartial_Small", attachfile, new ViewDataDictionary { { "upload", false } })
+                    </div>
+                    <div class="col-md-12 bg-gray" style="padding:5px">
+                        <div class="col-md-3">
+                            @if (Model.CreateAt != null)
+                            {
+                                <p>
+                                    <span class="label label-primary">OPENED</span><i> by </i><strong>@Model.CreateByName</strong><br />
+                                    <i>
+                                        at
+                                        <span id="localtime-@Model.Id">
+                                            <script>convertLocalTime("@Model.Id", "@Model.CreateAt")</script>
+                                        </span>
+                                    </i>
+                                </p>
+                            }
+                        </div>
+                        <div class="col-md-3">
+                            @if (Model.DateClosed != null)
+                            {
+                                <p>
+                                    <span class="label label-danger">CLOSED</span><i> by </i><strong>@Model.CloseByName</strong><br />
+                                    <i>
+                                        at
+                                        <span id="localtime-Close-@Model.Id">
+                                            <script>convertLocalTime("Close-" + "@Model.Id", "@Model.DateClosed")</script>
+                                        </span>
+                                    </i>
+                                </p>
+                            }
+                        </div>
+                        <div class="col-md-4">
+                            <b><i>Last updated:</i></b><br />
+                            @if (!string.IsNullOrWhiteSpace(Model.UpdateTicketHistory))
+                            {
+                                var item = Model.UpdateTicketHistory?.Split(new char[] { '|' }).Reverse();
+
+                                foreach (var x in item)
+                                {
+                                    if (!string.IsNullOrEmpty(x))
+                                    {
+                                        <p>
+                                            <span id="localtime-@x">
+                                                <script>convertLocalTime("@x", "@DateTime.Parse(x.Split(new char[] { '-' })[0]).ToString()")</script>
+                                            </span>
+                                            @x.Split(new char[] { '-' })[1]
+                                        </p>
+                                        break;
+                                    }
+                                }
+                            }
+                        </div>
+
+                        <div class="col-md-2" style="text-align: right">
+                            <input class="custom-show-detail" type="checkbox" checked data-toggle="toggle"
+                                   data-on="Show more <i class='fa fa-arrow-down'></i> " data-off="Show less <i class='fa fa-arrow-up'></i>"
+                                   data-onstyle="default" data-offstyle="danger">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- /.col -->
+        <div class="col-md-8">
+            @if (TempData["e"] != null)
+            {
+                <div class="alert alert-warning alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                    <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+                </div>
+            }
+            else if (TempData["s"] != null)
+            {
+                <div class="alert alert-success alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                    <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+                </div>
+            }
+
+            <div class="box box-solid" style="border-bottom:1px solid gray;">
+                <div class="box-body no-padding">
+                    <div class="row">
+                        <div class="col-md-12 " style="padding-top:5px">
+
+                            @if (Model.CreateByNumber == cmem.MemberNumber)
+                            {
+                                <a href="/development/update/@Model.Id?urlback=/development/detail/@Model.Id" class="btn btn-default">Edit ticket</a>
+                            }
+                            @*@if (Model.DateClosed == null)
+                                {
+                                    <a href="#" onclick="confirmRedirect('Are you sure want to CLOSE this ticket?','/ticket/close/@Model.Id?urlback=@ViewBag.urlback')" class="btn btn-default">Close ticket</a>
+                                }
+                                else
+                                {
+                                    <a href="#" onclick="confirmRedirect('Are you sure want to REOPEN this ticket?','/ticket/reopen/@Model.Id?urlback=@ViewBag.urlback')" class="btn btn-primary">Re-Open ticket</a>
+                                }*@
+                            <a class="btn btn-default" onclick="update_task('@ViewBag.can_update',0,'true', '@Model.Id', '@Model.Name')"><i class="fa fa-plus"></i> Create/new task</a>
+                            <div class="btn-group pull-right">
+                                <button id="btnprivate" onclick="globalticket('@Model.Id','private')" type="button" class="btn @if (Model.GlobalStatus != "publish") {@Html.Raw("btn-warning") } "><i class="fa fa-lock"></i> Private action</button>
+                                <button id="btnpublish" type="button" onclick="globalticket('@Model.Id','publish')" class="btn @if (Model.GlobalStatus == "publish") {@Html.Raw("btn-warning") }"><i class="fa fa-globe"></i> Publish action</button>
+                            </div>
+                        </div>
+                    </div>
+                    <hr />
+                    <div class="row">
+                        <div class="col-md-12 ">
+                            <form role="form" id="frmReassign" class="inline" action="/development/reassigned/@Model.Id">
+                                <div class="form-group">
+                                    <label class="col-sm-2 control-label">Reassigned:</label>
+                                    <div class="col-sm-3">
+                                        <select onchange="return confirmSubmit('Are you sure want to RE-ASSIGNED this ticket?')" name="reassigned" class="form-control input-sm" @if (Model.DateClosed != null) { @Html.Raw("disabled") }>
+                                            <option value="">Unreassigned</option>
+                                            @if (!string.IsNullOrWhiteSpace(memberInGroup))
+                                            {
+                                                var mn = memberInGroup.Split(new char[] { '|' })[0];
+                                                var name = memberInGroup.Split(new char[] { '|' })[1];
+                                                var arrMn = mn.Split(new char[] { ',' });
+                                                var arrName = name.Split(new char[] { ',' });
+                                                for (int g = 0; g < arrMn.Length; g++)
+                                                {
+                                                    try
+                                                    {
+                                                        if (string.IsNullOrWhiteSpace(arrMn[g]) || arrMn[g] == cmem.MemberNumber)
+                                                        {
+                                                            continue;
+                                                        }
+                                                        <option value="@arrMn[g]" @if (Model.ReassignedToMemberNumber == arrMn[g]) { @Html.Raw("selected") }>@arrName[g]</option>
+                                                    }
+                                                    catch (Exception)
+                                                    {
+                                                        continue;
+                                                    }
+                                                }
+                                            }
+                                        </select>
+                                        <img src="~/Content/ajax-loaders/ajax-loader-1.gif" name="loading_top" style="display:none" />
+                                    </div>
+                                </div>
+                                @*<div class="form-group">
+                                        <label class="col-sm-1 control-label">Escalate:</label>
+                                        <div class="col-sm-3">
+                                            <select onchange="return confirmSubmit('Are you sure want to ESCALATE this ticket?')" class="form-control  input-sm" name="escalate" @if (Model.DateClosed != null) { @Html.Raw("disabled") }>
+                                                <option value="">Unreassigned</option>
+                                                @foreach (var item in group)
+                                                {
+                                                    <option value="@item.Id" @if (Model.EscaladeToGroupId == item.Id) { @Html.Raw("selected") }>@item.Name</option>
+                                                }
+                                            </select>
+                                            <img src="~/Content/ajax-loaders/ajax-loader-1.gif" name="loading_top" style="display:none" />
+                                        </div>
+                                    </div>*@
+                                <div class="form-group">
+                                    <label class="col-sm-1 control-label">Status:</label>
+                                    <div class="col-sm-2" id="divStatus">
+                                        @if (Model.DateClosed != null)
+                                        {
+                                            <span style="font-size:1em" class="label label-danger">@(string.IsNullOrWhiteSpace(Model.StatusName) == true ? "Open" : Model.StatusName)</span>
+                                        }
+                                        else
+                                        {
+                                            <span style="font-size:1em" class="label label-primary">@(string.IsNullOrWhiteSpace(Model.StatusName) == true ? "Open" : Model.StatusName)</span>
+                                        }
+                                        <img src="~/Content/ajax-loaders/ajax-loader-1.gif" name="loading_top" style="display:none" />
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="box-footer" style="margin-top:5px">
+                    <img src="~/Content/ajax-loaders/ajax-loader-1.gif" id="loading_task" style="display:none" />
+                    <div id="divTaskStatus">
+                        <!--show status status-->
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <img src="~/Content/ajax-loaders/ajax-loader-1.gif" id="loading_timeline" style="display:none" />
+
+                <div id="div_timeline">
+                    @*@Html.Partial("_TicketTimelinePartial")*@
+                </div>
+            </div>
+
+
+
+        </div>
+
+        <div class="col-md-4">
+            @if (ViewBag.can_update == true)
+            {
+                using (Ajax.BeginForm("saveticketinfo", null, new AjaxOptions
+                {
+                    Url = "/development/saveticketinfo",
+                    HttpMethod = "Post",
+                    LoadingElementId = "loading_info",
+                    OnSuccess = "SaveTicketInfoSuccess",
+                    OnFailure = "SaveTicketInfoFailure"
+                }, new { }))
+                {
+                    @Html.Partial("_developmentInfoPartial")
+                }
+            }
+            else
+            {
+                @Html.Partial("_developmentInfoSimplePartial")
+            }
+        </div>
+    </div>
+</section>
+<div class="modal fade" id="stage_status">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Stage status</h4>
+            </div>
+            <form action="/Development/SaveStageStatus" method="post">
+                <div class="modal-body">
+                    <input type="hidden" name="Id" />
+                    <div class="form-group">
+                        <label>Status name</label>
+                        <input class="form-control" name="Name" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Status type</label>
+                        <select class="form-control" name="Type">
+                            <option value="">N/A</option>
+                            <option value="open">Open</option>
+                            <option value="closed">Close</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary pull-right">Save</button>
+                </div>
+            </form>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+
+<!--Modal merchant-->
+<div id="merchant_popup">
+    @*@Html.Partial("_MerchantPopupPartial",
+        new EnrichcousBackOffice.Models.CustomizeModel.CustomerMerchantViewModel(),
+        new ViewDataDictionary { {"update", false } })*@
+</div>
+<!--End modal merchant-->
+<!--Update bank infomation-->
+<div class="modal fade" id="update_bank_infomation_popup">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div>
+                <form action="/ticket/updatebankinfomation/@Model.Id" method="post" id="form_update_bank_infomation" class="form-horizontal">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                        <h4 id="modal-notice-title" class="modal-title">Update bank infomation</h4>
+                    </div>
+                    <div class="modal-body" id="modal-notice-body">
+                        <div class="form-group">
+                            <label class="col-sm-4">Bank Name </label>
+                            <div class="col-sm-8">
+                                <input type="text" name="bi_BankName" class="form-control" />
+
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4">Bank Account</label>
+                            <div class="col-sm-8">
+                                <input type="text" name="bi_BankAccount" class="form-control" />
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-4">Bank DDA  (*)</label>
+                            <div class="col-sm-8">
+                                <input type="text" name="bi_BankDDA" class="form-control" required />
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-4">Bank Account Routing (*)</label>
+                            <div class="col-sm-8">
+                                <input type="text" name="bi_AccountRouting" class="form-control" required />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4">Comment (*)</label>
+                            <div class="col-sm-8">
+                                <textarea wrap="soft" name="bi_Comment" class="form-control" required></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        <button type="submit" id="push_up_smartsheet" class="btn btn-primary"> Update &amp; Push up smartsheet </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section script
+{
+    <!--Thu vien de chay _TagsPopupPartial-->
+    <script src="~/Content/Admin/plugins/iCheck/icheck.min.js"></script>
+    <script src="~/Content/Admin/bower_components/bootstrap-colorpicker/dist/js/bootstrap-colorpicker.min.js"></script>
+
+    <!--Asp ajax form-->
+    <script src="~/Scripts/jquery.unobtrusive-ajax.min.js"></script>
+    @*<script src="~/Scripts/jquery.form.min.js"></script>*@
+
+    <!--upload and review-->
+    <script src="~/Scripts/upload_and_review.js"></script>
+    @* bootstrap-toggle *@
+    <script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
+    @* Zoom image *@
+    <script src="~/Content/plugins/zoom_image.js"></script>
+    <script src="~/Content/plugins/simpleLightbox.min.js"></script>
+
+    <script src="~/Scripts/task_popup.js"></script>
+
+    <script type="text/javascript">
+
+        var form_changed = false;
+        function setonunload() {
+             if (form_changed == false) {
+                 window.onbeforeunload = function () {
+                    overlayOff();
+                    return "";
+                }
+                form_changed = true;
+            }
+        }
+        function load_change_form_alert() {
+            $("form:not(#frmReassign) :input").on("change", function (e) {
+                if (e.originalEvent)
+                    try { setonunload(); } catch (e) { }
+            });
+            $("#divSubcribeUser_Content").on("click", function () {
+                try { setonunload(); } catch (e) { }
+            });
+            if (CKEDITOR.instances.fb_content) {
+                CKEDITOR.instances.fb_content.on("change", function () {
+                    try { setonunload(); } catch (e) { }
+                });
+            }
+            if (CKEDITOR.instances.fb_edit_content) {
+                CKEDITOR.instances.fb_edit_content.on("change", function () {
+                    try { setonunload(); } catch (e) { }
+                });
+            }
+            $("form").submit(function () {
+                window.onbeforeunload = null;
+                form_changed = false;
+            });
+        }
+
+          $(".datepicker").datepicker({
+                dateFormat: "mm/dd/yy",
+                changeMonth: true,
+                changeYear: true,
+                yearRange: '-70:+10'
+          });
+
+
+        $("#form_update_bank_infomation").on("submit", function () {
+            event.preventDefault();
+            $("#push_up_smartsheet").html("Submiting...");
+            $("#push_up_smartsheet").append("&nbsp&nbsp<img src='/Content/ajax-loaders/ajax-loader-1.gif' style='height:18px'/>")
+            $("#push_up_smartsheet").attr("disabled", true);
+
+
+             $("#form_update_bank_infomation").ajaxSubmit(function (data) {
+                 $("#push_up_smartsheet").html("Update &amp; Push up smartsheet");
+                 $("#push_up_smartsheet").removeAttr("disabled");
+                 $("#push_up_smartsheet").remove("img");
+                 $("#update_bank_infomation_popup").modal("hide");
+
+                if (data[0]) {
+                    Gettimeline();
+                    var options = $.parseJSON('{"text":"' + data[1] + '","layout":"top","type":"success"}');
+                    noty(options);
+                }
+                else {
+                    var options = $.parseJSON('{"text":"' + data[1] + '","layout":"top","type":"error"}');
+                    noty(options);
+                }
+            });
+         });
+
+
+        //load ticket timeline
+        Gettimeline();
+        //get task
+        GetTaskStatusList();
+
+
+        /**
+         * confirm reassign submit
+         * @@param conf
+         */
+        function confirmSubmit(conf) {
+            if (confirm(conf) == true) {
+                $("#frmReassign").submit();
+
+            }
+        }
+
+         /**
+
+
+
+        function TaskSaveComplete(result) {
+            $("#modal-task").modal('hide');
+            //alert("tao task thanh cong");
+
+            GetTaskStatusList();
+            var optionsErr = $.parseJSON('{"text":"Task has been saved.","layout":"topRight","type":"success"}');
+            noty(optionsErr);
+
+            return;
+
+
+
+        }
+
+        function TaskSaveError() {
+            alert("Opp, Something went wrong");
+        }
+
+
+        /**
+         * load task list cua ticket nay
+         * */
+        function GetTaskStatusList() {
+            $("#loading_task").show();
+
+            $.ajax({
+                url: "/ticket/GetTaskStatusByTicket",
+                dataType: "html",
+                method: "post",
+                data: {id: '@Model.Id'}
+            }).done(function (result) {
+
+                $("#divTaskStatus").html(result);
+
+            }).fail(function () {
+                alert("Opp!Something went wrong");
+
+            }).always(function ()
+            {
+                $("#loading_task").hide();
+            });
+        }
+
+
+        /**
+         * get list member cung group/ list groups cung department
+         * */
+        function Get_Reassign_Group_Status() {
+            $("img[name=loading_top]").show();
+            $.ajax({
+                url: "/ticket/Get_Reassign_Group_Status",
+                dataType: "json",
+                method: "post",
+                data: { id: '@Model.Id' }
+            }).done(function (result) {
+                //new object[] { tic.StatusName, memberInGroup, group, tic.ReassignedToMemberNumber, tic.EscaladeToGroupId }
+                //status
+
+                //console.log(result);
+
+                if (result[0] == "") {
+                    $("#divStatus").html('<span style="font-size:1em" class="label label-primary">Open</span>');
+                }
+                else if (result[0].search(/close/i) >= 0) {
+                    $("#divStatus").html('<del><span style="font-size:1em" class="label label-default">' + result[0] + '</span></del>');
+                }
+                else {
+                    $("#divStatus").html('<span style="font-size:1em" class="label label-primary">' + result[0] + '</span>');
+                }
+
+                //alert("0");
+
+                //groups
+                $("select[name=escalate]").empty();
+                var option_g = new Option("Unassigned","");
+                $("select[name=escalate]").append(option_g);
+
+                    for (var i = 0; i < result[2].length; i++) {
+
+                    //alert(result[2].length + "|" + result[2][i].Id + "|" + result[2][i].Name);
+
+                    if (result[4] == result[2][i].Id) {
+                        var option_g = new Option(result[2][i].Name, result[2][i].Id, true, true);
+                        $("select[name=escalate]").append(option_g);
+                    }
+                    else {
+                        var option_g = new Option(result[2][i].Name, result[2][i].Id);
+                        $("select[name=escalate]").append(option_g);
+                    }
+
+                }
+
+                //members
+                $("select[name=reassigned]").empty();
+                if (result[1] != null && result[1] != "") {
+
+                    var memberNumber = result[1].split('|')[0];
+                    var memberName = result[1].split('|')[1];
+
+                    //alert(memberNumber + "|" + memberName);
+                    $("select[name=reassigned]").append(new Option("Unassigned",""));
+
+                    var arrMemberNumber = memberNumber.split(',');
+                    var arrMemberName = memberName.split(',');
+                    for (var i = 0; i < arrMemberNumber.length; i++) {
+                        if (result[3] == arrMemberNumber[i]) {
+                            var option_m = new Option(arrMemberName[i], arrMemberNumber[i], true, true);
+                            $("select[name=reassigned]").append(option_m);
+                        }
+                        else {
+                            var option_m = new Option(arrMemberName[i], arrMemberNumber[i]);
+                            $("select[name=reassigned]").append(option_m);
+                        }
+                    }
+
+                }
+
+
+
+
+            }).fail(function () {
+                alert("Opp!Something went wrong. Reassigned, groups, status infomation loading failure");
+                }).always(function () { $("img[name=loading_top]").hide(); });
+        }
+
+
+        function SaveTicketInfoSuccess(result) {
+
+            //console.log(result);
+            if (result[0] == true) {
+
+                Get_Reassign_Group_Status();
+
+                //alert(result[2]);
+                //upate lai member assigned
+                //var arrAssigned = new Array();
+                //var _arrAssigned = result[2].split(",");
+                //for (var i = 0; i < _arrAssigned.length; i++) {
+                //    arrAssigned.push(_arrAssigned[i]);
+                //}
+                //$("select[name=assigned]").val(arrAssigned).trigger('change');
+
+
+                var options = $.parseJSON('{"text":"' + result[1] + '","layout":"top","type":"success"}');
+                noty(options);
+
+                setTimeout(redirect, 1000);
+
+                return;
+            }
+            else {
+                var optionsErr = $.parseJSON('{"text":"Ticket update failure. ' + result[1] + '","layout":"top","type":"warning"}');
+                noty(optionsErr);
+                return;
+            }
+        }
+
+
+        function redirect() {
+            location.href = $("input[name=urlback]").val();
+        }
+
+
+        function SaveTicketInfoFailure() {
+            var optionsErr = $.parseJSON('{"text":"Opp!Something went wrong","layout":"topRight","type":"warning"}');
+            noty(optionsErr);
+            return;
+        }
+
+        /**
+         * load time line.
+         * */
+        function Gettimeline() {
+            //alert("get timeline");
+            $("#loading_timeline").show();
+
+            $.ajax({
+                url: "/ticket/gettimeline",
+                dataType: "html",
+                method: "post",
+                data: {id: '@Model.Id'}
+            }).done(function (result) {
+
+                $("#div_timeline").html(result);
+                let contr = $("#hd_controller").val();
+                $("input[name='_controller']").val(contr);
+
+            }).fail(function () {
+                alert("Opp!Something went wrong, timeline loading failure");
+
+            }).always(function ()
+            {
+                $("#loading_timeline").hide();
+
+                if ($("#update_bank_infomation").length > 0) {
+
+                    $("#update_bank_infomation").on("click", function () {
+
+                        $('#update_bank_infomation_popup').modal({
+                            backdrop: 'static',
+                            keyboard: false,
+                            show: true
+                        });
+
+                        //get thogn tin
+                        $.ajax("/ticket/getbankinfomation/?code=@Model.CustomerCode",
+                            {
+                                dataType: "json",
+                                method: "post",
+                            }).done(function (data) {
+                                $("input[name=bi_BankName]").val(data[0]);
+                                $("input[name=bi_BankDDA]").val(data[1]);
+                                $("input[name=bi_AccountRouting]").val(data[2]);
+                            }).fail(function () { console.log("[getbankinfomation] error!"); }).always(function () { });
+                });
+                }
+
+            });
+        }
+
+        /**
+         *
+         * @@param id ticketid
+         * @@param type publish/private
+         */
+        function globalticket(id, type) {
+
+            $.ajax({
+                url: "/ticket/SetActionTicket",
+                dataType: "json",
+                method: "post",
+                data: {
+                    id: id,
+                    type: type
+                }
+            }).done(function (result) {
+                //return Json(new object[] {true, id, type });
+                if (type == "publish") {
+
+                    $("#btnprivate").removeClass().addClass("btn");
+                    $("#btnpublish").removeClass().addClass("btn btn-warning");
+
+                    var optionsErr = $.parseJSON('{"text":"The ticket is now published.","layout":"topRight","type":"success"}');
+                        noty(optionsErr);
+
+                    }
+                else {
+                    $("#btnpublish").removeClass().addClass("btn");
+                    $("#btnprivate").removeClass().addClass("btn btn-warning");
+
+                    var optionsErr = $.parseJSON('{"text":"The ticket is now privated.","layout":"topRight","type":"success"}');
+                        noty(optionsErr);
+
+                    }
+
+                Gettimeline();
+
+            }).fail(function () {
+                var optionsErr = $.parseJSON('{"text":"Opp, something went wrong.","layout":"topRight","type":"warning"}');
+                noty(optionsErr);
+                return;
+
+            });
+        }
+
+        // Toggle detail
+        $('.custom-show-detail').change(function() {
+            let maxHeight = '100%';
+            if ($(this).prop('checked')) {
+                maxHeight = '400px';
+                $('.ticket-description').scrollTop(0);
+                $('html').scrollTop(0)
+            }
+            $('.ticket-description').css({'max-height': maxHeight});
+        })
+    </script>
+}
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        zoomWrapper(".noi-dung-ticket").then(() => {
+            $('.noi-dung-ticket .zoom.wrapper').simpleLightbox();
+        });
+    });
+</script>

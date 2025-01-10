@@ -1,0 +1,50 @@
+﻿<div  id="import_sn_popup" class="modal" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form id="import_sn_form" method="post" action="/device/ImportSerialNumber">
+                <div class="modal-header">
+                    <h3 class="modal-title pull-left">Import Serial Number</h3>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <label>Upload Excel file</label>
+                    <input class="form-control" type="file" name="excelfile" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary pull-left" data-dismiss="modal">Close</button>
+                    <a class="btn btn-secondary btn-success pull-left" href="/upload/downloadfile_?file=/upload/documents/templates/ImportSerialNumber_Template.xlsx"><i class="fa fa-download"></i> Download Template</a>
+                    <button id="btnImport" type="button" class="btn btn-primary">Import</button>
+                    &nbsp;&nbsp;<img id="importLoading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" width="24" />
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+
+    $("#btnImport").on("click", function () {
+        $("#btnImport").html("Submitting...");
+        $("#btnImport").attr("disabled", true);
+        $("#importLoading").show();
+
+        $(this).closest("form").submit();
+    });
+
+   
+    $("#import_sn_form").ajaxForm(function (data) {
+        $("#btnImport").html("Import");
+        $("#btnImport").attr("disabled", false);
+        $("#importLoading").hide();
+
+        if (data[0]) {
+            noty({ "text": data[1], "layout": "topRight", "type": "success" });
+            $("#import_sn_popup").modal("hide");
+            $("#import_sn_form").resetForm();
+            ChangeTab();
+        } else {
+            noty({ "text": data[1], "layout": "topRight", "type": "warning" });
+        }
+    });
+</script>

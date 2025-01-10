@@ -1,0 +1,390 @@
+﻿@{
+    List<EnrichcousBackOffice.Models.P_BonusStrategySetting> bonus = ViewBag.bonus;
+    List<EnrichcousBackOffice.Models.P_MemberType> memberTypes = ViewBag.memberTypes;
+}
+
+<div>
+    <a href="#" class="btn btn-primary pull-right" onclick="AddNew()">Add new bonus award</a>
+</div>
+<div class="clearfix"></div><br />
+
+@foreach (var item in bonus)
+{
+    if (item.Active == true)
+    {
+        <div class="box box-solid bg-blue-gradient">
+            <div class="box-header">
+                <i class="glyphicon glyphicon-usd"></i>
+                <h3 class="box-title">@item.StrategyName</h3>
+                <!-- tools box -->
+                <div class="pull-right box-tools">
+
+                    <a  class="btn btn-warning btn-sm" onclick="return confirm('Are you sure stop this awards')" href="/commsetting/stopbonus/@item.Id">
+                        <i class="glyphicon glyphicon-stop"></i> Stop
+                    </a>
+
+                    <a  class="btn btn-primary btn-sm" onclick="loadToUpdate('@item.Id')">
+                        <i class="glyphicon glyphicon-edit"></i> Edit
+                    </a>
+                    <a class="btn btn-danger btn-sm" onclick="return confirm('Are you sure delete this awards?')" href="/commsetting/deletebonus/@item.Id">
+                        <i class="fa fa-times"></i> Del
+                    </a>
+                </div>
+                <!-- /. tools -->
+            </div>
+            <div class="box-footer text-black">
+
+                <table class="table table-hover table-responsive" style="width:80%">
+                    <tbody>
+                        <tr>
+                            <td style="font-weight:bold;width:40%">Apply for member</td>
+                            <td>@item.ApplyForMemberType_Name</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight:bold">Term</td>
+                            <td>
+                                @if (item.ApplyByTerm == "monthly")
+                                {@Html.Raw("Monthly") }
+                            else
+                            {
+                                <span>From date: </span> @(item.StartDate?.ToShortDateString())<br />
+                                <span>To date: </span> @(item.EndDate?.ToShortDateString())<br />
+                            }
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight:bold">Effective Date</td>
+                            <td>@(item.EffectiveDate?.ToShortDateString())</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight:bold">[Option1]Total income must reached</td>
+                            <td style="font-size:1.5em">@(item.Opt_TotalIncome_EqualOrThan?.ToString("$#,##0.##"))</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight:bold">[Option2]Number of contracts must reached</td>
+                            <td style="font-size:1.5em">@(item.Opt_TotalQuantityFullContracts_EqualOrThan)</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight:bold">[Option3]Total new members must reached</td>
+                            <td style="font-size:1.5em">@(item.Opt_NewMemberTotal_EqualOrThan)</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight:bold">BONUS AMOUNT</td>
+                            <td style="color:blue;font-size:1.5em">@(item.BonusAmount?.ToString("$#,##0.##"))</td>
+                        </tr>
+
+                        <tr>
+                            <td style="font-weight:bold">Active</td>
+                            <td>
+                                @if (item.Active == true)
+                                {
+                                    <span class="label label-success">Starting</span>
+                                }
+                                else
+                                {
+                                    <span class="label label-default">Stoped</span>
+                                }
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight:bold">Comment</td>
+                            <td>@Html.Raw(item.Comment?.Replace("\n", "<br/>"))</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight:bold">Lastest update</td>
+                            <td>By @item.UpdateBy at @(item.UpdateAt?.ToShortDateString())</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="box box-solid bg-default-gradient">
+            <div class="box-header">
+                <i class="glyphicon glyphicon-usd"></i>
+                <h3 class="box-title">@item.StrategyName</h3>
+                <!-- tools box -->
+                <div class="pull-right box-tools">
+
+                    <a  class="btn btn-success btn-sm" onclick="return confirm('Are you sure re-start this awards')" href="/commsetting/restartbonus/@item.Id">
+                        <i class="glyphicon glyphicon-play"></i> Start
+                    </a>
+
+                    <a class="btn btn-primary btn-sm"  onclick="loadToUpdate('@item.Id')">
+                        <i class="glyphicon glyphicon-edit"></i> Edit
+                    </a>
+                    <a href="/commsetting/deletebonus/@item.Id" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure delete this awards?')">
+                        <i class="fa fa-times"></i> Del
+                    </a>
+                </div>
+                <!-- /. tools -->
+            </div>
+            <div class="box-footer text-black">
+
+                <table class="table table-hover table-responsive">
+                    <tbody>
+                        <tr>
+                            <td style="font-weight:bold;width:40%">Apply for member</td>
+                            <td>@item.ApplyForMemberType_Name</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight:bold">Term</td>
+                            <td>
+                                @if (item.ApplyByTerm == "monthly")
+                                {@Html.Raw("Monthly") }
+                            else
+                            {
+                                <span>From date: </span> @(item.StartDate?.ToShortDateString())<br />
+                                <span>To date: </span> @(item.EndDate?.ToShortDateString())<br />
+                            }
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight:bold">Effective Date</td>
+                            <td>@(item.EffectiveDate?.ToShortDateString())</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight:bold">[Option1]Total income must reached</td>
+                            <td style="font-size:1.5em">@(item.Opt_TotalIncome_EqualOrThan?.ToString("$#,##0.##"))</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight:bold">[Option2]Number of contracts must reached</td>
+                            <td style="font-size:1.5em">@(item.Opt_TotalQuantityFullContracts_EqualOrThan)</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight:bold">[Option3]Total new members must reached</td>
+                            <td style="font-size:1.5em">@(item.Opt_NewMemberTotal_EqualOrThan)</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight:bold">BONUS AMOUNT</td>
+                            <td style="color:blue;font-size:1.5em">@(item.BonusAmount?.ToString("$#,##0.##"))</td>
+                        </tr>
+
+                        <tr>
+                            <td style="font-weight:bold">Active</td>
+                            <td>
+                                @if (item.Active == true)
+                                {
+                                    <span class="label label-success">Starting</span>
+                                }
+                                else
+                                {
+                                    <span class="label label-default">Stoped</span>
+                                }
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight:bold">Comment</td>
+                            <td>@Html.Raw(item.Comment?.Replace("\n", "<br/>"))</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight:bold">Lastest update</td>
+                            <td>By @item.UpdateBy at @(item.UpdateAt?.ToShortDateString())</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+            </div>
+        </div>
+    }
+}
+
+
+
+
+
+
+
+
+
+
+<!--Modal-->
+<div class="modal fade" id="modal-default">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <form action="/commsetting/bonussave" method="post">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title">Bonus Adward</h4>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="bonus_id" />
+                    <div class="form-group">
+                        <label>Strategy Name (*):</label>
+                        <input type="text" class="form-control" name="bonus_name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Term:</label>
+                        <select name="bonus_term" class="form-control" onclick="ChangesBonusTerm()">
+                            <option value="monthly">Monthly</option>
+                            <option value="bydate">By Date</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="div_fromto" style="display:none">
+                        <label>From:</label>
+                        <div class="form-inline">
+                            <input type="text" name="bonus_from" class="form-control datepicker">
+                            <span>&nbsp;&nbsp;To</span>
+                            <input type="text" name="bonus_to" class="form-control datepicker">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Total income equal or than <span class="label label-warning">OR</span>:</label>
+                        <input type="text" id="re" value="//" />
+                        <input type="text" class="form-control" name="bonus_totalincome" onblur="checkMoney('bonus_totalincome')">
+                    </div>
+                    <div class="form-group">
+                        <label>Number of contracts reached <span class="label label-warning">OR</span>:</label>
+                        <input type="number" class="form-control" name="bonus_numberofcontract">
+                    </div>
+                    <div class="form-group">
+                        <label>New members in the team <span class="label label-warning">OR</span>:</label>
+                        <input type="number" class="form-control" name="bonus_totalnewmember">
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label">Apply for member type (*):</label>
+                        <select id="bonus_membertype" name="bonus_membertype" class="form-control select2"  multiple="multiple"  data-placeholder="select a member type" style="width: 100%;">
+                            <option value="">Please select</option>
+                            @foreach (var item in memberTypes)
+                            {
+                                <option value="@item.MemberType">@item.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Bonus amount (*):</label>
+                        <input type="text" class="form-control" name="bonus_amount" required  onblur="checkMoney('bonus_amount')" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label>Comment:</label>
+                        <textarea wrap="soft" class="form-control" name="bonus_comment"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Effective date (*):</label>
+                        <input type="text" name="bonus_effectivedate" class="form-control datepicker" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Active</label>&nbsp;&nbsp;
+                        <input id="bonus_active" type="checkbox" class="flat-red" name="bonus_active" />
+
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                </div>
+            </form>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+<!-- /.modal -->
+
+
+
+<script type="text/javascript">
+        
+
+    /**
+     * add new bonus
+     * */
+    function AddNew() {
+        clear();
+        $("#modal-default").modal("show");
+    }
+
+    /**
+     * thay doi ky han.
+     * */
+    function ChangesBonusTerm() {
+        var term = $("select[name='bonus_term']").val();
+        if (term != "monthly") {
+            $("#div_fromto").show("300");
+        }
+        else {
+            $("input[name='from']").val('');
+            $("input[name='to']").val('');
+            $("#div_fromto").hide("300");
+        }
+    }
+
+    function clear() {
+        $("input[name='bonus_id']").val('');
+        $("input[name='bonus_name']").val('');
+        $("#bonus_term").val('monthly')
+        $("input[name='from']").val('');
+        $("input[name='to']").val('');
+        $("#div_fromto").hide("300");
+        $("input[name='bonus_totalincome']").val('');
+        $("input[name='bonus_numberofcontract']").val('');
+        $("input[name='bonus_totalnewmember']").val('');
+        $("input[name='bonus_amount']").val('');
+        $("input[name='bonus_membertype']").val('');
+        $("input[name='bonus_comment']").val('');
+        $("input[name='bonus_effectivedate']").val('');
+        $("#bonus_active").prop("checked", true);
+        $("#bonus_active").iCheck("update");
+    }
+
+
+    /**
+     * load thong tin bonus de update
+     * @@param id bonusid
+     */
+    function loadToUpdate(id) {
+        $("#modal-default").modal("show");
+        $.ajax({
+            url: "/commsetting/GetBonusById/",
+            data: {
+                'id': id
+            },
+            dataType: "json",
+            type: "POST"
+        }).done(function (data) {
+
+            $("input[name='bonus_id']").val(data.Id);
+            $("input[name='bonus_name']").val(data.StrategyName);
+            $("#bonus_term").val(data.ApplyByTerm);
+            if (data.ApplyByTerm == "bydate") {
+                $("input[name='from']").val(data.StartDate);
+                $("input[name='to']").val(data.EndDate);
+                $("#div_fromto").show("300");
+            }
+            else {
+                $("input[name='from']").val();
+                $("input[name='to']").val();
+                $("#div_fromto").hide();
+            }
+           
+            $("input[name='bonus_totalincome']").val(data.Opt_TotalIncome_EqualOrThan);
+            $("input[name='bonus_numberofcontract']").val(data.Opt_TotalQuantityFullContracts_EqualOrThan);
+            $("input[name='bonus_totalnewmember']").val(data.Opt_NewMemberTotal_EqualOrThan);
+            $("input[name='bonus_amount']").val(data.BonusAmount);
+            
+            $("input[name='bonus_comment']").val(data.Comment);
+            $("#bonus_active").prop("checked", data.Active);
+            $("#bonus_active").iCheck("update");
+            $("input[name='bonus_effectivedate']").val(data.EffectiveDate);
+
+            var arrSelect = data.ApplyForMemberType.split(',');
+            $("#bonus_membertype").val(arrSelect).trigger('change');
+
+        })
+            .fail(function (jqXHR, code, status) {
+                alert("Oops! Something went wrong. Please try again later.");
+            });
+
+    }
+
+
+
+
+</script>

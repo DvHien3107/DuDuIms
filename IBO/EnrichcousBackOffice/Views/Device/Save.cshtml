@@ -1,0 +1,664 @@
+﻿@model EnrichcousBackOffice.Models.O_Device
+@using EnrichcousBackOffice.Models
+
+
+<section class="content-header">
+    <h1>
+        @ViewBag.Title
+        <small>Products &amp; services</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li><i class="fa fa-hashtag"></i> Admin</li>
+        <li>Products &amp; services</li>
+        <li class="active">@ViewBag.Title</li>
+    </ol>
+</section>
+<!-- Main content -->
+<section class="content">
+    <div class="row">
+        @if (TempData["error"] != null)
+        {
+            <div class="alert alert-warning alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-warning"></i> @TempData["error"]</span>
+            </div>
+        }
+        else if (TempData["success"] != null)
+        {
+            <div class="alert alert-success alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-check"></i> @TempData["success"]</span>
+            </div>
+        }
+
+
+        <div class="col-md-12">
+            <div class="box">
+                <div class="box-header with-border">
+                    <h3 class="box-title">@ViewBag.Title</h3>
+
+                    <div class="box-tools pull-right">
+                        <a href="/device" class="btn btn-sm" data-toggle="tooltip" title="Go back" data-original-title="Go back">
+                            <i class="fa fa-arrow-left"></i> Go back
+                        </a>
+
+                        @if (Model.DeviceId > 0)
+                        {
+                            <a href='/device/save' class="btn btn-sm" data-toggle="tooltip" title="Add new" data-original-title="Add new">
+                                <i class="fa fa-plus">Add new device</i>
+                            </a>
+                        }
+                    </div>
+                </div>
+
+
+                <form role="form" id="FormSave" class="form-horizontal" action="/device/savesubmit" method="post" enctype="multipart/form-data">
+                    @Html.HiddenFor(m => m.DeviceId)
+                    <div class="box-body">
+
+                        <!--Device type partial-->
+                        @*@Html.Partial("_DeviceTypePartial", Model)*@
+                        <!--/.End-->
+                        <h4>Basic Infomation</h4><br />
+                        <div class="col-md-12">
+                            <div class="col-md-6">
+                                <label>Product <span style="color:red">*</span></label>
+                                <div class="form-inline">
+                                    <select id="Product" name="Product" class="form-control prod pull-left" style="width:60%; margin-right:10px" onchange="check_product_select(this)">
+                                        <option value="0">---Select product---</option>
+                                    </select>
+                                    <div class="pull-left" style="padding:2px; padding-left">
+                                        <button type="button" class="btn btn-sm prod" onclick="add_product()" title="Add Product"><i class="fa fa-plus"></i></button>
+                                        <button type="button" class="btn btn-sm prod" onclick="edit_product()" title="Edit Product"><i class="fa fa-edit"></i></button>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="col-md-6">
+
+                                <label class="control-label">Product version </label>
+                                <div class="">
+                                    <input type="text" name="Version" class="form-control" placeholder="Product version" value="@(Model?.Version)" />
+                                </div>
+
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="col-md-6">
+
+                                <label class="control-label">Serial Number <span style="color:red">*</span></label>
+                                <input type="text" name="SerialNumber" class="form-control" placeholder="Serial number" value="@(Model?.SerialNumber)" required />
+                            </div>
+                            <div class="col-md-6">
+
+
+                                <label class="control-label">Notes </label>
+                                <div class="">
+                                    <textarea style=" resize: vertical;" name="Description" class="form-control" placeholder="Notes about the item" value="@(Model?.Description)"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <hr />
+                        @*<div class="form-group col-md-6">
+                                <label class="col-sm-3 control-label">Picture</label>
+                                <div class="col-sm-9">
+                                    <input type="file" id="pic0" name="pic0" onchange="reviewUpload(this)" />
+
+                                    <div style="padding-left:0px;display:block" class="col-sm-12" id="review_pic0">
+                                        <p class="col-sm-12" style="border:1px dotted red; padding:3px">
+                                            @if (string.IsNullOrEmpty(Model.Picture) == true)
+                                            {
+                                                <img id="img_pic0" src="~/Upload/Img/no_image.jpg" style="height:100px;margin-left:0" alt="preview" />
+
+                                            }
+                                            else
+                                            {
+                                                <img id="img_pic0" src="@(Model?.Picture)" style="height:100px;margin-left:0" alt="preview" />
+                                            }
+
+                                            <i style="padding-left:5px" id="fname_pic0"></i>
+                                            <a onclick="upload_delete('pic0')" href="#" data-toggle="tooltip" title="Delete this file" class="pull-right">
+                                                <i class="fa fa-trash"></i>
+                                            </a>
+                                        </p>
+                                        <input type="hidden" name="hdPicDelete_pic0" id="hdPicDelete_pic0" value="0" />
+                                    </div>
+                                </div>
+                            </div>*@
+                        <br style="clear:both" />
+                        @if (Model?.DeviceId > 0)
+                        {
+                            <div class="checkbox">
+                                <label for="Active" class="col-sm-3 control-label"> </label>
+                                <div class="col-sm-9">
+                                    <label> @Html.CheckBox("Active", Model?.Active) Are trading</label>
+                                </div>
+                            </div>
+                        }
+
+                        <div class="box-footer" style="float:right">
+                            <a href="/device" class="btn btn-sm" data-toggle="tooltip" title="Go back" data-original-title="Go back">
+                                <i class="fa fa-arrow-left"></i> Go back
+                            </a>
+                            @*<button type="submit" class="btn btn-primary" name="submit" value="1">Save &amp; Go back</button>*@
+                            @if (ViewBag.showSaveBtn != false)
+                            {
+                                <button type="submit" name="submit" value="save" class="btn btn-primary">Save</button>
+                                <button type="submit" name="submit" value="save_return" class="btn btn-primary">Save &amp; return</button>
+                            }
+                            else
+                            {
+                                <lable class="label label-danger">You do not have permission to save this form!</lable>
+                            }
+                        </div>
+                        <div class="clearfix"></div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+<!--Modal device type-->
+<div class="modal fade" id="modal-product">
+    <div class="modal-dialog">
+        @using (Ajax.BeginForm("SaveProduct01", null, new AjaxOptions
+        {
+            OnSuccess = "OnSuccessSaveProduct",
+            HttpMethod = "post",
+            LoadingElementId = "idiamgeloading",
+        }, new { enctype = "multipart/form-data" }))
+        {
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 id="modal-product-title" class="modal-title">Modal Product</h4>
+                </div>
+                <div class="modal-body">
+
+
+
+                    <input type="hidden" name="OldCode" id="hd_type_code" />
+                    <p>
+                        <label>Product line <span style="color:red">*</span></label>
+                        <select id="ProductLine" name="ProductLine" class="form-control prod"></select>
+                        <div class="help-block">
+                            <button type="button" class="btn btn-sm prod" onclick="add_product_line()" title="Add Product"><i class="fa fa-plus"></i></button>
+                            <button type="button" class="btn btn-sm prod" onclick="edit_product_line()" title="Edit Product"><i class="fa fa-edit"></i></button>
+                        </div>
+                    </p>
+                    <!--Div add edit product line-->
+                    <div id="ProlineDiv" style="margin:10px; padding: 20px ; border: 2px solid lightgray; border-radius:5px; background-color: #FCFCFC; display:none">
+                        <h4 id="ProlineDiv_title" style="display: inline-block;"></h4><button style="float:right" type="button" class="btn btn-sm prod" onclick="close_product_line()" title="Close"><i class="fa fa-close"></i></button>
+                        <hr />
+                        <p>
+                            <label>Product line name <span style="color:red">*</span></label>
+                            <div class="input-group">
+                                <input type="hidden" id="product_line_code" />
+                                <input type="text" id="product_line_name" class="form-control" placeholder="Product name" />
+
+                                <span class="input-group-btn">
+                                    <button type="button" class="btn btn-primary" id="ProlineDiv_Ok" onclick="save_product_line()" title="Save">Ok</button>
+                                </span>
+                            </div>
+                        </p>
+                    </div>
+                    <!--end div-->
+                    <p>
+                        <label>Product name  <span style="color:red">*</span></label>
+                        <input type="text" id="product_name" name="product_name" class="form-control" placeholder="Product name" required />
+
+                    </p>
+                    <!--Image-->
+                    <div class="form-group">
+                        <label>Price  <span style="color:red">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-addon">$</span>
+                            <input type="text" id="product_price" name="product_price" class="form-control" placeholder="Product price" pattern="[0-9.]+" required />
+                        </div>
+                    </div>
+                    <label>Picture</label>
+                    <input type="file" id="pic1" name="pic1" onchange="reviewUpload(this)" />
+
+                    <div style="padding-left:0px;" id="review_pic0">
+                        <p style="border:1px dotted red; padding:3px">
+
+                            <img id="img_pic1" src="" style="height:100px;margin-left:0" onerror="this.onerror=null; this.src='/Upload/Img/no_image.jpg'" alt="preview" />
+
+                            <i style="padding-left:5px" id="fname_pic0"></i>
+                            <a onclick="upload_delete('pic1')" href="#" data-toggle="tooltip" title="Delete this file" class="pull-right">
+                                <i class="fa fa-trash"></i>
+                            </a>
+                        </p>
+                        <input type="hidden" name="hdPicDelete_pic1" id="hdPicDelete_pic1" value="0" />
+                    </div>
+                    <!--end image-->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal" onclick="close_product_line()">Close</button>
+                    <button type="submit" id="save-modal-btn" class="btn btn-primary">Save</button>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+<!--/.End-->
+<!--Modal vendor-->
+<div class="modal fade" id="modal-vendor">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 id="modal-vendor-title" class="modal-title">Modal Title</h4>
+            </div>
+            <div class="modal-body row">
+                <input type="hidden" name="hd_vendorId" />
+                <div class="col-sm-6">
+                    <p>
+                        <label>Company name <span style="color:red">*</span></label>
+                        <input type="text" class="form-control" name="company_name" placeholder="Company Name" required />
+                    </p>
+                    <p>
+                        <label>Address  <span style="color:red">*</span></label>
+                        <input type="text" class="form-control" name="address" placeholder="Address" required />
+                    </p>
+
+                    <!--Country - State - City - ZipCode-->
+                    <p>
+                        <label>Country</label>
+                        <select id="Country" class="form-control" style="width:100%">
+                            <option value="">-- select country --</option>
+
+                            @if (ViewBag.Countries != null)
+                            {
+                                foreach (var item in ViewBag.Countries as List<Ad_Country>)
+                                {
+                                    <option value="@item.Name">@item.Name</option>
+                                }
+                            }
+                        </select>
+                    </p>
+                    <p>
+                        <label>State</label>
+                        <input id="txtState" type="text" class="form-control col-md-9" name="State" value="" />
+                        <select id="selectState" class="form-control" name="State" style="display: none; width:100%"></select>
+                        <img id="stateLoading" alt="loading..." src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display: none" />
+                    </p>
+                    <p>
+                        <label>City</label>
+                        <input type="text" class="form-control" name="City" />
+                    </p>
+                    <p>
+                        <label>Zip code</label>
+                        <input type="number" class="form-control" name="ZipCode" />
+                    </p>
+                    <!--/.End-->
+
+                    <p>
+                        <label>Website</label>
+                        <input type="text" class="form-control" name="website" placeholder="Website" />
+                    </p>
+                </div>
+
+                <div class="col-sm-6">
+                    <p>
+                        <label>Email</label>
+                        <input type="text" class="form-control" name="email" placeholder="Email" />
+                    </p>
+                    <p>
+                        <label>Fax</label>
+                        <input type="text" class="form-control" name="fax" placeholder="Fax" />
+                    </p>
+                    <p>
+                        <label>Phone</label>
+                        <input type="text" class="form-control" name="phone" placeholder="Phone" />
+                    </p>
+                    <p>
+                        <label>Contact first name <span style="color:red">*</span></label>
+                        <input type="text" class="form-control" name="first_name" placeholder="Contact first name" required />
+                    </p>
+                    <p>
+                        <label>Contact last name  <span style="color:red">*</span></label>
+                        <input type="text" class="form-control" name="last_name" placeholder="Contact last name" required />
+                    </p>
+                    <p>
+                        <label>Contact phone</label>
+                        <input type="text" class="form-control" name="contact_phone" placeholder="Contact phone" />
+                    </p>
+                    <p>
+                        <label>Contact email</label>
+                        <input type="text" class="form-control" name="contact_email" placeholder="Contact phone" />
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="save_vendor()">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!--/.End-->
+
+
+
+
+@section style{
+    <link href="~/Content/noty/jquery.noty.css" rel="stylesheet" />
+    <link href="~/Content/noty/noty_theme_default.css" rel="stylesheet" />
+    <!-- datepicker -->
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <link href="~/Content/Admin/plugins/iCheck/all.css" rel="stylesheet" />
+    <link href="~/Content/Selectize/css/selectize.default.css" rel="stylesheet" />
+    <link href="~/Content/tagsinput/jquery.tagsinput-revisited.min.css" rel="stylesheet" />
+
+    <style type="text/css">
+        input:read-only:not(:disabled) {
+            background-color: #fff !important;
+        }
+    </style>
+}
+
+@section script
+{
+    <!--ajax form-->
+    <script src="~/Content/Selectize/js/standalone/selectize.min.js"></script>
+    <!---->
+    <script src="~/Scripts/upload_and_review.js"></script>
+    <script src="~/Content/noty/jquery.noty.js"></script>
+    <script src="~/Scripts/us-zip-city-state.js"></script>
+    <!--DatePicker-->
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <!-- CK Editor -->
+    <script src="~/Content/admin/bower_components/ckeditor/ckeditor.js"></script>
+    <!-- Icheck-->
+    <script src="~/Content/Admin/plugins/iCheck/icheck.min.js"></script>
+    <script src="~/Content/Selectize/js/selectize.min.js"></script>
+    <script src="~/Content/tagsinput/jquery.tagsinput-revisited.min.js"></script>
+    <script type="text/javascript">
+        $.ajax({
+            method: "POST",
+            url: "/Device/LoadListFeature",
+            dataType: "json"
+        })
+            .done(function (data) {
+                var valset = $('input[name=Features]').val();
+                var selectizes = $('input[name=Features]').selectize({
+                    delimiter: ',',
+                    persist: false,
+                    options: data,
+                    create: function (input) {
+                        return {
+                            value: input,
+                            text: input
+                        }
+                    }
+                });
+                var selectize = selectizes[0].selectize;
+                selectize.clear(true);
+                v = valset.split(',');
+                for (var i = 0; i < v.length; i++) {
+                    selectize.createItem(v[i]);
+                }
+                refresh_selectize(valset);
+            });
+        LoadType();
+        $(".datepicker").datepicker({
+            dateFormat: "mm/dd/yy",
+            changeMonth: true,
+            changeYear: true,
+            yearRange: '-100:+100'
+        });
+        function refresh_selectize() {
+            var $select = $('input[name=Features]').selectize();
+            var selectize = $select[0].selectize;
+            selectize.on("item_add", function (item) {
+                var v = item.split(',').concat($('input[name=Features]').val().split(',')).sort();
+                selectize.clear(true);
+                selectize.off("item_add");
+                for (var i = 0; i < v.length; i++) {
+                    selectize.createItem(v[i]);
+                }
+                refresh_selectize();
+            })
+        }
+        $(function () {
+
+            // Replace the <textarea id="editor1"> with a CKEditor
+            // instance, using default configuration.
+            //CKEDITOR.replace('editor1'); CKEDITOR.replace('editor2'); CKEDITOR.replace('editor3')
+
+
+            //Select2
+            $('#Country').select2();
+            $('#attached_devices').select2({
+                placeholder: "-- Select device --"
+            });
+            $('#Dell_pc_checkbox').iCheck({
+                checkboxClass: 'icheckbox_flat-blue',
+                radioClass: 'iradio_square-blue',
+                //increaseArea: '20%' // optional
+            });
+            $('#Dell_pc_checkbox').on('ifChecked', function(){
+                $('#Dell_pc_info').show(300);
+            });
+            $('#Dell_pc_checkbox').on('ifUnchecked', function(){
+                $('#Dell_pc_info').hide(300);
+            });
+
+
+        });
+
+        function LoadType() {
+            $.ajax({
+                method: "POST",
+                url: "/device/GetProductType",
+                data: {},
+                dataType: "json"
+            })
+                .done(function (data) {
+                    if (data[0] == true) {
+                        for (var i = 0; i < data[1].length; i++) {
+                            var opt = new Option(data[1][i]["Name"], data[1][i]["Code"], false, true);
+                            $("#Product").append(opt);
+                        }
+                        @if(Model.ProductCode!=null)
+                        {
+                            @Html.Raw("$('#Product').val('" + Model.ProductCode + "');")
+                        }
+                        else
+                        {
+                            @Html.Raw("$('#Product').val($('#Product option:first').val());")
+
+                        }
+                        check_product_select($("#Product"));
+                    }
+                })
+                .fail(function () {
+                    alert("Oops! Something went wrong");
+                    $("#modal-default").modal('hide');
+                })
+                .always(function () {
+                    $("#loading").hide();
+                });
+        }
+
+        function LoadProductLine() {
+
+            $.ajax({
+                method: "POST",
+                url: "/device/GetProductLine",
+                data: {},
+                dataType: "json"
+            })
+                .done(function (data) {
+                    if (data[0] == true) {
+                        for (var i = 0; i < data[1].length; i++) {
+                            var opt = new Option(data[1][i]["Name"], data[1][i]["Code"], false, true);
+                            $("#ProductLine").append(opt);
+                        }
+                        $("#ProductLine").val($("#ProductLine option:first").val())
+                    }
+
+                })
+                .fail(function () {
+                    alert("Oops! Something went wrong");
+                    $("#modal-default").modal('hide');
+                })
+                .always(function () {
+                    $("#loading").hide();
+                });
+        }
+        //Product function
+        function add_product() {
+            close_product_line();
+            $("#hd_type_code").val("");
+            $("#product_name").val("");
+            $("#product_price").val("");
+            $("#modal-product-title").html("Add new product");
+            $("#modal-product").modal("show");
+            if ($('#ProductLine option').length == 0) { LoadProductLine(); };
+        }
+        function edit_product() {
+            close_product_line();
+            var Code = $("select[name='Product'] option:selected").val();
+            if (Code && Code != 0) {
+                $.ajax({
+                    method: "POST",
+                    url: "/Device/getProductInfo",
+                    data: { Code },
+                    dataType: "json"
+                })
+                    .done(function (data) {
+                        if (data[0] == true) {
+                            $("#product_name").val(data[1]["Name"]);
+                            $("#product_price").val(data[1]["Price"]);
+                            $("#hd_type_code").val(Code);
+
+                            if (data[1]["Picture"]) {
+                                $("#img_pic1").prop("src", data[1]["Picture"]);
+                            }
+                            else {
+                                $("#img_pic1").prop("src", "/Upload/Img/no_image.jpg");
+
+                            }
+                            $("#modal-product-title").html("Edit product: " + data[1]["Name"]);
+                            $("#modal-product").modal("show");
+
+                            if ($('#ProductLine option').length == 0) { LoadProductLine(); };
+                        }
+                        else { }
+                    })
+                    .fail(function () {
+                        alert("Oops! Something went wrong");
+                    })
+            }
+            else {
+                var warning = $.parseJSON('{"text": "Please select product first!", "layout": "topRight", "type": "warning"}');
+                noty(warning);
+            }
+        }
+        function OnSuccessSaveProduct(data) {
+            if (data['status'] == true) {
+                var opt = new Option(data['name'], data['code'], false, true);
+
+                $("select[name='Product'] option[value='" + data["OldCode"] + "']").remove();
+                $("select[name='Product']").append(opt);
+                var success = $.parseJSON('{"text": "' + data['text'] + '", "layout": "topRight", "type": "success"}');
+                noty(success);
+                $("#modal-product").modal("hide");
+                check_product_select($("#Product"));
+                    }
+            else {
+                var error = $.parseJSON('{"text": "' + data['text'] + '", "layout": "topRight", "type": "error"}');
+                noty(error);
+            }
+        }
+        //Product line function
+        function close_product_line() {
+
+            $("#modal-product :input").prop("disabled", false);
+            $("#ProlineDiv").hide(300);
+        }
+        function add_product_line() {
+            $("#product_line_code").val("");
+            $("#product_line_name").val("");
+            $("#ProlineDiv_title").text("Add new product line");
+            $("#ProlineDiv_Ok").val("Add");
+            $("#modal-product .modal-body :input").prop("disabled", true);
+            $("#save-modal-btn").prop("disabled", true);
+            $("#ProlineDiv :input").prop("disabled", false);
+            $("#ProlineDiv").show(300);
+        }
+        function edit_product_line() {
+            $("#product_line_code").val($("#ProductLine").val());
+            $("#product_line_name").val(getSelectedText("ProductLine"));
+            $("#ProlineDiv_title").text("Edit product line: " + getSelectedText("ProductLine"));
+            $("#ProlineDiv_Ok").val("Edit");
+            $("#modal-product .modal-body :input").prop("disabled", true);
+            $("#save-modal-btn").prop("disabled", true);
+            $("#ProlineDiv :input").prop("disabled", false);
+            $("#ProlineDiv").show(300);
+        }
+        function save_product_line() {
+            var ocode = $("#product_line_code").val();
+            var name = $("#product_line_name").val();
+            $.ajax({
+                method: "POST",
+                url: "/Device/SaveProductLine",
+                data: { ocode, name },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    if (data[0] == true) {
+                        var opt = new Option(data[2], data[3], false, true);
+                        $("select[name='ProductLine'] option[value='" + ocode + "']").remove();
+                        $("select[name='ProductLine']").append(opt);
+                        var success = $.parseJSON('{"text": "' + data[1] + '", "layout": "topRight", "type": "success"}');
+                        noty(success);
+                        close_product_line();
+                    }
+                    else {
+                        var error = $.parseJSON('{"text": "' + data[1] + '", "layout": "topRight", "type": "error"}');
+                        noty(error);
+                    }
+
+                })
+                .fail(function () {
+                    alert("Oops! Something went wrong");
+                })
+        }
+        //Orther function
+        /**
+         * Get selected opotion text of select
+         * @@param elementId select id
+         */
+        function getSelectedText(elementId) {
+            var elt = document.getElementById(elementId);
+
+            if (elt.selectedIndex == -1)
+                return null;
+
+            return elt.options[elt.selectedIndex].text;
+        }
+        /**
+         * If no product selected, disable all input
+         * @@param product_select selected product
+         */
+        function check_product_select(product_select) {
+            if ($(product_select).val() == "0") {
+                $("#FormSave input:not(.feature)").prop("disabled", true);
+                $(".prod").prop("disabled", false);
+            }
+            else {
+                $("#FormSave input").prop("disabled", false);
+            }
+        }
+    </script>
+
+}
+

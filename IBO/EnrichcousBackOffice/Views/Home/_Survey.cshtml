@@ -1,0 +1,228 @@
+﻿@model EnrichcousBackOffice.Models.SurveyIM
+<style>
+    .rate {
+        float: left;
+        height: 46px;
+        padding: 0;
+        margin-top: -5px;
+    }
+
+        .rate:not(:checked) > input {
+            position: absolute;
+            top: -9999px;
+        }
+
+        .rate:not(:checked) > label {
+            float: right;
+            width: 1em;
+            overflow: hidden;
+            white-space: nowrap;
+            cursor: pointer;
+            font-size: 30px;
+            color: #ccc;
+        }
+
+            .rate:not(:checked) > label:before {
+                content: '★ ';
+            }
+
+        .rate > input:checked ~ label {
+            color: #ffc700;
+        }
+
+        .rate:not(:checked) > label:hover,
+        .rate:not(:checked) > label:hover ~ label {
+            color: #deb217;
+        }
+
+        .rate > input:checked + label:hover,
+        .rate > input:checked + label:hover ~ label,
+        .rate > input:checked ~ label:hover,
+        .rate > input:checked ~ label:hover ~ label,
+        .rate > label:hover ~ input:checked ~ label {
+            color: #c59b08;
+        }
+
+    .title-survey:before {
+        content: '';
+        position: absolute;
+        width: 60px;
+        height: 2px;
+        background: gray;
+        left: 50%;
+        bottom: 4px;
+        transform: translateX(-50%);
+    }
+</style>
+<div class="modal fade" id="surveyModal">
+    <div class="modal-dialog" style="width:640px">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                Khảo Sát Sử Dụng IMS
+            </div>
+            <div class="modal-body">
+
+
+                <form class="px-2" method="post" action="/home/sendSurvey" id="surveyform">
+                    <h5 class="text-center title-survey" style="padding-bottom: 15px; font-size: 16px;position: relative"><strong>Giúp Team hoàn thành khảo sát bên dưới để IMS cải thiện phục vụ mọi người tốt hơn :</strong></h5>
+                    <input type="hidden" name="Action" id="CommandSurvey" />
+                    @Html.AntiForgeryToken()
+                    @Html.HiddenFor(x => x.MemberNumber)
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="control-label">Mức độ hài lòng :</label>
+                                <div class="clearfix"></div>
+                                <div class="rate">
+                                    <input type="radio" id="Satisfaction5" name="Satisfaction" value="5">
+                                    <label for="Satisfaction5" data-toggle="tooltip" title="cực kỳ hài lòng">cực kỳ hài lòng</label>
+                                    <input type="radio" id="Satisfaction4" name="Satisfaction" value="4">
+                                    <label for="Satisfaction4" data-toggle="tooltip" title="hài lòng">hài lòng</label>
+                                    <input type="radio" id="Satisfaction3" name="Satisfaction" value="3">
+                                    <label for="Satisfaction3" data-toggle="tooltip" title="bình thường">bình thường</label>
+                                    <input type="radio" id="Satisfaction2" name="Satisfaction" value="2">
+                                    <label for="Satisfaction2" data-toggle="tooltip" title="không hài lòng">không hài lòng</label>
+                                    <input type="radio" id="Satisfaction1" name="Satisfaction" value="1">
+                                    <label for="Satisfaction1" data-toggle="tooltip" title="rất không hài lòng">rất không hài lòng</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="control-label">Hệ thống không có bug :</label>
+                                <div class="clearfix"></div>
+                                <div class="rate">
+                                    <input type="radio" id="Bug5" name="Bug" value="5">
+                                    <label for="Bug5" data-toggle="tooltip" title="không có bug">không có bug</label>
+                                    <input type="radio" id="Bug4" name="Bug" value="4">
+                                    <label for="Bug4" data-toggle="tooltip" title="ít bug">ít bug</label>
+                                    <input type="radio" id="Bug3" name="Bug" value="3">
+                                    <label for="Bug3" data-toggle="tooltip" title="bug bình thường">bug bình thường</label>
+                                    <input type="radio" id="Bug2" name="Bug" value="2">
+                                    <label for="Bug2" data-toggle="tooltip" title="nhiều bug">nhiều bug</label>
+                                    <input type="radio" id="Bug1" name="Bug" value="1">
+                                    <label for="Bug1" data-toggle="tooltip" title="rất nhiều bug">rất nhiều bug</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="control-label">Tốc độ nhanh :</label>
+                                <div class="clearfix"></div>
+                                <div class="rate">
+                                    <input type="radio" id="Speed5" name="Speed" value="5">
+                                    <label for="Speed5" data-toggle="tooltip" title="rất nhanh">rất nhanh</label>
+                                    <input type="radio" id="Speed4" name="Speed" value="4">
+                                    <label for="Speed4" data-toggle="tooltip" title="nhanh">nhanh</label>
+                                    <input type="radio" id="Speed3" name="Speed" value="3">
+                                    <label for="Speed3" data-toggle="tooltip" title="bình thường">bình thường</label>
+                                    <input type="radio" id="Speed2" name="Speed" value="2">
+                                    <label for="Speed2" data-toggle="tooltip" title="chậm">chậm</label>
+                                    <input type="radio" id="Speed1" name="Speed" value="1">
+                                    <label for="Speed1" data-toggle="tooltip" title="rất chậm">rất chậm</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="control-label">Đáp ứng được nhu cầu hiện tại :</label>
+                                <div class="clearfix"></div>
+                                <div class="rate">
+                                    <input type="radio" id="MeetTheMeed5" name="MeetTheMeed" value="5">
+                                    <label for="MeetTheMeed5" data-toggle="tooltip" title="rất tốt">rất tốt</label>
+                                    <input type="radio" id="MeetTheMeed4" name="MeetTheMeed" value="4">
+                                    <label for="MeetTheMeed4" data-toggle="tooltip" title="tốt">tốt</label>
+                                    <input type="radio" id="MeetTheMeed3" name="MeetTheMeed" value="3">
+                                    <label for="MeetTheMeed3" data-toggle="tooltip" title="tương đối">tương đối</label>
+                                    <input type="radio" id="MeetTheMeed2" name="MeetTheMeed" value="2">
+                                    <label for="MeetTheMeed2" data-toggle="tooltip" title="không đáp ứng">không đáp ứng</label>
+                                    <input type="radio" id="MeetTheMeed1" name="MeetTheMeed" value="1">
+                                    <label for="MeetTheMeed1" data-toggle="tooltip" title="rất không đáp ứng">rất không đáp ứng</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-12">
+                            <label class="form-label" for="Note">Ý kiến:</label>
+                            <textarea class="form-control" name="Note" rows="4"></textarea>
+
+                        </div>
+                    </div>
+
+                    <div class="modal-footer" style="padding: 15px 0px">
+                        <button type="submit" id="skipSurvey" data-command="skip" class="btn btn-danger pull-left survey-button">Bỏ Qua</button>
+                        <button type="submit" id="submitSurvey" data-command="send" class="btn btn-primary survey-button">Gửi Feedback</button>
+
+                    </div>
+
+                </form>
+            </div>
+
+        </div>
+
+
+    </div>
+</div>
+
+<div class="modal fade" id="surveythanks">
+    <div class="modal-dialog">
+       
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" style="font-size:2em" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <span>Thank You</span>
+             
+            </div>
+            <div class="modal-body">
+
+                <p>Thank you for survey !</p>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-cancel" data-dismiss="modal" aria-label="Close">Close</button>
+            </div>
+        </div>
+
+
+    </div>
+</div>
+
+<script>
+    $('[data-toggle="tooltip"]').tooltip();
+    $(".survey-button").click(function () {
+        $("#CommandSurvey").val($(this).attr('data-command'));
+    })
+    // this is the id of the form
+    $("#surveyform").submit(function (e) {
+        e.preventDefault();
+        overlayOn();
+        var form = $('#surveyform');
+        var actionUrl = form.attr('action');
+        $.ajax({
+            type: "POST",
+            url: actionUrl,
+            data: form.serialize(), // serializes the form's elements.
+            success: function (data) {
+                if (data.status)
+                {
+                    $("#surveyModal").modal('hide');
+                    if ($("#CommandSurvey").val() != 'skip') {
+                        $("#surveythanks").modal('show');
+                    }
+           
+                }
+            },
+            complete: function () {
+                overlayOff();
+            }
+        });
+
+    });
+
+
+</script>

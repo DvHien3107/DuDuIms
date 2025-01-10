@@ -1,0 +1,43 @@
+UAT-VN
+https://uat-checkin.enrichcous.com:4443/login		CHECKIN
+https://uat-manage.enrichcous.com:4443/ 		POS
+https://uat-login.enrichcous.com:4443/			MANAGER
+
+PRODUCT-VN
+https://checkin.mangoforsalon.vn/home			CHECKIN
+https://login.mangoforsalon.vn/				MANAGER
+https://manage.mangoforsalon.vn/			POS
+
+STAGING(UAT-US)
+https://staging-checkin.enrichcous.com/			CHECKIN
+https://staging-login.enrichcous.com/			MANAGER
+https://staging-manage.enrichcous.com/			POS
+
+
+IMS
+    
+https://ims.enrichcous.com
+https://staging-ims.enrichcous.com
+https://uat-ims.enrichcous.com:4443/
+
+https://staging-register-slice.enrichcous.com/register/slice
+https://staging-register.enrichcous.com/
+
+dev-api-ims.enrichcous.com
+uat-api-ims.enrichcous.com
+staging-api-ims.enrichcous.com
+
+FTP Staging:
+ftp.enrichcous.comims/Ims@789/2120
+
+API
+
+Pro : https://api-ims.enrichcous.com/swagger/ui/index#/
+Staging : https://staging-api.enrichcous.com/ 
+
+https://dev-api-ims.enrichcous.com/swagger/ui/index
+
+---------------------------------------------------------------
+dev-ims.enrichcous.com
+35.239.206.23
+son-ims|hdhg@315RN!19

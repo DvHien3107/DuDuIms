@@ -1,0 +1,598 @@
+﻿@using EnrichcousBackOffice.Controllers
+@using EnrichcousBackOffice.Models
+@using EnrichcousBackOffice.Utils.IEnums
+@using Enrich.Core.Infrastructure
+@{
+    WebDataModel db = new WebDataModel();
+    var states = Json.Decode(Json.Encode(EngineContext.Current.Resolve<MerchantManController>().LoadListState().Data))[0];
+    var resourceMerchant = new List<string> { "Merchant", "Lead", "Potential", "Data", "Other" };
+    var NumberOfPeopleReached = db.C_Customer.Count();
+    List<License_Product> licenses = db.License_Product.Where(l => l.isAddon != true).ToList();
+    List<M_Campaign> listCampaign = db.M_Campaign.Where(c => c.Status != -2).ToList();
+}
+
+<section class="content">
+    <div class="row">
+        <a class="btn btn-sm btn-success btn-header-lead btn-flat pull-right" onclick="createAds()">
+            <i class="fa fa-plus"></i> Add Ads
+        </a>
+    </div><br />
+    <div class="row">
+        <form id="search_form">
+            <div class="form-inline filter-group">
+                <div class="col-md-12">
+                    <div class="row">
+                        <div class="input-group col-md-3 pull-left">
+                            <div class="input-group-addon" style="width:100px">
+                                <i class="fa fa-calendar"></i> From
+                            </div>
+                            <input type="text" id="FDate" name="FDate" class="form-control datepicker change-search" value="@TempData["FDate"]" onchange="submit_form()" readonly>
+                        </div>
+                        <div class="input-group col-md-3 pull-left">
+                            <div class="input-group-addon" style="width:100px">
+                                <i class="fa fa-calendar"></i> To
+                            </div>
+                            <input type="text" id="TDate" name="TDate" class="form-control datepicker change-search" value="@TempData["TDate"]" onchange="submit_form()" readonly>
+                        </div>
+                        <div class="col-md-3 input-group pull-left">
+                            <div class="input-group-addon" style="width: 100px; height: 36px !important">Campaign</div>
+                            <select class="form-control select2" id="SCampaign" name="SCampaign" style="width: 100%;" onchange="submit_form()">
+                                <option value="all" @(TempData["SCampaign"]?.ToString().Contains("all") == true ? "selected" : "")>All</option>
+                                @foreach (var cam in listCampaign)
+                                {
+                                    <option value="@cam.Id" @(TempData["SCampaign"]?.ToString().Contains(cam.Id) == true ? "selected" : "")>@cam.Name</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="col-md-3 input-group pull-left">
+                            <div class="input-group-addon" style="width: 60px">Search text</div>
+                            <input type="text" class="form-control change-search" id="SText" name="SText" value="@TempData["SText"]" placeholder="Name, Campaign name, Zipcode..." />
+                        </div>
+                    </div>
+                    <div class="row" style="margin-top: 5px;">
+                        <div class="col-md-3 input-group pull-left">
+                            <div class="input-group-addon" style="width: 100px">Ads type</div>
+                            <select class="form-control" id="SAdsType" name="SAdsType" onchange="submit_form()">
+                                <option value="all" @(TempData["SAdsType"]?.ToString().Contains("all") == true ? "selected" : "")>All</option>
+                                <option value="sms" @(TempData["SAdsType"]?.ToString().Contains("sms") == true ? "selected" : "")>SMS</option>
+                                <option value="email" @(TempData["SAdsType"]?.ToString().Contains("email") == true ? "selected" : "")>Email</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 input-group pull-left">
+                            <div class="input-group-addon" style="width: 100px">Status</div>
+                            <select class="form-control" id="SStatus" name="SStatus" onchange="submit_form()">
+                                <option value="all" @(TempData["SStatus"]?.ToString().Contains("all") == true ? "selected" : "")>All</option>
+                                <option class="text-dark" value="@AdsStatus.Draft.ToString()" @(TempData["SStatus"]?.ToString() == AdsStatus.Draft.ToString() ? "selected" : "")>@AdsStatus.Draft.ToString()</option>
+                                <option class="text-success" value="@AdsStatus.Sent.ToString()" @(TempData["SStatus"]?.ToString() == AdsStatus.Sent.ToString() ? "selected" : "")>@AdsStatus.Sent.ToString()</option>
+                                <option class="text-warning" value="@AdsStatus.Failed.ToString()" @(TempData["SStatus"]?.ToString() == AdsStatus.Failed.ToString() ? "selected" : "")>@AdsStatus.Failed.ToString()</option>
+                                <option class="text-danger" value="@AdsStatus.Cancel.ToString()" @(TempData["SStatus"]?.ToString() == AdsStatus.Cancel.ToString() ? "selected" : "")>@AdsStatus.Cancel.ToString()</option>
+                            </select>
+                        </div>
+
+                        @*<div class="col-md-3 input-group pull-left">
+                                <div class="input-group-addon" style="width: 100px; height: 36px !important">Resource</div>
+                                <select class="form-control select2" id="SResource" name="SResource" style="width: 100%;" multiple data-maximum-selection-length="1">
+                                    @foreach (string re in resourceMerchant)
+                                    {
+                                        <option value="@re" @(TempData["SResource"]?.ToString().Contains(re) == true ? "selected" : "")>@re</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-3 input-group pull-left">
+                                <div class="input-group-addon" style="width: 100px">License</div>
+                                <select class="form-control select2" id="SLicense" name="SLicense" style="width: 100%;" multiple data-maximum-selection-length="1">
+                                    @foreach (var lic in licenses)
+                                    {
+                                        <option value="@lic.Code" @(TempData["SLicense"]?.ToString().Contains(lic.Code) == true ? "selected" : "")>@lic.Name</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-3 input-group pull-left">
+                                <div class="input-group-addon" style="width: 100px">State</div>
+                                <select class="form-control select2" id="SState" name="SState" style="width: 100%;" multiple data-maximum-selection-length="1">
+                                    @foreach (string state in states)
+                                    {
+                                        <option value="@state" @(TempData["SState"]?.ToString().Contains(state) == true ? "selected" : "")>@state</option>
+                                    }
+                                </select>
+                            </div>*@
+
+                        <button type="submit" class="btn btn-primary btn-flat form-control" id="search_submit" name="search_submit">
+                            <i class="fa fa-search"></i> Search
+                        </button>
+                    </div>
+                </div>
+
+                <input type="text" id="Page" name="Page" value="@TempData["Page"]" hidden>
+            </div>
+        </form>
+    </div>
+    <hr />
+    <div class="row">
+        <table id="data_ads" class="table table-bordered table-striped table-hover" data-order='[[ 0, "desc" ]]' style="width: 100%">
+            <thead>
+                <tr>
+                    <th style="width: 60px">#</th>
+                    <th>Name</th>
+                    @*<th>Campaign Name</th>*@
+                    <th>Ads Type</th>
+                    <th>Number Of Reached</th>
+                    @*<th>Result (success/failed)</th>*@
+                    <th>Status</th>
+                    <th>Message</th>
+                    @*<th></th>*@
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<style>
+    .bootstrap-tagsinput {
+        width: 100%;
+        border-radius: 0px;
+        border: 1px solid #ccc !important;
+        resize: vertical;
+        font-size: 14px;
+        background: #fff;
+        min-height: 100px;
+        overflow-y: auto;
+    }
+
+    .align-middle {
+        vertical-align: middle !important;
+    }
+
+    .align-center {
+        text-align: center !important;
+    }
+
+    .input-group-addon, .form-control {
+        min-height: 36px !important;
+    }
+
+    .select2-selection {
+        min-height: 36px !important;
+    }
+</style>
+
+<script>
+    var _dataAds = [];
+    var _currentAds = null;
+    $(function () {
+        var t = $("#data_ads").DataTable({
+            "language": {
+                "processing": '<img src="/Content/ajax-loaders/loading2.gif" width="60px" />',
+                "paginate": {
+                    "first": '<i class="fa fa-angle-double-left" aria-hidden="true"></i>',
+                    "last": '<i class="fa fa-angle-double-right" aria-hidden="true"></i>',
+                    "next": '<i class="fa fa-angle-right" aria-hidden="true"></i>',
+                    "previous": '<i class="fa fa-angle-left" aria-hidden="true"></i>'
+                },
+            },
+            "pageLength": 10,
+            "serverSide": true, // for process server side
+            "processing": true, // for show progress bar
+            'paging': true,
+            'lengthChange': true,
+            'searching': false,
+            'ordering': true,
+            'info': false,
+            'autoWidth': true,
+            'stateSave': false,
+            "ajax": {
+                "url": "/AdsCampaign/LoadAds",
+                "type": "POST",
+                "datatype": "json",
+                data: function (data) {
+                    data.SText = $('#SText').val();
+                    data.FDate = $('#FDate').val();
+                    data.TDate = $('#TDate').val();
+                    data.SCampaign = $('#SCampaign').val();
+                    data.Page = $('#Page').val();
+                    //data.SResource = $('#SResource').select2('data').map(c => c.id).join(",");
+                    //data.SLicense = $('#SLicense').select2('data').map(c => c.id).join(",");
+                    //data.SState = $('#SState').select2('data').map(c => c.id).join(",");
+                    data.SAdsType = $('#SAdsType').val();
+                    data.SStatus = $('#SStatus').val();
+                    return data;
+                },
+                'dataSrc': function (data) {
+                    _dataAds = data.data;
+                    return data.data;
+                },
+            },
+            'fnCreatedRow': function (nRow, aData, iDataIndex) {
+                $(nRow).hover(
+                    function () {
+                        $(this).find(".btn_group").css({ opacity: 0.0, visibility: "visible" }).animate({ opacity: 1.0 });
+                    },
+                    function () {
+                        $(this).find(".btn_group").css({ opacity: 0.0, visibility: "hidden" }).animate({ opacity: 1.0 });
+                    }
+                );
+                $(nRow).attr('onclick', `detailAds('${aData.Id}', $(this))`);
+            },
+            "columns": [
+                {
+                    "name": "CreateAt",
+                    "data": "CreateAt",
+                    "className": 'align-middle',
+                },
+                {
+                    "name": "Name",
+                    "render": function (data, type, row) {
+                        let html = `<span class="text-success" style="cursor: pointer">${row["Name"].toUpperCase()}</span></br>
+                                    <span>Compaign name: <span class="text-primary" style="cursor: pointer">${row["CompaignName"].toUpperCase()}</span></span>
+                                    `;
+                        return html;
+                    },
+                    "className": 'align-middle',
+                },
+                //{
+                //    "name": "CompaignName",
+                //    "render": function (data, type, row) {
+                //        return `<span class="text-primary" style="cursor: pointer">${row["CompaignName"]}</span>`;
+                //    },
+                //    "className": 'align-middle',
+                //},
+                {
+                    "name": "AdsType",
+                    "render": function (data, type, row) {
+                        let html = '';
+                        if (row["AdsType"].indexOf('sms') > -1)
+                            html += `<span class="label label-info" style="margin-right: 10px"><i class="fa fa-commenting-o"></i> SMS</span>`;
+                        else if (row["AdsType"].indexOf('email') > -1)
+                            html += `<span class="label label-primary"><i class="fa fa-envelope-o"></i> Email</span>`;
+                        return html;
+                    },
+                    "className": 'align-middle',
+                },
+                {
+                    "name": "NumberOfPeopleReached",
+                    "render": function (data, type, row) {
+                        return `<b><span class="text-success">${row["TotalSuccess"] ?? 0}</span> / ${row["NumberOfPeopleReached"] ?? 0}<b>`;
+                    },
+                    "className": 'align-middle',
+                },
+                //{
+                //    "name": "Result",
+                //    "render": function (data, type, row) {
+                //        return `<b><span class="text-success">${row["TotalSuccess"] ?? 0}</span> / <span class="text-warning">${row["TotalFailed"] ?? 0}</span><b>`;
+                //    },
+                //    "className": 'align-middle',
+                //},
+                {
+                    "name": "Status",
+                    "render": function (data, type, row) {
+                        if (row["Status"] == 'Draft')
+                            return `<span class="label label-default">Draft</span>`;
+                        else if (row["Status"] == 'Sent')
+                            return `<span class="label label-success">Sent</span>`;
+                        else if (row["Status"] == 'Failed')
+                            return `<span class="label label-warning">Failed</span>`;
+                        else if (row["Status"] == 'Cancel')
+                            return `<span class="label label-danger">Cancel</span>`;
+                        else
+                            return `<span class=""></span>`;
+                    },
+                    "className": 'align-middle',
+                },
+                {
+                    "name": "Message",
+                    "render": function (data, type, row) {
+                        return row["Message"];
+                    },
+                    "className": 'align-middle',
+                },
+                //{
+                //    "name": "Action",
+                //    "render": function (data, type, row) {
+                //        let x = `<div class="btn_group" style="visibility:hidden">
+                //                    <a class="btn btn-sm btn-info btn-header-lead btn-flat" onclick="sendAds('', 'ads')"><i class="fa fa-paper-plane-o"></i> Send</a>
+                //                    <a class="btn btn-sm btn-warning btn-header-lead btn-flat" onclick="editcampaign('', 'cam')"><i class="fa fa-pencil-square-o"></i> Edit</a>
+                //                    <a class="btn btn-sm btn-danger btn-header-lead btn-flat" onclick="removecampign('')"><i class="fa fa-trash-o"></i> Camcel</a>
+                //                </div>`;
+                //        return '<span class="btn btn-default dropdown-toggle btn-action" style="padding: 3px 15px; outline: none;"><i class="icon fa fa-ellipsis-h" aria-hidden="true" ></i ></span >';
+                //    },
+                //    "className": 'align-middle align-center',
+                //},
+            ]
+        });
+
+        $("#TDate").datepicker({
+            showAnim: 'slideDown',
+            showButtonPanel: true,
+            changeMonth: true,
+            changeYear: true,
+            yearRange: '1950:2050'
+        });
+        $("#FDate").datepicker({
+            showAnim: 'slideDown',
+            showButtonPanel: true,
+            changeMonth: true,
+            changeYear: true,
+            yearRange: '1950:2050'
+        });
+
+        $('#smartwizard').smartWizard({
+            selected: 0,
+            theme: 'arrows',
+            autoAdjustHeight: true,
+            transitionEffect: 'fade',
+            showStepURLhash: false,
+            cycleSteps: false,
+            toolbarSettings: {
+                showNextButton: false, // show/hide a Next button
+                showPreviousButton: false, // show/hide a Previous button
+            },
+            anchorSettings: {
+                enableAnchorOnDoneStep: false // Bật / Tắt điều hướng các bước đã thực hiện
+            },
+            keyboardSettings: {
+                keyNavigation: false, // Enable/Disable keyboard navigation(left and right keys are used if enabled)
+            },
+        });
+
+        $('input[type="checkbox"].flat-red, input[type="radio"].flat-red').iCheck({
+            checkboxClass: 'icheckbox_flat-blue',
+            radioClass: 'iradio_flat-blue'
+        })
+
+        $('.box-tag').tagsinput({
+            tagClass: 'label label-primary',
+            confirmKeys: [13],
+            allowDuplicates: false
+        });
+
+        //$('#SResource').change(function () {
+        //    console.log(typeof $('#SResource').select2('data').map(c => c.id).join(","));
+        //});
+    });
+
+    function submit_form() {
+        $("#search_form").submit();
+    }
+
+    function detailAds(id, e) {
+        let DAds = _dataAds.find(e => e.Id == id);
+        console.log(DAds);
+        $('.modal-title').html("Detail Ads");
+        $('#smartwizard .step-anchor').hide();
+        $('#modal_create_campaign').modal("show");
+        $('#smartwizard').smartWizard("next");
+        $('.btn-for-detail-ads').show();
+        $('.btn-for-save-ads').hide();
+        $('#form_create_ads').trigger("reset");
+        $("[name=AdsType]").iCheck('enable').iCheck('update');
+        $('#btn_cancel_ads').show();
+        $('#btn_send_ads').show();
+        $('#btn_draft_ads').hide();
+        $('#btn-edit-ads').show();
+        _readyChange = false;
+
+        //show data
+        if (DAds != null) {
+            debugger;
+            _currentAds = DAds;
+            $('#modal_create_campaign #CompaignName').val(DAds.CampaignId).prop("disabled", true).trigger('change');
+            $('#modal_create_campaign #Name').val(DAds.Name).prop("disabled", true);
+
+            if (DAds.AdsType == 'sms') {
+                $("[name=AdsType][value=sms]").iCheck('check').iCheck('update');
+                $("[name=AdsType][value=email]").iCheck('uncheck').iCheck('disable').iCheck('update');
+            }
+            else {
+                $("[name=AdsType][value=sms]").iCheck('uncheck').iCheck('disable').iCheck('update');
+                $("[name=AdsType][value=email]").iCheck('check').iCheck('update');
+            }
+
+            $('#modal_create_campaign #Resource').val(DAds.Resource?.split(',')).prop("disabled", true).trigger('change');
+            $('#modal_create_campaign #LicenseType').val(DAds.LicenseType?.split(',')).prop("disabled", true).trigger('change');
+            $('#modal_create_campaign #State').val(DAds.State?.split(',')).prop("disabled", true).trigger('change');
+            $('.bootstrap-tagsinput').css("background", "#eee");
+            $('#Zipcode').tagsinput('removeAll');
+            DAds.Zipcode.split(',').forEach(z => {
+                $('#modal_create_campaign #Zipcode').tagsinput('add', z);
+            })
+            $('#modal_create_campaign #Zipcode').prop("disabled", true).trigger('change');
+            $('#Additional').tagsinput('removeAll');
+            DAds.Additional.split(',').forEach(z => {
+                $('#modal_create_campaign #Additional').tagsinput('add', z);
+            })
+            $('#modal_create_campaign #Additional').prop("disabled", true).trigger('change');
+
+            $('#show_NumberOfPeopleReached').html(DAds.NumberOfPeopleReached);
+            $('#modal_create_campaign #Message').val(DAds.Message);
+
+            $('#current').text($('.textarea-countlength').val().length);
+            $('#AdsId').val(DAds.Id);
+
+            if (DAds.Status == "Cancel") {
+                $('#btn_cancel_ads').hide();
+                $('#btn_send_ads').hide();
+                $('#btn_draft_ads').show();
+                $('#btn-edit-ads').show();
+            }
+            else if (DAds.Status == "Sent") {
+                $('#btn_cancel_ads').hide();
+            }
+            //else if (DAds.Status == "Sent") {
+            //    $('#btn_cancel_ads').hide();
+            //    $('#btn_send_ads').hide();
+            //    $('#btn_draft_ads').hide();
+            //    $('#btn-edit-ads').hide();
+            //}
+
+            _dataFile = _currentAds.Attachment?.split('|') ?? [];
+            reload_uploadfile();
+            $('.group-attachment').hide();
+            $('.btn-icon-remove-file').hide();
+        }
+    }
+
+    function createAds() {
+        $('#modal_create_campaign').modal("show");
+        $('#smartwizard .step-anchor').hide();
+        $('.modal-title').html("Add Ads");
+        $('#smartwizard').smartWizard("next");
+        $('#form_create_ads').trigger("reset");
+        $('.btn-for-save-ads').show();
+        $('.btn-for-detail-ads').hide();
+
+        $('#AdsId').val("");
+        $('#NumberOfPeopleReached').val(0);
+        $('#modal_create_campaign #CompaignName').val("").prop("disabled", false).trigger('change');
+        $('#modal_create_campaign #Name').val("").prop("disabled", false);
+        $("[name=AdsType][value=sms]").iCheck('check').iCheck('enable').iCheck('update');
+        $("[name=AdsType][value=email]").iCheck('uncheck').iCheck('enable').iCheck('update');
+        $('#modal_create_campaign #Resource').val("").prop("disabled", false).trigger('change');
+        $('#modal_create_campaign #LicenseType').val("").prop("disabled", false).trigger('change');
+        $('#modal_create_campaign #State').val("").prop("disabled", false).trigger('change');
+        $('#modal_create_campaign #Zipcode').tagsinput('removeAll');
+        $('#modal_create_campaign #Zipcode').prop("disabled", false).trigger('change');
+        $('#modal_create_campaign #Additional').tagsinput('removeAll');
+        $('#modal_create_campaign #Additional').prop("disabled", false).trigger('change');
+        $('#show_NumberOfPeopleReached').html(0);
+        $('#modal_create_campaign #Message').val("").prop("disabled", false);
+        $('.bootstrap-tagsinput').css("background", "#fff");
+
+        _dataFile = [];
+        reload_uploadfile();
+        $('.group-attachment').show();
+        _readyChange = true;
+    }
+
+    function actionEditAds() {
+        if (_currentAds == null) {
+            noty({ "text": "Cannot edit, Ads error. Please try later.", "layout": "topRight", "type": "error" });
+            return;
+        }
+        else {
+            $('.btn-for-detail-ads').hide();
+            $('.btn-for-save-ads').show();
+            $('#modal_create_campaign #CompaignName').prop("disabled", false).trigger('change');
+            $('#modal_create_campaign #Name').prop("disabled", false);
+            $("[name=AdsType]").iCheck('enable').iCheck('update');
+            $('#modal_create_campaign #Resource').prop("disabled", false).trigger('change');
+            $('#modal_create_campaign #LicenseType').prop("disabled", false).trigger('change');
+            $('#modal_create_campaign #State').prop("disabled", false).trigger('change');
+            $('#modal_create_campaign #Zipcode').prop("disabled", false).trigger('change');
+            $('#modal_create_campaign #Additional').prop("disabled", false).trigger('change');
+            $('#modal_create_campaign #Message').prop("disabled", false);
+            $('.bootstrap-tagsinput').css("background", "#fff");
+            $('.group-attachment').show();
+            $('.btn-icon-remove-file').show();
+            _readyChange = true;
+        }
+    }
+
+    function removeads() {
+        if (confirm("Are you sure you want to remove this Ads?") == true) {
+            $.ajax({
+                url: `/adscampaign/removeads?key=${_currentAds.Id}`,
+                type: "get",
+                success: function (data) {
+                    if (data[0]) {
+                        noty({ "text": data[1], "layout": "topRight", "type": "success" });
+                        $('#modal_create_campaign').modal("hide");
+                        $("#data_ads").DataTable().ajax.reload();
+                    }
+                    else {
+                        noty({ "text": data[1], "layout": "topRight", "type": "error" });
+                    }
+                },
+            })
+        }
+    }
+
+    async function sendSMSAds(elemt) {
+        if (confirm("Are you want to Send message?") == true) {
+            if (_currentAds == null) {
+                noty({ "text": "Can not send, Ads error. Please try later.", "layout": "topRight", "type": "error" });
+                return;
+            }
+            if (_currentAds.NumberOfPeopleReached == 0) {
+                noty({ "text": "Can not send. Please add more merchant.", "layout": "topRight", "type": "warning" });
+                return;
+            }
+            $(elemt).find("#loading").show();
+            //show progress bar
+            $('#pleaseWaitDialog').modal({ keyboard: false });
+            $('.progress-bar').css("width", '1%');
+
+            //run api
+            let count = 100;
+            for (let i = 0; i != _currentAds.NumberOfPeopleReached && i != -1;) {
+                await $.ajax({
+                    url: '/adscampaign/SendSMSToMerchant',
+                    type: "post",
+                    data: {
+                        AdsId: _currentAds.Id,
+                        startNumber: i,
+                        countNumber: count
+                    }
+                }).done(function (data) {
+                    if (data[0]) {
+                        i = data[1];
+                        $('.progress-bar').css("width", `${data[1] * 100 / _currentAds.NumberOfPeopleReached}%`);
+                        if (data[1] == _currentAds.NumberOfPeopleReached || data[1] == -1) { // done
+                            $(elemt).find("#loading").hide();
+                            if (data[2] != '' && data[2] != null)
+                                noty({ "text": "Done. Some customer sent error.", "layout": "topRight", "type": "warning" });
+                            else
+                                noty({ "text": "Done. Sent success", "layout": "topRight", "type": "success" });
+
+                            $('#pleaseWaitDialog').modal("hide");
+                            $('#modal_create_campaign').modal("hide");
+                            $("#data_ads").DataTable().ajax.reload();
+                        }
+                        else { //progress
+                        }
+                    }
+                    else {
+                        i = data[1];
+                        noty({ "text": data[2], "layout": "topRight", "type": "warning" });
+                        $('#pleaseWaitDialog').modal("hide");
+                        return;
+                    }
+                }).fail(function () {
+                    $(elemt).find("#loading").hide();
+                    $('#pleaseWaitDialog').modal("hide");
+                    alert("Oops! Something went wrong. Sent failure.");
+                    i = -1;
+                })
+            }
+
+            $(elemt).find("#loading").hide();
+        }
+    }
+
+    function changeStatus(status, elemt) {
+        if (_currentAds == null) {
+            noty({ "text": "Cannot update, Ads error. Please try later.", "layout": "topRight", "type": "error" });
+            return;
+        }
+        if (confirm("Are you sure you want to " + status + " this Ads?") == true) {
+            $(elemt).find("#loading").show();
+            $.ajax({
+                url: `/adscampaign/ChangeStatusAds?key=${_currentAds.Id}&status=${status}`,
+                type: "get",
+                success: function (data) {
+                    $(elemt).find("#loading").hide();
+                    if (data[0]) {
+                        noty({ "text": data[1], "layout": "topRight", "type": "success" });
+                        $("#data_ads").DataTable().ajax.reload();
+                        $('#modal_create_campaign').modal("hide");
+                    }
+                    else {
+                        noty({ "text": data[1], "layout": "topRight", "type": "error" });
+                    }
+                },
+            })
+        }
+    }
+</script>   

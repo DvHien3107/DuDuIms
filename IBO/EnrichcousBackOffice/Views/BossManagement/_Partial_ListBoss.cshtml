@@ -1,0 +1,60 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.C_BossStore>
+
+<table id="view_boss_list" class="table table-bordered table-striped table-hover" data-order='[[ 0, "desc" ]]'>
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Owner</th>
+            <th>Contact person</th>
+            <th>Stores total</th>
+            <th>Last updated</th>
+            <th>Description</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model != null)
+        {
+            foreach (var boss in Model)
+            {
+                <tr id="view_@boss.Id" style="border-color: lightblue" onclick="open_detail_boss('@boss.Id')">
+                    <td>@boss.IdBossManage</td>
+                    <td style="cursor: pointer">
+                        <b class="text-success">@boss.Owner</b><br />
+                        Phone: <b class="text-primary">@boss.Phone</b><br />
+                        Email: <b class="text-primary">@boss.Email</b>
+                    </td>
+                    <td style="cursor: pointer"><b class="text-primary">@boss.ContactPerson</b></td>
+                    <td>
+                        @if (!string.IsNullOrEmpty(boss.StoreCodes))
+                        {
+                            <b class="">@(boss.StoreCodes.Split(',').Count())</b>
+                        }
+                    </td>
+                    <td id="Owner">@(boss.UpdateAt?.ToString("yyyy-MM-dd"))</td>
+                    <td id="Owner">@boss.Description</td>
+                    <td>
+                        <a id="btn-togle-@boss.Id" class="btn btn-default fa fa-angle-left text-green"></a>
+                    </td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="6">
+                    <center><span>Boss not found</span></center>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<script>
+    $('#view_boss_list').DataTable({
+        'paging': true,
+        'searching': false,
+        'ordering': true,
+        'info': false
+    });
+</script>

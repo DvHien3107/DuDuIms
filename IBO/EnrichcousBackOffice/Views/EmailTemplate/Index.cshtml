@@ -1,0 +1,117 @@
+﻿@model IEnumerable<Enrich.DataTransfer.T_EmailTemplate_customize>
+@using EnrichcousBackOffice.Models
+@{
+    /**/
+    var groups = new WebDataModel().T_EmailTemplateGroup.ToList();
+}
+<section class="content-header">
+    <h1>
+        Email Templates
+        <small>Admin</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Dashboard</a></li>
+        <li><i class="fa fa-hashtag"></i> Admin</li>
+        <li class="active">Email Templates</li>
+    </ol>
+</section>
+
+<!-- Main content -->
+<section class="content">
+    <div class="row">
+
+        @if (TempData["e"] != null)
+        {
+            <div class="alert alert-warning alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+            </div>
+        }
+        else if (TempData["s"] != null)
+        {
+            <div class="alert alert-success alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+            </div>
+        }
+
+        <div class="col-md-12">
+            <div class="box box-primary">
+                <div class="box-header ">
+                    <h3 class="box-title">List email template</h3>
+                    <div class="pull-right box-tools">
+                        <a href="/EmailTemplate/Save" class="btn btn-primary" data-toggle="tooltip" title="Add new" data-original-title="Add new">
+                            <i class="fa fa-plus"> New Email template</i>
+                        </a>
+                    </div>
+                </div>
+                <div class="box-body">
+                    <div class="row" style="margin-bottom:30px">
+
+                        <div class="col-md-2" style="padding-right:0px">
+                            <select class="form-control" id="etGroup">
+                                <option value="0">--All groups--</option>
+                                @foreach (var group in groups)
+                                {
+                                    <option value="@group.Id">@group.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-5" style="padding-left:0px; padding-right:0px">
+                            <input type="text" class="form-control" id="etName" placeholder="Search subject name">
+                        </div>
+                        <div class="col-md-3" style="padding-left:0px;">
+                            <button class="btn btn-primary" onclick="SearchEmailTemplate()">
+                                <i class="fa fa-search"></i> Search
+                                <img class="loading" style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                            </button>
+                        </div>
+                    </div>
+                    <div id="ListEmailPartial">
+                        @*@Html.Partial("_EmailTemplateListPartial", Model)*@
+                    </div>
+                    <div style="text-align:center">
+                        <img class="loading" src="~/Content/ajax-loaders/loading-partial.gif" />
+                    </div>
+                </div>
+
+
+
+            </div>
+        </div>
+    </div>
+</section>
+@section script{
+    <script type="text/javascript">
+        $(function () {
+            SearchEmailTemplate(true);
+        });
+        function SearchEmailTemplate(reloadOnly = false) {
+            $("#ListEmailPartial").html('');
+            var group = 0, name = "";
+            if (reloadOnly == false) {
+                $('.loading').show();
+                group = $('#etGroup').val();
+                name = $('#etName').val();
+            }
+            $.ajax({
+                method: "POST",
+                url: "/EmailTemplate/Search",
+                data: { group, name },
+                dataType: "html"
+            })
+                .done(function (data) {
+                    $("#ListEmailPartial").html(data);
+                })
+                .fail(function () {
+                    alert("search fail!");
+                })
+                .always(function () {
+                    $('.loading').hide();
+                })
+        }
+    </script>
+}
+
+
+

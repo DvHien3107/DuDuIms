@@ -1,0 +1,108 @@
+﻿@model List<EnrichcousBackOffice.Models.CustomizeModel.Ticket.T_FileRelatedModel>
+@if (Model.Count > 0)
+{
+
+    <style>
+        .files-related .item {
+            width: 49%;
+            margin: 0.5%;
+            border: 1px solid #f4f4f4;
+            position: relative;
+        }
+
+        .files-related .products-list {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .files-related .product-title {
+            padding: 0px 15px 0px 15px;
+            display: block;
+            font-weight: normal;
+            font-style: italic;
+            color: #555;
+        }
+
+        .files-related .button_action_files_relater {
+            position: absolute;
+            right: 2px;
+            top: 3px;
+        }
+    </style>
+    <div class="box box-default files-related" style="border-bottom:1px solid gray;">
+        <div class="box-header with-border" onclick="togglePanel(this)">
+            <h6 class="box-title close-title" style="font-size:16px;">Files Related</h6>
+            <a href="javascript:void(0)" class="icon" style="color:#555;float:right;"><i class="fa fa-minus" aria-hidden="true"></i></a>
+        </div>
+        <!-- /.box-body -->
+        <div class="panel-body no-padding">
+            <div class="" style="overflow:auto;max-height:400px">
+                <ul class="products-list product-list-in-box">
+                    @foreach (var file in Model)
+                    {
+                        <li class="item">
+                            <div class="button_action_files_relater">
+                                <a class="edit-file-related" style="margin-right:5px" onclick="addOrUpdateMoreInfoTicket(@file.TicketId,@file.Id)" href="javascript:void(0)"><i class="fa fa-pencil" title="edit files related"></i></a>
+                                <a class="delete-file-related" onclick="deleteFileRelated(@file.Id)" href="javascript:void(0)"><i class="fa fa-trash" title="delete files related"></i></a>
+                            </div>
+
+                            <div style="padding-top:5px;">
+
+                                <div>
+                                    @Html.Partial("_UploadMoreFilesPartial_Small", file.FilesRelated, new ViewDataDictionary { { "upload", false } })
+                                </div>
+                                <div style="padding:15px;">
+                                    @file.Note
+                                </div>
+                            </div>
+                        </li>
+                    }
+
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+    <script>
+        function deleteFileRelated(Id) {
+            if (confirm('are you sure delete this more info')) {
+                $.ajax({
+                    type: "POST",
+                    url: "/Ticket_New/DeleteFileRelated",
+                    data: { Id }, // serializes the form's elements.
+                    success: function (data) {
+                        if (data.status) {
+                            success(data.message);
+                            loadTicketFileRelated();
+                            Gettimeline();
+                        }
+                        else {
+                            error(data.message);
+                        }
+                    },
+                    error: function (xhr) {
+                        alert("Error occured.please try again");
+                    },
+                    complete: function () {
+                        overlayOff();
+                    },
+                });
+            }
+
+        }
+        function togglePanel(el) {
+            var panelbody = $(el).parent().children('.panel-body');
+            var btnicon = $(el).children('.icon');
+            if ($(panelbody).is(':visible')) {
+                $(panelbody).slideUp();
+                $(btnicon).html('<i class="fa fa-plus" aria-hidden="true"></i>');
+            }
+            else {
+                $(panelbody).slideDown();
+                $(btnicon).html('<i class="fa fa-minus" aria-hidden="true"></i>');
+            }
+        }
+    </script>
+}

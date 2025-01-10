@@ -1,0 +1,750 @@
+@model IEnumerable<EnrichcousBackOffice.Models.CustomizeModel.DevelopmetTicket_view>
+@using EnrichcousBackOffice.Models;
+@{
+    ViewBag.Title = "Enrich IMS - Development ticket system";
+    var ticketList = Model.ToList();
+
+    if (Request["t"] == "invisible")
+    {
+        //Invisible
+        ticketList = Model.Where(tic => tic.Ticket.Visible == null || tic.Ticket.Visible == false).ToList();
+    }
+    else if (Request["t"] == "unassigned")
+    {
+        //unassigned ticket
+        ticketList = Model.Where(t => t.Ticket.Visible == true && t.Ticket.DateClosed == null && string.IsNullOrEmpty(t.assigned_member_numbers) == true && t.status_type != "closed").ToList();
+    }
+    else if (string.IsNullOrWhiteSpace(Request["t"]) == true || Request["t"] == "open")
+    {
+        //open ticket
+        ticketList = Model.Where(tic => tic.Ticket.Visible == true && (string.IsNullOrEmpty(tic.assigned_member_numbers) == false) && tic.status_type != "closed").ToList();
+    }
+    else if (Request["t"] == "closed")
+    {
+        //closed
+        ticketList = Model.Where(tic => tic.Ticket.Visible == true && tic.status_type == "closed").ToList();
+    }
+
+    var group = ViewBag.group;
+    var stage = ViewBag.stage as T_Project_Stage;
+    var version = ViewBag.version as T_Project_Milestone;
+}
+
+
+@section title{
+   Development ticket system
+}
+
+<style type="text/css">
+    .select ul li.option {
+        background-color: #DEDEDE;
+        box-shadow: 0px 1px 0 #DEDEDE, 0px -1px 0 #DEDEDE;
+        -webkit-box-shadow: 0px 1px 0 #DEDEDE, 0px -1px 0 #DEDEDE;
+        -moz-box-shadow: 0px 1px 0 #DEDEDE, 0px -1px 0 #DEDEDE;
+    }
+
+    .select ul li.option {
+        z-index: 1;
+        padding: 5px;
+        display: none;
+        color: white;
+        list-style: none;
+        padding: 6px 12px;
+    }
+
+    .select ul li:first-child {
+        display: block;
+        color: black;
+    }
+
+    .select ul li {
+        cursor: pointer;
+    }
+</style>
+
+
+<section class="content-header">
+    <h1>
+        DEVELOPMENT
+        <small>Tickets</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li><i class="fa fa-code"></i> Development</li>
+        <li class="active">Tickets</li>
+    </ol>
+</section>
+
+
+<!-- Main content -->
+<section class="content">
+    <div class="row">
+
+        @if (TempData["e"] != null)
+        {
+            <div class="col-md-12">
+                <div class="alert alert-warning alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                    <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+                </div>
+            </div>
+        }
+        else if (TempData["s"] != null)
+        {
+            <div class="col-md-12">
+                <div class="alert alert-success alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                    <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+                </div>
+            </div>
+        }
+
+        <div class="col-md-12">
+            <div class="box box-primary">
+                <!-- /.box-header -->
+                <div class="box-header with-border">
+                    <div class="col-md-12" style="padding: 0;">
+                        <div class="form-inline" style="padding-left: 0;">
+                            <form action="/development/">
+                                @*<div class="group-item btn-group btn-group-md">
+                                        <div class="btn-group">
+                                            <button type="button" class="btn btn-success btn-flat" onclick="select_stage_show()">Project <b>@(stage?.ProjectName)</b></button>
+                                            <span class="btn"><i class="fa fa-angle-double-right fa-2x" style="margin:-6px 0"></i></span>
+                                        </div>
+                                        <div class="btn-group">
+                                            <button type="button" class="btn btn-info btn-flat" onclick="select_stage_show('@(stage?.ProjectId)')"></button>
+                                            <span class="btn"><i class="fa fa-angle-double-right fa-2x" style="margin:-6px 0"></i></span>
+                                        </div>
+                                        <div class="btn-group">
+                                            <button type="button" class="btn btn-primary btn-flat" onclick="select_stage_show(null,'@(stage?.Id)')">Version <b>@(version?.Name??"All")</b></button>
+                                        </div>
+                                    </div>*@
+                                <div id="cssmenu">
+                                    <ul>
+                                        <li><a href="#3" onclick="select_stage_show(null,'@(stage?.Id)')"><b>@(version?.Name??"All Version")</b></a></li>
+                                        <li><a href="#2" onclick="select_stage_show('@(stage?.ProjectId)')"><b>@(stage?.Name)</b></a></li>
+                                        <li><a href="#1" onclick="select_stage_show()"><b>@(stage?.ProjectName)</b></a></li>
+                                    </ul>
+                                </div>
+                                <input type="hidden" name="t" value="@Request["t"]" />
+                                <input type="hidden" name="g" value="@Request["g"]" />
+
+                                <div class="input-group col-sm-2 pull-right">
+                                    <input onkeyup="if (event.key == 'Enter' ) {overlayOn();$(this).closest('form').submit() }" onblur="overlayOn(); $(this).closest('form').submit()" type="text" name="s_content" placeholder="Search by ticket#, name" class="form-control" value="@(TempData["tic_s_content"])">
+                                </div>
+
+                                <div class="input-group col-sm-2  pull-right" @if (TempData["tic_s_filter"]?.ToString() != "assigned") { @Html.Raw(@"style = ""display:none""") }>
+                                    <select name="s_related" class="select2 form-control" onchange="overlayOn(); $(this).closest('form').submit()">
+
+                                        @if (ViewBag.assignedObj != null)
+                                        {
+                                            foreach (var item in ViewBag.assignedObj)
+                                            {
+                                                string Id = item.GetType().GetProperty("Id").GetValue(item, null);
+                                                string Name = item.GetType().GetProperty("Name").GetValue(item, null);
+                                                <option @if (TempData["tic_s_related"]?.ToString() == Id) { @Html.Raw("selected") } value="@Id">@@@Name</option>
+                                            }
+                                        }
+
+
+                                    </select>
+                                </div>
+
+
+                                <div class="input-group col-sm-2 pull-right">
+                                    <div class="input-group-addon">
+                                        <i class="fa fa-filter"></i> Filters
+                                    </div>
+                                    <select style="width:120px" name="s_filter" onchange="if ($(this).val() != 'createby') { overlayOn(); $(this).closest('form').submit() }" class="form-control">
+                                        <option value="all">All</option>
+                                        <option @if (TempData["tic_s_filter"]?.ToString() == "assigned") { @Html.Raw("selected") } value="assigned">Assigned to</option>
+                                        <option @if (TempData["tic_s_filter"]?.ToString() == "me") { @Html.Raw("selected") } value="me">Your tickets</option>
+                                        @*<option @if (TempData["tic_s_filter"]?.ToString() == "createby") { @Html.Raw("selected") } value="createby">Owner by</option>*@
+                                        <option @if (TempData["tic_s_filter"]?.ToString() == "salon") { @Html.Raw("selected") } value="salon">Salon</option>
+                                    </select>
+
+                                </div>
+
+                                <div class="input-group col-sm-2 pull-right">
+                                    <div class="input-group-addon">
+                                        <i class="fa fa-calendar"></i> To
+                                    </div>
+                                    <input onchange="overlayOn();$(this).closest('form').submit()" type="text" name="tdate" class="form-control datepicker" value="@(TempData["tic_tdate"])">
+                                </div>
+
+                                <div class="input-group col-sm-2 pull-right">
+                                    <div class="input-group-addon">
+                                        <i class="fa fa-calendar"></i> From
+                                    </div>
+                                    <input onchange="overlayOn();$(this).closest('form').submit()" type="text" name="fdate" class="form-control datepicker" value="@TempData["tic_fdate"]">
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <!-- /.box-tools -->
+                </div>
+
+                <!-- .box-body -->
+                <div class="box-body">
+                    <!--Tab button-->
+                    <div class="box box-solid" style="border-bottom:1px solid gray;">
+                        <div class="box-header with-border">
+                            @*<h3 class="box-title">Filter</h3>*@
+                        </div>
+                        <div id="ticket_type_select" class="box-body no-padding">
+
+                            <a href="/development/?t=open&g=@group" class="btn btn-app   @if (string.IsNullOrWhiteSpace(Request["t"]) == true || Request["t"] == "open") {@Html.Raw("btn-info active") } ">
+                                <span class="badge bg-aqua"><span class="fill_count"></span><span id="open">@ViewBag.open</span></span>
+                                <i class="fa fa-eye"></i> Open ticket
+                            </a>
+                            <a href="/development/?t=unassigned&g=@group" class="btn btn-app  @if (Request["t"] == "unassigned") {@Html.Raw("btn-info  active") }">
+                                <span class="badge bg-yellow "><span class="fill_count"></span><span id="unassigned">@ViewBag.unassigned</span></span>
+                                <i class="fa fa-bullhorn"></i> Unassigned
+                            </a>
+
+                            <a href="/development/?t=closed&g=@group" class="btn btn-app  @if (Request["t"] == "closed") {@Html.Raw("btn-info  active") } ">
+                                <span class="badge bg-blue "><span class="fill_count"></span><span id="closed">@ViewBag.closed</span></span>
+                                <i class="fa  fa-check"></i> Closed ticket
+                            </a>
+
+                            <a href="/development/?t=all&g=@group" class="btn btn-app @if (Request["t"] == "all") {@Html.Raw("btn-info active") } ">
+                                <span class="badge bg-navy"><span class="fill_count"></span><span id="all">@ViewBag.all</span></span>
+                                <i class="fa fa-envelope "></i> All Ticket
+                            </a>
+
+
+
+
+                            <a href="/development/?t=invisible&g=@group" class="btn btn-app   @if (Request["t"] == "invisible") {@Html.Raw("btn-info  active") }">
+                                <span class="badge bg-red"><span class="fill_count"></span><span id="invisible">@ViewBag.invisible</span></span>
+                                <i class="fa fa-trash-o"></i> Invisible
+                            </a>
+
+                            <a href="/development/update" onclick="overlayOn()" class="btn btn-primary pull-right">
+                                <i class="fa fa-plus"></i> New ticket
+                            </a>
+                        </div>
+                        <!-- /.box-body -->
+                    </div>
+
+                    <div class="mailbox-messages">
+
+                        @*@Html.Partial("_MaskAsMultiTicketPartial")*@
+
+
+                        <table class="table table-hover table-striped" data-order='[[7,"desc"]]'>
+                            <thead>
+                                <tr>
+                                    <th style="display:none">type</th>
+                                    <th style="display:none">status</th>
+                                    <th style="display:none">priority</th>
+                                    <th style="display:none">severity</th>
+                                    <th style="display:none">cate</th>
+                                    <th style="display:none">tags</th>
+                                    @*<th style="display:none">group</th>*@
+                                    <th class="no-sort"><input name="checkall" type="checkbox" /></th>
+                                    <th>#</th>
+                                    <th>Ticket name</th>
+                                    <th>Status</th>
+                                    <th>Assigned</th>
+                                    <th>Shared Stage</th>
+                                    <th>Last updated</th>
+
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in ticketList)
+                                {
+                                    <tr @if (item.status_type == "closed") { @Html.Raw(@"class=""strikeout""") }>
+
+                                        <td style="display:none">@(item.Ticket.TypeId == null ? "NULL" : item.Ticket.TypeId.ToString().PadLeft(4, '0'))</td>
+                                        <td style="display:none">@(string.IsNullOrEmpty(item.Ticket.StatusName) ? "NULL" : item.Ticket.StatusName.Replace(" ","").ToLower())</td>
+                                        <td style="display:none">@(string.IsNullOrEmpty(item.Ticket.PriorityName) ? "NULL" : item.Ticket.PriorityName)</td>
+                                        <td style="display:none">@(item.Ticket.SeverityId == null ? "NULL" : item.Ticket.SeverityId.ToString())</td>
+                                        <td style="display:none">@(string.IsNullOrEmpty(item.Ticket.ProjectId) ? "NULL" : item.Ticket.ProjectId.ToString())</td>
+                                        <td style="display:none">@(string.IsNullOrEmpty(item.Ticket.Tags) ? "NULL" : item.Ticket.Tags)</td>
+                                        @*<td style="display:none">@(item.Ticket.GroupID == null ? "NULL" : item.Ticket.GroupID.ToString())</td>*@
+
+                                        <td class="mailbox-star"><input name="checkticket" type="checkbox" value="@item.Ticket.Id" /></td>
+                                        <td>#@EnrichcousBackOffice.AppLB.CommonFunc.view_TicketId(item.Ticket.Id)</td>
+                                        <td class="mailbox-name">
+                                            <a href="/development/detail/@item.Ticket.Id?urlback=@Request.Url.PathAndQuery" onclick="overlayOn()" title="Click here to open ticket" data-toggle="tooltip">@item.Ticket.Name</a>
+                                            <br />
+                                            <i style="color:grey;font-size:0.85em">
+                                                Opened @(EnrichcousBackOffice.AppLB.CommonFunc.DateTimeRemain(item.Ticket.CreateAt.Value)) by @item.Ticket.CreateByName
+                                            </i>
+                                            @if (string.IsNullOrWhiteSpace(item.Ticket.CustomerCode) == false)
+                                            {
+                                                <br />
+                                                <i><b>Merchant: </b> @item.Ticket.CustomerName</i>
+                                            }
+                                            <br />
+                                            <a onclick="label_select('priority','@item.Ticket.PriorityName',$(this).html().trim())" data-toggle="tooltip" data-original-title="Click to filter">
+                                                @if (item.Ticket.PriorityName?.Contains("Low") == true)
+                                                {
+                                                    <span class="label" style="background-color: #cfcfcf">Low</span>
+                                                }
+                                                else if (item.Ticket.PriorityName?.Contains("Medium") == true)
+                                                {
+                                                    <span class="label" style="background-color:#00acd6">Medium</span>
+                                                }
+                                                else if (item.Ticket.PriorityName?.Contains("High") == true)
+                                                {
+                                                    <span class="label" style="background-color:#ff8616">High</span>
+                                                }
+                                                else if (item.Ticket.PriorityName?.Contains("Urgent") == true)
+                                                {
+                                                    <span class="label" style="background-color:#ff1e16">Urgent</span>
+                                                }
+                                            </a>
+                                            <a onclick="label_select('severity','@item.Ticket.SeverityId',$(this).html().trim())" data-toggle="tooltip" data-original-title="Click to filter">
+                                                @if (item.Ticket.SeverityName?.Contains("Minor") == true)
+                                                {
+                                                    <span class="label" style="background-color: #cfcfcf">Minor</span>
+                                                }
+                                                else if (item.Ticket.SeverityName?.Contains("Serious") == true)
+                                                {
+                                                    <span class="label" style="background-color:#ff8616">Serious</span>
+                                                }
+                                                else if (item.Ticket.SeverityName?.Contains("Catastrophic") == true)
+                                                {
+                                                    <span class="label" style="background-color:#ff1e16">Catastrophic</span>
+                                                }
+                                            </a>
+                                            @if (!string.IsNullOrEmpty(item.Ticket.Tags))
+                                            {
+
+                                                foreach (var tag in item.Ticket.Tags.Split('|'))
+                                                {
+                                                    if (!string.IsNullOrEmpty(tag))
+                                                    {
+                                                        <a data-toggle="tooltip" data-original-title="Click to filter" onclick="label_select('tags','@(tag.Split(new string[] { "::" },StringSplitOptions.RemoveEmptyEntries)[0])',$(this).html().trim())"><span class="label" style="background-color:@(tag.Split(new string[] { "::" }, StringSplitOptions.RemoveEmptyEntries)[1])">@(tag.Split(new string[] { "::" }, StringSplitOptions.RemoveEmptyEntries)[0].Replace("[", "").Replace("]", ""))</span></a>
+                                                        @Html.Raw("&nbsp;");
+                                                    }
+                                                }
+                                            }
+                                        </td>
+                                        <td>@(string.IsNullOrWhiteSpace(item.status) == true ? "Open" : item.status)</td>
+                                        <td>
+                                            @if (string.IsNullOrWhiteSpace(item.assigned_member_numbers) == false)
+                                            {
+
+                                                var mem = item.assigned_member_names?.Split(new char[] { '|' });
+                                                var mem_id = item.assigned_member_numbers?.Split(new char[] { '|' });
+                                                for (int i = 0; i < mem_id.Length && i < mem?.Length; i++)
+                                                {
+                                                    if (!string.IsNullOrWhiteSpace(mem_id[i]) && !string.IsNullOrWhiteSpace(mem?[i]))
+                                                    {
+                                                        <a class="label label-success" data-toggle="tooltip" data-original-title="Click to filter" onclick="label_select_member('@mem_id[i]')">@mem[i]</a>
+                                                    }
+                                                }
+                                            }
+                                            @if (string.IsNullOrWhiteSpace(item.Ticket.ReassignedToMemberNumber) == false)
+                                            {
+                                                <a class="label label-success" data-toggle="tooltip" data-original-title="Click to filter" onclick="label_select_member('@item.Ticket.ReassignedToMemberNumber')">@item.Ticket.ReassignedToMemberName</a>
+                                            }
+
+                                            <br />
+
+                                        </td>
+                                        <td>
+                                            @foreach (var shared in item.shared_stages)
+                                            {
+                                                <label class="label label-warning">@shared.StageName</label>
+                                            }
+                                        </td>
+                                        <td>
+                                            @{
+                                                string data = EnrichcousBackOffice.ViewControler.TicketViewController.GetLastestUpdate(item.Ticket.UpdateTicketHistory);
+                                            }
+
+                                            @if (!string.IsNullOrEmpty(data))
+                                            {
+                                                @data.Split(new char[] { '-' })[0]
+                                                <br /> <span>- @data.Split(new char[] { '-' })[1]</span>
+                                            }
+                                        </td>
+
+
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th style="display:none">type</th>
+                                    <th style="display:none">group</th>
+                                    <th style="display:none">priority</th>
+                                    <th style="display:none">severity</th>
+                                    <th style="display:none">cate</th>
+                                    <th style="display:none">tags</th>
+                                    <th></th>
+                                    <th>#</th>
+                                    <th>Ticket name</th>
+                                    <th>Status</th>
+                                    <th>Assigned</th>
+                                    <td>Open date</td>
+                                    <th>Last updated</th>
+
+                                </tr>
+                            </tfoot>
+                        </table>
+                        <!-- /.table -->
+                    </div>
+                    <!-- /.mail-box-messages -->
+                </div>
+                <!-- /.box-body -->
+            </div>
+            <!-- /. box -->
+        </div>
+        <!-- /.col -->
+    </div>
+    <!-- /.row -->
+    <div id="select_stage_partial">
+
+    </div>
+</section>
+<!-- /.content -->
+
+
+@section style{
+
+    <style>
+        tr.strikeout {
+            text-decoration: line-through;
+        }
+
+        #ticket_type_select > a.active > .badge {
+            font-size: 12px;
+            top: -5px;
+        }
+    </style>
+    <link href="~/Content/DropdownStyle/dropdown.css" rel="stylesheet" />
+}
+
+@section script{
+    <script type="text/javascript">
+        function select_stage_show(project, stage) {
+            $.ajax({
+                url: "/development/_Partial_SelectStage",
+                method: "POST",
+                dataType: "html",
+            }).done(function (data) {
+                $("#select_stage_partial").html(data);
+                if (stage) {
+                    select_stage(stage);
+                } else if (project){
+                    select_project(project);
+                }
+            }).fail(function () {
+                alert("_Partial_SelectStage fail")
+            })
+        }
+
+
+        /*-----------------------------------------*/
+        @if (string.IsNullOrEmpty(Request.Url.Query) == true)
+        {
+            @:localStorage.removeItem("dev_filter_default"); localStorage.removeItem("dev_filter");
+        }
+
+        var dev_filter_default = localStorage.getItem("dev_filter_default");
+        console.log(dev_filter_default);
+
+        //table
+        var table = $('.table').DataTable({
+            'paging': true,
+            'lengthChange': true,
+            'searching': true,
+            'ordering': true,
+            'info': false,
+            'autoWidth': true,
+            "columnDefs": [{
+                "targets": 'no-sort',
+                "orderable": false,
+            }]
+            //"orderCellsTop": true,
+            //"fixedHeader": true
+        });
+
+        table.on('draw', function () {
+            //alert('Table redrawn');
+            //initialCheck();
+        });
+
+        $(function () {
+            ///select stage
+            //Datepicker
+            $(".datepicker").datepicker({
+                changeMonth: true,
+                changeYear: true,
+                yearRange: '1950:2050'
+            });
+            $("#DataTables_Table_0_wrapper").find(".row").first().find("div").first().removeClass("col-sm-6").addClass("col-sm-3");
+            $("#DataTables_Table_0_wrapper").find(".row").first().find("div").first().next().removeClass("col-sm-6").addClass("col-sm-9 filter_selectors");
+
+            //initialCheck();
+
+            //getTicketAmount();
+            getTicketFilter();
+        });
+
+        function initialCheck() {
+            $("input[name=checkall]").prop("checked", false);
+            $("input[name=checkticket]").prop("checked", false);
+            cancelMarkas();
+
+            //checkall
+            $("input[name=checkall]").on("click", function (e) {
+                e.stopPropagation();
+                var allcheck = $(this).prop("checked");
+                $("input[name=checkticket]").each(function () {
+                    $(this).prop("checked", allcheck);
+                })
+                var findcheck = $("input[name=checkticket]:checked").map(function () { return $(this).val(); }).toArray();
+                //console.log(findcheck);
+                $("#markas_div").children("h4").first().html(findcheck.length + " selected");
+                if (findcheck.length > 0) {
+                    getGroupLabelProject();
+                }
+                else {
+                    cancelMarkas();
+                }
+            });
+            //check selected
+            $("input[name=checkticket]").on("click", function () {
+
+                var findcheck = $("input[name=checkticket]:checked").map(function () { return $(this).val(); }).toArray();
+                if (findcheck.length == $("input[name=checkticket]").length) {
+                    $("input[name=checkall]").prop("checked", true);
+                }
+                else if (findcheck == null || findcheck.length == 0) {
+                    $("input[name=checkall]").prop("checked", false);
+                }
+                //console.log(findcheck);
+                $("#markas_div").children("h4").first().html(findcheck.length + " selected");
+                if (findcheck.length > 0) {
+                    getGroupLabelProject();
+                }
+                else {
+                    cancelMarkas();
+                }
+            });
+        }
+
+        /*
+         * load ticket type/group
+         */
+        function getTicketFilter() {
+            let dev_filter = localStorage.getItem("dev_filter");
+            if (JSON.parse(dev_filter) === null) {
+                $.post("/TicketSpecial/LoadDevFilter", function (data, status) {
+                    if (data[0] == false) return;
+                    localStorage.setItem("dev_filter", JSON.stringify(data));
+                    getTicketFilter();
+                });
+                return;
+            }
+            let data = JSON.parse(dev_filter);
+            let tableRowAppend = $("#DataTables_Table_0_wrapper").find(".row").first().find(".col-sm-9");
+            tableRowAppend.children().remove();
+            let selectBuild = (rows, selectInit, value, text, colors = []) => {
+                let select = $(selectInit)
+                for (let i = 0; i < rows.length; i++) {
+                    let style = ""
+                    if (typeof colors === "function") {
+                        style = `style='font-weight:bold;color:${colors(rows[i])}'`;
+                    } else if (colors.length > 0) {
+                        if (colors[i] !== null && colors[i] !== undefined) {
+                            style = `style='font-weight:bold;color:${colors[i]}'`;
+                        } else if (i > colors.length) {
+                            style = `style='font-weight:bold;color:${colors[i%colors.length]}'`;
+                        }
+                    }
+                    select.append($(`<option ${style} value='${value(rows[i])}'>${text(rows[i])}</option>`));
+                }
+                return select;
+            }
+            // Type
+            tableRowAppend.append(selectBuild( data[1],
+               `<select style='max-width:150px' id='ticket_type_filter' class='form-control' onchange='ticketFilter(this, ${tableRowAppend.children().length})'>
+                    <option value='0'>All Type</option>
+                </select>`, (value) => value.Id.toString().padStart(4, '0'),  (text) => text.TypeName
+            ));
+            // Status
+            tableRowAppend.append(selectBuild( data[2],
+               `<select style='max-width:150px' id='ticket_status_filter' class='form-control' onchange='ticketFilter(this, ${tableRowAppend.children().length})'>
+                    <option value='0'>All Status</option>
+                    <option value='NULL'>No Status</option>
+                </select>`, (value) => value.Key, (text) => text.Name
+            ));
+            // Priority
+            tableRowAppend.append(selectBuild( ["Low", "Medium", "High", "Urgent"],
+               `<select style='max-width:150px' id='ticket_priority_filter' class='form-control' onchange='ticketFilter(this, ${tableRowAppend.children().length})'>
+                    <option value='0'>All Priority</option>
+                    <option value='NULL'>No Priority</option>
+                </select>`, (value) => value, (text) => text, ["#cfcfcf", "#00acd6", "#ff8616", "#ff1e16"]
+            ));
+            // Severity
+            tableRowAppend.append(selectBuild(data[3],
+               `<select style='max-width:150px' id='ticket_severity_filter' class='form-control' onchange='ticketFilter(this, ${tableRowAppend.children().length})'>
+                    <option value='0'>All Severity</option>
+                    <option value='NULL'>No severity</option>
+                </select>`, (value) => value.Id, (text) => text.SeverityName, ["#cfcfcf", "#ff8616", "#ff1e16"]
+            ));
+            // Category | Project
+            var selectP = $(
+               `<select style='max-width:150px' id='ticket_cate_filter' class='form-control' onchange='ticketFilter(this, ${tableRowAppend.children().length})'>
+                    <option value='0'>All Category</option>
+                    <option value='NULL'>No category</option>
+                </select>`);
+            let rows = data[4];
+            for (const groupId in rows) {
+                let group = rows[groupId];
+                let optGroup = $(`<optgroup label='${group.Name}' data-value='${group.Id}'></optgroup>`);
+                for (const category of group["Categories"]) {
+                    optGroup.append($(`<option value='${category.Id}'>${category.Name}</option>`));
+                }
+                selectP.append(optGroup);
+            }
+            tableRowAppend.append(selectP);
+            // Tags
+            tableRowAppend.append(selectBuild(data[5],
+               `<select style='max-width:150px' id='ticket_tags_filter' class='form-control' onchange='ticketFilter(this, ${tableRowAppend.children().length})'>
+                    <option value='0'>All tags</option>
+                    <option value='NULL'>No tags</option>
+                </select>`, (value) => value.Name, (text) => text.Name.replace(/\]|\[/g,""), (color) => color.Color
+            ));
+
+            //
+            var clear_btn = "<a id='btn_clear' data-toggle='tooltip' data-original-title='Click to clear filter' style='padding:10px; display:none;font-weight:bold' onclick='clear_filter()' > < Clear filter > </a>";
+            $("#DataTables_Table_0_wrapper").find(".row").first().find(".col-sm-3").append(clear_btn);
+            $('[data-toggle="tooltip"]').tooltip();
+            $("#DataTables_Table_0_filter").remove();
+
+            //load default type/group/tag
+            console.log("filter defaut data:" + dev_filter_default);
+            let filterRows = $("#DataTables_Table_0_wrapper").find(".row").first().find(".col-sm-9");
+            dev_filter_default = localStorage.getItem("dev_filter_default");
+            if (dev_filter_default) {
+                let filters = JSON.parse(dev_filter_default);
+                filters.forEach((val, index) => {
+                    let select = $(filterRows.find("select").get(index));
+                    if(select.length) {
+                        select.val(filters[index]);
+                    } else {
+                        let item = $(`.filter-group-item[data-key='${filters[index]}']`);
+                        $("span.filter-group-value").text(item.text());
+                        $("span.filter-group-value").parent("label").css({"background-color" : `${item.parent("label").css("background-color")} !important`});
+                    }
+                    table.columns(index).search(filters[index] == "0" ? "" : filters[index]).draw();
+                });
+            }
+            else {
+                dev_filter_default = JSON.stringify(Array($("#DataTables_Table_0_wrapper").find(".row").first().find(".col-sm-9 select").length + 1).fill('0'));
+                localStorage.setItem("dev_filter_default", dev_filter_default);
+            }
+            let g = '@group';
+            if (g != '') {
+                let item = $(`.filter-group-item[data-key='${g}']`);
+                $("span.filter-group-value").text(item.text());
+                $("span.filter-group-value").parent("label").css({ "background-color": `${item.parent("label").css("background-color")} !important` });
+            }
+            show_hide_clear_btn();
+        }
+
+        function filterGroup(key) {
+            window.location.href = "/development/?t=@Request["t"]&g=" + key;
+            //$('input[type="checkbox"].filter-group-select').prop("checked", false);
+            //let index = $("#DataTables_Table_0_wrapper").find(".row").first().find(".col-sm-9 select").length;
+            //table.columns(index).search(key).draw();
+            //var filterArr = JSON.parse(localStorage.getItem("dev_filter_default"));
+            //filterArr[index] = key;
+            //localStorage.setItem("dev_filter_default", JSON.stringify(filterArr));
+            //let item = $(`.filter-group-item[data-key='${key}']`);
+            //$("span.filter-group-value").text(item.text());
+            //$("span.filter-group-value").parent("label").css({"background-color" : `${item.parent("label").css("background-color")} !important`});
+        }
+        function setcolorhover() {
+            var color = "";
+            $(".filter-group .filter-group-value").hover(
+                function () {
+                    color = $(this).css("background-color");
+                    rgb = color.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+                    $(this).css("background-color", "rgb(" + (rgb[1] - 30) + "," + (rgb[2] - 30) + "," + (rgb[3] - 30) + ")");
+                },
+                function () {
+                    $(this).css("background-color", color);
+                }
+            )
+        }
+        $(document).ready(() => {
+            $('div.fill-over').on("click", ()=>{
+                $('input[type="checkbox"].filter-group-select').prop("checked", false);
+            });
+        });
+
+        /**
+         * filter ticket type [ticketspecial>index]
+         * @@param select combobox ticket type
+         * @@param col vi tri cot can tim kiem
+         */
+        function ticketFilter(select, col) {
+
+            var id = $(select).val();
+
+            console.log("id: " + id + "|col: " + col);
+
+            if (id != "0") {
+                table.columns([col]).search(id).draw();
+            }
+            else {
+                table.columns([col]).search('').draw();
+            }
+            show_hide_clear_btn();
+
+            var data_filter_arr = JSON.parse(localStorage.getItem("dev_filter_default"));
+            data_filter_arr[col] = id;
+
+            localStorage.setItem("dev_filter_default", JSON.stringify(data_filter_arr));
+            //console.log("ticket filter: " + dev_filter_default);
+        }
+
+        function label_select(type, value, text) {
+            clear_table_filter();
+            $("#ticket_" + type + "_filter").val(value).trigger("change");
+            noty({ "text": "Filter: " + text, "layout": "topRight", "type": "default" });
+        }
+        function clear_table_filter() {
+            $(".filter_selectors").find("select").val("0").trigger("change");
+            dev_filter_default = JSON.stringify(Array($("#DataTables_Table_0_wrapper").find(".row").first().find(".col-sm-9 select").length + 1).fill('0'));
+            localStorage.setItem("dev_filter_default", dev_filter_default);
+        }
+        function clear_filter() {
+            clear_table_filter();
+            if ($("select[name=s_filter]").val() != "all" || $("input[name=s_content]").val() != "") {
+                $("input[name=s_content]").val(""); $("select[name=s_filter]").val("all").trigger("change");
+            }
+        }
+        function show_hide_clear_btn() {
+            if ($(".filter_selectors").find('select option:selected').not('select option[value="0"]:selected').length > 0||$("select[name=s_filter]").val() != "all" || $("input[name=s_content]").val() != "") {
+                $("#btn_clear").show();
+            } else {
+                $("#btn_clear").hide();
+            }
+            $("#ticket_type_select .fill_count").html("");
+            $("#ticket_type_select > a.active .fill_count").html(table.page.info().recordsDisplay + "/");
+        }
+        function label_select_member(id) {
+            clear_table_filter();
+            if ($('select[name=s_related]').find("option[value=" + id + "]").length == 0) {
+                $('select[name=s_related]').append("<option value='"+id+"'></option>")
+            }
+            $('select[name=s_filter]').val("assigned");
+            $('select[name=s_related]').val(id).trigger('change');
+        }
+    </script>
+}
+
+
+
+<!-- /.content -->

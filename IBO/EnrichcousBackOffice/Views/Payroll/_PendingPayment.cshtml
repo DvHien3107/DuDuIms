@@ -1,0 +1,949 @@
+﻿@{
+    var access = EnrichcousBackOffice.AppLB.Authority.GetAccessAuthority();
+}
+<style>
+    .payroll-info {
+        cursor: pointer;
+    }
+    .bg-not-complete {
+        background-color: #8a8a8a;
+        color: white;
+    }
+    .bg-not-paid {
+        background-color: #ff774c;
+        color: white;
+    }
+    .bg-complete {
+        background-color: #00a65a;
+        color: white;
+    }
+    .bg-warning {
+        background-color: #dea74f;
+        color: white;
+    }
+</style>
+<div class="tab-pane active">
+    <div style="text-align:center">
+        <img id="load_partial_tab" src="~/Content/ajax-loaders/loading-partial.gif" style="display:none" />
+    </div>
+    <div class="content-tab-load">
+        <div id="partial_tab">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title"></h3>
+                    <div class="box-tools pull-right">
+                        <a class="btn btn-sm btn-info btn-header-lead" onclick="export_excel()" style="font-size:12px; margin-left:5px">
+                            <i class="fa fa-file-excel-o"></i> Export excel <img id="img_load_excel" src="/Content/ajax-loaders/ajax-loader-1.gif" style="display:none">
+                        </a>
+                    </div>
+                </div>
+                <div class="box-body">
+                    @if ((access.Any(k => k.Key.Equals("payroll_accounting")) == true && access["payroll_accounting"] == true) || (access.Any(k => k.Key.Equals("payroll_viewall")) == true && access["payroll_viewall"] == true))
+                    {
+                    <div class="row">
+                        <div class="input-group col-sm-2 pull-left" style="padding: 2px">
+                            <label class="input-group-addon" style="min-width:100px">
+                                Search By
+                            </label>
+                            <input type="text" id="SearchText" name="SearchText" placeholder="Name/ID/Email/Phone" class="form-control change-filter" value="">
+                        </div>
+                        <div class="input-group col-sm-2 pull-left" style="padding: 2px">
+                            <label class="input-group-addon" style="min-width:100px">
+                                Department
+                            </label>
+                            <select id="DepartMentId" name="DepartMentId" class="form-control change-filter">
+                            </select>
+                            <div class="loading-dropdown-dep" style="position: absolute;top: 8px;right: 7px;z-index: 999;background: white;font-size:17px">
+                                <i class="fa fa-spinner fa-spin"></i>
+                            </div>
+                        </div>
+                        <div class="input-group col-sm-2 pull-left groups-div" style="padding: 2px;">
+                            <label class="input-group-addon label-groups">
+                                Groups
+                            </label>
+                            <select id="Groups" name="Groups" class="form-control change-filter">
+                                <option value="">Please Select</option>
+                            </select>
+                            <div class="loading-dropdown-gr" style="position: absolute;top: 8px;right: 7px;z-index: 999;background: white;font-size:17px;display:none">
+                                <i class="fa fa-spinner fa-spin"></i>
+                            </div>
+                        </div>
+                        <div class="input-group col-sm-3 pull-left groups-div" style="padding: 2px;">
+                            <label class="input-group-addon label-groups">
+                                Status
+                            </label>
+                            <select id="Status" name="Status" class="form-control change-filter">
+                                <option value="">All</option>
+                                <option value="NotYetCalculated">Calculated Not yet</option>
+                                <option value="NotPaid">Not Paid</option>
+                                <option value="NotComplete">Not complete</option>
+                                <option value="Completed">Fully paid (Completed)</option>
+                            </select>
+                       
+                        </div>
+                        <div class="input-group pull-left" style="padding: 2px">
+                            <button id="search-button" class="btn btn-primary"><i class="fa fa-search" aria-hidden="true"></i> Search</button>
+                        </div>
+                    </div>
+                    }
+                    <br />
+                    <div>
+                        <div style="margin-bottom:1rem">
+                            <style>
+                                .fc-button-group {
+                                    display: flex;
+                                    justify-content: center;
+                                }
+
+                                #Date {
+                                    width: 125px;
+                                    font-weight: bold;
+                                    border: none;
+                                    font-size: 16px;
+                                    color: white;
+                                    background: #2C3E50;
+                                }
+                            </style>
+                            <div class="fc-button-group">
+                                <button onclick="PrevMonth()" type="button" class="btn btn-primary-custom" aria-label="prev" style="background: #2c3e50;color: white;border-radius: 7px 0px 0px 7px;margin-right: 1px;">
+                                    <i class="fa fa-angle-left" aria-hidden="true"></i>
+                                </button>
+                                <input class="text-center" id="Date" name="Date" value="@DateTime.UtcNow.ToString("MMMM yyyy")" readonly />
+                                <button onclick="NextMonth()" type="button" class="btn btn-primary-custom" aria-label="next" style="background: #2c3e50;color: white;border-radius: 0px 7px 7px 0px;margin-left: 1px;">
+                                    <i class="fa fa-angle-right" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                            @if (access.Any(k => k.Key.Equals("payroll_accounting")) == true && access["payroll_accounting"] == true)
+                            {
+                                <div class="row" style="margin:0px !important">
+                                    <button class="btn btn-success" id="calculate-payroll" disabled>Calculate Payroll</button>
+                                    <button class="btn btn-info" style="color:white" onclick="setaspaid_multiemp()" id="set-as-paid-payroll" disabled>Set As Paid</button>
+                                    <div class="progress" style="display:none;margin-top:2px">
+                                        <div id="payroll_progess" class="progress-bar progress-bar-striped progress-bar-success" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                </div>
+
+                            }
+
+                        </div>
+                        <table id="pending_payment" class="table dataTable table-hover table-bordered table-striped" style="width:100%;">
+                            <thead>
+
+                            </thead>
+                            <tbody>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    @if (access.Any(k => k.Key.Equals("payroll_accounting")) == true && access["payroll_accounting"] == true)
+                                    {
+                                        <th colspan="3" style="text-align:right">Total:</th>
+                                    }
+                                    else
+                                    {
+                                        <th colspan="2" style="text-align:right">Total:</th>
+                                    }
+                                    <th id="total-pendingpayment"></th>
+                                    @*<th id="total-commission"></th>*@
+                                    <th id="total-all"></th>
+                                    <th colspan="2"></th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                        <div style="width:100%;text-align:right;display:flex">
+                            <p style="display: flex;align-items: center;margin-right:15px"> <span class="text-primary" style="height: 15px;width: 30px;display: inline-block;background: #8a8a8a;"></span><span>&nbsp;: Caculated Not Yet</span></p>
+                            <p style="display: flex;align-items: center;margin-right:15px"> <span class="text-primary" style="height: 15px;width: 30px;display: inline-block;background: #ff774c;"></span><span>&nbsp;: Not Paid</span></p>
+                            <p style="display: flex;align-items: center;margin-right:15px"> <span class="text-primary" style="height: 15px;width: 30px;display: inline-block;background: #dea74f;"></span><span>&nbsp;: Not Complete</span></p>
+                            <p style="display: flex;align-items: center;"> <span class="text-primary" style="height: 15px;width: 30px;display: inline-block;background: #00a65a;"></span><span>&nbsp;: Completed</span></p>
+                        </div>
+                    </div>
+                </div>
+                <!-- /.box-body -->
+            </div>
+
+        </div>
+        <div class="loadding-tab" style="position: absolute; right: 50%;top: 50%;transform: translate(50%, -50%) ;display:none">
+            <img src="/Content/ajax-loaders/loading-partial.gif" width="75">
+        </div>
+    </div>
+</div>
+
+<div id="render-setaspaid-popup">
+
+</div>
+
+<div class="modal fade" id="modal-default">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Member profile</h4>
+            </div>
+            <div class="modal-body">
+                <p id="loading"><img src="~/Content/ajax-loaders/ajax-loader-1.gif" /></p>
+                <div id="modal-content">
+                    <!--_MemberProfileSimplePartial Partial-->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+
+<!--CREATE OR UPDATE BANK-->
+<form method="post" action="/Payroll/CreateOrUpdateBankSupport" class="modal fade" id="create-or-update-bank">
+    <div class="modal-dialog" style="width: 450px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" onclick="$('#create-or-update-bank').modal('hide')" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title"></h4>
+            </div>
+            <div class="modal-body">
+                <div id="modal-content">
+                    <input type="hidden" name="Code" class="code" />
+                    <div class="form-group col-12" id="form-bank-name">
+                        <label class="control-label">Name<span style="color:red">*</span></label>
+                        <input type="text" class="form-control" name="Name" maxlength="50" style="max-width: 100%" required>
+                    </div>
+                    <div class="form-group col-12" id="form-card-number">
+                        <label class="control-label">Account</label>
+                        <input type="text" class="form-control" name="Account" style="max-width: 100%">
+                    </div>
+                    <div class="form-group col-12">
+                        <label class="control-label">Method</label>
+                        <select class="form-control" id="Method" name="Method" required>
+                            <option value="">N/A</option>
+                            <option value="Wire transfer">Wire transfer</option>
+                            <option value="Deposit">Deposit</option>
+                            <option value="Paypal">Paypal</option>
+                            <option value="Cash">Cash</option>
+                            <option value="Bank">Bank</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-12" id="form-card-number">
+                        <label class="control-label">Comment</label>
+                        <textarea type="text" class="form-control" name="Comment" style="max-width: 100%"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">Save</button>
+                <button type="button" class="btn btn-default" onclick="$('#create-or-update-bank').modal('hide')">Close</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</form>
+@{
+    var host = $"{HttpContext.Current.Request.Url.Scheme}://{HttpContext.Current.Request.Url.Authority}";
+}
+<div class="modal fade" id="Invoice" role="dialog" style="display: none;">
+    <div class="modal-dialog modal-content" style="min-width:900px">
+        <div class="modal-header">
+            <div class="modal-title pull-left"><h3 style="margin:0">View Invoice</h3></div>
+            <button type="button" class="btn btn-sm btn-warning" style="float:left; margin-left:20px" onclick="document.getElementById('invoice-view').contentWindow.print()"><i class="fa fa-print"></i> Print</button>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">×</span>
+            </button>
+        </div>
+        <div class="modal-body" style="padding:1px;height: 77vh;">
+            <iframe width="100%" height="100%" style="border: none;" id="invoice-view" data-src="@host/order/ImportInvoiceToPDF?_code=%code%&amp;flag=Invoice"></iframe>
+        </div>
+    </div>
+</div>
+
+<div class="loading" style="display:none;position: fixed;top: 50%;left: 50%;transform: translate(-50%, -50%);"><img src="/Content/ajax-loaders/loading2.gif" width="60"></div>
+<script id="jquery-tab" type="text/javascript">
+    var totalPendingPayment;
+    var totalAll;
+    // load data table
+    var t = $(".dataTable").DataTable({
+        "language": {
+            "processing": '<img src="/Content/ajax-loaders/loading2.gif" width="60px" />',
+            "paginate": {
+                "first": '<i class="fa fa-angle-double-left" aria-hidden="true"></i>',
+                "last": '<i class="fa fa-angle-double-right" aria-hidden="true"></i>',
+                "next": '<i class="fa fa-angle-right" aria-hidden="true"></i>',
+                "previous": '<i class="fa fa-angle-left" aria-hidden="true"></i>'
+            },
+        },
+        'paging': true,
+        "pageLength": 10,
+        "serverSide": true, // for process server side
+        "processing": true, // for show progress bar
+        'lengthChange': true,
+        'searching': false,
+        'ordering': true,
+        'stateSave': true,
+        'info': false,
+        "scrollX": true,
+        'autoWidth': true,
+        "order": [[2, "asc"]],
+        "ajax": {
+            "url": "/Payroll/LoadListMember",
+            "type": "POST",
+            "datatype": "json",
+            beforeSend: function () {
+                clearMasterCheckbox();
+            },
+            data: function (data) {
+                data.SearchText = $('#SearchText').val();
+                data.DepartMentId = $('#DepartMentId').val();
+                data.Groups = $('#Groups').val();
+                data.Date = $('#Date').val();
+                data.Status = $("#Status").val();
+                return data;
+            },
+            'dataSrc': function (data) {
+                totalPendingPayment = data.totalPendingPayment;
+                totalAll = data.totalAll;
+                return data.data;
+            }
+        },
+        'fnCreatedRow': function (nRow, aData, iDataIndex) {
+            $(nRow).attr('id', 'tr_' + aData.MemberNumber.toString());
+            $(nRow).attr('data-empId', aData.MemberNumber.toString());
+             @if (access.Any(k => k.Key.Equals("payroll_accounting")) == true && access["payroll_accounting"] == true)
+           {
+            <text>
+            if (aData.IsCalculated == true) {
+                if (aData.Paid) {
+                    if (aData.PaidStatusName == "Complete") {
+                        $('td', nRow).eq(4).addClass('bg-complete');
+                    }
+                    else {
+                        $('td', nRow).eq(4).addClass('bg-warning');
+                    }
+                }
+                else {
+                    $('td', nRow).eq(4).addClass('bg-not-paid');
+                }
+            }
+            else {
+                $('td', nRow).eq(4).addClass('bg-not-complete');
+            }
+            </text>
+             }
+             else
+             {
+                  <text>
+            if (aData.IsCalculated == true) {
+                if (aData.Paid) {
+                    if (aData.PaidStatusName == "Complete") {
+                        $('td', nRow).eq(3).addClass('bg-complete');
+                    }
+                    else {
+                        $('td', nRow).eq(3).addClass('bg-warning');
+                    }
+                }
+                else {
+                    $('td', nRow).eq(3).addClass('bg-not-paid');
+                }
+            }
+            else {
+                $('td', nRow).eq(3).addClass('bg-not-complete');
+            }
+            </text>
+             }
+
+        },
+        "columns": [
+          @if (access.Any(k => k.Key.Equals("payroll_accounting")) == true && access["payroll_accounting"] == true)
+          {
+            <text>
+            {
+                'title': '<input id="mastercheckbox" type="checkbox"/>',
+                "render": function (data, type, row) {
+                    //if (!row["Paid"]) {
+                        return '<input onclick="enableButtonPayroll()" class="SelectEmployee on_rows" data-calculate="' + row["IsCalculated"]+'" name="EmployeeId" type="checkbox" value="' + row["MemberNumber"] + '"> ';
+                    //}
+                    //else {
+                    //    return '';
+                    //}
+
+                },
+                "width": '10',
+                "orderable": false,
+            },
+            </text>
+            }
+            {
+                "title": 'Employee Id',
+                "data": "MemberNumber",
+                "width": "100",
+                "name": "MemberNumber",
+                "className": "open-detail",
+            },
+            {
+                "title": 'Employee Name',
+                "data": "FullName",
+                "name": "MemberName",
+                "className": "open-detail",
+            },
+            //{
+            //    "title": 'Phone',
+            //    "data": "Phone",
+            //    "orderable": false,
+            //    "className": "open-detail",
+            //},
+            {
+                "title": 'Pending Payments',
+                "name": "PendingPayment",
+                "data": "PendingPayment",
+                "className": "open-detail",
+            },
+
+            //{
+            //    "title": 'Commission',
+            //    "name": "Commission",
+            //    "data": "Commission",
+
+            //    "className": "open-detail",
+            //},
+
+            {
+                "title": 'Total',
+                "name": "Total",
+                "data": "Total",
+                "className": "open-detail",
+                 },
+            //{
+            //    "title": 'Is Calculated',
+            //    "name": "IsCalculated",
+            //    "render": function (data, type, row) {
+            //             var Status = row["IsCalculated"];
+            //             if (Status) {
+            //                 return '<i class="fa fa-check text text-success" aria-hidden="true"></i>';
+            //             }
+            //             else {
+            //                 return '<i class="fa fa-times text text-danger" aria-hidden="true"></i>';
+            //             }
+            //         },
+            //        "className": " text-center open-detail",
+            // },
+            //{
+            //    "title": 'Paid',
+            //    //"name": "Paid",
+            //    "render": function (data, type, row) {
+            //        if (row["IsCalculated"]) {
+            //            var html = '';
+            //            if (row["Paid"]) {
+            //                if (row["PaidStatusName"] == "Complete") {
+            //                    html += '<span class="label label-success">' + row["PaidStatusName"] + '</span>';
+            //                }
+            //                else {
+            //                    html += '<span class="label label-warning">' + row["PaidStatusName"] + '</span>';
+            //                }
+            //            }
+            //            else {
+            //                html += '<span class="label label-danger">Not paid</span>'
+            //            }
+            //            return html;
+            //        }
+            //        else {
+            //            return '<i class="fa fa-times text text-danger" aria-hidden="true"></i>';
+            //        }
+            //    },
+
+            //},
+            {
+                "title": 'Calculated Date',
+                "name":"CalculateDate",
+                "render": function (data, type, row) {
+                         var CalculatedDate = row["CalculatedDate"];
+                         var CalculatedBy = row["CalculatedBy"];
+                         if (CalculatedDate != null && CalculatedDate != '') {
+                             return '<span>At: ' + CalculatedDate + '</span></br><span> By: ' + CalculatedBy + '</span>';
+                         }
+                         else {
+                             return '';
+                         }
+                },
+                "className": "open-detail",
+
+                 },
+            {
+                "render": function (data, type, row) {
+                   return '<a  onclick="showDetail(\'' + row["MemberNumber"] + '\')" class="btn btn-primary btn-sm detail on_rows" style="margin-right: 3px;" >Detail</a>';
+                     },
+                "className": "text-center",
+                "width": 'auto',
+                "orderable": false,
+            }
+        ],
+        "footerCallback": function (row, data, start, end, display) {
+            var api = this.api(), data;
+           @if (access.Any(k => k.Key.Equals("payroll_accounting")) == true && access["payroll_accounting"] == true)
+           {
+            <text>
+            $(api.column(3).footer()).html(
+                totalPendingPayment
+            );
+            //$(api.column(4).footer()).html(
+            //    totalCommission
+            //);
+            $(api.column(4).footer()).html(
+                totalAll
+            );
+            </text>
+           }
+           else
+           {
+            <text>
+            $(api.column(2).footer()).html(
+                totalPendingPayment
+            );
+            //$(api.column(3).footer()).html(
+            //    totalCommission
+            //);
+            $(api.column(3).footer()).html(
+                totalAll
+            );
+            </text>
+           }
+
+                 }
+             });
+    $("#search-button").click(function () {
+        $(".dataTable").DataTable().ajax.reload();
+    })
+    // change dep
+    $("#DepartMentId").change(function () {
+        $(".loading-dropdown-gr").show();
+        var DepartMentId = $('#DepartMentId').val();
+        if (DepartMentId == "" || DepartMentId == "Other") {
+            $('#Groups').html('');
+            $('#Groups').append($('<option value="">Please Select</option>'));
+            $(".loading-dropdown-gr").hide();
+        }
+        else {
+            $.ajax({
+                type: "Post",
+                url: "/Payroll/LoadGroups",
+                data: { "DepartMentId": DepartMentId },
+                success: function (data) {
+                    $('#Groups').html('');
+                    $.each(data, function (id, option) {
+                        $('#Groups').append($('<option></option>').val(option.Value).html(option.Text));
+                    });
+                },
+                error: function (xhr, ajaxOptions, thrownError) {
+                    alert('fail');
+                },
+                complete: function () {
+                    $(".loading-dropdown-gr").hide();
+                }
+            });
+        }
+    })
+    //default dep
+    function LoadDep() {
+        $(".loading-dropdown-dep").show();
+        var Date = $('#Date').val();
+        $.ajax({
+            type: "Post",
+            url: "/Payroll/LoadDepartment",
+            data: { "Date": Date },
+            success: function (data) {
+                $('#DepartMentId').html('');
+                $.each(data, function (id, option) {
+                    $('#DepartMentId').append($('<option></option>').val(option.Value).html(option.Text));
+                });
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                alert('fail');
+            },
+            complete: function () {
+                $(".loading-dropdown-dep").hide();
+            }
+        });
+    }
+    LoadDep();
+    //show detail
+    function showDetail(employeeId, show = true) {
+        $(".loading").show();
+        if ($(".tr-detail-" + employeeId).length) {
+            if (show == false) {
+                $(".div-detail-" + employeeId).slideUp(function () {
+                    $(".tr-detail-" + employeeId).hide();
+                });
+            }
+            else {
+                $(".tr-detail").hide();
+                $(".tr-detail-" + employeeId).show();
+                $(".div-detail-" + employeeId).slideDown(function () {
+                });
+            }
+            $(".loading").hide();
+            return;
+        }
+        $.ajax({
+            type: "POST",
+            url: "/Payroll/DetailPayRoll",
+            data: { "MemberNumber": employeeId, "Date": $("#Date").val() },
+            success: function (data) {
+                $(".tr-detail").hide();
+                $("#tr_" + employeeId).after(data);
+                $(".div-detail-" + employeeId).slideDown();
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                alert('fail');
+            },
+            complete: function () {
+                $(".loading").hide();
+            },
+        });
+    }
+    function PrevMonth() {
+        const d = new Date($("#Date").val());
+        d.setDate(1);
+        d.setMonth(d.getMonth() - 1);
+        $("#Date").val(monthNames[d.getMonth()] + " " + d.getFullYear());
+        $(".dataTable").DataTable().ajax.reload();
+    }
+    function NextMonth() {
+        const d = new Date($("#Date").val());
+        d.setDate(1);
+        d.setMonth(d.getMonth() + 1);
+        $("#Date").val(monthNames[d.getMonth()] + " " + d.getFullYear());
+        $(".dataTable").DataTable().ajax.reload();
+    }
+    // enable button when selected row
+    function enableButtonPayroll() {
+        if ($(".SelectEmployee[type=checkbox]:checked").length)
+        {
+            $("#calculate-payroll").prop("disabled", false);
+            $("#set-as-paid-payroll").prop("disabled", false);
+        }
+        else {
+            $("#calculate-payroll").prop("disabled", true);
+            $("#set-as-paid-payroll").prop("disabled", true);
+        }
+    }
+    // calculate payroll
+    $('#calculate-payroll').click(async function (e) {
+        e.preventDefault();
+        $(".progress").show();
+        var selectedIds = [];
+        $(".SelectEmployee[type=checkbox]:checked").each(function () {
+            selectedIds.push($(this).val());
+        });
+        for (let start = 0; start < selectedIds.length; start++) {
+            var MemberNumber = selectedIds[start];
+            var commissionselected = [];
+            $(".commission-select-" + MemberNumber + "[type=checkbox]:checked").each(function () {
+                commissionselected.push($(this).val());
+            });
+            await $.ajax({
+                method: "Post",
+                url: "/Payroll/PaymentProcess",
+                data: {
+                    "Date": $("#Date").val(),
+                    "MemberNumber": MemberNumber,
+                    "CommissionSelected": commissionselected,
+                }
+            })
+                .done(function (data) {
+                    if (data) {
+                        if ((start + 1) == selectedIds.length) {
+                            $("#payroll_progess").attr("aria-valuenow", 100);
+                            $("#payroll_progess").css("width", '100%');
+                            $("#payroll_progess").html("calculate payroll complete.");
+                            noty({ "text": "calculate payroll completed !", "layout": "topRight", "type": "success" });
+                            saveCompleted = 1;
+                            $(".dataTable").DataTable().ajax.reload(null, false);
+                            $("#calculate-payroll").prop("disabled", true);
+                            $("#set-as-paid-payroll").prop("disabled", true);
+                            setTimeout(function () {
+                                $(".progress").hide('blind', {}, 500)
+                                $("#payroll_progess").attr("aria-valuenow", 0);
+                                $("#payroll_progess").css("width", "0px");
+                                $("#payroll_progess").html("");
+                            }, 500);
+
+                        }
+                        else {
+                            $("#payroll_progess").attr("aria-valuenow", Math.round(start * 100 / selectedIds.length));
+                            $("#payroll_progess").css("width", Math.round(start * 100 / selectedIds.length) + '%');
+                            $("#payroll_progess").html("processing: " + Math.round(start * 100 / selectedIds.length) + '%');
+                        }
+                    }
+                    else {
+                        $("#payroll_progess").html("calculate payroll error");
+                        noty({ "text": "Payroll error " + data[1], "layout": "topRight", "type": "warning" });
+                    }
+                })
+                .fail(function () {
+                    start = -1;
+                    alert("fail");
+
+                })
+                .always(function () {
+                });
+        }
+    })
+    // set as paid
+    //function SetAsPaid(membernumber, membername) {
+    //    $("#modal-set-as-paid").modal("show");
+    //    $("#title-setaspaid-modal").html("Set As Paid - " + membername + "(#" + membernumber + ")");
+    //    $("#MemberNumber-SetAsPaid").val(membernumber);
+    //}
+    // set as paid multi employee
+    $('#modal-set-as-paid').submit(function (e) {
+        e.preventDefault();
+        var Date = $("#Date").val();
+        $.ajax({
+            method: "Post",
+            url: "/Payroll/SetAsPaid",
+            data: $("#modal-set-as-paid").serialize() + "&Date=" + Date,
+        })
+            .done(function (data) {
+                if (data) {
+                    noty({ "text": "set as paid success", "layout": "topRight", "type": "success" });
+                }
+                else {
+                    noty({ "text": "set as paid error", "layout": "topRight", "type": "warning" });
+                }
+            })
+            .fail(function () {
+                start = -1;
+                alert("fail");
+
+            })
+            .always(function () {
+                $(".dataTable").DataTable().ajax.reload();
+                $("#modal-set-as-paid").modal("hide");
+            });
+    })
+
+    $('#mastercheckbox').click(function () {
+        $('.SelectEmployee').prop('checked', $(this).is(':checked')).change();
+        enableButtonPayroll();
+    });
+    function clearMasterCheckbox() {
+        $('#mastercheckbox').prop('checked', false).change();
+    }
+    function viewdetail(mn) {
+        $("#modal-default").modal('show');
+        $.ajax({
+            method: "POST",
+            url: "/account/GetMemberInfoSimple",
+            data: { "mn": mn },
+            dataType: "html"
+        })
+            .done(function (data) {
+                $("#modal-content").html(data);
+            })
+            .fail(function () {
+                alert("Oops! Something went wrong");
+                $("#modal-default").modal('hide');
+            })
+            .always(function () {
+                $("#loading").hide();
+            });
+    }
+    function show_invoice(code) {
+        let src = $("#invoice-view").data("src").replace("%code%", code);
+        $("#invoice-view").attr("src", src);
+        $('#Invoice').modal('show');
+    }
+    function UpdateRow(MemberNumber) {
+        $.ajax({
+            method: "Post",
+            url: "/Payroll/UpdateRow",
+            data: { MemberNumber, "Date": $("#Date").val() },
+            dataType: "json"
+        }).done(function (data) {
+            var numberrow = t.row('#tr_' + MemberNumber).index()
+            t.row(numberrow).data(data);
+        })
+            .fail(function () {
+                alert("update row fail");
+            })
+    }
+    function UpdateTotal() {
+        $.ajax({
+            method: "Post",
+            url: "/Payroll/UpdateTotal",
+            data: {
+                "CalculationStatus": $('#CalculationStatus').val(),
+                "SearchText": $('#SearchText').val(),
+                "DepartMentId" : $('#DepartMentId').val(),
+                "Groups" : $('#Groups').val(),
+                "Date" : $('#Date').val(),
+            },
+            dataType: "json"
+        }).done(function (data) {
+            $(".dataTables_scrollFoot").find("#total-pendingpayment").html(data.totalPendingPayment);
+            //$(".dataTables_scrollFoot").find("#total-commission").html(data.totalCommission);
+            $(".dataTables_scrollFoot").find("#total-all").html(data.totalAll);
+        })
+            .fail(function () {
+                alert("update row fail");
+            })
+    }
+    function setaspaid_multiemp() {
+        var check = true;
+        $(".SelectEmployee[type=checkbox]:checked").each(function () {
+            if ($(this).attr("data-calculate") == "false") {
+                alert('please calculate payroll all the selected employee before set as paid !');
+                check = false;
+                return false;
+            }
+        });
+        if (check) {
+            $(".loading").show();
+            $.ajax({
+                method: "Post",
+                url: "/Payroll/ShowPopUpSetAsPaid",
+                data: { "Type":"ByEmpIds"},
+                dataType: "html"
+            }).done(function (data) {
+                $("#render-setaspaid-popup").html('');
+                $("#render-setaspaid-popup").html(data);
+                $("#modal-set-as-paid-multi-emp").modal("show");
+                $(".loading").hide();
+            })
+                .fail(function () {
+
+                    alert("update row fail");
+
+                })
+        }
+    }
+    function setaspaid_by_empPayrollId(empId) {
+        var SelectedEmpPayroll = [];
+        var Date = $("#Date").val();
+        $(".selected-setaspaid-" + empId + "[type=checkbox]:checked").not(":disabled").each(function () {
+               SelectedEmpPayroll.push($(this).attr("data-emppayrollid"));
+         });
+         $.ajax({
+             method: "Post",
+             url: "/Payroll/SetAsPaidByEmpPayroll",
+             data: $("#modal-set-as-paid-multi-emp").serialize() + "&EmpPayrollIds=" + SelectedEmpPayroll + "&Date=" + Date,
+             dataType: "json"
+         }).done(function (data) {
+             if (data) {
+                 noty({ "text": "set as paid success", "layout": "topRight", "type": "success" });
+                 $("#modal-set-as-paid-multi-emp").modal("hide");
+                 $(".tr-detail-" + empId).remove();
+                 showDetail(empId);
+             }
+             })
+                .fail(function () {
+                    alert("fail");
+                })
+    }
+    function export_excel() {
+        var Name = $('#Name').val();
+        var Phone = $('#Phone').val();
+        var DepartMentId = $('#DepartMentId').val();
+        var Groups = $('#Groups').val();
+        var Date = $('#Date').val();
+        window.location.href = "/Payroll/ExportExcelPendingPayment?Name=" + Name + "&Phone=" + Phone + "&DepartMentId=" + DepartMentId + "&Groups=" + Groups + "&Date=" + Date;
+    }
+</script>
+
+<script>
+    function insertBank() {
+        var modal = $("#create-or-update-bank");
+        modal.find(".modal-title").html("Insert Bank");
+        modal.find(".code").val("");
+        modal.find('[name = "Name"]').val("");
+        modal.find('[name = "Account"]').val("");
+        modal.find('[name = "Comment"]').val("");
+        modal.find('[name = "Method"]').val("");
+        modal.modal("show");
+    }
+    function repairBank(selectId = '') {
+        $.ajax({
+            type: "Post",
+            url: "/Payroll/RepairBank",
+            success: function (data) {
+                $('.PaymentMethod').html('');
+                $('.PaymentMethod').append($('<option></option>').val("").html("N/A"));
+                $.each(data, function (id, option) {
+                    $('.PaymentMethod').append($('<option></option>').val(option.Value).html(option.Text));
+                });
+                if (selectId != '') {
+                    $('.PaymentMethod').val(selectId);
+                }
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                alert('fail');
+            },
+            complete: function () {
+
+            }
+        });
+    }
+    function updateBank() {
+        var modal = $("#create-or-update-bank");
+        modal.find(".modal-title").html("Update Bank");
+        var currentBank = $("#PaymentMethod").val();
+        if (currentBank == '' || currentBank == null) {
+            return alert('please select payment name');
+        }
+        modal.find(".code").val(currentBank);
+        $.ajax({
+            type: "Post",
+            url: "/Payroll/GetDetailBank",
+            data: { "code": currentBank },
+            success: function (data) {
+                modal.find('[name = "Name"]').val(data.data.Name);
+                modal.find('[name = "Account"]').val(data.data.Account);
+                modal.find('[name = "Comment"]').val(data.data.Comment);
+                modal.find('[name = "Method"]').val(data.data.Method);
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                alert('fail');
+            },
+            complete: function () {
+
+            }
+        });
+        modal.modal("show");
+    }
+    $('#create-or-update-bank').submit(function (e) {
+        e.preventDefault();
+        $.ajax({
+            method: "Post",
+            url: "/Payroll/CreateOrUpdateBankSupport",
+            data: $("#create-or-update-bank").serialize(),
+        }).done(function (data) {
+            if (data.status) {
+                if (data.command == "create") {
+                    noty({ "text": "create success", "layout": "topRight", "type": "success" });
+                    repairBank(data.selectedId);
+                }
+                else {
+                    noty({ "text": "update success", "layout": "topRight", "type": "success" });
+                    repairBank(data.selectedId);
+                }
+            }
+            else {
+                noty({ "text": "error", "layout": "topRight", "type": "warning" });
+            }
+        })
+            .fail(function () {
+                start = -1;
+                alert("fail");
+
+            })
+            .always(function () {
+                $('#create-or-update-bank').modal("hide");
+            });
+    })
+    $('.change-filter').change(function () {
+        $("#pending_payment").DataTable().ajax.reload();
+    })
+</script>

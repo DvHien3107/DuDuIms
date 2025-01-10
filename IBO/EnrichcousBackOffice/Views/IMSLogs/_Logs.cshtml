@@ -1,0 +1,396 @@
+﻿
+
+<!-- Main content -->
+<section class="content">
+    @*<input type="hidden" id="logHistory" value="@logJson" />*@
+    <div class="row">
+
+        @if (TempData["e"] != null)
+        {
+            <div class="col-md-12">
+                <div class="alert alert-warning alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                    <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+                </div>
+            </div>
+        }
+        else if (TempData["s"] != null)
+        {
+            <div class="col-md-12">
+                <div class="alert alert-success alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                    <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+                </div>
+            </div>
+        }
+
+    <div class="col-md-12">
+        <div>
+            <div class="row">
+                <form method="get">
+                    <div class="col-md-3 search-box-log" style="padding-left: 20px">
+                        <div class="input-group">
+                            <div class="input-group-addon">
+                                <span><b>Url</b></span>
+                            </div>
+                            <input type="text" class="form-control change-search" name="search_url" id="search_url" placeholder="Search..." />
+                        </div>
+                    </div>
+                    <div class="col-md-3 search-box-log">
+                        <div class="input-group">
+                            <div class="input-group-addon">
+                                <span><b>Action by</b></span>
+                            </div>
+                            <input type="text" class="form-control change-search" name="search_name" id="search_name" placeholder="Search..." />
+                        </div>
+                    </div>
+                    <div class="col-md-3 search-box-log">
+                        <div class="input-group">
+                            <div class="input-group-addon">
+                                <span><b>Request Url</b></span>
+                            </div>
+                            <input type="text" class="form-control change-search" name="search_r_url" id="search_r_url" placeholder="Search..." />
+                        </div>
+                    </div>
+                    <div class="col-md-3 search-box-log" style="padding-right: 20px">
+                        <div class="input-group">
+                            <div class="input-group-addon">
+                                <span><b>Salon Name</b></span>
+                            </div>
+                            <input type="text" class="form-control change-search" name="search_salon" id="search_salon" placeholder="Search..." />
+                        </div>
+                    </div>
+                    <div class="col-md-3 search-box-log" style="padding-left: 20px">
+                        <div class="input-group">
+                            <div class="input-group-addon">
+                                <span><b>Success</b></span>
+                            </div>
+                            <select class="form-control change-search" name="search_success" id="search_success">
+                                <option value="">All</option>
+                                <option value="true">Success</option>
+                                <option value="false">Failed</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3 search-box-log">
+                        <div class="input-group">
+                            <div class="input-group-addon">
+                                <span><b><i class="fa fa-calendar"></i> From</b></span>
+                            </div>
+                            <input type="text" class="form-control datepicker-jq change-search" id="search_from_date" name="search_from_date" value="@DateTime.UtcNow.AddDays(-1).ToString("MM/dd/yyyy")" autocomplete="off" />
+                        </div>
+                    </div>
+                    <div class="col-md-3 search-box-log">
+                        <div class="input-group">
+                            <div class="input-group-addon">
+                                <span><b><i class="fa fa-calendar"></i> To</b></span>
+                            </div>
+                            <input type="text" class="form-control datepicker-jq change-search" id="search_to_date" name="search_to_date" value="@DateTime.UtcNow.ToString("MM/dd/yyyy")" autocomplete="off" />
+                        </div>
+                    </div>
+                    <div class="col-md-3 search-box-log">
+                        <button type="submit" class="btn btn-default btn-flat" id="search_submit" name="search_submit">
+                            <i class="fa fa-search"></i> Search
+                            <img id="search_loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <br />
+
+            <div>
+                <table id="ims_log_table" class="table table-hover table-bordered table-striped" style="width:100%">
+                  
+                </table>
+            </div>
+        </div>
+    </div>
+    </div>
+</section>
+<!--invoice detail-->
+<div class="modal fade" id="detail-log" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Detail log</h4>
+            </div>
+            <div class="modal-body">
+                <div class="col-md-12" style="border: dotted 1px orange; padding:0px;margin-bottom:20px">
+                    <div class="col-md-12" style="padding-top:10px">
+                        <table class="table table-striped">
+                            <tbody>
+                                <tr>
+                                    <th>Action url</th>
+                                    <td id="action-url" class="break-line"></td>
+                                </tr>
+                                <tr>
+                                    <th>Action by</th>
+                                    <td id="create-by"></td>
+                                </tr>
+                                <tr>
+                                    <th>Request url</th>
+                                    <td id="request-url" class="break-line"></td>
+                                </tr>
+                                <tr>
+                                    <th>Method</th>
+                                    <td id="request-method"></td>
+                                </tr>
+                                <tr>
+                                    <th>Status code</th>
+                                    <td id="status-code"></td>
+                                </tr>
+                                <tr>
+                                    <th>Create on</th>
+                                    <td id="create-on">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Description</th>
+                                    <td id="description"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="col-md-12">
+                    <div class="row">
+                        <ul class="nav nav-tabs">
+                            <li id="tab_json-request" class="active"><a data-toggle="tab" href="#json-request" style=""><strong>Json Request</strong></a></li>
+                            <li id="tab_json-respone"><a data-toggle="tab" href="#json-respone"><strong>Json Respone</strong></a></li>
+                        </ul>
+                        <div class="col-md-12 tab-content" style="border: solid 1px #ddd; border-top:none">
+                            <div id="json-request" class="tab-pane fade in active" style="padding:10px 0">
+                                <div class="sample-content">
+                                    <pre class="wrapped" id="json-request-data">
+                                </pre>
+                                </div>
+                            </div>
+                            <div id="json-respone" class="tab-pane fade in" style="padding:10px 0">
+                                <div class="sample-content">
+                                    <pre class="wrapped" id="json-respone-data">
+                                </pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    <!-- datepicker jquery -->
+    <link rel="stylesheet" href="~/Content/Admin/bower_components/jquery-ui/jquery-ui.min.js">
+    <!-- DataTables -->
+    <link rel="stylesheet" href="~/content/admin/bower_components/datatables.net-bs/css/dataTables.bootstrap.min.css">
+    <!--noty-->
+    <link href="~/Content/noty/jquery.noty.css" rel="stylesheet" />
+    <link href="~/Content/noty/noty_theme_default.css" rel="stylesheet" />
+
+    <style>
+        .search-box-log {
+            padding: 0 5px 10px 5px;
+        }
+        .break-line {
+            word-break: break-all; 
+            word-wrap: break-word; /* IE 5.5-7 */
+            white-space: -moz-pre-wrap; /* Firefox 1.0-2.0 */
+            white-space: pre-wrap; /* current browsers */
+        }
+    </style>
+
+
+
+
+    <!-- DataTables -->
+    <script src="~/content/admin/bower_components/datatables.net/js/jquery.dataTables.min.js"></script>
+    <script src="~/content/admin/bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js"></script>
+    <!--noty-->
+    <script src="~/Content/noty/jquery.noty.js"></script>
+    <!-- datepicker jquery -->
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script src="~/Content/Admin/bower_components/moment/moment.js"></script>
+    <script type="text/javascript">
+
+
+        $(document).ready(function () {
+            $('#ims_log_table').DataTable({
+                processing: true,
+                serverSide: true,
+                ajax:
+                {
+                    url: "/IMSLogs/LoadListLog",
+                    type: "POST",
+                    dataType: "json",
+                    data: function (data) {
+                        data.search_url = $('#search_url').val();
+                        data.search_name = $('#search_name').val();
+                        data.search_r_url = $('#search_r_url').val();
+                        data.search_salon = $('#search_salon').val();
+                        data.search_success = $('#search_success').val();
+                        data.FromDate = $('#search_from_date').val();
+                        data.ToDate = $('#search_to_date').val();
+                        return data;
+                    }
+                },
+                scrollX: true,
+                info: true,
+                searching: false,
+                paging: true,
+                pagingType: 'simple_numbers',
+                language: {
+                    "emptyTable": "No data available in table",
+                    "info": "_START_-_END_ of _TOTAL_ items",
+                    "infoEmpty": "No records",
+                    "infoFiltered": "(filtered from _MAX_ total entries)",
+                    "thousands": ",",
+                    "lengthMenu": "Show _MENU_ items",
+                    "loadingRecords": "Loading...",
+                    "processing": '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>',
+                    "zeroRecords": "No matching records found",
+                    "paginate": {
+                        "first": '<i class="fa fa-angle-double-left" aria-hidden="true"></i>',
+                        "last": '<i class="fa fa-angle-double-right" aria-hidden="true"></i>',
+                        "next": '<i class="fa fa-angle-right" aria-hidden="true"></i>',
+                        "previous": '<i class="fa fa-angle-left" aria-hidden="true"></i>'
+                    },
+                },
+                pageLength: 15,
+                lengthChange: false,
+                order: [[0, "desc"]],
+                ordering: true,
+                fnCreatedRow: function (nRow, aData, iDataIndex) {
+                    $(nRow).attr('onclick', `showDetailLog('${aData.Id}')`);
+                },
+                columns: [
+                    {
+                        title: 'Create On',
+                        name: 'CreateOn',
+                        width: '200',
+                        visible: true,
+                        searchable: false,
+                        render: function (data, type, row, meta) {
+                            return '<i>' + moment(data).format("MMM DD YYYY, h:mm:ss A") + '</i>'
+                        },
+                        data: 'CreateOn'
+                    },
+                    {
+                        title: 'Action Url',
+                        name:'Url',
+                        class: 'break-line',
+                        visible: true,
+                        searchable: false,
+                        render: function (data, type, row, meta) {
+                            return data
+                        },
+                        data: 'Url'
+                    },
+                    {
+                        title: 'Action By',
+                        name:'CreateBy',
+                        visible: true,
+                        searchable: false,
+                        render: function (data, type, row, meta) {
+                            return data
+                        },
+                        data: 'CreateBy'
+                    },
+                    {
+                        title: 'Request Url',
+                        name: 'RequestUrl',
+                        class: 'break-line',
+                        visible: true,
+                        searchable: false,
+                        render: function (data, type, row, meta) {
+                            return data
+                        },
+                        data: 'RequestUrl'
+                    },
+                    {
+                        title: 'Method',
+                        width: '70',
+                        name:'Method',
+                        visible: true,
+                        searchable: false,
+                        render: function (data, type, row, meta) {
+                            return data
+                        },
+                        data: 'RequestMethod'
+                    },
+                    {
+                        title: 'Status Code',
+                        name: 'StatusCode',
+                        width: '100',
+                        visible: true,
+                        searchable: false,
+                        render: function (data, type, row, meta) {
+                            if (row['Success']) {
+                                return '<label class="label label-success">' + data + '</label>';
+                            }
+                            else {
+                                return '<label class="label label-danger">' + data + '</label>';
+                            }
+                        },
+                        data: 'StatusCode'
+                    },
+                    {
+                        title: 'Salon Name',
+                        name:'SalonName',
+                        visible: true,
+                        searchable: false,
+                        render: function (data, type, row, meta) {
+                            return data;
+                        },
+                        data: 'SalonName'
+                    }
+                ]
+            });
+            $('#search_submit').click(function () {
+                $('#ims_log_table').DataTable().ajax.reload();
+                return false;
+            });
+            $('#ims_log_table').DataTable().columns.adjust();
+        });
+
+        //Datepicker
+        $(".datepicker-jq").datepicker({
+            showAnim: 'slideDown',
+            showButtonPanel: true,
+            changeMonth: true,
+            changeYear: true,
+            yearRange: '1950:2050'
+        });
+
+        function showDetailLog(id) {
+            $.ajax({
+                method: "POST",
+                url: "/IMSLogs/GetLogById",
+                data: { id },
+                dataType: "json"
+            })
+                .done(function (log) {
+                    $('#action-url').html(log.Url);
+                    $('#create-by').html(log.CreateBy);
+                    $('#request-url').html(log.RequestUrl);
+                    $('#request-method').html('<label class="label label-default">' + log.RequestMethod + '</label>');
+                    $('#status-code').html(log.StatusCode == 200 ? '<label class="label label-success">' + log.StatusCode + '</label>' : '<label class="label label-danger">' + log.StatusCode + '</label>');
+                    $('#create-on').html($('#localtime-' + id).html());
+                    $('#description').html(log.Description);
+                    $('#json-request-data').html(log.JsonRequest ? JSON.stringify(JSON.parse(log.JsonRequest,), null, 4) : " ");
+                    $('#json-respone-data').html(log.JsonRespone ? JSON.stringify(JSON.parse(log.JsonRespone), undefined, 4) : " ");
+                    $('#detail-log').modal();
+                })
+                .fail(function () {
+                
+                    $("#modal-merchant").modal('hide');
+
+                })
+         
+        }
+
+    </script>

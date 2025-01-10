@@ -1,0 +1,68 @@
+﻿@{
+    string controller = ViewContext.RouteData.Values["controller"].ToString().ToLower();
+    string action = ViewContext.RouteData.Values["action"].ToString().ToLower();
+    var member = EnrichcousBackOffice.AppLB.Authority.GetCurrentMember();
+    var access = EnrichcousBackOffice.AppLB.Authority.GetAccessAuthority();
+}
+
+<ul class="sidebar-menu" data-widget="tree">
+
+    <li>
+
+        <a href="/ticket/GoBackIms"> <i class="fa fa-angle-left"></i><span>Go back IMS</span> </a>
+    </li>
+
+    <li class="header">TICKET SYSTEM</li>
+    <li @if (controller == "ticket" && (action == "index" || action == "")) { @Html.Raw(@" class=""active""") }>
+        <a href="/ticket/" onclick="overlayOn()">
+            <i class="fa fa-times-rectangle-o"></i> <span> Ticket Follows</span>
+        </a>
+    </li>
+    <li @if (controller == "ticket" && action == "update" && Request["id"] == "") { @Html.Raw(@" class=""active""") }>
+        <a href="/ticket/update"  onclick="overlayOn()">
+            <i class="fa fa-ticket"></i> <span> New Ticket</span>
+        </a>
+    </li>
+
+    <li @if (controller == "tasksman") { @Html.Raw("class='active'") }>
+        <a href="/tasksman" onclick="overlayOn()">
+            <i class="fa fa-tasks"></i> <span> Task</span>
+        </a>
+    </li>
+
+    <li @if (controller == "kb") { @Html.Raw(@" class=""active""") }>
+        <a href="/kb/index"  onclick="overlayOn()">
+            <i class="fa fa-question-circle"></i> <span> Knowledge Base</span>
+        </a>
+    </li>
+    <li>
+        <a  onclick="overlayOn()" href="/departmentman/?urlback=@Request.Url.PathAndQuery">
+            <i class="fa fa-user-secret"></i> <span> Department - Groups</span>
+        </a>
+    </li>
+    @*<li>
+        <a href="#">
+            <i class="fa fa-gears"></i> <span> Ticket Router</span>
+        </a>
+    </li>*@
+    <li>
+        <a  onclick="overlayOn()" href="/EmailTemplate/">
+            <i class="fa fa-mail-reply-all"></i> <span> Email Template</span>
+        </a>
+    </li>
+
+    <li class="treeview">
+        <a href="#">
+            <i class="fa fa-edit"></i> <span>Reports</span>
+            <span class="pull-right-container">
+                <i class="fa fa-angle-left pull-right"></i>
+            </span>
+        </a>
+        <ul class="treeview-menu">
+            <li><a href="#"><i class="fa fa-circle-o"></i> Updating...</a></li>
+        </ul>
+    </li>
+
+
+</ul>
+

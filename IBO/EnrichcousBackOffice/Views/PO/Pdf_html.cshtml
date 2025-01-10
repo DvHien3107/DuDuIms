@@ -1,0 +1,130 @@
+﻿@model EnrichcousBackOffice.Models.CustomizeModel.PurchaseOrder_view
+
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>@ViewBag.Title</title>
+    <!-- Tell the browser to be responsive to screen width -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <!-- Bootstrap 3.3.7 -->
+    <link rel="stylesheet" href="/content/admin/bower_components/bootstrap/dist/css/bootstrap.min.css">
+    <!-- Noty -->
+    <link href="~/Content/noty/jquery.noty.css" rel="stylesheet" />
+    <link href="~/Content/noty/noty_theme_default.css" rel="stylesheet" />
+
+    <style type="text/css">
+        .text_right {
+            text-align: right;
+        }
+    </style>
+
+
+    <!-- jQuery 3 -->
+    <script src="~/Content/Admin/bower_components/jquery/dist/jquery.min.js"></script>
+    <!-- Noty -->
+    <script src="~/Content/noty/jquery.noty.js"></script>
+</head>
+<body style="width:1000px">
+    <div id="page_detail" @*style="margin:15px 0px"*@>
+        <div id="Invoice_Detail" @*style="max-width:210mm; min-height:297mm; margin:auto; padding: 20px; border:1px solid grey"*@>
+            <div style="font-size:16px">
+                <table style="width:100%; padding:8px;">
+                    <tbody>
+                        <tr>
+                            <td style="width:25%">
+                                <img class="img img-responsive eshop-logo" src="@System.Configuration.ConfigurationManager.AppSettings["LogoImg"]" style="height:60px;width:auto; margin-left:-5px">
+                            </td>
+                            <td style="width:40%"></td>
+                            <td class="text_right" style="width:50%; font-size:26px" colspan="2">
+                                <span>PURCHASE ORDER</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>855 Metropolitan Pkwy</td>
+                            <td></td>
+                            <td></td>
+                            <td class="text_right" style="width:200px">
+                                Date: @DateTime.Now.ToString("dd MMM yyyy")
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Atlanta, GA 30310</td>
+                            <td></td>
+                            <td> </td>
+                            <td class="text_right">PO #: @Model.PO.POCode</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <a href="#">www.enrichcous.com</a>
+                            </td>
+                            <td></td>
+                            <td> </td>
+                            <td class="text_right">Approve by: @Model.PO.UpdatedBy<br /></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                0123.456.789
+                            </td>
+                            <td colspan="2"></td>
+                            <td class="text_right">
+                                Status:
+                                    <span class="@Model.PO.Status">@Model.PO.Status</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <br /><br />
+
+                <br /><br />
+
+                <div>
+                        <div>
+                            <label style="padding:10px; padding-bottom:0">Vendor: @(Model.PO.VendorName)</label><br />
+                            <span style="padding:10px;">Sales order #: @(Model.PO.SaleOrderNumber)</span>
+                            <div style="margin:10px">
+                                <table style="background-color:#fff; margin-bottom:25px; width:100%">
+
+                                    @foreach (var item in Model.Detail)
+                                    {
+                                        <tr style="border: 1px solid #ddd;">
+                                            <td style="padding:5px; width:20%"><img style="height:60px; display:block; margin:auto" src="@(!string.IsNullOrEmpty(item.Detail_request.ModelPicture)?item.Detail_request.ModelPicture : "/Upload/Img/no_image.jpg")" /></td>
+                                            <td style="padding:5px; width:80%">
+                                                <div style="width:50%">
+                                                    <label>@item.Detail_request.ProductName</label><br />
+                                                    <span>Quantity : @item.Detail.Qty</span>
+                                                </div>
+                                                <div style="width:50%">
+                                                    <span>Color: </span><span style="padding-top:5px">@(!string.IsNullOrEmpty(item.Detail_request.Color) ? item.Detail_request.Color : "Default")</span><br />
+                                                </div>
+                                            </td>
+
+
+                                        </tr>
+                                    }
+                                </table>
+                            </div>
+                        </div>
+
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+<script>
+    $(".Purchased").addClass("text-success");
+    $(".Requesting").addClass("text-warning");
+    $(".Approved").addClass("text-primary");
+    $(".Denied").addClass("text-danger");
+    $(".Postpone").addClass("text-default");
+</script>

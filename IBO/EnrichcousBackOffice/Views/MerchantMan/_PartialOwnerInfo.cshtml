@@ -1,0 +1,748 @@
+﻿@model EnrichcousBackOffice.Models.C_Customer
+@using EnrichcousBackOffice.Models;
+@using EnrichcousBackOffice.Utils.IEnums;
+@using Inner.Libs.Helpful
+@{
+    Dictionary<string, bool> p = ViewBag.p;
+    List<C_CustomerAdditionalInfo> AdditionalInfo = ViewBag.AdditionalInfo;
+    List<C_CustomerContact> AddContact = ViewBag.AddContact;
+    //List<C_CustomerAccountManager> accountManagers = ViewBag.accountManagers as List<C_CustomerAccountManager>;
+    var AllOptionEnum = ViewBag.EnumValues as List<EnumValue>;
+}
+
+<div class="box box-primary box-solid" style="border-radius:unset">
+    <div class="box-header with-border">
+        <h4 class="box-title">Salon Infomation</h4>
+        @*<div class="pull-right box-tools">
+                <button type="button" onclick="update_merchant('@Model.Id', 'true')" class="btn btn-info" style="border-color:var(--main-color-2)">
+                    <i class="fa fa-pencil"> Edit</i>
+                </button>
+            </div>*@
+        <div class="pull-right box-tools">
+            @if (!MerchantType.STORE_IN_HOUSE.ToString().Equals(Model.Type))
+            {
+                <label class="switch" data-toggle="tooltip" title="Click to change to Store in house">
+                    <input type="checkbox" checked onchange="updateDataTypeStore(this)">
+                    <span class="slider round"></span>
+                    <span class="absolute-no">Store in house</span>
+                </label>
+            }
+            else
+            {
+                <label class="switch" data-toggle="tooltip" title="Click to change to Merchant">
+                    <input type="checkbox" onchange="updateDataTypeStore(this)">
+                    <span class="slider round"></span>
+                    <span class="absolute-no">Store in house</span>
+                </label>
+            }
+        </div>
+    </div>
+    <div class="box-body">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="control-label">Account manager: </label><span> @(string.IsNullOrEmpty(Model.MemberNumber) ? "___" : "#" + Model.MemberNumber + " - " + Model.FullName)</span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="control-label">Company/Partner: </label><span> @Model.PartnerCode @(string.IsNullOrEmpty(Model.PartnerCode) ? "Simply Pos" : " - " + Model.PartnerName)</span>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="control-label">Business Name: </label><span> @(Model.BusinessName ?? "___")</span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="control-label">Legal Name: </label><span> @(Model.LegalName ?? "___")</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="control-label">Salon Email:</label><span style="vertical-align:top"> @(Model.SalonEmail ?? "___")</span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="control-label">Mango email:<br /><i>(Account Login)</i></label><span style="vertical-align:top"> @(Model.MangoEmail ?? "___")</span>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="control-label">Salon Phone Number: </label><span> @(Model.SalonPhone ?? "___")</span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="control-label">Salon Time Zone: </label><span> @(Model.SalonTimeZone ?? "___")</span>
+                </div>
+            </div>
+
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="control-label">Salon Address: </label>
+                    <span>
+                        @(Model.SalonAddress1 ?? "___") @(Model.SalonAddress2 ?? ""),
+                        @(Model.SalonCity ?? "___"),
+                        @(Model.SalonState ?? "___") @(Model.SalonZipcode ?? "___")
+                    </span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="control-label">First Invoice Date: </label><span>
+                        <span id="localtime-BusinessStartDate-@Model.Id">
+                            <script>convertLocalTime("BusinessStartDate-" + "@Model.Id", "@Model.BusinessStartDate", "MMMddyyyy")</script>
+                        </span>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="control-label">Website: </label><span>@(Model.Website ?? "___")</span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="control-label">Salon Note: </label>
+                    <span>
+                        @(Model.BusinessDescription ?? "___")
+                    </span>
+                    <button class="btn btn-sm btn-outline-warning" id="btn-edit-note-" data-toggle="modal" data-target="#modal-salon-note" style="margin-left:10px">
+                        <i class="fa fa-pencil" aria-hidden="true"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <hr />
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="control-label">Owner Name:</label><span> @(Model.OwnerName ?? "___")</span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="control-label">Owner Number:</label><span> @(string.IsNullOrEmpty(Model.OwnerMobile) ? Model.CellPhone : Model.OwnerMobile)</span>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="control-label">Owner/Docusign Email:</label><span> @Model.Email</span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="control-label">Owner Address:</label><span> @(Model.OwnerAddressStreet), @(Model.City), @(Model.State) @(Model.Zipcode), @(Model.Country)</span>
+                </div>
+            </div>
+        </div>
+        <hr />
+        <h3>Other Contacts</h3><br />
+        <div id="list_add_contacts">
+            @if (AddContact.Count > 0)
+            {
+                foreach (var contact in AddContact)
+                {
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="control-label">Contact Name:</label><span> @(contact.Name ?? "___")</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="control-label">Authorization:</label>
+                                <span>
+                                    @foreach (var au in contact.Authorization.Split(','))
+                                    {
+                                        <label class="label label-default">@au</label>
+                                    }
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="control-label">Preferred Language:</label>
+                                <span>
+                                    @if ("Vietnamese".Equals(contact.PreferredLanguage))
+                                    {
+                                        <img src="~/Content/flag/vn.png" width="20" />
+                                    }
+                                    else
+                                    {
+                                        <img src="~/Content/flag/usa.png" width="20" />
+                                    }
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="control-label">Preferred Contact:</label><span> @(contact.PreferredContact ?? "___")</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="control-label">Phone Number:</label><span> @(contact.PhoneNumber ?? "___")</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="control-label">Relationship:</label><span> @(contact.Relationship ?? "___")</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="control-label">Email:</label><span> @(contact.Email ?? "___")</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="control-label">Address:</label><span> @(contact.Address ?? "___")</span>
+                            </div>
+                        </div>
+                    </div>
+                    <hr style="margin-left:10%; margin-right:10%" />
+                }
+            }
+        </div>
+        <hr />
+        <h3>Other Information</h3>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="control-label">MID:</label><span> @(!string.IsNullOrEmpty(Model.MID)?Model.MID:"___")</span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="control-label">Terminal Status:</label><span> @(Model.TerminalStatus==true ? "Active" : "Inactive")</span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="control-label">Terminal Type:</label><span> @(!string.IsNullOrEmpty(Model.TerminalType)? AllOptionEnum.FirstOrDefault(x=> x.Namespace == EnrichcousBackOffice.Utils.IEnums.MerchantOptionEnum.TerminalType.Code<string>() &&  x.Value==Model.TerminalType)?.Name: "___")</span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="control-label">Processor:</label><span> @(!string.IsNullOrEmpty(Model.Processor)? AllOptionEnum.FirstOrDefault(x => x.Namespace == EnrichcousBackOffice.Utils.IEnums.MerchantOptionEnum.Processor.Code<string>() &&  x.Value == Model.Processor)?.Name : "___")</span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="control-label">Source:</label><span> @(!string.IsNullOrEmpty(Model.Source)? AllOptionEnum.FirstOrDefault(x=> x.Namespace == EnrichcousBackOffice.Utils.IEnums.MerchantOptionEnum.Source.Code<string>() &&  x.Value==Model.Source)?.Name: "___")</span>
+                </div>
+            </div>
+
+        </div>
+        <br />
+        <h3>Bank Infomation</h3>
+        <br />
+        <div class="row" id="bank_infomation_btn">
+            <div class="col-md-12">
+                <a class="btn btn-primary" onclick="show_bank_info('@Model.Id')">
+                    Show
+                    <img id="show_bank_info_loader" style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                </a>
+            </div>
+        </div>
+        <div class="row" id="bank_infomation" style="display: none">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label class="control-label">Bank Name: </label><span id="BankName"></span>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label>Bank DDA/Account Number: </label><span id="BankDDA"></span>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label class="control-label">Bank Transit: </label><span id="BankTransit"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!--<div class="box box-primary box-solid" style="border-radius:unset">
+    <div class="box-header with-border">
+        <h4 class="box-title">Owner Infomation</h4>-->
+@*<div class="pull-right box-tools">
+        <button type="button" onclick="update_merchant('@Model.Id', 'true')" class="btn btn-info" style="border-color:var(--main-color-2)">
+            <i class="fa fa-pencil"> Edit</i>
+        </button>
+    </div>*@
+<!--</div>
+<div class="box-body">-->
+@*<div class="row">
+        <div class="col-md-6">
+            <div class="form-group">
+                <label class="control-label">Password: </label>
+                @if (p?.Any(k => k.Key.Equals("customer_view_merchantaccount")) == true && p?["customer_view_merchantaccount"] == true && Model.Id > 0)
+                {
+                    <span id="c_pass_unshow"> ****** <i class="fa fa-eye" onclick="showPassDetail('c_pass_show', 'c_pass_unshow')" style="color:#258e4f; cursor:pointer"></i></span>
+                    <span id="c_pass_show" style="display:none"> @(Model.Password) <i class="fa fa-eye-slash" onclick="showPassDetail('c_pass_unshow', 'c_pass_show')" style="color:#258e4f; cursor:pointer"></i></span>
+                }
+                else
+                {
+                    <span> ******</span>
+                }
+            </div>
+        </div>
+    </div>*@
+<!--<div class="row">
+    <div class="col-md-6">
+        <div class="form-group">
+            <label class="control-label">Preferred Language:</label><span> @(Model.PreferredLanguage ?? "---")</span>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="form-group">
+            <label class="control-label">Social:</label>-->
+@*<span id="SocialNumber">@(new string('*', Model.SocialSecurity.Length - 4))@Model.SocialSecurity.Substring(Model.SocialSecurity.Length - 4, 4)</span>*@
+<!--<span id="SocialNumber">*********</span>
+                    <span id="SocialNumber_show"></span>
+                    <i class="fa fa-eye" onclick="show_input_pass(this,'SocialNumber','@Model.Id')" style="color:#258e4f; cursor:pointer"></i>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="control-label">Preferred Name:</label><span> @(Model.PreferredName ?? "---")</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>-->
+
+<div class="modal fade" id="modal-salon-note" role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-content">
+        <form action="/merchantman/savesalonnote" method="post" id="form-salon-note">
+            <div class="modal-header">
+                <div class="modal-title pull-left"><h4 style="margin:0">Update note</h4></div>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="control-label">Salon note</label>
+                    <textarea type="text" class="form-control" style="min-height:100px;resize:vertical;" name="BusinessDescription" id="BusinessDescription">@Model.BusinessDescription</textarea>
+                </div>
+                <input name="Id" id="customer_id_edit" value="@Model.Id" hidden />
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary" onsubmit="overlayOn()">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!--addtional contact-->
+<!--<div class="box box-primary box-solid" style="border-radius:unset">
+    <div class="box-header with-border">
+        <h4 class="box-title">Additional Info</h4>-->
+@*<div class="pull-right box-tools">
+        <button type="button" onclick="update_merchant('@Model.Id', 'true','mn_additinal')" class="btn btn-info" style="border-color:var(--main-color-2)">
+            <i class="fa fa-pencil"> Edit</i>
+        </button>
+    </div>*@
+<!--</div>
+<div class="box-body">
+    <div class="table-responsive mailbox-messages">-->
+@*@if (p?.Any(k => k.Key.Equals("customer_view_merchantaccount")) == true && p?["customer_view_merchantaccount"] == true && Model.Id > 0)
+    {
+        <a class="btn btn-primary" onclick="$('#additional_info_table').show(300), $(this).hide()">Show info</a>
+        <table id="additional_info_table" class="table table-hover table-striped" style="display:none">
+            <thead>
+                <tr>
+                    <th style="text-align:center">#</th>
+                    <th>Name</th>
+                    <th>Note</th>
+                    <th>Create by</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{ int i = 1;}
+                @if (AdditionalInfo.Count > 0)
+                {
+                    foreach (var Info in AdditionalInfo)
+                    {
+                        <tr>
+                            <td style="text-align:center">@(i++)</td>
+                            <td>@Info.InfoName</td>
+                            <td>@Html.Raw(Info.InfoContent.Replace("\n", "<br/>"))</td>
+                            <td>@Info.CreateBy at @Info.CreateAt</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="5" style="text-align:center">There are no additional info to display</td></tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <a class="btn btn-primary" onclick="shownoty('You do not have permission to view additional info!','error')">Show info</a>
+    }*@
+<!--</div>
+
+    </div>
+</div>-->
+
+<style type="text/css">
+    .control-label {
+        width: 150px
+    }
+
+    .newcontact-form {
+        background-color: #f1f1f1;
+        padding: 5px 20px;
+        margin: 20px 0;
+        box-shadow: 0 2px 4px 0 rgba(0,0,0,0.16),0 2px 10px 0 rgba(0,0,0,0.12) !important;
+    }
+
+    .newcontact-content {
+        width: auto;
+        background-color: #fff;
+        padding: 8px 12px;
+        border-left: 3px solid var(--main-color-1);
+        word-wrap: break-word;
+    }
+
+    .switch {
+        position: relative;
+        display: inline-block;
+        height: 30px;
+        width: 140px;
+    }
+
+        .switch input {
+            display: none;
+        }
+
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        overflow: hidden;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #f2f2f2;
+        -webkit-transition: .4s;
+        transition: .4s;
+    }
+
+        .slider:before {
+            position: absolute;
+            z-index: 2;
+            content: "";
+            height: 24px;
+            width: 24px;
+            left: 2px;
+            bottom: 3px;
+            background-color: darkslategrey;
+            -webkit-box-shadow: 0 2px 5px rgba(0, 0, 0, 0.22);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.22);
+            -webkit-transition: .4s;
+            transition: all 0.4s ease-in-out;
+        }
+
+        .slider:after {
+            position: absolute;
+            left: 0;
+            z-index: 1;
+            content: "Merchant";
+            text-align: left !important;
+            line-height: 30px;
+            padding-left: 0;
+            width: 140px;
+            color: #fff;
+            height: 30px;
+            border-radius: 100px;
+            background-color: #fc8b00;
+            -webkit-transform: translateX(-160px);
+            -ms-transform: translateX(-160px);
+            transform: translateX(-160px);
+            transition: all 0.4s ease-in-out;
+        }
+
+    input:checked + .slider:after {
+        -webkit-transform: translateX(0px);
+        -ms-transform: translateX(0px);
+        transform: translateX(0px);
+        padding-left: 30px;
+    }
+
+    input:checked + .slider:before {
+        background-color: #fff;
+    }
+
+    input:checked + .slider:before {
+        -webkit-transform: translateX(98px);
+        -ms-transform: translateX(98px);
+        transform: translateX(98px);
+    }
+
+    /* Rounded sliders */
+    .slider.round {
+        border-radius: 100px;
+        height: 30px;
+    }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+    .absolute-no {
+        position: absolute;
+        left: 0;
+        color: darkslategrey;
+        text-align: right !important;
+        width: calc(100% - 20px);
+        height: 30px;
+        line-height: 30px;
+        cursor: pointer;
+    }
+
+    .modal {
+        text-align: center;
+        padding: 0 !important;
+    }
+
+        .modal:before {
+            content: '';
+            display: inline-block;
+            height: 100%;
+            vertical-align: middle;
+            margin-right: -4px;
+        }
+
+    .modal-dialog {
+        display: inline-block;
+        text-align: left;
+        vertical-align: middle;
+    }
+</style>
+<script type="text/javascript">
+    //iCheck for checkbox and radio inputs
+    $('input[type="checkbox"].minimal').iCheck({
+        checkboxClass: 'icheckbox_minimal-blue'
+    });
+    //Inactive checked khi xem chi tiet
+    $('input[type="checkbox"].inactive_unchecked').on('ifChanged', function (e) {
+        var isChecked = e.currentTarget.checked;
+        if (isChecked == false) {  //neu uncheck thi gan lai la check
+            this.iCheck('check');
+        }
+        else {  //neu uncheck thi gan lai la check
+            this.iCheck('uncheck');
+        }
+    });
+    $('#form-salon-note').ajaxForm(function (data) {
+        if (data[0]) {
+            var mess = $.parseJSON('{"text":"' + data[1] + '", "layout":"top", "type":"success"}');
+            noty(mess);
+        } else {
+            var mess = $.parseJSON('{"text":"' + data[1] + '", "layout":"top", "type":"error"}');
+            noty(mess);
+        }
+        overlayOff();
+        ChangeSubTab('OwnerInfo', '@Model.Id');
+        $('#modal-salon-note').modal('hide');
+        $('.modal-backdrop').fadeOut(500);
+    })
+
+    function PreContactChange(t) {
+        if ($(t).val() == "Mobile") {
+            $("#divPhoneNumber").show(200);
+        }
+        else {
+            $("#divPhoneNumber").hide(200);
+        };
+    }
+    function Reload_Addinfo_Table(id) {
+        $.ajax({
+            method: "POST",
+            url: "/merchantman/GetAddInfo",
+            data: { id },
+            dataType: "json"
+        })
+            .done(function (data) {
+                $("#additional_info_table tbody").empty();
+                for (var i = 0; i < Object.keys(data).length; i++) {
+                    $("#additional_info_table tbody").append('<tr>'
+                        + '<td style="text-align:center">' + (i + 1) + '</td>'
+                        + '<td>' + data[i]["InfoName"] + '</td>'
+                        + '<td>' + data[i]["InfoContent"].replace(/\n/g, "<br/>") + '</td>'
+                        + '<td>' + data[i]["CreateBy"] + ' at ' + data[i]["CreateAt"].toString() + '</td>'
+                        + '</tr>');
+                }
+            })
+            .fail(function () {
+            })
+    };
+    function SaveNewContact() {
+        var Name = $('#CtName').val();
+        var Authorization = [];
+        $.each($("input[name='CtAuthorization']:checked"), function () {
+            Authorization.push($(this).val());
+        });
+        var PreferredLanguage = $('#CtPreferredLanguage').val();
+        var PreferredContact = $('#CtPreferredContact').val();
+        var PhoneNumber = $('#CtPhoneNumber').val();
+        var Relationship = $('#CtRelationship').val();
+        $.ajax({
+            method: "POST",
+            url: "/Merchantman/SaveContact",
+            data: {
+                "CustomerId" : "@Model.Id",
+                Name,
+                "Authorization": Authorization.join(","),
+                PreferredLanguage,
+                PreferredContact,
+                PhoneNumber,
+                Relationship
+            },
+            dataType: "html"
+        })
+            .done(function (data) {
+                $("#list_add_contacts").append(data);
+                var Success = $.parseJSON('{"text":"Save new contact completed!", "layout":"top", "type":"success"}');
+                noty(Success);
+                $('#CtName').val('');
+                $('#CtRelationship').val('');
+            })
+            .fail(function () {
+                var Error = $.parseJSON('{"text":"Save new contact failure!", "layout":"top", "type":"error"}');
+                noty(Error);
+            })
+
+        $('#add_contact_btn').show(300), $('#add_contact').hide(300);
+    }
+    function shownoty(text, type = "success", layout = "top") {
+        var Success = $.parseJSON('{"text":"' + text + '", "layout":"' + layout + '", "type":"' + type + '"}');
+        noty(Success);
+    };
+    function show_bank_info(id) {
+        $("#show_bank_info_loader").show();
+        $.ajax({
+            method: "POST",
+            url: "/Merchantman/getBankInfo",
+            data: {
+                id
+            },
+            dataType: "json"
+        })
+            .done(function (data) {
+                if (data[0]) {
+                    $("#BankName").html(data[1].DepositBankName || "___");
+                    $("#BankDDA").html(data[1].DepositAccountNumber || "___");
+                    $("#BankTransit").html(data[1].DepositRoutingNumber || "___");
+                    $("#bank_infomation_btn").hide(300);
+                    $("#bank_infomation").show(300);
+                } else {
+                    noty({ "text": data[1], "layout": "top", "type": "error" });
+                }
+            })
+            .fail(function () {
+                alert("show_bank_info fail");
+            }).always(function () {
+                $("#show_bank_info_loader").hide();
+            });
+    }
+    function updateDataTypeStore(e) {
+            overlayOn();
+            let type = "";
+            if (!$(e).prop('checked')) {
+                type = '@MerchantType.STORE_IN_HOUSE.ToString()';
+                $(".switch").attr("title", "Click to change to Merchant")
+            }
+            else {
+                type = '@MerchantType.STORE_OF_MERCHANT.ToString()';
+                $(".switch").attr("title", "Click to change to Store in house")
+            }
+
+            $.ajax({
+                method: "GET",
+                url: "/Merchantman/ChangeStoreType?storeId=@(Model.StoreCode)&type=" + type,
+                dataType: "html"
+            })
+                .done(function (data) {
+                    let _data = JSON.parse(data);
+                    overlayOff();
+                    if (_data[0])
+                        noty({ "text": _data[1], "layout": "topRight", "type": "success" });
+                    else
+                        noty({ "text": _data[1], "layout": "topRight", "type": "error" });
+                })
+                .fail(function () {
+                    alert("change store type fail");
+                }).always(function () {
+                    overlayOff();
+                });
+    }
+    function show_account_passhidden(Id) {
+        var _show = $('#account_password_' + Id).html();
+        $('.pass-hidden-' + Id).toggleClass('fa-eye fa-eye-slash');
+        if (_show == "******") {
+            $.ajax({
+                method: "POST",
+                url: "/merchantMan/getAccountManager",
+                data: { Id },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    overlayOff();
+                    if (data[0] == true) {
+                        $('#account_password_' + Id).html(data[1].Password);
+                    }
+                    else {
+                        var Error = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"error"}');
+                        noty(Error);
+                    }
+                })
+                .fail(function () {
+                    overlayOff();
+                    alert("Get data Fail");
+                })
+        }
+        else {
+            $('#account_password_' + Id).html("******");
+        }
+    }
+</script>

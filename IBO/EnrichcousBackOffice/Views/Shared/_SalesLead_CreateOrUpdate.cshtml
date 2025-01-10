@@ -1,0 +1,887 @@
+﻿@model SalesLeadViewModel
+@using EnrichcousBackOffice.Models
+@using EnrichcousBackOffice.Models.CustomizeModel
+@using EnrichcousBackOffice.Services
+@using EnrichcousBackOffice.ViewModel
+@using EnrichcousBackOffice.Utils.IEnums
+@using Inner.Libs.Helpful
+@{
+    List<Ad_USAState> State = ViewBag.State ?? new List<Ad_USAState>();
+    var access = EnrichcousBackOffice.AppLB.Authority.GetAccessAuthority();
+    string FromPage = ViewBag.Page;
+    var SalesMember = ViewBag.ListMemberSales as List<P_Member>;
+    P_Member cMem = EnrichcousBackOffice.AppLB.Authority.GetCurrentMember();
+    bool? showteam = ViewBag.ShowTeam as bool?;
+
+    List<TimeZoneModel> listTimeZone = new MerchantService().ListTimeZone();
+
+}
+<link href="~/Content/DualListMulti/multi.min.css" rel="stylesheet" />
+<style>
+    .rate {
+        float: left;
+        height: 46px;
+        padding: 0;
+        margin-top: -5px;
+    }
+
+        .rate:not(:checked) > input {
+            position: absolute;
+            top: -9999px;
+        }
+
+        .rate:not(:checked) > label {
+            float: right;
+            width: 1em;
+            overflow: hidden;
+            white-space: nowrap;
+            cursor: pointer;
+            font-size: 30px;
+            color: #ccc;
+        }
+
+            .rate:not(:checked) > label:before {
+                content: '★ ';
+            }
+
+        .rate > input:checked ~ label {
+            color: #ffc700;
+        }
+
+        .rate:not(:checked) > label:hover,
+        .rate:not(:checked) > label:hover ~ label {
+            color: #deb217;
+        }
+
+        .rate > input:checked + label:hover,
+        .rate > input:checked + label:hover ~ label,
+        .rate > input:checked ~ label:hover,
+        .rate > input:checked ~ label:hover ~ label,
+        .rate > label:hover ~ input:checked ~ label {
+            color: #c59b08;
+        }
+    /*set style for modal sales person*/
+    .multi-wrapper a {
+        color: #000;
+    }
+
+    .error {
+        color: red;
+    }
+
+    input.error {
+        border: 1px solid red !important;
+    }
+</style>
+<form class="modal fade form-sales_lead" id="form-sales_lead" method="post" action="@(FromPage == "NewRegister" ? "/SaleLead/NewRegister_Update" : "/SaleLead/Update")" role="dialog">
+    <div class="modal-dialog modal-lg" style="width:800px; max-width:100%">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header" style="background-color:#a8a0a0">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+
+                <h4 class="modal-title" style="color:white;font-size:18px">@(!string.IsNullOrEmpty(Model.Id) ? "Update Lead" : "New Lead")</h4>
+            </div>
+            <div class="modal-body" style="overflow:auto;top:0">
+                <input type="hidden" id="Id" name="Id" value="@Model.Id" />
+                <input type="hidden" id="command" name="command" value="" />
+
+                <h3 style="padding:5px;border-left:solid 5px red;background-color:#f1dbbe">Contact Information</h3>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group div-contactname">
+                            <label>Contact Name <span style="color:red">*</span></label>
+                            <input type="text" class="form-control" name="ContactName" value="@(Model.ContactName)" required />
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group div-contactphone">
+                            <label>Contact Phone</label>
+                            <input type="text" class="form-control" name="ContactPhone" value="@(Model.ContactPhone)" />
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="control-label">Rate :</label>
+                            <div class="clearfix"></div>
+                            <div class="rate">
+                                <input type="radio" id="star5" name="PotentialRateScore" value="5" @if (Model.PotentialRateScore == 5) { @Html.Raw("checked") } />
+                                <label for="star5" title="5 stars">5 stars</label>
+                                <input type="radio" id="star4" name="PotentialRateScore" value="4" @if (Model.PotentialRateScore == 4) { @Html.Raw("checked") } />
+                                <label for="star4" title="4 stars">4 stars</label>
+                                <input type="radio" id="star3" name="PotentialRateScore" value="3" @if (Model.PotentialRateScore == 3) { @Html.Raw("checked") } />
+                                <label for="star3" title="3 stars">3 stars</label>
+                                <input type="radio" id="star2" name="PotentialRateScore" value="2" @if (Model.PotentialRateScore == 2) { @Html.Raw("checked") } />
+                                <label for="star2" title="2 stars">2 stars</label>
+                                <input type="radio" id="star1" name="PotentialRateScore" value="1" @if (Model.PotentialRateScore == 1) { @Html.Raw("checked") } />
+                                <label for="star1" title="1 stars">1 stars</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 style="padding:5px;border-left:solid 5px red;background-color:#f1dbbe">Spa/Salon Information</h3>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group div-salonname">
+                            <label>Salon Name<span style="color:red">*</span></label>
+                            <input class="form-control" name="SalonName" value="@(Model.SalonName)" required />
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group div-emailsalon">
+                            <label>Email Salon</label>
+                            <input type="email" class="form-control" name="SalonEmail" value="@(Model.SalonEmail)"/>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group div-phonesalon">
+                            <label>Phone Salon</label>
+                            <input type="text" class="form-control" name="SalonPhone" value="@(Model.SalonPhone)" />
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group div-street">
+                            <label>Street</label>
+                            <input class="form-control" name="Address" value="@(Model.Address)" />
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group div-city">
+                            <label>City</label>
+                            <input type="text" id="InfoSalon_District" class="form-control ui-autocomplete-input" name="City" value="@(Model.City)" />
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group div-state">
+                            <label>State/Province</label>
+                            <select id="InfoSalon_Province" data-placeholder="" class="form-control province select2" name="State" style="width:100%; margin-bottom:5px">
+                                <option value="">N/A</option>
+                                @foreach (var item in State)
+                                {
+                                    <option value="@item.abbreviation" @(item.abbreviation == Model.State ? "selected='selected'" : "")>@item.name</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group div-zipcode">
+                            <label>Zip Code</label>
+                            <input type="text" id="ZipCode" class="form-control ui-autocomplete-input" name="ZipCode" value="@(Model.ZipCode)" />
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group div-country">
+                            <label>Country<span style="color:red">*</span></label>
+                            <select class="form-control" id="Country" name="Country" required>
+                                <option selected="selected" value="United States">United States</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Time Zone<span style="color:red">*</span></label>
+                            <select class="form-control select2" style="width: 100%" id="TimeZone" name="TimeZone" required>
+                                @*<option value="">N/A</option>*@
+                                @*<option @Html.Raw(Model.TimeZone == "Eastern Standard Time" ? "selected" : "") value="Eastern Standard Time">(UTC-05:00) Eastern Time (US &amp; Canada)</option>
+                                    <option @Html.Raw(Model.TimeZone == "Central Standard Time" ? "selected" : "") value="Central Standard Time">(UTC-06:00) Central Time (US &amp; Canada)</option>
+                                    <option @Html.Raw(Model.TimeZone == "Mountain Standard Time" ? "selected" : "") value="Mountain Standard Time">(UTC-07:00) Mountain Time (US &amp; Canada)</option>
+                                    <option @Html.Raw(Model.TimeZone == "Pacific Standard Time" ? "selected" : "") value="Pacific Standard Time">(UTC-08:00) Pacific Time (US &amp; Canada)</option>
+                                    <option @Html.Raw(Model.TimeZone == "SE Asia Standard Time" ? "selected" : "") value="SE Asia Standard Time">(UTC+07:00) Bangkok, Hanoi, Jakarta</option>*@
+
+                                @if (listTimeZone.Count > 0)
+                                {
+                                    if (!string.IsNullOrEmpty(Model.TimeZone) && !listTimeZone.Any(x => x.Name.Contains(Model.TimeZone)))
+                                    {
+                                        <option selected value="@(Model?.TimeZone)">
+                                            (UTC @(Model?.TimeZoneNumber)) @(Model?.TimeZone)
+                                        </option>
+                                    }
+                                    foreach (TimeZoneModel time in listTimeZone)
+                                    {
+                                        <option @if (Model?.TimeZone == time.Name) { @Html.Raw("selected") } value="@time.Name">(UTC @time.TimeDT) @time.Name</option>
+                                    }
+                                }
+                                else
+                                {
+                                    if (!string.IsNullOrEmpty(Model?.TimeZone) && (Model?.TimeZone != "Eastern" && Model?.TimeZone != "Central" && Model?.TimeZone != "Mountain" && Model?.TimeZone != "Pacific" && Model?.TimeZone != "VietNam"))
+                                    {
+                                        <option selected value="@(Model?.TimeZone)">
+                                            (UTC @(Model?.TimeZoneNumber)) @(Model?.TimeZone)
+                                        </option>
+                                    }
+                                    <option @if (Model?.TimeZone == "Eastern") { @Html.Raw("selected") } value="Eastern">(UTC @(TIMEZONE_NUMBER_BY_ID.Eastern.Text())) @(TIMEZONE_NUMBER_BY_ID.Eastern.Code<string>()))</option>
+                                    <option @if (Model?.TimeZone == "Central") { @Html.Raw("selected") } value="Central">(UTC  @(TIMEZONE_NUMBER_BY_ID.Central.Text())) @(TIMEZONE_NUMBER_BY_ID.Central.Code<string>()))</option>
+                                    <option @if (Model?.TimeZone == "Mountain") { @Html.Raw("selected") } value="Mountain">(UTC  @(TIMEZONE_NUMBER_BY_ID.Mountain.Text())) @(TIMEZONE_NUMBER_BY_ID.Mountain.Code<string>()))</option>
+                                    <option @if (Model?.TimeZone == "Pacific") { @Html.Raw("selected") } value="Pacific">(UTC  @(TIMEZONE_NUMBER_BY_ID.Pacific.Text())) @(TIMEZONE_NUMBER_BY_ID.Pacific.Code<string>()))</option>
+                                    <option @if (Model?.TimeZone == "VietNam") { @Html.Raw("selected") } value="VietNam">(UTC  @(TIMEZONE_NUMBER_BY_ID.VietNam.Text())) @(TIMEZONE_NUMBER_BY_ID.VietNam.Code<string>()))</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <h3 style="padding:5px;border-left:solid 5px red;background-color:#f1dbbe">Other Information</h3>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Number Of Salons</label>
+                            <input type="text" class="form-control" name="MoreInfo.NumberBranches" value="@(Model.MoreInfo?.NumberBranches)" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Number Of Technicians</label>
+                            <input type="text" class="form-control" name="MoreInfo.NumberEmployees" value="@(Model.MoreInfo?.NumberEmployees)" />
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="label-field"> You are or are already using management software ?</label>
+                            <div class="groups-checkradio" style="display:flex">
+                                <div class="form-check-inline" style="display:inline">
+                                    <label class="label-radio no-select">
+                                        <input type="radio" class="input-radio" name="MoreInfo.AreUsingSoftware" value="Yes" @(Model.MoreInfo?.AreUsingSoftware == "Yes" ? "checked" : "") />&nbsp;&nbsp;Yes
+                                    </label>
+                                </div>
+                                <div class="form-check-inline" style="display: inline;margin-left: 15px;">
+                                    <label class="label-radio  no-select">
+                                        <input type="radio" class="input-radio" name="MoreInfo.AreUsingSoftware" value="No" @(Model.MoreInfo?.AreUsingSoftware == "No" ? "checked" : "") />&nbsp;&nbsp;No
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="label-field">Hardware</label>
+                            <div class="groups-checkradio" style="display:flex">
+                                <div class="form-check-inline" style="display:inline">
+                                    <label class="label-radio  no-select">
+                                        <input type="radio" class="input-radio" name="MoreInfo.Hardware" value="Self-supply" @(Model.MoreInfo?.Hardware == "Self-supply" ? "checked" : "") />&nbsp;&nbsp; Self-supply
+                                    </label>
+                                </div>
+                                <div class="form-check-inline" style="display: inline;margin-left: 15px;">
+                                    <label class="label-radio  no-select">
+                                        <input type="radio" class="input-radio" name="MoreInfo.Hardware" value="MANGO offers" @(Model.MoreInfo?.Hardware == "MANGO offers" ? "checked" : "") />&nbsp;&nbsp; MANGO offers
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <h3 style="padding:5px;border-left:solid 5px red;background-color:#f1dbbe">Interaction</h3>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Interaction Status</label>
+                            <select class="form-control InteractionStatus" name="InteractionStatus">
+                                <option value="">N/A</option>
+                                @foreach (var stt in ViewBag.InteractionStatus as List<SelectListItem>)
+                                {
+                                    <option value="@stt.Value" @(Model.InteractionStatus?.ToString() == stt.Value ? "selected" : "")>@stt.Text</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Call Of Number </label>
+                            <input type="number" class="form-control" name="CallOfNumber" value="@(Model.CallOfNumber)" />
+                        </div>
+                    </div>
+
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label>Note :</label>
+                            <textarea rows="5" class="form-control" name="Note" value="@(Model.Note)" />
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                @if (FromPage == "NewRegister")
+                {
+                    if ((access.Any(k => k.Key.Equals("sales_lead_add_lead")) == true && access["sales_lead_add_lead"] == true))
+                    {
+                        <button type="button" id="form-btn-edit-to-sales-lead" style="display:none" onclick="changeCommand('edit-to-sales-lead');" class="btn btn-success action-submit-form-button">
+                            Add To Sales Lead <img id="submit_img_edit-save" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                        </button>
+                    }
+                    if (Model.IsSendMail)
+                    {
+                        if ((access.Any(k => k.Key.Equals("sales_lead_verify")) == true && access["sales_lead_verify"] == true))
+                        {
+                            <button type="button" id="form-btn-verify" style="display:none" onclick="changeCommand('verify');" class="btn bg-navy  action-submit-form-button">
+                                Verify <img id="submit_img_verify" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                            </button>
+                        }
+                        if ((access.Any(k => k.Key.Equals("sales_lead_create_trial")) == true && access["sales_lead_create_trial"] == true))
+                        {
+                            <button type="button" id="form-btn-resend-email" style="display:none" onclick="changeCommand('resend-email');" class="btn bg-purple action-submit-form-button">
+                                Resend Email Verify  <img id="submit_img_resend-email" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                            </button>
+                        }
+                    }
+                    else
+                    {
+                        if ((access.Any(k => k.Key.Equals("sales_lead_create_trial")) == true && access["sales_lead_create_trial"] == true))
+                        {
+                            <button type="button" id="form-btn-create-trial" style="display:none" onclick="changeCommand('create-trial');" class="btn bg-purple action-submit-form-button">
+                                Create Trial Account <img id="submit_img_create-trial" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                            </button>
+                        }
+                    }
+                    if ((access.Any(k => k.Key.Equals("sales_lead_verify")) == true && access["sales_lead_verify"] == true))
+                    {
+                        <button type="button" id="form-btn-verify" style="display:none" onclick="changeCommand('verify');" class="btn btn-secondary action-submit-form-button">
+                            Verify <img id="submit_img_verify" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                        </button>
+                    }
+                }
+                else
+                {
+
+                }
+
+                @if (Model.IsSendMail)
+                {
+                    if ((access.Any(k => k.Key.Equals("sales_lead_verify")) == true && access["sales_lead_verify"] == true))
+                    {
+                        <button type="button" id="form-btn-verify" style="display:none" onclick="changeCommand('verify');" class="btn  bg-navy action-submit-form-button">
+                            Verify <img id="submit_img_verify" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                        </button>
+                    }
+                    if ((access.Any(k => k.Key.Equals("sales_lead_create_trial")) == true && access["sales_lead_create_trial"] == true))
+                    {
+                        <button type="button" id="form-btn-resend-email" style="display:none" onclick="changeCommand('resend-email');" class="btn bg-purple action-submit-form-button">
+                            Resend Email Verify  <img id="submit_img_resend-email" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                        </button>
+                    }
+                }
+                else
+                {
+                    if ((access.Any(k => k.Key.Equals("sales_lead_create_trial")) == true && access["sales_lead_create_trial"] == true))
+                    {
+                        <button type="button" id="form-btn-create-trial" style="display:none" onclick="changeCommand('create-trial');" class="btn bg-purple action-submit-form-button">
+                            Create Trial Account <img id="submit_img_create-trial" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                        </button>
+                    }
+                }
+
+
+                <button type="button" onclick="changeCommand('edit-saleslead');" class="btn btn-primary pull-right action-submit-form-button">
+                    Save <img id="submit_img_edit-save" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                </button>
+
+                <span class="btn btn-default pull-left margin-r-5" data-dismiss="modal">Close</span>
+                @*@if (FromPage == "SalesLead" && Model.Id > 0 && (access.Any(k => k.Key.Equals("sales_lead_assigned")) == true && access["sales_lead_assigned"] == true))
+                    {
+                        <button type="submit" onclick="changeCommand('show-select-sales-person');" class="btn btn-primary">
+                            @(string.IsNullOrEmpty(Model.SalesPerson)? "Assigned" : "ReAssigned")  <img id="submit_img_edit-save" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                        </button>
+                    }*@
+
+
+            </div>
+        </div>
+    </div>
+    <input type="hidden" value="" id="newsalon_form" name="newsalon_form" />
+</form>
+
+@if (SalesMember.Count() > 0 && string.IsNullOrEmpty(Model.SalesPerson) && Model.TeamNumber == null)
+{
+    <div id="addmember_modal" class="modal fade modal-select-member" data-backdrop="static" data-keyboard="false" role="dialog">
+        <div class="modal-dialog" style="background:white;">
+            <!-- Modal content-->
+            <div class="modal-header">
+                <button type="button" class="close btn-closeassigned" onclick="CloseUnAssigned('@Model.Id');"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Assign to</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12">
+
+                        <div class="row text-center" style="margin-bottom:5px">
+                            <button style="width:100px" class="btn btn-select-assigned btn-salesperson active" onclick="LoadAssignBySalesPerson()">Sales Person</button>
+                            @if (showteam == true)
+                            {
+                                <text>
+                                    |
+                                    <button style="width:100px" class="btn btn-select-assigned btn-team" onclick="LoadAssignByTeam()">Team</button>
+                                </text>
+                            }
+                        </div>
+                        <select class="assign-select" id="SalesPerson" data-type="SalesPerson" multiple="multiple" name="SalesPerson">
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="UnAssigned('@Model.Id');" class="btn-unassigned btn btn-warning pull-left">UnAssigned</button>
+                <button type="button" onclick="Assigned('@Model.Id');" class="btn-assigned btn btn-primary">Assigned</button>
+            </div>
+        </div>
+    </div>
+}
+
+
+
+<div id="verify-action-confirmation" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="verify-action-confirmation-title">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="verify-action-confirmation-title">Are you sure ?</h4>
+            </div>
+            <div class="modal-body">
+                You want to verify this account ?
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="verify-action-confirmation-submit-button" class="btn btn-primary pull-right btn-yes">
+                    Yes
+                </button>
+                <span class="btn btn-default pull-right margin-r-5" data-dismiss="modal">Cancel</span>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="confirm-product-popup">
+
+</div>
+
+
+
+<script src="~/Content/Admin/plugins/input-mask/jquery.inputmask.js"></script>
+<script src="~/Scripts/jquery.validate.min.js"></script>
+<script src="~/Scripts/jquery.validate.unobtrusive.min.js"></script>
+<script src="~/Content/DualListMulti/multi.custom.js"></script>
+@if (FromPage == "Order")
+{
+
+    <script>
+    var page = '@FromPage';
+    var command;
+    var UrlVerrify;
+    $(".form-sales_lead").validate({
+        onfocusout: false,
+        invalidHandler: function (form, validator) {
+            var errors = validator.numberOfInvalids();
+            if (errors) {
+                validator.errorList[0].element.focus();
+            }
+       },
+       errorPlacement: function (error, element) {
+           var elem = $(element).parent().children().last();
+           error.insertAfter(elem);
+        },
+    });
+    $(document).ready(function () {
+        $(".action-submit-form-button").click(function () {
+            if (!($("#form-sales_lead").valid())) {
+                return false;
+        }
+        command = $('#command').val();
+      
+       
+            $("#submit_img_" + command).show()
+            $.ajax({
+                type: "POST",
+                url: $("#form-sales_lead").attr('action'),
+                data: $("#form-sales_lead").serialize() + "&command=" + command, // serializes the form's elements.
+                success: function (data) {
+                    if (data.status)
+                    {
+                        $('#form-sales_lead').modal('hide');
+                        select_merchant(data.CustomerCode)
+                    }
+                    else
+                    {
+                        noty({ "text": data.message, "layout": "topRight", "type": "warning" });
+                    }
+                },
+                complete: function () {
+                    $("#submit_img_" + command).hide()
+                },
+            });
+        
+        })
+    })
+    //change command button
+    function changeCommand(command) {
+        $('#command').val(command);
+    }
+
+ 
+
+    </script>
+}
+else
+{
+    <script>
+    var page = '@FromPage';
+    var command;
+    var UrlVerrify;
+    $(".form-sales_lead").validate({
+        onfocusout: false,
+        invalidHandler: function (form, validator) {
+            var errors = validator.numberOfInvalids();
+            if (errors) {
+                validator.errorList[0].element.focus();
+            }
+       },
+       errorPlacement: function (error, element) {
+           var elem = $(element).parent().children().last();
+           error.insertAfter(elem);
+        },
+    });
+    $(document).ready(function () {
+        $(".action-submit-form-button").click(function () {
+            if (!($("#form-sales_lead").valid())) {
+                return false;
+        }
+        command = $('#command').val();
+        var confirmation = true;
+        switch (command) {
+            case 'verify':
+                confirmation = confirm("Are you sure you want to verify this account !");
+                if (!confirmation) {
+                    return;
+                }
+                break;
+            case 'create-trial':
+                confirmation = confirm("Are you sure you want to create trial account !");
+                if (!confirmation) {
+                    return;
+                }
+                break;
+                 default:
+                break;
+             }
+        if (confirmation) {
+            $("#submit_img_" + command).show()
+            $.ajax({
+                type: "POST",
+                url: $("#form-sales_lead").attr('action'),
+                data: $("#form-sales_lead").serialize() + "&command=" + command, // serializes the form's elements.
+                success: function (data) {
+                    if (data.status)
+                    {
+
+                            @if (string.IsNullOrEmpty(Model.SalesPerson)&&Model.TeamNumber==null&& SalesMember.Count() > 0)
+                            {
+                                <text>
+                             if (command == 'create-trial' || command == 'verify' || command=="resend-email" || command == 'edit-to-sales-lead' || command == 'edit-saleslead')
+                                {
+                                    if (command == 'verify') {
+                                        UrlVerrify = data.message;
+                                     }
+                                 if (command == 'edit-saleslead') {
+                                         //assigned refresh onclick
+                                         var clickfun = $(".btn-assigned").attr("onClick");
+                                         var funname = clickfun.substring(0, clickfun.indexOf("("));
+                                         $(".btn-assigned").attr("onclick", funname + '("' + data.SalesLeadId + '")');
+
+                                         //unassigned refresh onclick
+                                          var clickUnassignedfun = $(".btn-unassigned").attr("onClick");
+                                     var funnameunassigned = clickUnassignedfun.substring(0, clickUnassignedfun.indexOf("("));
+                                     $(".btn-unassigned").attr("onclick", funnameunassigned + '("' + data.SalesLeadId + '")');
+
+                                     //close assign refresh onclick
+                                     var clickCloseassignedfun = $(".btn-closeassigned").attr("onClick");
+                                     var funnamecloseassigned = clickCloseassignedfun.substring(0, clickCloseassignedfun.indexOf("("));
+                                     $(".btn-closeassigned").attr("onclick", funnamecloseassigned + '("' + data.SalesLeadId + '")');
+                                         }
+                                    $('#addmember_modal').modal('show');
+                                    return;
+                                }
+                                </text>
+                            }
+                             if (command == 'verify' || command == 'create-trial' || command =="resend-email") {
+                                   UrlVerrify = data.message;
+                                   LoadConfirmLicenseProduct('@Model.Id', command);
+                                //verifyOpenWindow(UrlVerrify);
+                            }
+                            else {
+                            noty({ "text": data.message, "layout": "topRight", "type": "success" });
+                            $('#addmember_modal').modal('hide');
+                            $('#form-sales_lead').modal('hide');
+                            if (page == "NewRegister")
+                            {
+                                $('#dataTable').DataTable().ajax.reload();
+                            }
+                            else
+                            {
+                                @if (!string.IsNullOrEmpty(Model.Id))
+                                {
+                                   <text>
+                                   UpdateRow($('#Id').val(), true);
+                                   </text>
+                                }
+                                else
+                                {
+                                  <text>
+                                  $('#dataTable').DataTable().ajax.reload();
+                                  </text>
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        noty({ "text": data.message, "layout": "topRight", "type": "warning" });
+                    }
+                },
+                complete: function () {
+                    $("#submit_img_" + command).hide()
+                },
+            });
+        }
+        })
+    })
+    //change command button
+    function changeCommand(command) {
+        $('#command').val(command);
+    }
+
+    function CloseUnAssigned(SalesLeadId) {
+        $('#addmember_modal').modal('hide');
+        CompleteStepAssigned(SalesLeadId);
+    }
+    function UnAssigned(SalesLeadId) {
+        CompleteStepAssigned(SalesLeadId);
+    }
+    function Assigned(SalesLeadId) {
+        var result = false;
+        if ($('#SalesPerson').val()=='') {
+            return alert('Please select sales person!');
+        }
+        else {
+            $('.loading').show();
+            var Type = $("#SalesPerson").attr("data-type");
+            $.ajax({
+                url: '/SaleLead/ReAssigned',
+                type: 'POST',
+                dataType: 'json',
+                data: { "SalesLeadId": SalesLeadId, "SalesPerson": $('#SalesPerson').val(), "Type": Type },
+                success: function (data) {
+                    if (data.status == true) {
+                        CompleteStepAssigned(SalesLeadId);
+                    }
+                    else {
+                        $('#addmember_modal').modal('hide');
+                        noty({ "text": data.message, "layout": "topRight", "type": "error" });
+                    }
+                },
+                error: function (data) {
+                    console.log(data.message);
+                },
+                complete: function () {
+                    $('.loading').hide();
+                }
+            });
+        }
+    }
+    function CompleteStepAssigned(SalesLeadId) {
+        debugger;
+        switch (command) {
+            case 'verify':
+                LoadConfirmLicenseProduct(SalesLeadId,'verify');
+                break;
+            case 'create-trial':
+                LoadConfirmLicenseProduct(SalesLeadId, 'create-trial');
+                break;
+            case 'edit-to-sales-lead':
+                noty({ "text": "add to sales lead success", "layout": "topRight", "type": "success" });
+                $('#addmember_modal').modal('hide');
+                $('#form-sales_lead').modal('hide');
+                break;
+            case 'edit-saleslead':
+                noty({ "text": "add new sales lead success", "layout": "topRight", "type": "success" });
+                $('#addmember_modal').modal('hide');
+                $('#form-sales_lead').modal('hide');
+                break;
+            case 'resend-email':
+                LoadConfirmLicenseProduct(SalesLeadId, 'resend-email');
+                break;
+            default:
+                break;
+        }
+
+        if (page == "NewRegister") {
+            $('#dataTable').DataTable().ajax.reload();
+        }
+        else {
+             @if (!string.IsNullOrEmpty(Model.Id))
+                                {
+                                   <text>
+                                   UpdateRow($('#Id').val(), true);
+                                  </text>
+                                }
+                                else
+                                {
+                                    <text>
+                                    $('#dataTable').DataTable().ajax.reload();
+                                     </text>
+                                }
+        }
+    }
+
+    function LoadConfirmLicenseProduct(SalesLeadId, Command) {
+        $('.loading').show();
+        $.ajax({
+            method: "POST",
+            url: "/SaleLead/LoadPopupConfirmSelectProduct",
+            data: { "SalesLeadId": SalesLeadId, "Command": Command},
+            dataType: "html"
+        })
+            .done(function (data) {
+                $("#confirm-product-popup").html(data);
+                $("#product-confirm-modal").modal("show");
+            })
+            .fail(function () {
+                alert("show_popup_product ajax fail");
+            }).always(function () {
+                $('.loading').hide();
+            });
+    }
+
+    function ConfirmChangeLicenseProductStep(SalesLeadId,Command) {
+        $('.loading').show();
+        if ($(".selected_prd[type=radio]:checked").length ==0)
+        {
+            return alert('Please Select Subscription Product !');
+        };
+        var LicenseId = $(".selected_prd[type=radio]:checked").val();
+        $.ajax({
+            method: "POST",
+            url: "/SaleLead/ProcessConfirmSelectProduct",
+            data: { "SalesLeadId": SalesLeadId, "LicenseId": LicenseId},
+            dataType: "json"
+        })
+            .done(function (data) {
+                if (data.status) {
+                    $("#product-confirm-modal").modal("hide");
+                    $('#addmember_modal').modal('hide');
+                    $('#form-sales_lead').modal('hide');
+                    if (Command == 'verify') {
+                        verifyOpenWindow(UrlVerrify);
+                    }
+                    else if (Command == "create-trial") {
+                        $('#dataTable').DataTable().ajax.reload();
+                        noty({ "text": "create trial success", "layout": "topRight", "type": "success" });
+                    }
+                    else {
+                        $('#dataTable').DataTable().ajax.reload();
+                        noty({ "text": "resend email success", "layout": "topRight", "type": "success" });
+                    }
+                }
+                else {
+                    error("change product fail");
+                }
+            })
+            .fail(function () {
+                alert("change product fail");
+            }).always(function () {
+                $('.loading').hide();
+            });
+    }
+    // modal select sales person
+    //$("#SalesPerson").multi({
+    //    non_selected_header: 'Members',
+    //    selected_header: 'Assigned Sales Person',
+    //    limit: 1,
+    //});
+
+    $(".modal-select-member .non-selected-wrapper>.disabled").on('click', function (event) {
+           event.stopPropagation();
+    })
+    $('.select2').select2();
+
+    @if (SalesMember.Count() > 0 && string.IsNullOrEmpty(Model.SalesPerson) && Model.TeamNumber == null)
+                {
+        <text>
+    var select = document.getElementById('SalesPerson');
+    localStorage.setItem("non_selected_header", "Member");
+    localStorage.setItem("selected_header", "Assigned To Sales Person");
+    multi(select, {
+        "ajax": {
+            endpoint: '/SaleLead/GetListMemberAssigned',
+            transform: function (res) {
+                return res.data.map(function (res) {
+                    return {
+                        value: res.Value,
+                        label: res.Text,
+                        //disabled: disabled,
+                        //selected: selected && !disabled
+                    };
+
+                });
+            },
+        },
+        "limit": 1,
+        "non_selected_header": 'Members',
+        "selected_header": 'Assigned To Sales Person',
+    });
+    var trigger_event = function (type, el) {
+        var e = document.createEvent("HTMLEvents")
+        e.initEvent(type, false, true)
+        el.dispatchEvent(e)
+    }
+         </text>
+                }
+
+                function LoadAssignByTeam() {
+                    localStorage.setItem("non_selected_header", "Team");
+                    localStorage.setItem("selected_header", "Assigned To Team");
+        $.ajax({
+                        type: "Post",
+            url: "/SaleLead/GetListTeamAssigned",
+            success: function (res) {
+                $('#SalesPerson').html('');
+                $.each(res.data, function (id, option) {
+                    $('#SalesPerson').append($('<option></option>').val(option.Value).html(option.Text));
+                            });
+                $('#SalesPerson').attr("data-type", "Team")
+                trigger_event("change", select)
+                $('.btn-select-assigned').removeClass('active');
+                $('.btn-team').addClass('active');
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                alert('fail');
+            },
+        });
+    }
+    function LoadAssignBySalesPerson() {
+        localStorage.setItem("non_selected_header", "Member");
+        localStorage.setItem("selected_header", "Assigned To Sales Person");
+        $.ajax({
+            type: "Post",
+            url: "/SaleLead/GetListMemberAssigned",
+            success: function (res) {
+                $('#SalesPerson').html('');
+                $.each(res.data, function (id, option) {
+                    $('#SalesPerson').append($('<option></option>').val(option.Value).html(option.Text));
+                });
+                $('#SalesPerson').attr("data-type", "SalesPerson")
+                trigger_event("change", select)
+                $('.btn-select-assigned').removeClass('active');
+                $('.btn-salesperson').addClass('active');
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+        alert('fail');
+    },
+        });
+    }
+
+    </script>
+
+
+}

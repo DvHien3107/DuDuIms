@@ -1,0 +1,24 @@
+﻿@model EnrichcousBackOffice.Models.C_CustomerContact
+<div class="row">
+    <div class="col-md-4">
+        <label class="control-label col-md-4" style="text-align:right">name:</label><span> @(Model.Name ?? "---")</span>
+    </div>
+    <div class="col-md-4">
+        <label class="control-label col-md-4" style="text-align:right">Authorization:</label><span> @(Model.Authorization ?? "---")</span>
+    </div>
+    <div class="col-md-4">
+        <label class="control-label col-md-4" style="text-align:right">Preferred Language:</label><span> @(Model.PreferredLanguage ?? "---")</span>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-4">
+        <label class="control-label col-md-4" style="text-align:right">Preferred Contact:</label><span> @(Model.PreferredContact ?? "---")</span>
+    </div>
+    <div class="col-md-4" @if (Model.PreferredContact != "Mobile") { @Html.Raw("style = 'display:none'") }>
+        <label class="control-label col-md-4" style="text-align:right">Number:</label><span> @(Model.PhoneNumber ?? "---")</span>
+    </div>
+    <div class="col-md-4">
+        <label class="control-label col-md-4" style="text-align:right">Relationship:</label><span> @(Model.Relationship ?? "---")</span>
+    </div>
+</div>
+<hr style="margin-left:10%; margin-right:10%" />

@@ -1,0 +1,142 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.I_ProcessSetting>
+
+@if (string.IsNullOrWhiteSpace(ViewBag.err))
+{
+    <!--Modal process setting-->
+    <div class="modal fade" id="modal-process-setting">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" style="font-weight:bold">Inventory Process Setting</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group form-inline row">
+                        <div class="col-md-12">
+                            @*<div class="input-group" style="width:30%">
+                                <div class="input-group-addon" style="background-color:whitesmoke"><b>Type: </b></div>
+                                <select id="s_process_type" name="s_process_type" class="form-control" onchange="search_process()">
+                                    <option value="">--All--</option>
+                                    <option value="Packaging">Preparation</option>
+                                    <option value="Testing">Testing</option>
+                                    <option value="Shipping">Shipping</option>
+                                </select>
+                            </div>*@
+                            <div class="input-group" style="width:100%">
+                                <input type="text" class="form-control" name="search_process" value="" placeholder="Search for name" />
+                                <div class="input-group-addon" style="width:10%; background-color:whitesmoke; cursor:pointer" onclick="search_process()">
+                                    <i class="fa fa-search"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="clearfix"></div><hr />
+                    <div class="form-group">
+                        <table class="table table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    @*<th>Type</th>*@
+                                    <th>Field Name</th>
+                                    <th>Requirement</th>
+                                    <th>Type</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody">
+                                @foreach (var item in Model)
+                                {
+                                    <tr id="tr_@item.Id">
+                                        <td style="display:none">
+                                            <select class="form-control" name="process_type_@item.Id" disabled>
+                                                <option @if (item.FieldType == "Packaging") { @Html.Raw("selected") } value="Packaging">Preparation</option>
+                                                @*<option @if (item.FieldType == "Testing") { @Html.Raw("selected") } value="Testing">Testing</option>
+                                                <option @if (item.FieldType == "Shipping") { @Html.Raw("selected") } value="Shipping">Shipping</option>*@
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <input type="text" class="form-control" name="process_name_@item.Id" value="@item.FieldName" disabled />
+                                        </td>
+                                        
+                                        <td>
+                                            <input type="checkbox" name="process_requirement_@item.Id" @if (item.Requirement == true) { @Html.Raw("checked") }  style="height:20px; width:20px" disabled />
+                                        </td>
+                                        <td>
+                                            
+                                            <select name="process_check_@item.Id" class="form-control" disabled>
+                                                <option value="1" @if (item.IsCheck == true) { @Html.Raw("selected") }>Checkbox</option>
+                                                <option value="0" @if (item.IsCheck != true) { @Html.Raw("selected") }>Text field</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <button type="button" id="btn_u_@item.Id" class="btn btn-default btn-sm" onclick="update_process('@item.Id')"><i class="fa fa-edit"></i> Update</button>&nbsp;
+                                            <button type="button" id="btn_s_@item.Id" class="btn btn-default btn-sm" onclick="save_process('@item.Id')" style="display:none"><i class="fa fa-save"></i> Save</button>&nbsp;
+                                            <button type="button" class="btn btn-default btn-sm" onclick="delete_process('@item.Id')"><i class="fa fa-close"></i> Remove</button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td style="display:none">
+                                        <select class="form-control" name="process_type">
+                                            <option value="Packaging">Preparation</option>
+                                            @*<option value="Testing">Testing</option>
+                <option value="Shipping">Shipping</option>*@
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input type="text" class="form-control" name="process_name" />
+                                    </td>
+                                    <td>
+                                        <input type="checkbox" name="process_requirement" style="height:20px; width:20px"/>
+                                    </td>
+                                    <td>
+                                        <select name="process_check" class="form-control">
+                                            <option value="1">Checkbox</option>
+                                            <option value="0">Text field</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-default btn-sm" onclick="add_process()">
+                                            <i class="fa fa-plus"></i> Add
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--/.End-->
+}
+else
+{
+    <div class="modal fade" id="modal-process-setting">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" style="font-weight:bold">Inventory Process Setting</h4>
+                </div>
+                <div class="modal-body">
+                    <strong>@ViewBag.err</strong>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+<script src="~/Scripts/process_setting.js"></script>

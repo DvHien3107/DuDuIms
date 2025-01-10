@@ -1,0 +1,292 @@
+﻿@using EnrichcousBackOffice.Models
+@using EnrichcousBackOffice.AppLB
+@{
+    ViewBag.Title = "Access Role";
+    A_Role rolesInfo = ViewBag.rolesInfo as A_Role;
+    WebDataModel db = new WebDataModel();
+    var Partners = db.C_Partner.Where(c => c.Status > 0).ToList().OrderBy(c => c.Code);
+    P_Member cMem = Authority.GetCurrentMember();
+    List <Site> Sites = ViewBag.sites as List<Site>;
+}
+
+<section class="content-header">
+    <h1>
+        Access role
+        <small>Decentralization</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Dashboard</a></li>
+        <li><i class="fa fa-cogs"></i> Setting</li>
+        <li class="active">Grant access</li>
+    </ol>
+</section>
+<!-- Main content -->
+<section class="content container-fluid">
+    <div class="row">
+        @if (TempData["error"] != null)
+        {
+            <div class="alert alert-warning alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-warning"></i>@TempData["error"]</span>
+            </div>
+        }
+        else if (TempData["success"] != null)
+        {
+            <div class="alert alert-success alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-check"></i> @TempData["success"]</span>
+            </div>
+        }
+
+
+        <div class="col-md-12">
+            <div class="box">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Access role</h3>
+                </div>
+                <br />
+                <form method="get" url="/">
+                    <div class="form-group form-inline" style="margin:5px 2% 10px 2%">
+                        <label style="font-weight:bold; font-size:14px; margin-right:12px">Access role:</label>
+                        @if (cMem.SiteId == 1)
+                        {
+                          <select name="siteId" class="form-control" onchange="$(this.form).submit()">
+                              @foreach (var item in Sites)
+                              {
+                                  <option @(Request.QueryString["siteId"]==item.Id.ToString()?"selected":"") value="@item.Id">
+                                            @item.Name
+                                  </option>
+                              }
+                          </select>
+                        }
+                        <select name="RoleCode" class="form-control" onchange="$(this.form).submit()">
+                            @foreach (var item in ViewBag.rolesList as List<A_Role>)
+                            {
+                                <option @if (rolesInfo.RoleCode.Equals(item.RoleCode)) { @Html.Raw("selected") } value="@item.RoleCode">
+                                  @(item.RoleName + " - Level#" + item.RoleLevel)
+                                </option>
+                            }
+                        </select>
+
+
+                        <img src="~/Content/ajax-loaders/ajax-loader-1.gif" id="loading" style="display:none;height:15px" />
+                        &nbsp;&nbsp;
+                        <button type="button" class="btn btn-sm btn-primary" onclick="get_role_info('add')">Add new</button>&nbsp;
+                        <button type="button" class="btn btn-sm btn-primary" onclick="get_role_info('edit')">Edit</button>&nbsp;
+                        <button type="button" class="btn btn-sm btn-primary" onclick="get_role_info('delete')">Delete</button>
+                    </div>
+                </form>
+                <br />
+                <div id="loadRolesAccess">
+                    @Html.Partial("_RolesAccessDetail")
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<!--Start modal-->
+<div class="modal fade in" id="modal-default">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <h4 id="modal-title" class="modal-title">Add new access role</h4>
+            </div>
+            <form role="form" action="/grantaccess/saverole" method="post">
+                <input type="hidden" name="SiteId" value="@ViewBag.SiteId" />
+                <div class="modal-body">
+                    <input type="hidden" name="hd_rolde_code" />
+                    <div class="form-group">
+                        <label>Role name <span style="color:red">*</span></label>
+                        <input type="text" class="form-control" name="RoleName" placeholder="Role name" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Role level <span style="color:red">*</span></label>
+                        <input type="number" class="form-control" name="RoleLevel" placeholder="Role level" required />
+                    </div>
+                   
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea class="form-control" name="Description" wrap="soft" rows="5" placeholder="Description"></textarea>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" onclick="return SaveRoleSubmit()">Save</button>
+                </div>
+            </form>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+<!--/.End modal-->
+<!--Start modal delete role-->
+<div class="modal fade in" id="modal-delete">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <h4 id="modal-title_delete" class="modal-title">Delete access role: </h4>
+            </div>
+            <form role="form" action="/grantaccess/deleterole" method="post">
+                <div class="modal-body">
+                    <input type="hidden" name="hd_rolde_code_delete" />
+                    <div class="form-group">
+                        <label>Role name</label>
+                        <input type="text" class="form-control" name="RoleNameDelete" readonly required />
+                    </div>
+                    <div class="form-group">
+                        <label>Access role</label>
+                        <select class="form-control" name="select_new_access_role">
+                            <option>-- select access role --</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" onclick="return confirm('You want to delete this access role?')">Delete</button>
+                </div>
+            </form>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+<!--/.End modal-->
+
+
+
+
+
+
+@section style{
+    <link href="~/Content/noty/jquery.noty.css" rel="stylesheet" />
+    <link href="~/Content/noty/noty_theme_default.css" rel="stylesheet" />
+    <style type="text/css">
+        .well {
+            margin-bottom: 0;
+        }
+    </style>
+}
+
+
+@section script{
+    <script src="~/Content/noty/jquery.noty.js"></script>
+    <script src="~/Scripts/jquery.matchHeight-min.js"></script>
+    <script>
+        
+        function changeRolesFailure() {
+            alert('Error');
+        }
+
+        //Access role
+        function get_role_info(key) {
+            //alert(key);
+            //click button add new
+            if (key == "add") {
+                $("#modal-title").html("Add new access role");
+                $("input[name='hd_rolde_code']").val("");
+                $("input[name='RoleName']").val("");
+                $("input[name='RoleLevel']").val("0");
+                $("textarea[name='Description']").val("");
+
+                $("#modal-default").modal("show");
+            }
+
+
+            //click button edit
+            if (key == "edit" || key == "delete") {
+                var roleCode = $("select[name='RoleCode']").val();
+
+                var obj = {};
+                obj.url = "/GrantAccess/GetRoleInfo";
+                obj.dataType = "json";
+                obj.type = "GET";
+                obj.contentType = "application/json";
+                obj.data = { RoleCode: roleCode };
+                obj.success = function (data) {
+                    //data = object[] {true/false, role/message, list_role}
+
+                    if (data[0] == true) {
+
+                        if (key == "edit") {
+                            $("#modal-title").html("Edit access role: " + data[1].RoleName);
+                            $("input[name='hd_rolde_code']").val(data[1].RoleCode);
+                            $("input[name='RoleName']").val(data[1].RoleName);
+                            $("input[name='RoleLevel']").val(data[1].RoleLevel);
+                        
+                            if (data[1].IsForPartner) {
+                                $("input[name='IsForPartner']").prop('checked', true);
+                            }
+                            else {
+                                $("input[name='IsForPartner']").prop('checked', false);
+                            }
+                            $("textarea[name='Description']").val(data[1].Description);
+
+                            $("#modal-default").modal("show");
+                        }
+
+                        if (key == "delete") {
+                            $("#modal-title_delete").html("Delete access role: " + data[1].RoleName);
+                            $("input[name='hd_rolde_code_delete']").val(data[1].RoleCode);
+                            $("input[name='RoleNameDelete']").val(data[1].RoleName);
+
+                            $("select[name='select_new_access_role']").empty();
+                            for (var i = 0; i < data[2].length; i++) {
+                                $("select[name='select_new_access_role']").append("<option value='" + data[2][i].RoleCode + "'>" + data[2][i].RoleName + " - Level#" + data[2][i].RoleLevel + "</option>");
+                            }
+
+                            $("#modal-delete").modal("show");
+                        }
+
+                    }
+                    else {
+                        var optionsErr = $.parseJSON('{"text":"' + data[1] + '","layout":"topRight","type":"error"}');
+                        noty(optionsErr);
+                    }
+                };
+                obj.complete = function () {
+
+                };
+                obj.error = function () {
+                    var optionsErr = $.parseJSON('{"text":"There was a problem, please try again later.","layout":"topRight","type":"error"}');
+                    noty(optionsErr);
+                };
+
+                $.ajax(obj);
+
+            }
+        }
+
+
+        function SaveRoleSubmit() {
+            var roleCode = $("input[name='hd_rolde_code']").val();
+            var roleLevel = $("input[name='RoleLevel']").val();
+
+            if (roleCode != "admin" && roleLevel == 100) {
+                var optionsErr = $.parseJSON('{"text":"Value must be less than or equal to 99","layout":"topRight","type":"error"}');
+                noty(optionsErr);
+
+                return false;
+            }
+            else {
+                return true;
+            }
+        }
+
+        //function changeRole() {
+        //    overlayOn();
+        //    var currentRole = $("select[name='RoleCode']").val();
+        //    window.location.href = "/GrantAccess?role_code=" + currentRole;
+        //}
+
+    </script>
+}

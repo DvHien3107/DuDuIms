@@ -1,0 +1,492 @@
+﻿@using EnrichcousBackOffice.Utils.IEnums
+@using Inner.Libs.Helpful;
+@{
+    List<EnrichcousBackOffice.Models.P_Member> members = ViewBag.ListMemberFilter;
+    var Team = ViewBag.Team as List<EnrichcousBackOffice.Models.P_Department>;
+    var ShowSalesPerson = ViewBag.ShowSalesPerson as bool?;
+    var ShowTeam = ViewBag.ShowTeam as bool?;
+    var access = EnrichcousBackOffice.AppLB.Authority.GetAccessAuthority();
+}
+
+
+
+
+<section class="content">
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="box box-default" style="border:1px solid #ddd">
+                <div class="box-header with-border" style="background: #f5f5f5">
+                    <div class="">
+                        <div class="input-group col-sm-2 pull-right" style="display:inline-table">
+                            <div class="input-group-addon">Time</div>
+                            <select class="form-control" id="time" name="time">
+                                <option value="current-month">This month</option>
+                                <option value="last-month">Last month</option>
+                                <option value="nearest-3-months">Nearest 3 months</option>
+                                <option value="current-year">This year</option>
+                                <option value="last-year">Last year</option>
+                            </select>
+                        </div>
+                        @if (ShowSalesPerson.GetValueOrDefault())
+                        {
+                            <text>
+                                <div class="input-group col-sm-3 pull-right" style="margin-right:5px;display:inline-table">
+                                    <div class="input-group-addon">Sales Person</div>
+                                    <select class="form-control select2" id="sales-person" name="sales-person">
+                                        <option value=""> All </option>
+                                        @foreach (var member in members)
+                                        {
+                                            <option value="@member.MemberNumber"> @member.FullName - #@member.MemberNumber</option>
+                                        }
+
+                                    </select>
+                                </div>
+                            </text>
+                        }
+                        @if (ShowTeam.GetValueOrDefault())
+                        {
+                            <div class="input-group  col-md-3 pull-right" style="margin-right:5px">
+                                <div class="input-group-addon" style="width:100px">
+                                    Team
+                                </div>
+                                <select class="form-control member-in-dept select2" id="Team" name="Team" style="min-width: 100px">
+                                    <option value="">All</option>
+                                    @foreach (var item in Team)
+                                    {
+                                        <option value="@item.Id">@item.Name</option>
+                                    }
+                                </select>
+                            </div>
+                        }
+                    </div>
+
+                </div>
+                <!-- /.box-header -->
+
+                <div class="box-body invoice-list">
+                    <div class="row">
+                        <div class="col-md-4 col-sm-6 col-xs-12">
+                            <div class="info-box" style="box-shadow: 0px 0px 0px 1px rgb(0 0 0 / 10%);">
+                                <span class="info-box-icon bg-yellow"><i class="fa fa-cubes" aria-hidden="true"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">All</span>
+                                    <div style="display:flex">
+                                        <div class="col-md-6" style="padding:0px;border-right: 1px dotted #d0d0d0;">
+                                            <span class="info-box-number count" style="font-size:28px" id="numberAll"></span>
+                                            <i>Num. of invoice</i>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <span style="display:flex"><span style="font-size:28px;font-weight:bold;">$</span><span class="info-box-number count" style="font-size:28px" id="incomeAll"></span></span>
+                                            <i>Sales income</i>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 col-sm-6 col-xs-12">
+                            <div class="info-box" style="box-shadow: 0px 0px 0px 1px rgb(0 0 0 / 10%);">
+                                <span class="info-box-icon bg-aqua"><i class="fa fa-eye"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">Open/Paylater</span>
+                                    <div style="display:flex">
+                                        <div class="col-md-6" style="padding:0px;border-right: 1px dotted #d0d0d0;">
+                                            <span class="info-box-number count" style="font-size:28px" id="numberOpenPaylater"></span>
+                                            <i>Num. of invoice</i>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <span style="display:flex"><span style="font-size:28px;font-weight:bold;">$</span><span class="info-box-number count" style="font-size:28px" id="incomeOpenPaylater"></span></span>
+                                          
+                                            <i>Sales income</i>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 col-sm-6 col-xs-12">
+                            <div class="info-box" style="box-shadow: 0px 0px 0px 1px rgb(0 0 0 / 10%);">
+                                <span class="info-box-icon bg-green"><i class="fa fa-envelope"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">Reality </span>
+                                    <div style="display:flex">
+                                        <div class="col-md-6" style="padding:0px;border-right: 1px dotted #d0d0d0;">
+                                            <span class="info-box-number count" style="font-size:28px" id="numberReality"></span>
+                                            <i>Num. of invoice</i>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <span style="display:flex"><span style="font-size:28px;font-weight:bold;">$</span><span class="info-box-number count" style="font-size:28px" id="incomeReality"></span></span>
+                                        
+                                            <i>Sales income</i>
+                                        </div>
+                                    </div>
+
+                                </div>
+                                <!-- /.info-box-content -->
+                            </div>
+                            <!-- /.info-box -->
+                        </div>
+
+                    </div>
+                    <script>
+                        LoadDataCommonStatistics();
+                        function LoadDataCommonStatistics() {
+                            $.ajax({
+                                url: '/Order/GetDashboardReport',
+                                type: 'POST',
+                                dataType: 'json',
+                                data: {
+                                    "Time": $('#time').val(), "Team": $('#Team').val(), "salesPerson": $('#sales-person').val()
+                                },
+                                success: function (data) {
+                                    $('#numberAll').html(data.NumberInvoiceAll);
+                                    $('#numberOpenPaylater').html(data.NumberOpenPaylater);
+                                    $('#numberReality').html(data.NumberReality);
+
+                                    $('#incomeAll').html(data.IncomeInvoiceAll);
+                                    $('#incomeOpenPaylater').html(data.IncomeOpenPaylater);
+                                    $('#incomeReality').html(data.IncomeReality);
+                                    animation();
+                                },
+                                error: function (data) {
+                                    console.log(data.message);
+                                },
+                            })
+                        }
+                        function animation() {
+                            jQuery(document).ready(function ($) {
+                                $('.count').counterUp({
+                                    delay: 10,
+                                    time: 1000
+                                });
+                            })
+                        }
+                    </script>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="box box-default" id="trial-merchant-report">
+                                <div class="box-header with-border" style="padding: 12px;">
+                                    <h3 class="box-title">
+                                        <i class="fa fa-shopping-cart" aria-hidden="true"></i>
+                                        Invoice Report
+                                    </h3>
+                                </div>
+                            </div>
+                            <div class="box-body">
+                                <div class="row">
+                                    <div class="col-sm-12" style="margin-bottom:2rem">
+                                        <canvas id="invoice-chart-invoice" height="500"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="box box-default" id="trial-merchant-report">
+                                <div class="box-header with-border" style="padding: 12px;">
+                                    <h3 class="box-title">
+                                        <i class="fa fa-user" aria-hidden="true"></i>
+                                        Top 10 Sales Agent
+                                    </h3>
+                                </div>
+                            </div>
+                            <div class="box-body">
+                                <div class="row">
+                                    <div class="col-sm-12" style="margin-bottom:2rem">
+                                        <canvas id="top-ten-seller" height="500"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+            <!-- /.box -->
+        </div>
+    </div>
+</section>
+<script>
+    $('.select2').select2();
+    $('.invoice-chart-invoice')
+</script>
+<script type="text/javascript">
+    var ctx1 = document.getElementById("invoice-chart-invoice").getContext('2d');
+    var chart1 = new Chart(ctx1, {
+        type: 'bar',
+        data: {
+            datasets: [
+                {
+                    label: "Num. Of Reality Invoices",
+                    backgroundColor: '#4bc0c0',
+                    borderColor: '#4bc0c0',
+                    borderWidth: 1,
+                    yAxisID: 'Num. Of Reality Invoices'
+
+                },
+                {
+                    label: "Sales Income",
+                    backgroundColor: '#fdb45c',
+                    borderColor: '#fdb45c',
+                    borderWidth: 1,
+                    yAxisID: 'Sales Income'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            tooltips: {
+                callbacks: {
+                    label: function (tooltipItem, data) {
+                        if (tooltipItem.datasetIndex === 0) {
+                            return tooltipItem.yLabel;
+                        }
+                        else {
+                            return "$" + Number(tooltipItem.yLabel).toFixed(2).replace(/./g, function (c, i, a) {
+                                return i > 0 && c !== "." && (a.length - i) % 3 === 0 ? "," + c : c;
+                            });
+                        }
+
+                    }
+
+                }
+            },
+            title: {
+                display: true,
+                text: ''
+            },
+            scales: {
+                yAxes:
+                    [{
+                        id: 'Num. Of Reality Invoices',
+                        type: 'linear',
+                        position: 'left',
+                        gridLines: {
+                            display: false,
+                        },
+                        scaleLabel:
+                        {
+                            display: true,
+                            labelString: '#Invoice'
+                        },
+                        ticks: {
+                            min: 0, // it is for ignoring negative step.
+                            beginAtZero: true,
+                            callback: function (value, index, values) {
+                                if (Math.floor(value) === value) {
+                                    return value;
+                                }
+                            }
+                        }
+                    },
+                    {
+                        id: 'Sales Income',
+                        type: 'linear',
+                        position: 'right',
+                        gridLines: {
+                            display: false,
+                        },
+                        scaleLabel:
+                        {
+                            display: true,
+                            labelString: '$(USD)'
+                        },
+
+                        ticks:
+                        {
+                            beginAtZero: true,
+                            callback: function (value, index, values) {
+                                return '$' + value.toFixed(2);
+                            }
+                        }
+                    }]
+            },
+            plugins: {
+                labels: {
+                    render: function () {
+                        return '';
+                    }
+                },
+            
+            }
+        },
+    });
+    function LoadDataChart() {
+        $.ajax({
+            url: '/Order/ChartReport',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                "Time": $("#time").val(), "Team": $('#Team').val(), "salesPerson": $('#sales-person').val()
+            },
+            success: function (data) {
+                chart1.data.datasets[0].data = data.numberInvoiceData;
+                chart1.data.datasets[1].data = data.IncomeData;
+                //chart1.options.scales.yAxes[0].ticks.max = data.resultMaxInvoice;
+                //chart1.options.scales.yAxes[1].ticks.max = data.resultMaxIncome;
+                chart1.options.title.text = data.title;
+                chart1.data.labels = data.label;
+                chart1.update();
+            },
+            error: function (data) {
+                console.log(data.message);
+            },
+        })
+    }
+    LoadDataChart();
+</script>
+<script>
+    var ctx2 = document.getElementById("top-ten-seller").getContext('2d');
+    var chart2 = new Chart(ctx2, {
+        type: 'horizontalBar',
+        data: {
+            datasets: [
+                {
+                    label: "Num. Of Reality Invoices",
+                    backgroundColor: '#4bc0c0',
+                    borderColor: '#4bc0c0',
+                    borderWidth: 1,
+                    xAxisID: 'NumOfRealityInvoices'
+
+                },
+                {
+                    label: "Sales Income",
+                    backgroundColor: '#fdb45c',
+                    borderColor: '#fdb45c',
+                    borderWidth: 1,
+                    xAxisID: 'Sales Income'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            tooltips: {
+                callbacks: {
+                    label: function (tooltipItem, data) {
+                        if (tooltipItem.datasetIndex === 0) {
+                            return tooltipItem.xLabel;
+                        }
+                        else {
+                            return "$" + Number(tooltipItem.xLabel).toFixed(2).replace(/./g, function (c, i, a) {
+                                return i > 0 && c !== "." && (a.length - i) % 3 === 0 ? "," + c : c;
+                            });
+                        }
+
+                    }
+                }
+            },
+            title: {
+                display: true,
+                text: ''
+            },
+            scales: {
+                xAxes:
+                    [{
+                        id: 'NumOfRealityInvoices',
+                        position: 'top',
+                        type: 'linear',
+                        gridLines: {
+                            display: false,
+                        },
+                        scaleLabel:
+                        {
+                            display: true,
+                            labelString: '#Invoice'
+                        },
+                        ticks: {
+                            min: 0, // it is for ignoring negative step.
+                            beginAtZero: true,
+                            callback: function (value, index, values) {
+                                if (Math.floor(value) === value) {
+                                    return value;
+                                }
+                            }
+                        }
+                    },
+                    {
+                        id: 'Sales Income',
+                        position: 'bottom',
+                        type: 'linear',
+                        gridLines:
+                        {
+                            display: false,
+                        },
+                        scaleLabel:
+                        {
+                            display: true,
+                            labelString: '$(USD)'
+                        },
+                        ticks: {
+                            beginAtZero: true,
+                            callback: function (value, index, values) {
+                                return '$' + value.toFixed(2);
+                            }
+                        }
+                    }]
+            },
+            plugins: {
+                labels: {
+                    render: function () {
+                        return '';
+                    }
+                }
+            }
+        },
+    });
+    function LoadDataChartTopTenSeller() {
+        $.ajax({
+            url: '/Order/Top10BestSeller',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                "Time": $("#time").val(), "Team": $('#Team').val(), "salesPerson": $('#sales-person').val()
+            },
+            success: function (data) {
+                chart2.data.datasets[0].data = data.Top10SellerInvoice;
+                chart2.data.datasets[1].data = data.Top10SellerIncome;
+                //chart2.options.scales.xAxes[0].ticks.max = data.MaxYInvoice;
+                //chart2.options.scales.xAxes[1].ticks.max = data.MaxYIncome;
+                chart2.options.title.text = data.title;
+                chart2.data.labels = data.Top10Seller;
+                chart2.update();
+            },
+            error: function (data) {
+                console.log(data.message);
+            },
+        })
+    }
+    LoadDataChartTopTenSeller();
+    $('#time').change(function () {
+        LoadDataChartTopTenSeller();
+        LoadDataChart();
+        LoadDataCommonStatistics();
+    })
+    $('#sales-person').change(function () {
+        LoadDataChart();
+        LoadDataCommonStatistics();
+    })
+    $("#Team").change(function () {
+        var IdTeam = $('#Team').val();
+        $.ajax({
+            type: "Post",
+            url: "/SaleLead/GetMemberSalesPersonByTeam",
+            data: { "IdTeam": IdTeam },
+            success: function (data) {
+                $('#sales-person').html('');
+                $('#sales-person').append($('<option value="">All</option>'));
+                $.each(data, function (id, option) {
+                    $('#sales-person').append($('<option></option>').val(option.Id).html(option.Name));
+                });
+                LoadDataChart();
+                LoadDataCommonStatistics();
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                alert('fail');
+            }
+        });
+    })
+</script>

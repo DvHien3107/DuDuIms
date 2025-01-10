@@ -1,0 +1,816 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.CustomizeModel.LicensesItemGroup>
+
+@using EnrichcousBackOffice.Models
+@using EnrichcousBackOffice.Models.CustomizeModel
+@using EnrichcousBackOffice.AppLB
+@using System.Web.Script.Serialization;
+@{
+    ViewBag.Title = "Licenses Product & Addon";
+    List<LicenseProductView> Products = ViewBag.Products;
+    Dictionary<string, bool> p = ViewBag.p;
+}
+<style>
+    .error {
+        color: red;
+    }
+
+    input.error {
+        border: 1px solid red !important;
+    }
+</style>
+<section class="content-header">
+    <h1>
+        Licenses Product &amp; Addon
+        <small>Licenses Management</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Dashboard</a></li>
+        <li><i class="fa fa-television"></i> Licenses Management</li>
+        <li class="active">Licenses Product &amp; Addon</li>
+    </ol>
+</section>
+<link href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css" rel="stylesheet">
+<!-- Main content -->
+<section class="content">
+    <div id="partial_loading" style="text-align: center;display:none;position: fixed;width: 100%;height: 100%;top: 0;left: 0;background-color: gray;opacity: 0.5;z-index: 1000;padding-top: 25%;">
+        <img src="/Content/ajax-loaders/loading-partial.gif">
+    </div>
+    <div class="row">
+
+        @if (TempData["error"] != null)
+        {
+            <div class="alert alert-warning alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-warning"></i> @TempData["error"]</span>
+            </div>
+        }
+        else if (TempData["success"] != null)
+        {
+            <div class="alert alert-success alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-check"></i> @TempData["success"]</span>
+            </div>
+        }
+
+        <div class="col-md-12">
+            <div class="box box-primary">
+
+                <!-- /.box-header -->
+                <div class="box-header with-border">
+                    <h3 class="box-title">Licenses Product &amp; Addon</h3>
+                    <div class="pull-right box-tools"><a onclick="new_product()" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i> New product/Addon</a></div>
+                </div>
+                <div id="product_tab" class="box-body">
+                    <table id="tb_products" style="width: 100%;border-collapse: collapse; " class="table-bordered striped3">
+                        <thead style="background-color: #aad3ea">
+                            <tr>
+                                <th>NAME</th>
+                                <th>PRICE</th>
+                                <th>TYPE</th>
+                                @*<th>SUBSCRIPTION END<br /> WARNING DAYS</th>*@
+                                <th>Product/Addon</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var pr in Products)
+                            {
+                                <tr id="pr_@pr.Product.Id" class="@(pr.Product.Type !="other" ?"prd_collapse":"") hover">
+                                    <td>
+                                        @if (pr.Product.Type != "other")
+                                        {
+                                            <a style="color: dodgerblue; margin: 0px 10px; padding: 0px;vertical-align:top;" class="icon_span btn fa fa-2x fa-plus-square-o"></a>
+                                            <a style="color: orange; margin: 0px 10px; padding: 0px; display: none;vertical-align:top;" class="icon_span btn fa fa-2x fa-minus-square-o"></a>
+                                        }
+                                        <b style="color:green" id="product_name_@pr.Product.Id" class="prod_name">@pr.Product.Name</b>
+                                        @*@if (pr.Product.isAddon != true)
+                                            {
+                                                if (string.IsNullOrEmpty(pr.Product.Code_POSSystem))
+                                                {
+                                                    <label class="label label-success">version 2</label>
+                                                }
+                                                else
+                                                {
+                                                    <label class="label label-warning">version 1</label>
+                                                }
+                                            }*@
+                                        @if (pr.Product.AllowDemo == true)
+                                        {
+                                            <label class="label label-default">Allow Trial</label>
+                                        }
+                                        @if (pr.Product.AllowSlice == true)
+                                        {
+                                            <label class="label label-default">Allow Slice</label>
+                                        }
+                                    </td>
+                                    <td>
+                                        @(pr.Product.Price != null ? "$" + pr.Product.Price.ToString() : "N/A")
+                                    </td>
+                                    <td>
+                                        @(pr.Product.SubscriptionDuration ?? "ONETIME")
+                                    </td>
+                                    @*<td>
+                                            @(pr.Product.SubscriptionEndWarningDays != null ? pr.Product.SubscriptionEndWarningDays.ToString() : "N/A")
+                                        </td>*@
+                                    <td>
+                                        @if (pr.Product.isAddon == true)
+                                        {
+                                            <label class="label label-warning">Addon</label>
+                                        }
+                                        else
+                                        {
+                                            <label class="label label-success">Product</label>
+                                        }
+                                    </td>
+                                    <td>
+                                        <a onclick="edit_product('@pr.Product.Id', $(this))" class="btn btn-default fa fa-pencil text-green on_row" style="font-size:1.2em">
+                                            <img class="loading_img" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                                        </a>
+                                        <a onclick="check_delete_product('@pr.Product.Id', $(this))" class="btn btn-default fa fa-trash-o text-red on_row" style="font-size:1.2em">
+                                            <img class="loading_img" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                                        </a>
+                                    </td>
+                                </tr>
+                                if (pr.Product.Type != "other")
+                                {
+                                    <tr class="models_list" style="border-bottom: 1px double; display:none; background-color:#DDD">
+                                        <td colspan="7" style="padding-left:50px;border:none;">
+                                            <div style="border: 1px solid orange">
+                                                <table class="table table-bordered table-striped table-hover" style="margin:0px; background-color:#fff">
+
+                                                    <tbody>
+                                                        @foreach (var group in Model.Where(g =>
+                                                        ((g.Group.Options.Contains("Product") && pr.Product.isAddon != true)
+                                                        || (g.Group.Options.Contains("Addon") && pr.Product.isAddon == true))
+                                                            && (g.Group.ID != 1000000 || (g.Group.ID == 1000000 && string.IsNullOrEmpty(pr.Product.Code_POSSystem)))))
+                                                        {
+                                                            <tr class="group_@group.Group.ID" style="background-color: #a3cbe2">
+                                                                <th colspan="3" onclick="edit_group('@group.Group.ID')">
+                                                                    <div class="pull-left">
+                                                                        <h3 id="group_name_@group.Group.ID" class="pull-left" style="margin:0">@group.Group.Name</h3>
+                                                                    </div>
+
+                                                                </th>
+                                                                <th></th>
+                                                            </tr>
+
+                                                            foreach (var item in group.Items)
+                                                            {
+                                                                var LP_item = pr.Items.Where(l => l.License_Item_Code == item.Code).FirstOrDefault();
+                                                                if (LP_item?.Enable == true)
+                                                                {
+                                                                    <tr class="group_@group.Group.ID item" id="item_@item.ID">
+                                                                        <td></td>
+                                                                        <td></td>
+                                                                        <td>
+                                                                            <span id="item_name_@item.ID">@item.Name</span>
+                                                                        </td>
+
+                                                                        <td class="product_@pr.Product.Id" style="text-align:left; font-weight:bold">
+                                                                            @*<div class="pull-right btn_group" style="visibility: hidden; opacity: 1; margin-left:-50px">
+                                                                                    <a onclick="show_modal('@pr.Product.Id','@item.ID')" class="btn btn-default fa fa-pencil text-green" style="font-size:1.2em; padding:2px 10px"></a>
+                                                                                </div>*@
+                                                                            <ul class="todo-list ui-sortable">
+                                                                                <li>
+                                                                                    @*@item.Type :*@ @(item.Type == "FEATURE" ? (LP_item?.Value == 1 ? "Yes" : "No") : LP_item?.Value.ToString())
+                                                                                </li>
+                                                                            </ul>
+                                                                        </td>
+                                                                    </tr>
+                                                                }
+                                                            }
+
+                                                            foreach (var childgroup in group.ChildGroups)
+                                                            {
+                                                                <tr class="group_@group.Group.ID group_@childgroup.Group.ID">
+                                                                    <td></td>
+                                                                    <td colspan="2" onclick="edit_group('@childgroup.Group.ID')">
+                                                                        <b id="group_name_@childgroup.Group.ID" class="pull-left">@childgroup.Group.Name</b>
+                                                                    </td>
+                                                                    <td></td>
+                                                                </tr>
+
+                                                                foreach (var item in childgroup.Items)
+                                                                {
+                                                                    var LP_item = pr.Items.Where(l => l.License_Item_Code == item.Code).FirstOrDefault();
+                                                                    if (LP_item?.Enable == true)
+                                                                    {
+                                                                        <tr class="group_@group.Group.ID item" id="item_@item.ID">
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td>
+                                                                                <span id="item_name_@item.ID">@item.Name</span>
+                                                                            </td>
+
+                                                                            <td class="product_@pr.Product.Id" style="text-align:left; font-weight:bold">
+                                                                                @*<div class="pull-right btn_group" style="visibility: hidden; opacity: 1; margin-left:-50px">
+                                                                                        <a onclick="show_modal('@pr.Product.Id','@item.ID')" class="btn btn-default fa fa-pencil text-green" style="font-size:1.2em; padding:2px 10px"></a>
+                                                                                    </div>*@
+                                                                                <ul class="todo-list ui-sortable">
+                                                                                    <li>
+                                                                                        @*@item.Type :*@ @(item.Type == "FEATURE" ? (LP_item?.Value == 1 ? "Yes" : "No") : LP_item?.Value.ToString())
+                                                                                    </li>
+                                                                                </ul>
+                                                                            </td>
+                                                                        </tr>
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <div class="col-md-12">
+                                                <div class="col-md-8 col-md-offset-2" id="div-btn-action-product-@pr.Product.Id" style="text-align:center; padding:10px">
+                                                    <a class="btn btn-warning" onclick="show_select_item('@pr.Product.Id',this,true)">
+                                                        Update License
+                                                        <img class="loading_img" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                                                    </a>
+                                                    <a class="btn btn-success" onclick="show_select_item('@pr.Product.Id',this)">
+                                                        Add license
+                                                        <img class="loading_img" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                                                    </a>
+                                                    @if (pr.UpdateStore)
+                                                    {
+                                                        <a id="btn-update-store-fail" data-toggle="tooltip" title="@(pr.NumberUpdated) stores has been updated" class="btn btn-info" onclick="show_stores_actived('@pr.Product.Id', true, this)">
+                                                            Continue Update
+                                                            <img class="loading_img" src="~/content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                                                        </a>
+                                                    }
+
+                                                    @*<a class="btn btn-info" onclick="show_stores_actived('@pr.Product.Id', this)">
+                                                            Update Store
+                                                            <img class="loading_img" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                                                        </a>*@
+
+                                                </div>
+                                                <div class="col-md-2" style="padding:10px">
+                                                    <a onclick="close_collapse()" class="pull-right"><i class="fa fa-close"></i>Close</a>
+                                                </div>
+                                            </div>
+
+                                        </td>
+                                    </tr>
+                                }
+
+                            }
+                        </tbody>
+                    </table>
+
+                </div>
+                <!-- /.box-body -->
+            </div>
+            <!-- /.box -->
+        </div>
+    </div>
+</section>
+<div class="modal fade in" id="product_popup" style="display: none;">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <h4 id="modal-department-title" class="modal-title">Edit Product</h4>
+            </div>
+            <form id="product_form" action="/Licenses/Save_LicenseProduct" method="post">
+                <div class="modal-body">
+                    <div class="row">
+                        <input type="hidden" id="prd_id" name="Id" />
+                        <input type="hidden" id="prd_code" name="Code" />
+                        <div class="col-md-6" style="padding-bottom:10px">
+                            <label>License/Addon</label><br />
+                            <input type="checkbox" onchange="checkbox_product($(this).is(':checked'))" name="isProduct" value="true" checked data-toggle="toggle" data-on="License" data-off="Addon" data-onstyle="success" data-offstyle="warning" data-width="100%">
+                        </div>
+
+                        @*<div class="col-md-6" style="padding-bottom:20px">
+                                <label>Type <span style="color:red">*</span></label>
+                                <select id="prd_type" name="Type" class="form-control" required>
+                                    @foreach (var type in Enum.GetValues(typeof(UserContent.LICENSES_ITEM_TYPES)))
+                                    {
+                                        <option value="@type">@type</option>
+                                    }
+                                </select>
+                            </div>*@
+                        <div class="col-md-6" style="padding-bottom:10px">
+                            <label>Period</label>
+                            @*<select id="prd_duration" name="SubscriptionDuration" class="form-control" style="display:none">
+                                    <option value="">ONETIME</option>
+                                    <option value="MONTHLY">MONTHLY</option>
+                                </select>*@
+                            <input id="prd_duration_prod" name="SubscriptionDuration" class="form-control" readonly value="ONETIME" />
+                        </div>
+                        <div class="col-md-6" style="padding-bottom:20px">
+                            <label>Name <span style="color:red">*</span></label>
+                            <input id="prd_name" name="Name" class="form-control" required />
+                        </div>
+                        <div class="col-md-6" style="padding-bottom:20px">
+                            <label>Price <span style="color:red">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-addon">$</span>
+                                <input id="prd_price" name="Price" min="0" class="form-control prd_price" type="number" required />
+                            </div>
+                        </div>
+                        @*<div class="col-md-6" style="padding-bottom:20px">
+                                <label>End warning days</label>
+                                <input id="prd_days" name="SubscriptionEndWarningDays" class="form-control" />
+                            </div>*@
+
+                        <div class="col-md-6" style="padding-bottom:20px" id="Trial_Days-div">
+                            <label>Trial Days</label>
+                            <select id="trial_days" name="Trial_Days" class="form-control">
+                                <option value="0">N/A</option>
+                                <option value="30">1 Month</option>
+                            </select>
+                        </div>
+                        <div class="clearfix"></div>
+                        <div class="col-md-6" style="padding-bottom:10px" id="Promotion_Price-div">
+                            <label>Promotion Price</label>
+                            <div class="input-group" style="display: flex;flex-wrap: wrap;position: relative;display: -ms-flexbox;display: flex;-ms-flex-wrap: wrap;flex-wrap: wrap;-ms-flex-align: stretch;align-items: stretch; width: 100%;">
+                                <div class="input-group-prepend" style="">
+                                    <div class="input-group-text" style="display: flex;margin-right: -1px;border: 1px solid #d2d6de;padding: 6px 12px;">$</div>
+                                </div>
+                                <input id="Promotion_Price" name="Promotion_Price" type="number" min="0" class="form-control" style="display: block;position: relative;-ms-flex: 1 1 auto;flex: 1 1 auto;width: 1%;margin-bottom: 0;">
+                            </div>
+                        </div>
+                        <div class="col-md-6" style="padding-bottom:10px" id="Promotion_Apply_Months-div">
+                            <label>Promotion Apply Months</label><br />
+                            <input id="Promotion_Apply_Months" name="Promotion_Apply_Months" type="number" step="1" min="0" max="12" class="form-control" />
+                        </div>
+                        <div class="clearfix"></div>
+
+                        @*<div id="select_version_radio" class="col-md-12" style="padding-bottom:10px">
+                                <div class="pull-left" style="font-size: 16px">
+                                    <label class="label label-warning" style="cursor:pointer"><input type="radio" name="version" value="1" style="vertical-align: sub" /> Version 1</label>
+                                    <label class="label label-success" style="cursor:pointer"><input type="radio" name="version" value="2" style="vertical-align: sub" checked /> Version 2</label>
+                                </div>
+                            </div>*@
+                        <div class="col-md-12 for-product">
+                            <label>POS LICENSE </label>
+
+                            <select name="Code_POSSystem" class="form-control" required>
+                                <option value="MANGOONE">SIMPLY ONE</option>
+                                <option value="MANGOPLUS">SIMPLY PLUS</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">
+                        Save <img id="loading" src="/Content/ajax-loaders/ajax-loader-1.gif" style="display:none">
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="modal fade in" id="cant_delete_popup" style="display: none;">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <h4 id="modal-department-title" class="modal-title">
+                    This License has been activated for some salons. You cannot delete!
+                </h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <a id="btn_show" onclick="$('#list_merchant').slideDown(200), $(this).hide()"> + Show more...</a>
+                        <div id="list_merchant" style="display:none">
+                            <table class="table table-hover">
+                                <thead style="background-color: #c2e1f3">
+                                    <tr>
+                                        <th>Merchant #</th>
+                                        <th>Store #</th>
+                                        <th>Detail</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                        <button type="button" class="btn btn-default pull-right" data-dismiss="modal">Close</button>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+<div id="select_item_modal_div"></div>
+<div id="store_actived_modal_div"></div>
+@*@Html.Partial("_Partial_Popup")*@
+@section script{
+    <script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
+    <script src="~/Scripts/jquery.validate.min.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            $("input[name=version]").on("change", function () {
+                var ver = $("input[name=version]:checked").val();
+                var isProduct = $("[name=isProduct]:checked").val();
+                if (ver == "1" && isProduct) {
+                    $("[name=Code_POSSystem]").prop("disabled", "").closest(".for-product").show();
+                    $("[name=AllowDemo]").prop("disabled", "disabled").closest(".for-version2").hide();
+                } else {
+                    $("[name=Code_POSSystem]").prop("disabled", "disabled").closest(".for-product").hide();
+                    $("[name=AllowDemo]").prop("disabled", "").closest(".for-version2").show();
+                }
+
+            })
+
+        })
+        function checkbox_product(checked) {
+            if (checked) {
+                //$("#prd_duration").attr("disabled", true).hide();
+                //$("#prd_duration_prod").removeAttr("disabled").show();
+                $("#prd_duration_prod").val("MONTHLY");
+                $("#select_version_radio").show();
+                $("#Trial_Days-div").show();
+                $("#Promotion_Apply_Months-div").show();
+                $("#Promotion_Price-div").show();
+            } else {
+                // $("#prd_duration").removeAttr("disabled").show();
+                $("#prd_duration_prod").val("ONETIME");
+                //$("#prd_duration_prod").attr("disabled", true).hide();
+                $("#select_version_radio").hide();
+                $("#Trial_Days-div").hide();
+                $("#Promotion_Apply_Months-div").hide();
+                $("#Promotion_Price-div").hide();
+            }
+
+            var ver = $("input[name=version]:checked").val();
+            if (checked && ver == "1") {
+                $("[name=Code_POSSystem]").prop("disabled", "").closest(".for-product").show();
+            } else {
+                $("[name=Code_POSSystem]").prop("disabled", "disabled").closest(".for-product").hide();
+            }
+        }
+        function show_modal(productId, itemId) {
+            $.ajax({
+                method: "POST",
+                url: "/Licenses/Load_LicenseProductItem",
+                data: { productId, itemId },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    $("#LP_Item").resetForm();
+                    $("#popup").find(".modal-title").html(data[2] + " - " + data[3]);
+                    //Edit format form
+                    if (data[0] == "ONETIME") {
+                        $(".one_time").show().find(".form-control").removeAttr("disabled");
+                        $(".subscrip").hide().find(".form-control").attr("disabled", true);
+                        $("#subscription_check").hide();
+                    } else {
+                        $(".one_time").hide().find(".form-control").attr("disabled", true);
+                        $(".subscrip").show().find(".form-control").removeAttr("disabled");
+                        $("#subscription_check").show();
+                        if (data[1].PeriodAmount > 0) {
+                            $("#pa_1").prop('checked', true).trigger("click");
+                        } else {
+                            $("#pa_0").prop('checked', true).trigger("click");
+                        }
+                    }
+                    if (data[5] == "FEATURE") {
+
+                        $(".count").hide().find(".form-control").attr("disabled", true);
+                        if (data[0] == "ONETIME") {
+                            $(".no_count").css("width", "100%");
+                        } else {
+                            $(".no_count").css("width", "");
+                        }
+                    } else {
+                        $(".count").show().find(".form-control").removeAttr("disabled");
+                        $(".no_count").css("width", "");
+                    }
+                    //Set value
+                    $("#productId").val(productId);
+                    $("#itemType").val(data[0]);
+                    $("#period").val(data[4]);
+                    $("#enable_item").prop("checked", data[1].Id != null);
+                    $.each(data[1], function (key, value) {
+                        var input = $("#LP_Item").find("[name=" + key + "]");
+                        if (input.attr("type") == "checkbox") {
+                            input.attr("checked", value);
+                        } else
+                            if (value)
+                                input.val(value);
+                    });
+
+
+                    $("#popup").modal("show");
+                })
+                .fail(function () {
+                    alert("load_addon_table failure");
+                })
+                .always(function () {
+                });
+
+        }
+        $("#LP_Item").ajaxForm(function (data) {
+            if (data[0]) {
+                noty({ "text": data[1], "layout": "topRight", "type": "success" });
+                load_tab();
+                $("#popup").modal("hide");
+            } else {
+                noty({ "text": data[1], "layout": "topRight", "type": "error" });
+            }
+        });
+        function edit_product(id, e) {
+
+            e.find(".loading_img").show();
+            $.ajax({
+                method: "POST",
+                url: "/Licenses/getLicenseProduct",
+                data: { id },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    if (data[0]) {
+                        $("#product_form").find("[type=hidden]").val("");
+                        $("#product_form").resetForm();
+
+                        $.each(data[2], function (key, value) {
+
+                            if ($("[name=" + key + "]").attr("type") == "checkbox") {
+                                $("[name=" + key + "]").attr("checked", value);
+                            } else
+                                //if (value || value == 0) {
+                                $("[name=" + key + "]").val(value);
+                            //}
+
+                        });
+                        $("[name=isProduct]").removeAttr("disabled");
+                        $('[name=isProduct]').bootstrapToggle(data[2].isAddon ? 'off' : 'on');
+                        $("[name=isProduct]").prop("disabled", "disabled");
+                        $("#prd_id").val(data[1]);
+                        $("#prd_price").val(data[2].Price);
+                        $("#trial_days").val(data[2].Trial_Days);
+                        $("#Promotion_Apply_Months").val(data[2].Promotion_Apply_Months);
+                        $("#Promotion_Price").val(data[2].Promotion_Price);
+                        $('#Promotion_Price').attr("max", data[2].Price);
+                        if (data[2].Code_POSSystem) {
+                            $("[name=version][value=1]").prop("checked", "checked").trigger("change");
+                        } else {
+                            $("[name=version][value=2]").prop("checked", "checked").trigger("change");
+                        }
+                        //if (data[2].AllowDemo == true) {
+                        //    $("[name=allowdemo][value=true]").prop("checked", "checked").trigger("change");
+                        //}
+                        //if (data[2].AllowSlice == true) {
+                        //    $("[name=allowslice][value=true]").prop("checked", "checked").trigger("change");
+                        //}
+                        $("#product_popup").modal("show");
+                        if (data[2].isAddon) {
+                            $("#prd_duration_prod").val(data[2].isAddon ? "ONETIME" : "MONTHLY");
+                            $("#Trial_Days-div").hide();
+                            $("#Promotion_Apply_Months-div").hide();
+                            $("#Promotion_Price-div").hide();
+
+                        }
+                        else {
+                            $("#Trial_Days-div").show();
+                            $("#Promotion_Apply_Months-div").show();
+                            $("#Promotion_Price-div").show();
+                        }
+                    } else {
+                        noty({ "text": data[1], "layout": "topRight", "type": "error" });
+                    }
+                })
+                .fail(function () {
+                    alert("edit_group falure");
+                })
+                .always(function () {
+                    e.find(".loading_img").hide();
+                });
+        }
+        function check_delete_product(id, e) {
+            $.ajax({
+                method: "POST",
+                url: "/Licenses/CheckDeleteProduct",
+                data: { id },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    if (data[0]) {
+                        if (data[1]) {
+                            var s_list = "";
+                            for (var i in data[1]) {
+                                s_list += "<tr onclick=\"window.open('/merchantman/detail?code=" + data[1][i].Code + "&tab=services', '_blank');\" target='_blank'><td><b class='text-primary'>#" + data[1][i].Code + "</b></td><td>#" + data[1][i].Store + "</td><td><b class='text-success'>" + (data[1][i].Name || "") + "</b><br/>" + data[1][i].Address + "</td> </tr>";
+                            }
+                            $("#list_merchant").find("tbody").html(s_list);
+                            $('#btn_show').show(); $('#list_merchant').hide();
+                            $("#cant_delete_popup").modal("show");
+                        } else {
+                            delete_product(id, e);
+                        }
+                    } else {
+                        noty({ "text": data[1], "layout": "topRight", "type": "error" });
+                    }
+                })
+                .fail(function () {
+                })
+                .always(function () {
+                    e.find(".loading_img").hide();
+                });
+
+
+        }
+        function delete_product(id, e) {
+            var name = $('#product_name_' + id).html();
+            if (confirm('Do you want to delete product "' + name + '"?')) {
+                e.find(".loading_img").show();
+                $.ajax({
+                    method: "POST",
+                    url: "/Licenses/DeleteProduct",
+                    data: { id },
+                    dataType: "json"
+                })
+                    .done(function (data) {
+                        if (data[0]) {
+                            noty({ "text": data[1], "layout": "topRight", "type": "success" });
+                            load_tab();
+                        } else {
+                            noty({ "text": data[1], "layout": "topRight", "type": "error" });
+                        }
+                    })
+                    .fail(function () {
+                    })
+                    .always(function () {
+                        e.find(".loading_img").hide();
+                    });
+
+            }
+        }
+        function new_product() {
+            $("#product_form").resetForm();
+            $("#product_form").find("[type=hidden]").val("");
+            $("[name=isProduct]").removeAttr("disabled");
+            $('[name=isProduct]').bootstrapToggle('on');
+            $(".pro_desc").hide("300").find(".form-control").attr("disabled", true);
+            $("#product_popup").modal("show");
+            $("#prd_duration_prod").val("MONTHLY");
+        }
+        function load_tab() {
+            $("#partial_loading").show();
+            var actived_id = $(".actived").first().attr("id");
+            $.ajax({
+                method: "POST",
+                url: "/Licenses/LicenseProductAddon_Partial",
+                dataType: "html"
+            })
+                .done(function (data) {
+                    $("#product_tab").html(data);
+                    load_event();
+                    $("#" + actived_id).trigger("click");
+                })
+                .fail(function () {
+                    alert("load_addon_table failure");
+                })
+                .always(function () {
+                    $("#partial_loading").hide();
+                });
+        }
+        function show_select_item(ProductId, e, update = false) {
+            $(e).find(".loading_img").show();
+            $.ajax({
+                method: "POST",
+                url: "/Licenses/SelectItemModal_Partial",
+                data: { ProductId, update },
+                dataType: "html"
+            })
+                .done(function (data) {
+                    $("#select_item_modal_div").html(data);
+                    $("[name=ProductId]").val(ProductId);
+                    $("#select_item_modal").find(".modal-title").html(update ? "Update Product Licenses Item" : "Add Product Licenses Item");
+                    $("#update").val(update);
+                    $("#select_item_modal").modal("show");
+                })
+                .fail(function () {
+                    alert("show_select_item failure");
+                })
+                .always(function () {
+                    $(e).find(".loading_img").hide();
+                });
+        }
+        load_event();
+        function load_event() {
+            $(".on_row").on('click', function (event) {
+                event.stopPropagation();
+            })
+            $("th,td").not(".models_list> td").hover(
+                function () {
+                    $(this).find(".btn_group").css({ opacity: 0.0, visibility: "visible" }).animate({ opacity: 1.0 });
+                },
+                function () {
+                    $(this).find(".btn_group").css({ opacity: 0.0, visibility: "hidden" }).animate({ opacity: 1.0 });
+                }
+            );
+            $("#Type").on("change", function () {
+                if (this.value != "license") {
+                    $(".pro_desc").hide("300").find(".form-control").attr("disabled", true);
+                } else {
+                    $(".pro_desc").show("300").find(".form-control").removeAttr("disabled");
+                }
+            });
+            $(".prd_collapse").on("click", function () {
+                $(this).find(".icon_span").toggle();
+                $(this).next("tr").toggle(100);
+                if (!$(this).hasClass("actived")) {
+                    $(".prd_collapse.actived").find(".icon_span").toggle();
+                    $(".prd_collapse.actived").removeClass("actived").next("tr").hide();
+                }
+                $(this).toggleClass("actived");
+            });
+        }
+        function close_collapse() {
+            $(".prd_collapse.actived").find(".icon_span").toggle();
+            $(".prd_collapse.actived").removeClass("actived").next("tr").hide();
+        }
+        function show_stores_actived(productId, reUpdate, e) {
+            if (!reUpdate) {
+                $.ajax({
+                    method: "GET",
+                    url: "/Licenses/CreateHistoryStoreActivedProduct",
+                    data: { productId },
+                    dataType: "html"
+                });
+            }
+
+            $(e).find(".loading_img").show();
+            $.ajax({
+                method: "POST",
+                url: "/Licenses/GetStoresActivedProduct_Partial",
+                data: { productId, reUpdate },
+                dataType: "html"
+            })
+                .done(function (data) {
+                    $('#store_actived_modal_div').html(data);
+                    $("#store_actived_modal").modal();
+                })
+                .fail(function () {
+                    alert("show stores actived failure");
+                })
+                .always(function () {
+                    $(e).find(".loading_img").hide();
+                });
+        }
+        $('#prd_price').change(function () {
+            $('#Promotion_Price').attr("max", $('#prd_price').val());
+        });
+        $("#product_form").ajaxForm(function (data) {
+            $('#loading').show();
+            if (data[0]) {
+                noty({ "text": data[1], "layout": "topRight", "type": "success" });
+                load_tab();
+                $("#product_popup").modal("hide");
+            } else {
+                noty({ "text": data[1], "layout": "topRight", "type": "error" });
+            }
+            $('#loading').hide();
+        });
+    </script>
+}
+<style type="text/css">
+    table.table-bordered {
+        border: 1px solid lightgray;
+        margin-top: 20px;
+    }
+
+        table.table-bordered > thead > tr > th {
+            border: 1px solid lightgray;
+        }
+
+        table.table-bordered > tbody > tr > td {
+            border: 1px solid lightgray;
+        }
+
+    tr td, tr th {
+        border-top: solid 1px #ddd;
+        padding: 10px;
+        cursor: pointer;
+    }
+
+    tr.hover:hover {
+        background-color: #ddd !important;
+    }
+
+    .striped3 > tbody > tr:nth-of-type(4n+3) {
+        background-color: #eee;
+    }
+
+    .striped3 > tbody > tr:nth-of-type(4n+4) {
+        background-color: #eee;
+    }
+
+    .btn.btn-warning.toggle-off {
+        color: #fff !important;
+    }
+</style>
+
+

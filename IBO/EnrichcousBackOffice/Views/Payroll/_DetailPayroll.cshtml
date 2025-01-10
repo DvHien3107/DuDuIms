@@ -1,0 +1,390 @@
+﻿@model EnrichcousBackOffice.Models.CustomizeModel.DetailEmployeePayrollCustomizeModel
+@{
+    var host = $"{HttpContext.Current.Request.Url.Scheme}://{HttpContext.Current.Request.Url.Authority}";
+    var access = EnrichcousBackOffice.AppLB.Authority.GetAccessAuthority();
+    var IsCalculate = ViewBag.IsCalculate as bool?;
+    var IsComplete = ViewBag.IsComplete as bool?;
+    var gpscomm = Model.ListEmployeeComission.GroupBy(x => x.Type).ToList();
+}
+<tr class="detail-payroll tr-detail tr-detail-@Model.EmployeeId" style="background-color: #b7b6b6">
+    <td colspan="10" class="td-detail" style="padding:10px 20px;">
+        <div class="nav-tabs-custom col-md-8  tabs div-detail-@Model.EmployeeId" style="display: none;margin: auto; float: none; padding: 10px;">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#commission-@Model.EmployeeId" data-toggle="tab"><b>Payroll</b></a></li>
+                <li><a href="#info-@Model.EmployeeId" data-toggle="tab"><b>Info</b></a></li>
+
+                <li style="float: right;color: grey;font-size: 18px;cursor:pointer">
+                    <span onclick="showDetail('@Model.EmployeeId', false)"><i class="fa fa-times" aria-hidden="true"></i></span>
+                </li>
+            </ul>
+            <div class="tab-content" style="border: 0px 1px 1px 1px solid #ddd;overflow: auto;max-height: 500px">
+                <div class="tab-pane active" id="commission-@Model.EmployeeId">
+                    @if (IsCalculate.Value)
+                    {
+                        <div class="panel">
+                            <div class="panel-body">
+                                <div class="panel panel-default sub-panel" style="border:none;box-shadow: none; margin: 0">
+                                    <div style="display:flex;align-items:center;float:right">
+                                        <div> <b> Base Salary :</b></div>
+                                       
+                                        <div style="padding: 0 25px;width:300px">
+                                            @*<span style="font-weight: 600;display: block;padding-bottom: 10px;">Earnings</span>*@
+                                            <table class="table table-bordered">
+                                                <tbody>
+                                                    <tr style="border:1px solid var(--main-color-1)">
+                                                        <td>
+                                                            @*<strong>Basic Salary :</strong>*@
+                                                            <b>@(Model.BaseSalary!=null ? Model.BaseSalary.Value.ToString("$#,##0.##"):"$0")</b> 
+                                                        </td>
+                                                        <td width="40" class="text-center">
+                                                            @if (Model.PaidBaseSalary.Value)
+                                                            {
+                                                            <span class="label label-success">Paid</span>
+                                                            }
+                                                            else
+                                                            {
+                                                                <input type="checkbox" onclick="updateCmm(this)" class="selected-setaspaid-@Model.EmployeeId"
+                                                                       data-EmpPayrollId="@Model.EmpPayrollBaseSalaryId" data-employeeId="@Model.EmployeeId"
+                                                                       name="salary" @Html.Raw(Model.IsCalculatedBaseSalary.Value ? "checked" : "") @Html.Raw(Model.PaidBaseSalary.Value ? "disabled" : "") />
+
+                                                            }
+
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        @*<div class="col-sm-6">
+            <span style="font-weight: 600;display: block;padding-bottom: 10px;">Deductions</span>
+            <table class="table table-bordered">
+                <tbody>
+                    <tr style="border:1px solid #f4f4f4">
+                        <td>
+                            <strong>Tax :</strong>
+                            <span style="float:right">$0</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>*@
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                        if (Model.IsSalesPerson.Value)
+                        {
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <b>Commission</b>
+                                    <span class="pull-right" id="total_comission">Total: <b>$@gpscomm.Sum(c => c.Where(x => x.Status != "Submitted").Sum(x => x.Comisssion)).Value.ToString("#,##0.#0")</b></span>
+                                </div>
+                                <div class="panel-body">
+                                    <div class="panel panel-default sub-panel" style="border:none">
+                                        @if (gpscomm.Count() > 0)
+                                        {
+
+                                            foreach (var cmm in gpscomm)
+                                            {
+
+                                                <div class="list_groups custom-scroll" style="margin:20px 10px; border: 1px solid var(--main-color-1); background-color: #ffffff">
+                                                    @{
+                                                        var customeNameClass = (Model.EmployeeId + cmm.Key).ToString();
+                                                    }
+                                                    <b style="padding: 0px 20px; font-size: 1em; margin: -10px 20px; display:inline-block;transform:translateY(-9px); background-color: #ffffff; color:#076aa4"><i>@cmm.Key Commission</i></b>
+                                                    <table class="table table-bordered table-hover table-striped" style="margin-bottom:0px; margin-top:20px">
+                                                        <thead>
+                                                            <tr>
+                                                                @*<th>Transaction Id</th>*@
+                                                                <th>Order Code</th>
+                                                                @*<th>Order Note</th>*@
+                                                                <th>Customer Name</th>
+                                                                <th>Sales Person</th>
+                                                                <th>Transaction Amount</th>
+                                                                @*<th>Status</th>*@
+                                                                <th>Commission</th>
+
+                                                                @*@if (cmm.Where(x => x.Paid.Value).Count() > 0)
+                                                                    {
+                                                                        <th>Paid Commission</th>
+                                                                        <th>Balance Commission</th>
+                                                                    }*@
+                                                                @if ((access.Any(k => k.Key.Equals("payroll_accounting")) == true && access["payroll_accounting"] == true) || (access.Any(k => k.Key.Equals("payroll_viewall")) == true && access["payroll_viewall"] == true))
+                                                                {
+                                                                    <th width="10px" class="text-center">@*<input type="checkbox" class="select-all-@customeNameClass" name="select-comission" />*@</th>
+                                                                }
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @foreach (var item in cmm)
+                                                            {
+                                                                <tr>
+                                                                    <td>
+                                                                        <span>#@item.OrderCode</span>
+                                                                        <span style="cursor:pointer;border-radius:2px;margin-left:3px" class="label label-primary" onclick="show_invoice('@item.OrderCode')"> View Receipt</span>
+                                                                    </td>
+                                                                    @*<td>
+                                                                            <span>@item.TypeOfInvoice</span>
+                                                                        </td>*@
+                                                                    <td>
+                                                                        <span>@item.CustomerName</span>
+                                                                    </td>
+                                                                    <td>
+                                                                        <span>@item.SalesPersonName<span class="btn btn-warning" style="color:white;padding: 0px 5px; font-size: 12px; margin-left: 8px;" onclick="viewdetail('@item.SalesPersonNumber')"><i class="glyphicon glyphicon-search"></i> View</span></span>
+                                                                    </td>
+                                                                    <td>
+                                                                        <span>@item.Amount.Value.ToString("$#,##0.##")</span>
+                                                                    </td>
+                                                                    <td>
+                                                                        @if (item.Status != "Submitted")
+                                                                        {
+                                                                            <span>$@item.Comisssion.Value.ToString("#,##0.##")</span>
+                                                                        }
+                                                                    </td>
+                                                                    @*@if (cmm.Where(x => x.Paid.Value).Count() > 0)
+                                                                        {
+                                                                            <td>
+                                                                                <span>@item.PaidCommission.Value.ToString("$#,##0.##")</span>
+                                                                                @Html.Raw(item.Paid.Value ? "<span class='label label-success'>Paid</span>" : "<span class='label label-warning'>Pending Paid</span>")
+                                                                            </td>
+                                                                            <td>
+                                                                                <span>@item.BalanceCommissionAmount.Value.ToString("$#,##0.##")</span>
+                                                                            </td>
+                                                                        }*@
+                                                                    @if ((access.Any(k => k.Key.Equals("payroll_accounting")) == true && access["payroll_accounting"] == true) || (access.Any(k => k.Key.Equals("payroll_viewall")) == true && access["payroll_viewall"] == true))
+                                                                    {
+                                                                        <td class="text-center">
+                                                                            @if (item.Status != "Submitted")
+                                                                            {
+                                                                                if (item.Paid.Value)
+                                                                                {
+                                                                                    <span class='label label-success'>Paid</span>
+                                                                                }
+                                                                                else
+                                                                                {
+                                                                                    <input type="checkbox" class="commission-select-@customeNameClass commission-select-@Model.EmployeeId selected-setaspaid-@Model.EmployeeId commission-select-detail" data-price="@item.Comisssion" data-transactionId="@item.TransactionId" data-type="Commission" data-type-cmm="@cmm.Key" data-EmpPayrollId="@item.EmpPayrollId" data-employeeId="@Model.EmployeeId" onclick="updateCmm(this)" value="@(item.OrderCode)|@(item.Type)" name="select-comission" @(item.IsCalculated == true ? "checked" : "") @(item.Paid.Value ? "disabled" : "") />
+                                                                                }
+                                                                            }
+                                                                        </td>
+                                                                    }
+                                                                </tr>
+                                                            }
+                                                        </tbody>
+                                                        <tfoot>
+                                                            <tr>
+                                                                <th></th>
+                                                                <th></th>
+                                                                <th></th>
+                                                                <th class="text-right">Total</th>
+                                                                <th>$@((cmm.Where(x => x.Status != "Submitted").Sum(x => x.Comisssion).Value.ToString("#.##")))</th>
+                                                                @*@if (cmm.Where(x => x.Paid.Value).Count() > 0)
+                                                                    {
+                                                                        <th>@((cmm.Sum(x => x.PaidCommission).Value.ToString("$#,##0.##")) ?? "0")</th>
+                                                                        <th>@((cmm.Sum(x => x.BalanceCommissionAmount).Value.ToString("$#,##0.##")) ?? "0")</th>
+                                                                    }*@
+                                                                @if ((access.Any(k => k.Key.Equals("payroll_accounting")) == true && access["payroll_accounting"] == true) || (access.Any(k => k.Key.Equals("payroll_viewall")) == true && access["payroll_viewall"] == true))
+                                                                {
+                                                                    <th class="text-center total-select-comission-@(customeNameClass)">$0.00</th>
+                                                                }
+                                                            </tr>
+                                                        </tfoot>
+                                                    </table>
+                                                </div>
+                                                if ((access.Any(k => k.Key.Equals("payroll_accounting")) == true && access["payroll_accounting"] == true) || (access.Any(k => k.Key.Equals("payroll_viewall")) == true && access["payroll_viewall"] == true))
+                                                {
+                                                    <text>
+                                                        <script>
+                                            $(".commission-select-@(customeNameClass)").change(function () {
+                                                  var SelectedComission@(customeNameClass) = [];
+                                                $(".commission-select-@(customeNameClass)[type=checkbox]:checked").each(function () {
+                                                    SelectedComission@(customeNameClass).push($(this).attr("data-price"));
+                                                });
+
+                                                var total = 0.00;
+                                                for (var i = 0; i < SelectedComission@(customeNameClass).length; i++) {
+                                                    total += parseFloat(SelectedComission@(customeNameClass)[i]);
+                                                }
+                                                $(".total-select-comission-@(customeNameClass)").html("$" + total.toFixed(2));
+
+                                                //let total_com = 0;
+                                                //$('.commission-select-detail:checked').each(function (key, item) {
+                                                //    total_com += parseFloat($(item).attr("data-price"));
+                                                //})
+                                                //let html = `Total: <b>${total_com.toLocaleString('en-US', {
+                                                //    style: 'currency',
+                                                //    currency: 'USD',
+                                                //})}</b>`;
+                                                //$('#total_comission').html(html);
+                                            })
+                                            $(".commission-select-@(customeNameClass)").change();
+                                            // select all
+                                            $('.select-all-@(customeNameClass)').click(function () {
+                                                $('.commission-select-@(customeNameClass)').prop('checked', $(this).is(':checked')).change();
+                                            });
+                                                        </script>
+                                                    </text>
+
+                                                }
+
+                                            }
+
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning">
+                            <span><i class="icon fa fa-warning"></i>No Data (Please Calculate Payroll)</span>
+                        </div>
+                    }
+                </div>
+                <div class="tab-pane" id="info-@Model.EmployeeId">
+                    <table class="table table-bordered table-hover table-striped  no-footer">
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <strong>Employee Id :</strong> <span style="padding-left:5px" class="float-right">#@Model.EmployeeId</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <strong>Employee Name :</strong> <span style="padding-left:5px" class="float-right">@Model.EmployeeName</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <strong>Phone :</strong> <span style="padding-left:5px" class="float-right">@Model.Phone</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <strong>Email :</strong> <span style="padding-left:5px" class="float-right">@Model.Email</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <strong>Address :</strong> <span style="padding-left:5px" class="float-right">@Model.Address</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <strong>Department Name :</strong>
+                                    <span style="padding-left:5px" class="float-right">
+                                        @if (!string.IsNullOrEmpty(Model.Department))
+                                        {
+                                            foreach (var d in Model.Department?.Split(','))
+                                            {
+                                                <label class="label label-primary">@d</label>@Html.Raw("&nbsp;")
+                                            }
+                                        }
+
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <strong>Base Salary :</strong> <span style="padding-left:5px" class="float-right">$@Model.BaseSalary</span>
+                                </td>
+                            </tr>
+                        </tbody>
+
+                    </table>
+                </div>
+
+                <div class="render-transaction">
+                </div>
+                <script>
+                    function show_transaction(code) {
+                        $.ajax({
+                            type: "Get",
+                            url: "/Payroll/ViewTransaction",
+                            data: { "OrderCode": code }, // serializes the form's elements.
+                            success: function (data) {
+                                $(".render-transaction").html(data);
+                                $('#view-transaction').modal('show');
+                            },
+                            complete: function () {
+
+                            },
+                        });
+                    }
+                    function updateCmm(el) {
+                        var empPayrollId = $(el).attr("data-EmpPayrollId");
+                        var employeeId = $(el).attr("data-employeeId");
+                        $.ajax({
+                            type: "Post",
+                            url: "/Payroll/updateCmm",
+                            data: { "EmpPayrollId": empPayrollId },
+                            success: function (data) {
+                                if (data) {
+                                    noty({ "text": "update success !", "layout": "topRight", "type": "success" });
+                                    UpdateRow(employeeId);
+                                    UpdateTotal();
+                                }
+                            },
+                            complete: function () {
+
+                            },
+                        });
+                    }
+                </script>
+            </div>
+        </div>
+        <div class="col-md-8" style="margin: auto;float: none;padding: 10px 10px 10px 0;text-align: right;display: flex;flex-wrap: wrap;">
+            @if (IsCalculate.Value && Model.SetAsPaid.Value && IsComplete == false)
+            {
+                <button class="btn btn-success" onclick="setAspaid_@(Model.EmployeeId)()">Set As Paid</button>
+                <text>
+                    <script>
+                            function setAspaid_@(Model.EmployeeId)()
+                                {
+                                    var SelectedEmpPayroll = [];
+                                $(".selected-setaspaid-@(Model.EmployeeId)[type=checkbox]:checked").not(":disabled").each(function () {
+                                        SelectedEmpPayroll.push($(this).attr("data-emppayrollid"));
+                                    });
+                                    if (SelectedEmpPayroll.length == 0) {
+                                        return alert('No data is selected');
+                                }
+                                    $(".loading").show();
+                                    $.ajax({
+                                        method: "Post",
+                                        url: "/Payroll/ShowPopUpSetAsPaid",
+                                        data: { "Type": "ByEmpPayrollId","EmpId":"@(Model.EmployeeId)"},
+                                        dataType: "html"
+                                    }).done(function (data) {
+                                        $("#render-setaspaid-popup").html('');
+                                        $("#render-setaspaid-popup").html(data);
+                                        $("#modal-set-as-paid-multi-emp").modal("show");
+                                        $(".loading").hide();
+                                    })
+                                        .fail(function () {
+                                            alert("update row fail");
+                                        })
+                                }
+
+                    </script>
+                </text>
+            }
+            <button onclick="showDetail('@Model.EmployeeId',false)" class="btn btn-default" style="margin-left:auto !important">Close</button>
+        </div>
+        <script>
+            $('.tabs').on('show.bs.tab', function (e) {
+                if (e.relatedTarget === undefined) {
+                    $($(e.target).attr('href')).slideDown();
+                }
+                else {
+                    $($(e.relatedTarget).attr('href')).slideUp({
+                        duration: 'fast', queue: true,
+                        done: function () {
+                            $($(e.target).attr('href')).slideDown();
+                        }
+                    });
+                }
+            });
+        </script>
+    </td>
+</tr>
+

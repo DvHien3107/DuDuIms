@@ -1,0 +1,232 @@
+﻿@model EnrichcousBackOffice.Models.CustomizeModel.LogDetailRICustomizeModel
+@using EnrichcousBackOffice.Utils
+@using EnrichcousBackOffice.Models
+@{
+    var access = EnrichcousBackOffice.AppLB.Authority.GetAccessAuthority();
+    var cMem = EnrichcousBackOffice.AppLB.Authority.GetCurrentMember();
+    WebDataModel db = new WebDataModel();
+    string FormatDateRemain(DateTime dt)
+    {
+        string time = dt > DateTime.UtcNow ? "later" : "ago";
+        TimeSpan ts = dt > DateTime.UtcNow ? dt - DateTime.UtcNow : DateTime.UtcNow - dt;
+
+        if (ts.Days == 0 && ts.Hours == 0 && ts.Minutes == 0)
+        {
+            return "a few seconds " + time;
+        }
+        else if (ts.Days == 0 && ts.Hours == 0)
+        {
+            return ts.Minutes + " minutes " + time;
+        }
+        else if (ts.Days == 0)
+        {
+            return ts.Hours + " hours " + ts.Minutes + " minutes " + time;
+        }
+        else if (ts.Days > 365)
+        {
+            return Math.Round((decimal)(ts.Days / 365), 0, MidpointRounding.ToEven).ToString() + " years " + time;
+        }
+        else if (ts.Days > 30)
+        {
+            return Math.Round((decimal)(ts.Days / 30), 0, MidpointRounding.ToEven).ToString() + " months " + time;
+        }
+        return ts.Days + " days " + time;// +ts.Hours + " hours " + ts.Minutes + " minutes ago";
+    }
+}
+<tr class="detail-log tr-detail tr-detail-@Model.SalesLeadId" style="background-color: #b7b6b6">
+    <td colspan="12" class="td-detail" style="padding:10px 20px;">
+        <div class="col-md-8 div-detail-@Model.SalesLeadId" style="display:none;margin: auto;float: none;background: white;padding: 5px;">
+            <div class="header detail text-right">
+                <span onclick="showDetailLog('@Model.SalesLeadId', false)" style="cursor:pointer;margin-right: 12px;font-size: 16px;color: #58595a;"><i class="fa fa-times" aria-hidden="true"></i></span>
+            </div>
+            <div id="log-@Model.SalesLeadId" style="max-height:500px;overflow-y:scroll">
+                <div class="list_groups custom-scroll" style="margin:20px 10px; border: 1px solid var(--main-color-1); background-color: #ffffff;padding:1rem;min-height:75px">
+                    @if (Model.ListLog.Count() == 0)
+                    {
+                        <div class="col-md-12">
+                            <div class="alert alert-warning">
+                                <span><i class="icon fa fa-warning"></i> No data</span>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <ul class="timeline timeline-inverse">
+                            @{
+                                string LastDaysinMonth = "";
+                            }
+                            @foreach (var itemd in Model.ListLog.OrderByDescending(f => AppFunc.ParseTimeToUtc(f.StartEvent)))
+                            {
+                                string y = itemd.StartEvent.Substring(0, 4);
+                                string m = itemd.StartEvent.Substring(5, 2);
+
+                                <!-- timeline time label -->
+                                if (y + m != LastDaysinMonth)
+                                {
+                                    LastDaysinMonth = y + m;
+                                    <text>
+                                        <li class="time-label">
+                                            <span class="bg-green">
+                                                @AppFunc.ParseTimeToUtc(itemd.StartEvent).ToString("MMM dd, yyyy")
+                                            </span>
+                                        </li>
+                                    </text>
+                                }
+                                string dateago = FormatDateRemain(AppFunc.ParseTimeToUtc(itemd.StartEvent));
+                                <!-- timeline item -->
+                                <li class="list-item-log">
+                                    <i class="fa fa-comments bg-yellow"></i>
+                                    <div class="timeline-item">
+                                        <div class="timeline-header">
+                                            <table style="width:100%">
+                                                <tr>
+                                                    <td>
+                                                        <h5 class="title-log" style="margin:0">
+                                                            @Html.Raw(@itemd.Name)
+                                                        </h5>
+                                                    </td>
+                                                    <td style="text-align:right">
+                                                        <span style="color: #999;font-size:12px"><i class="fa fa-clock-o"></i>&nbsp;@dateago</span>
+
+                                                        @if (AppFunc.ParseTimeToUtc(itemd.StartEvent) <= DateTime.UtcNow && itemd.Done != 1 && itemd.Type == "Event")
+                                                        {
+                                                            <text>
+                                                                &nbsp; &nbsp; <img src="~/Content/Img/warning.gif" data-toggle="tooltip" title="Missed an appointment" style="width: 18px" alt="Not completed..." />
+                                                            </text>
+
+                                                        }
+                                                        else if (Model.NextAppoiment != null && Model.NextAppoiment.Id == itemd.Id && itemd.Type == "Event")
+                                                        {
+                                                            <text>
+                                                                &nbsp; &nbsp;<img src="~/Content/Img/ringing-bell.gif" data-toggle="tooltip" title="The appointment is coming" style="width: 23px;" alt="Coming soon..." />
+                                                            </text>
+                                                        }
+                                                        else if (AppFunc.ParseTimeToUtc(itemd.StartEvent) >= DateTime.UtcNow && itemd.Type == "Event")
+                                                        {
+                                                            <text>
+                                                                &nbsp; &nbsp; <img src="~/Content/Img/lamp_blue.png" data-toggle="tooltip" title="Future appointment" style="width: 23px;" alt="Coming soon..." />
+                                                            </text>
+                                                        }
+                                                        &nbsp;&nbsp;
+                                                        <a class="btn-xs @(itemd.Type == "Event" ? "btn-warning" :  itemd.Type == "Note" ? "btn-success" :"btn-primary")" id="iconpublish-@itemd.Id" style="margin-right:10px;color:white">
+                                                            @Html.Raw(itemd.Type == "Event" ? "<i class='fa fa-handshake-o'></i> " : itemd.Type == "Note" ? "<i class='fa fa-sticky-note'></i> " : "<i class='fa fa-comment-o' aria-hidden='true'></i> ")&nbsp;@(itemd.Type == "Event" ? "Appoiment" : itemd.Type)
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            </table>
+
+                                        </div>
+                                        <div class="timeline-body timeline-@itemd.Id" style="max-width:100%; overflow-x:auto">
+                                            <div class="noi-dung-log">
+                                                @Html.Raw(itemd.Description?.Replace("\n", "<br/>"))
+                                            </div>
+                                            <br />
+                                        </div>
+                                        <div class="timeline-footer">
+                                            <div style="display:flex">
+                                                @if (itemd.CreateBy != "IMS System" && itemd.MemberNumber == cMem.MemberNumber)
+                                                {
+                                                    <a class="btn btn-sm btn-warning btn-edit-log" onclick="@(itemd.Type == "Event" ? "edit_appointment" : "edit_log")('@itemd.SalesLeadId','@itemd.Id','img_@itemd.Id')" title="" data-toggle="tooltip" style="padding: 2px 7px; color: white;" data-original-title="Click to Edit">
+                                                        <i class="fa fa-edit"></i><span>&nbsp;Edit</span>
+                                                    </a>
+                                                }
+
+                                                <span style="display: block;margin-left: auto;color: #666;font-size:13px">
+                                                    <span class="entry-time"> @string.Format("{0:r}", AppFunc.ParseTimeToUtc(itemd.StartEvent))</span>
+                                                    - by: <i>@(!string.IsNullOrEmpty(itemd.MemberNumber) ? db.P_Member.FirstOrDefault(x => x.MemberNumber == itemd.MemberNumber).FullName : (string.IsNullOrEmpty(itemd.LastUpdateBy)? "IMS System": itemd.LastUpdateBy))</i>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+                            }
+                            <!-- END timeline item -->
+                            <li>
+                                <i class="fa fa-clock-o bg-gray"></i>
+                            </li>
+                        </ul>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8" style="margin: auto;float: none;padding:10px 0px 10px 0;text-align: right;display: flex;flex-wrap: wrap;">
+            <div class="dropdown dropdown-action" id="dropdown-action" style="display:inline-block;margin-top:1px;background:transparent;margin-right:5px">
+                <button class="btn btn-warning dropdown-toggle" type="button" data-toggle="dropdown"><i class="fa fa-pencil-square-o" aria-hidden="true"></i>
+                    Update
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu">
+                    <li>
+                        <button type="button" onclick="new_appoiment('@Model.SalesLeadId')" class="btn bg-purple" style="margin-bottom: 2px;padding: 4px 11px;margin-right: 3px;"><i class="fa fa-calendar" aria-hidden="true"></i> Add Appoiment</button>
+                    </li>
+                    <li>
+                        <button type="button" onclick="new_log('@Model.SalesLeadId')" style="margin-bottom: 2px;padding: 4px 11px;margin-right: 3px;" class="btn bg-primary"><i class="fa fa-check-square" aria-hidden="true"></i> Update Note/Status</button>
+                    </li>
+
+                </ul>
+            </div>
+
+            <div class="dropdown dropdown-action" id="dropdown-action" style="display:inline-block;margin-top:1px;background:transparent;margin-right:5px;">
+                <button class="btn btn-info dropdown-toggle" type="button" data-toggle="dropdown"><i class="fa fa-user-circle-o" aria-hidden="true"></i>
+                    Account
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu">
+
+                    @if (Model.IsSendEmailVerify == true)
+                    {
+
+                        if ((access.Any(k => k.Key.Equals("sales_lead_create_trial")) == true && access["sales_lead_create_trial"] == true))
+                        {
+                            <li>
+                                <button type="button" id="resendemail" data-button="resend-email" class="btn bg-purple" style="margin-right:3px;margin-bottom: 2px" onclick="open_account_popup('@Model.SalesLeadId',this)"><i class="fa fa-envelope" aria-hidden="true"></i> Resend email verify</button>
+                            </li>
+
+                        }
+                        if ((access.Any(k => k.Key.Equals("sales_lead_verify")) == true && access["sales_lead_verify"] == true))
+                        {
+                            <li>
+                                <button type="button" id="verify" data-button="verify" onclick="open_account_popup('@Model.SalesLeadId' ,this)" class="btn bg-navy" style="margin-bottom: 2px;padding: 4px 11px;margin-right: 3px;"><i class="fa fa-refresh" aria-hidden="true"></i> Verify</button>
+                            </li>
+                        }
+                    }
+                    else
+                    {
+                        if ((access.Any(k => k.Key.Equals("sales_lead_verify")) == true && access["sales_lead_verify"] == true))
+                        {
+                            <li>
+                                <button type="button" id="verify" data-button="verify" onclick="open_account_popup('@Model.SalesLeadId' ,this)" class="btn btn-secondary" style="margin-bottom: 2px;padding: 4px 11px;margin-right: 3px;"><i class="fa fa-refresh" aria-hidden="true"></i> Verify</button>
+                            </li>
+                        }
+                        if ((access.Any(k => k.Key.Equals("sales_lead_create_trial")) == true && access["sales_lead_create_trial"] == true))
+                        {
+                            <li>
+                                <button type="button" id="update" data-button="create-trial" class="btn bg-purple" style="margin-bottom: 2px;margin-right:3px;padding: 4px 11px;" onclick="open_account_popup('@Model.SalesLeadId',this)"><i class="fa fa-pencil-square-o" aria-hidden="true"></i> Update/Create Trial</button>
+                            </li>
+                        }
+                    }
+
+
+                </ul>
+            </div>
+            @if ((access.Any(k => k.Key.Equals("sales_lead_add_lead")) == true && access["sales_lead_add_lead"] == true))
+            {
+                <button type="button" id="update" data-button="edit-to-sales-lead" class="btn btn-success" style="margin-bottom: 2px;margin-right:5px;padding: 4px 11px;" onclick="open_account_popup('@Model.SalesLeadId',this)"><i class="fa fa-plus" aria-hidden="true"></i> Add To Sales Lead</button>
+            }
+            @if ((access.Any(k => k.Key.Equals("sales_lead_delete")) == true && access["sales_lead_delete"] == true))
+            {
+
+                <button type="button" class="btn btn-danger" style="margin-bottom:2px" onclick="delete_account('@Model.SalesLeadId',this)"><i class="fa fa-trash"></i> Delete</button>
+
+            }
+
+            <button onclick="showDetailLog('@Model.SalesLeadId', false)" class="btn btn-default" style="margin-left:auto !important">Close</button>
+        </div>
+</td>
+</tr>
+<script>
+    $(".entry-time").html(function (index, value) {
+        return moment(value).format("MMM DD YYYY, h:mm:ss A");
+    });
+</script>

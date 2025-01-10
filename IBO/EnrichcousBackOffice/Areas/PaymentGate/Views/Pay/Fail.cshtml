@@ -1,0 +1,90 @@
+﻿
+@model EnrichcousBackOffice.Areas.PaymentGate.ModelsView.OrderRequest
+@using Newtonsoft.Json;
+@using EnrichcousBackOffice.Areas.PaymentGate.ModelsView
+
+@{
+    ViewBag.Title = "Thanh toán không thành công";
+    Layout = "~/Areas/PaymentGate/Views/Shared/_Layout.cshtml";
+}
+
+@{
+    var authFlag = ViewBag.Auth ?? false;
+    var storeCode = ViewBag.StoreCode;
+}
+
+@section title{
+    Thanh toán thất bại
+}
+
+@section content_page_script{
+    <script src="~/Scripts/jquery.form.min.js"></script>
+    <script>
+    let hadAuth = '@authFlag'.toLowerCase() === "true";
+    let storeCode = '@storeCode';
+    function historyPayment() {
+        if (hadAuth === false) {
+            $("#login").modal("show");
+            return;
+        }
+        else
+            location.href = './history?key=' + storeCode;
+    }
+    // Login
+    $(".payment-login").on("click", () => {
+        $(".payment-login img").show();
+        $.ajax({
+            method: "POST",
+            url: "/PaymentGate/Pay/Login",
+            data: { "email": $("#login_form input[name='email']").val(), "password": $("#login_form input[name='password']").val() },
+            dataType: "json"
+        })
+            .done(function (data) {
+                $("#login").modal("hide");
+                hadAuth = true;
+                location.href = './history?key=' + data;
+            })
+            .fail(function (err) {
+                $("#login div.alert-dismissible").hide();
+                $("span.msg-login").text("");
+                if (err.responseText.startsWith("Please login first") || err.status === 403) {
+                    $("#login div.alert-dismissible").show();
+                    $("span.msg-login").text(err.responseJSON);
+                } else {
+                    noty({ "text": "Sorry, An error has occurred! Please try again later!", "layout": "topRight", "type": "error" });
+                }
+            })
+            .always(function () {
+                $(".payment-login img").hide();
+            });
+    });
+    </script>
+}
+
+@section content_header{
+    @if (Model == null)
+    {
+        <text>
+            <div class="alert alert-danger alert-dismissible" style="margin: 0">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                @if (ViewBag.Message != null)
+                {
+                    <span><i class="icon fa fa-times-circle-o"></i> @ViewBag.Message</span><br />
+                }
+                <span><i class="icon fa fa-times-circle-o"></i> Thanh toán không thành công</span>
+            </div>
+        </text>
+        return;
+    }
+}
+
+@section content_left {
+    <div style="margin-top: 15px">
+        <button class="btn btn-default selected-action-btn btn-sm" onclick="window.history.back()">Thanh toán lại</button>
+        <a class="pull-right" href="#" onclick="historyPayment()"><u>Lịch sử giao dịch</u></a>
+    </div>
+}
+
+@section content_right {
+
+}

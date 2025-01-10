@@ -1,0 +1,325 @@
+﻿@model List<EnrichcousBackOffice.Models.T_TicketStatus>
+    <style>
+        .input-error{
+            border: 1px solid red !important;
+        }
+
+        #status_list_modal .modal-dialog .modal-body{
+    max-height:700px;
+    overflow-y: scroll;
+
+
+}
+#status_list_modal .modal-dialog .modal-body::-webkit-scrollbar {
+    width: 5px;
+}
+
+    #status_list_modal .modal-dialog .modal-body::-webkit-scrollbar-track {
+        background: #dbdbdb;
+        border-radius: 5px;
+    }
+
+    #status_list_modal .modal-dialog .modal-body::-webkit-scrollbar-thumb {
+        border-radius: 5px;
+        background: #b5b5b5;
+    }
+     .scrollable thead {
+        position: sticky;
+        background-color: white;
+        z-index: 2;
+        top: -15px;
+    }
+
+    .scrollable::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    .scrollable::-webkit-scrollbar-track {
+        background: #e7e7e7bf;
+        border-radius: 5px;
+    }
+
+    .scrollable::-webkit-scrollbar-thumb {
+        border-radius: 5px;
+        background: #dbdbdb;
+    }
+.action-button{
+        white-space:nowrap
+
+
+}
+    </style>
+<div class="modal fade" id="status_list_modal">
+
+    <div class="modal-dialog">
+        <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" style="text-transform:uppercase">@ViewBag.ProjectName | Status List</h4>
+                </div>
+                <div class="modal-body">
+                    <button class="btn btn-sm btn-success" onclick="addNew()" style="position:absolute"><i class="fa fa-plus"></i> Add New</button>
+                    <table id="status-list-table" class="table table-hover table-bordered table-striped scrollable">
+                        <thead>
+                            <tr>
+                                <th data-searchable="true">Status Name</th>
+                                <th data-orderable="false" data-searchable="false">Type</th>
+                                <th data-searchable="false">Order</th>
+                                <th data-orderable="false"></th>
+
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var status in Model)
+                            {
+                                <tr data-id="@status.Id">
+                                    <td data-column="Name" style="vertical-align:middle; width:450px" data-text="@status.Name">@status.Name</td>
+                                    <td data-column="Type">
+                                        <select class="form-control" name="Type" disabled="disabled">
+                                            <option value="open" @(status.Type == "open" || string.IsNullOrEmpty(status.Type) ? "selected" : "")>Open</option>
+                                            <option value="closed" @(status.Type == "closed" ? "selected" : "")>Closed</option>
+                                        </select>
+                                    </td>
+                                    <td data-column="Order" style="vertical-align:middle" data-text="@(status.Order??0)">@(status.Order??0)</td>
+                                    <td class="text-center action-button">
+                                        <button class="btn btn-edit btn-sm btn-warning" onclick="UpdateStatus(this)"><i class="fa fa-pencil"></i></button>
+                                        <button class="btn btn-save btn-sm btn-success" style="display:none;" onclick="SaveStatus(this)"><i class="fa fa-check"></i></button>
+                                        <button class="btn btn-cancel btn-sm btn-default" style="display:none;" onclick="CancelStatus(this)"><i class="fa fa-ban"></i></button>
+                                        <button class="btn btn-delete btn-sm btn-danger" onclick="DeleteStatus(this)"><i class="fa fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                            }
+                            @*<tr>
+                                <td colspan="4" class="text-center"><button onclick="addNew()" class="btn btn-success btn-sm"><i class="fa fa-plus" aria-hidden="true"></i> Add New</button></td>
+                            </tr>*@
+                        </tbody>
+
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary pull-right" data-dismiss="modal">Done</button>
+                </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+
+<script>
+    function loadDatatable() {
+        $("#status-list-table").DataTable({
+            "language": {
+                "processing": '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>',
+                "paginate": {
+                    "first": '<i class="fa fa-angle-double-left" aria-hidden="true"></i>',
+                    "last": '<i class="fa fa-angle-double-right" aria-hidden="true"></i>',
+                    "next": '<i class="fa fa-angle-right" aria-hidden="true"></i>',
+                    "previous": '<i class="fa fa-angle-left" aria-hidden="true"></i>'
+                },
+            },
+            "pageLength": 100,
+            'lengthChange': false,
+            'searching': true,
+            "stateSave": true,
+            'paging': false,
+            'order': [],
+            'info': false,
+            'ordering': true,
+        })
+    }
+    loadDatatable();
+    function UpdateStatus(el) {
+        debugger;
+        let trTable = $(el).parents('tr');
+        let tdNameTable = $(trTable).find('td[data-column="Name"]');
+        let tdOrderTable = $(trTable).find('td[data-column="Order"]');
+        let currentNameVal = $(tdNameTable).text();
+        let currentOrderVal = $(tdOrderTable).text();
+        $(tdNameTable).html(`<input value="${currentNameVal}" class="form-control" style="width:100%" name="Name" />`);
+        $(tdOrderTable).html(`<input value="${currentOrderVal}" class="form-control" style="width:60px" type="number" name="Order" />`);
+        $(trTable).find('td[data-column="Type"] select').removeAttr("disabled");
+        $(trTable).find(".btn-edit").hide();
+        $(trTable).find(".btn-delete").hide();
+        $(trTable).find(".btn-save").show();
+        $(trTable).find(".btn-cancel").show();
+    }
+    function CancelStatus(el) {
+        let trTable = $(el).parents('tr');
+        $(trTable).find('td[data-column="Type"] select').attr("disabled",true);
+        let tdNameTable = $(trTable).find('td[data-column="Name"]');
+        let currentNameVal = $(tdNameTable).attr("data-text");
+
+        let tdOrderTable = $(trTable).find('td[data-column="Order"]');
+        let currentOrderVal = $(tdOrderTable).attr("data-text");
+
+        $(tdNameTable).html(currentNameVal);
+
+        $(tdOrderTable).html(currentOrderVal);
+        $(trTable).find(".btn-edit").show();
+        $(trTable).find(".btn-delete").show();
+        $(trTable).find(".btn-save").hide();
+        $(trTable).find(".btn-cancel").hide();
+    }
+    function DeleteStatus(el) {
+        if (confirm('Are you sure are you sure to delete this status ?')) {
+            let trTable = $(el).parents('tr');
+            var StatusId = $(trTable).attr("data-id");
+
+            $.ajax({
+                method: "POST",
+                url: "/ticket_new/deleteStatus",
+                data: { Id: StatusId },
+                dataType: "json"
+            }).done(function (data) {
+                if (data.status == true) {
+                    var options = $.parseJSON('{"text":"' + data.message + '","layout":"topRight","type":"success"}');
+                        noty(options);
+
+
+                    $("#status-list-table").DataTable().destroy();
+                    trTable.remove();
+                    loadDatatable();
+                    refeshStatusTicketInfo();
+                    }
+                else {
+                    var options = $.parseJSON('{"text":"' + data.message + '","layout":"topRight","type":"error"}');
+                       noty(options);
+
+                    }
+                })
+        }
+    }
+    function SaveStatus(el) {
+        let trTable = $(el).parents('tr');
+
+        let tdNameTable = $(trTable).find('td[data-column="Name"]');
+        let tdOrderTable = $(trTable).find('td[data-column="Order"]');
+        let tdTypeTable = $(trTable).find('td[data-column="Type"]');
+
+        let projectId = $("#Project_select").val();
+        let Id = $(trTable).attr('data-id');
+        let Name = $(trTable).find('[name="Name"]').val();
+        if (Name == '') {
+            var options = $.parseJSON('{"text":"please enter status name","layout":"topRight","type":"error"}');
+            noty(options);
+            $(trTable).find('[name="Name"]').addClass('input-error');
+            $(trTable).find('[name="Name"]').focus();
+            $(trTable).find('[name="Name"]').keyup(function () {
+                $(trTable).find('[name="Name"]').removeClass('input-error');
+            })
+            return;
+        }
+        let Type = $(trTable).find('[name="Type"]').val();
+        let Order = $(trTable).find('[name="Order"]').val();
+
+        $.ajax({
+            method: "POST",
+            url: "/ticket_new/SaveStageStatus",
+            data: { Id, Name, Type, Order, projectId },
+            dataType: "json"
+        }).done(function (data) {
+            if (data.status == true)
+            {
+                var options = $.parseJSON('{"text":"' + data.message + '","layout":"topRight","type":"success"}');
+                noty(options);
+
+                if (Id) {
+                    $(trTable).find(".btn-edit").show();
+                    $(trTable).find(".btn-delete").show();
+                    $(trTable).find(".btn-save").hide();
+                    $(trTable).find(".btn-cancel").hide();
+                    $(trTable).find('td[data-column="Type"] select').attr("disabled", true);
+                    $(tdNameTable).html(Name);
+                    $(tdNameTable).attr('data-text', Name);
+                    //$(tdTypeTable).find('select').attr('disabled', 'disabled');
+                    $(tdOrderTable).html(Order);
+                    $(tdOrderTable).attr('data-text', Order);
+                    $("#status-list-table").DataTable().destroy();
+                    loadDatatable();
+                }
+                else {
+                    $(trTable).remove();
+                    //$(trTable).attr("data-id", data.StatusId);
+                    $("#status-list-table").DataTable().destroy();
+                    $("#status-list-table").find('tbody').append(`
+                                <tr data-id="${data.StatusId}">
+                                    <td data-column="Name" style="vertical-align:middle" data-text="${Name}">${Name}</td>
+                                    <td data-column="Type">
+                                        <select class="form-control" name="Type" disabled="disabled">
+                                            <option value="open" ${Type == "open" ? "selected" : ""}>Open</option>
+                                            <option value="closed" ${Type == "closed" ? "selected" : ""}>Closed</option>
+                                        </select>
+                                    </td>
+                                    <td data-column="Order" style="vertical-align:middle" data-text="${Order||0}">${Order||0}</td>
+                                    <td class="text-center">
+                                        <button class="btn btn-edit btn-sm btn-warning" onclick="UpdateStatus(this)"><i class="fa fa-pencil"></i></button>
+                                        <button class="btn btn-save btn-sm btn-success" style="display:none;" onclick="SaveStatus(this)"><i class="fa fa-check"></i></button>
+                                        <button class="btn btn-cancel btn-sm btn-default" style="display:none;" onclick="CancelStatus(this)"><i class="fa fa-ban"></i></button>
+                                        <button class="btn btn-delete btn-sm btn-danger" onclick="DeleteStatus(this)"><i class="fa fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                                `);
+
+                    loadDatatable();
+                }
+                refeshStatusTicketInfo();
+
+            }
+            else {
+                var options = $.parseJSON('{"text":"' + data.message + '","layout":"topRight","type":"error"}');
+                noty(options);
+
+            }
+        })
+
+    }
+    function addNew() {
+        //$("#stage_status").modal('show');
+        //$("#status-list-table").find('tbody').append();
+        if ($(".addNewRowStatus").length) {
+            $(".addNewRowStatus").find('[name="Name"]').focus();
+            return;
+        }
+        $("#status-list-table").find('tbody').append(`<tr class="addNewRowStatus">
+                                    <td data-column="Name" style="vertical-align:middle">
+                                        <input  class="form-control"  style="width:100%" name="Name" />
+                                      </td>
+                                    <td data-column="Type">
+                                        <select class="form-control" name="Type">
+                                            <option value="open">Open</option>
+                                            <option value="closed">Closed</option>
+                                        </select>
+                                    </td>
+                                    <td data-column="Order" style="vertical-align:middle"><input class="form-control" value="0" style="width:60px" type="number" name="Order" /></td>
+                                    <td class="text-center action-button">
+                                        <button class="btn btn-save btn-sm btn-success" onclick="SaveStatus(this)"><i class="fa fa-check"></i></button>
+                                        <button class="btn btn-cancel btn-sm btn-default" onclick="$(this).parents('tr').remove()"><i class="fa fa-ban"></i></button>
+                                    </td>
+                                </tr>`);
+    }
+    function refeshStatusTicketInfo() {
+        let projectId = $("#Project_select").val();
+        $.ajax({
+            method: "POST",
+            url: "/ticket_new/LoadTicketStatus",
+            data: { projectId},
+            dataType: "json"
+        }).done(function (data) {
+            var statusTicketInfo = $("#status");
+            var statusSelected = $(statusTicketInfo).val();
+            $(statusTicketInfo).html('');
+            $.each(data, function (i, item) {
+                $(statusTicketInfo).append($('<option>', {
+                    value: item.Id,
+                    text: item.Name,
+
+                }));
+            });
+            $(statusTicketInfo).val(statusSelected);
+        })
+    }
+
+</script>

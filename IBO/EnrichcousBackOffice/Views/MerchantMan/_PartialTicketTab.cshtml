@@ -1,0 +1,96 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.T_SupportTicket>
+
+@{
+    Dictionary<string, bool> p = ViewBag.p;
+    var CustomerId = ViewBag.CustomerID;
+}
+<style>
+    .title {
+        text-align: center;
+        font-size: 19px;
+        color: #3782ad;
+    }
+
+    .circular {
+        animation: rotate 2s linear infinite;
+        height: 50px;
+        transform-origin: center center;
+        width: 50px;
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        margin: auto;
+    }
+
+    .path {
+        stroke-dasharray: 1, 200;
+        stroke-dashoffset: 0;
+        animation: dash 1.5s ease-in-out infinite, color 6s ease-in-out infinite;
+        stroke-linecap: round;
+    }
+
+    @@keyframes rotate {
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    @@keyframes dash {
+        0% {
+            stroke-dasharray: 1, 200;
+            stroke-dashoffset: 0;
+        }
+
+        50% {
+            stroke-dasharray: 89, 200;
+            stroke-dashoffset: -35px;
+        }
+
+        100% {
+            stroke-dasharray: 89, 200;
+            stroke-dashoffset: -124px;
+        }
+    }
+
+    @@keyframes color {
+        100%, 0% {
+            stroke: #d62d20;
+        }
+
+        40% {
+            stroke: #0057e7;
+        }
+
+        66% {
+            stroke: #008744;
+        }
+
+        80%, 90% {
+            stroke: #ffa700;
+        }
+    }
+</style>
+<div class="row" style="padding: 1rem;">
+    @*<ul class="nav nav-pills" id="subtab">
+        <li id="TicketInfo" class="active"><a href="#" onclick="ChangeSubTab('TicketInfo','@CustomerId')">Tickets</a></li>
+        <li id="TimeLine"><a href="#" onclick="ChangeSubTab('TimeLine','@CustomerId')">Supports log</a></li>
+        @if (p.Any(k => k.Key.Equals("customer_supportinginfo")) == true && p["customer_supportinginfo"] == true)
+        {
+            <li id="SupportingInfo"><a href="#" onclick="ChangeSubTab('SupportingInfo','@CustomerId')">Supporting info</a></li>
+        }
+    </ul>
+    <hr style="margin-top:0"/>*@
+    <div id="subtab_info">
+        @*@Html.Partial("_SubPartial_SupportingInfo")*@
+    </div>
+
+</div>
+
+<script>
+    ChangeSubTab('TicketInfo', '@CustomerId');
+</script>
+@*@Html.Partial("_Partial_AppoimentPopup")
+@Html.Partial("_Partial_LogPopup")*@
+

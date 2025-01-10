@@ -1,0 +1,127 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.License_Product>
+@using EnrichcousBackOffice.Models
+
+@{
+    var GroupsSubscriptionsss = Model.GroupBy(x => x.Type).OrderBy(c => c.Key);
+    var Partner = ViewBag.Partner as C_Partner;
+    //var keyLicense = Partner?.PriceType != "membership" && Partner?.PriceType != "partner" ? "Mango" : Partner?.KeyLicense;
+}
+<style>
+    .td-select {
+        width: 50px;
+    }
+
+    .PriceType {
+        text-align: center;
+        display: none;
+    }
+
+        .PriceType [type=radio] {
+            vertical-align: text-bottom;
+        }
+
+    .hover:hover {
+        background-color: #ddd !important;
+    }
+
+    .custom-scroll::-webkit-scrollbar {
+        width: 3px;
+        background-color: #f1f1f1;
+    }
+
+    .custom-scroll::-webkit-scrollbar-track {
+        -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+        border-radius: 10px;
+        background-color: #f1f1f1;
+    }
+
+    .custom-scroll::-webkit-scrollbar-thumb {
+        border-radius: 0px;
+        -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+        background-color: var(--main-color-1);
+    }
+
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+    .tableWrap {
+        transform: translateY(-20px);
+    }
+</style>
+@foreach (var item in GroupsSubscriptionsss)
+{
+    <table class="table table-bordered table-hover" id="tableLabel_@item.Key">
+        <thead data-toggle="collapse" href="#body-pr" role="button" style="background-color: #aad3ea" onclick="ToggleLicense('@item.Key')">
+            <tr>
+                <th>
+                    @(item.Key =="license"? "License": item.Key =="addon"?"Addon": item.Key == "giftcard" ? "Gift Card" : "Other services")
+                </th>
+                @*<th width="95px">Promo Price</th>
+                    <th width="150px">Price</th>*@
+                <th class="text-center td-select"><i class="fa @(item.Key!="license"?"fa-plus":"fa-minus") icon-expand"></i></th>
+            </tr>
+        </thead>
+    </table>
+    <div class="tableWrap" id="tableWrap_@item.Key" @(item.Key != "license" ? "style=display:none" : "")>
+        <table class="table table-bordered table-hover" style="margin-bottom:0px;" id="table_@item.Key">
+
+            <tbody id="body-pr-@item.Key" class="tbody-content">
+                @*@foreach (var pr in item.Where(c => c.PartnerPrice != null || c.MembershipPrice != null || string.IsNullOrEmpty(ViewBag.partnerCode)))*@
+                @foreach (var pr in item)
+                {
+                    <tr id="pr_@pr.Id" class="hover" onclick="show_license('@pr.Id')" style="cursor:pointer">
+                        <td>
+                            <b style="color: green" id="product_name_@pr.Id" class="prod_name">@pr.Name</b>
+                            <br />
+                            @if (pr.Type == "license" && pr.Trial_Months > 0)
+                            {
+                                <span>Allow trial (@pr.Trial_Months @(@pr.Trial_Months==1? "month": "months"))</span>
+                            }
+                            @if (pr.Type == "license" && pr.Promotion_Apply_Months > 0)
+                            {
+                                <span>@(pr.Trial_Months>0 ?"-":"") Allow promotion (@(pr.Promotion_Price?.ToString("$#,##0.00")) / @pr.Promotion_Apply_Months @(@pr.Promotion_Apply_Months==1? "month": "months"))</span>
+                            }
+                            @if (pr.SubscriptionDuration == "MONTHLY")
+                            {
+                                <span>@(pr.Trial_Months>0 ||pr.Promotion_Apply_Months>0 ?"-":"") Regular price (@(pr.Price?.ToString("$#,##0.00")) / @(pr.NumberOfPeriod == 1 ? "" : pr.NumberOfPeriod?.ToString()) @((string.IsNullOrEmpty(pr.PeriodRecurring) ? "month" : pr.PeriodRecurring.ToLower().Replace("ly", "")) + (pr.NumberOfPeriod == 1 ? "" : "s")))</span>
+                            }
+                            else
+                            {
+                                <span>Regular price (@(pr.Price?.ToString("$#,##0.00")) / @pr.NumberOfPeriod times)</span>
+                            }
+
+                            <br />
+                            @(pr.SubscriptionDuration == "MONTHLY"? Html.Raw("<label class='label label-primary'>Monthly</label>"): Html.Raw("<label class='label label-warning'>Onetime</label>"))
+                            <img id="img_load_addon_@pr.Id" src="/Content/ajax-loaders/ajax-loader-1.gif" style="visibility:hidden">
+                        </td>
+                        <td class="text-center td-select" style="vertical-align:middle;">
+                            <input name="selected_prd" type="radio" class="check" value="@pr.Id" />
+                        </td>
+                    </tr>
+                    <tr class="license_contain" style="border-bottom: 1px double; display:none; background-color:#DDD">
+                        <td id="prdata_@pr.Id" colspan="5"></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+<script>
+    function ToggleLicense(key) {
+        var table = $("#tableWrap_" + key);
+        $(table).slideToggle("slow", function () {
+            if ($(table).is(":hidden")) {
+                $("#tableLabel_" + key).find('.icon-expand').addClass("fa-plus").removeClass("fa-minus");
+            }
+            else {
+                $("#tableLabel_" + key).find('.icon-expand').removeClass("fa-plus").addClass("fa-minus");
+            }
+        });
+
+
+    }
+</script>
+
+
+

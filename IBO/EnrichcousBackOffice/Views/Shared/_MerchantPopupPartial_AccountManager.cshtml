@@ -1,0 +1,283 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.C_CustomerAccountManager>
+@{
+    Dictionary<string, bool> p = ViewBag.p;
+}
+<input type="hidden" id="AMCustomerCode" value="@ViewBag.CustomerCode" />
+<table class="table table-hover table-striped">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Username</th>
+            <th width="200px">Password</th>
+            <th>Description</th>
+            <th width="150px"></th>
+        </tr>
+    </thead>
+    <tbody id="tbody_ct">
+        @foreach (var am in Model)
+        {
+            <tr id="tb_amTr_@am.Id">
+                <td id="tb_Name_@am.Id" style="vertical-align: middle"><span class="text-primary">@am.Name.ToUpper()</span></td>
+                <td id="tb_Username_@am.Id" style="vertical-align: middle">@am.Username</td>
+                <td id="tb_Pass_@am.Id" style="vertical-align: middle">
+                    <span id="data_password_@am.Id">******</span>
+                    <i class="fa fa-eye pass-hidden-@am.Id" onclick="show_passhidden('@am.Id')" style="color:#258e4f; cursor:pointer"></i>
+                </td>
+                <td id="tb_Description_@am.Id" style="vertical-align: middle">@am.Description</td>
+                <td style="vertical-align: middle">
+                    <a class="btn btn-primary btn-flat btn-sm" onclick="editAccountManager('@am.Id')">Edit</a>
+                    @*@if (p?.Any(k => k.Key.Equals("customer_update")) == true && p?["customer_update"] == true)
+                        {
+                        }*@
+                    <a class="btn btn-danger btn-flat btn-sm" onclick="deleteAccountManager('@am.Id')">Delete</a>
+                    @*@if (p?.Any(k => k.Key.Equals("customer_delete")) == true && p?["customer_delete"] == true)
+                        {
+                        }*@
+                    @*<a class="btn btn-info view_merchant" style="display:none" onclick="ContactView('@am.Id')">View info</a>*@
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+<a class="btn btn-success btn-flat center-block btn-sm" style="width:200px" onclick="editAccountManager()">
+    <span class="fa fa-plus"></span> New account manager
+</a>
+
+@*@if (p?.Any(k => k.Key.Equals("customer_update")) == true && p?["customer_update"] == true)
+    {
+
+    }*@
+<div class="clearfix"></div>
+
+<!-- InputMask -->
+<script src="~/Content/Admin/plugins/input-mask/jquery.inputmask.js"></script>
+<script src="~/Content/Admin/plugins/input-mask/jquery.inputmask.date.extensions.js"></script>
+<script src="~/Content/Admin/plugins/input-mask/jquery.inputmask.extensions.js"></script>
+
+<script>
+    //Phone inputmask
+    $('[data-mask]').inputmask();
+    //view contact
+    $('input[type="checkbox"].flat-red, input[type="radio"].flat-red').iCheck({
+        checkboxClass: 'icheckbox_flat-blue',
+        radioClass: 'iradio_flat-blue'
+    })
+    function show_passhidden(Id) {
+        var _show = $('#data_password_' + Id).html();
+        $('.pass-hidden-' + Id).toggleClass('fa-eye fa-eye-slash');
+        if (_show == "******") {
+            $.ajax({
+                method: "POST",
+                url: "/merchantMan/getAccountManager",
+                data: { Id },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    overlayOff();
+                    if (data[0] == true) {
+                        $('#data_password_' + Id).html(data[1].Password);
+                    }
+                    else {
+                        var Error = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"error"}');
+                        noty(Error);
+                    }
+                })
+                .fail(function () {
+                    overlayOff();
+                    alert("Get data Fail");
+                })
+        }
+        else {
+            $('#data_password_' + Id).html("******");
+        }
+    }
+    function editAccountManager(Id) {
+        overlayOn();
+        if (Id) {
+            $("#modal-accountmanager .modal-title").html("Edit account manager");
+            $.ajax({
+                method: "POST",
+                url: "/merchantMan/getAccountManager",
+                data: { Id },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    overlayOff();
+                    if (data[0] == true) {
+                        $("#AMId").val(Id);
+                        $("#AMName").val(data[1].Name);
+                        $("#AMUsername").val(data[1].Username);
+                        $("#AMPassword").val(data[1].Password);
+                        $("#AMDescription").val(data[1].Description);
+                        $('.icon_login_remote').addClass('fa-eye');
+                        $('.icon_login_remote').removeClass('fa-eye-slash');
+                        document.getElementById('AMPassword').type = 'password';
+                        $('#modal-accountmanager').modal('show');
+                    }
+                    else {
+                        var Error = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"error"}');
+                        noty(Error);
+                    }
+                })
+                .fail(function () {
+                    overlayOff();
+                    alert("Get data Fail");
+                })
+        }
+        else {
+            $("#AMId").val('');
+            $("#AMName").val('');
+            $("#AMUsername").val('');
+            $("#AMPassword").val('');
+            $("#AMDescription").val('');
+            $("#modal-accountmanager").modal();
+            overlayOff();
+        }
+    }
+    function saveAccountManager() {
+        overlayOn();
+        var Id = $('#AMId').val();
+        var CustomerCode = $('#AMCustomerCode').val();
+        var Name = $('#AMName').val();
+        var Username = $('#AMUsername').val();
+        var Password = $('#AMPassword').val();
+        var Description = $('#AMDescription').val();
+        $.ajax({
+            method: "POST",
+            url: "/merchantMan/SaveAccountManager",
+            data: { Id, CustomerCode, Name, Username, Password, Description },
+            dataType: "json"
+        })
+            .done(function (data) {
+                overlayOff();
+                if (data[0] == true) {
+                    if (Id != "" && Id != null) {
+                        $("#tb_Name_" + Id).html('<span class="text-primary">' + Name.toUpperCase() + '</span>');
+                        $("#tb_Username_" + Id).html(Username);
+                        $("#tb_Description_" + Id).html(Description);
+                    }
+                    else {
+                        Id = data[2];
+                        var html = `<tr id="tb_amTr_${Id}">
+                                        <td id="tb_Name_${Id}" style="vertical-align: middle"><span class="text-primary">${Name.toUpperCase()}</span></td>
+                                        <td id="tb_Username_${Id}" style="vertical-align: middle">${Username}</td>
+                                        <td id="tb_Passhidden_${Id}" style="vertical-align: middle">
+                                            <span id="data_password_${Id}">******</span>
+                                            <i class="fa fa-eye pass-hidden-${Id}" onclick="show_passhidden('${Id}')" style="color:#258e4f; cursor:pointer"></i>
+                                        </td>
+                                        <td id="tb_Description_${Id}" style="vertical-align: middle">${Description}</td>
+                                        <td style="vertical-align: middle">
+                                            <a class="btn btn-primary btn-flat btn-sm" onclick="editAccountManager('${Id}')">Edit</a>
+                                            <a class="btn btn-danger btn-flat btn-sm" onclick="deleteAccountManager('${Id}')">Delete</a>
+                                        </td>
+                                    </tr>`;
+                        $('#tbody_ct').append(html);
+                    }
+                    $('#modal-accountmanager').modal("hide");
+                    $('#tb_amTr_' + Id).css("background", "lightgreen");
+                    setTimeout(function () {
+                        $('#tb_amTr_' + Id).css("transition", "background-color 0.5s ease");
+                        $('#tb_amTr_' + Id).css("background", "");
+                    }, 1000);
+
+                    var Success = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"success"}');
+                    noty(Success);
+                }
+                else {
+                    var Error = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"error"}');
+                    noty(Error);
+                }
+            })
+            .fail(function () {
+                overlayOff();
+                alert("Data Fail");
+            })
+    }
+    function deleteAccountManager(Id) {
+        var result = confirm("Do you wan't to delete this account manager?");
+        if (result) {
+            overlayOn();
+            $.ajax({
+                method: "GET",
+                url: "/merchantMan/DeleteAccountManager?Id=" + Id,
+                //data: { Id },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    if (data[0] == true) {
+                        $('#tb_amTr_' + Id).css("background-color", "red");
+                        $('#tb_amTr_' + Id).hide(300, function () { $(this).remove(); });
+                        var Success = $.parseJSON('{"text":"Delete success!", "layout":"topRight", "type":"success"}');
+                        noty(Success);
+                    }
+                    else {
+                        var Error = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"error"}');
+                        noty(Error);
+                    }
+                    overlayOff();
+                })
+                .fail(function () {
+                    overlayOff();
+                    alert("Data Fail");
+                })
+        }
+    }
+</script>
+<div class="modal fade" id="modal-accountmanager" role="dialog" data-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close view_merchant" onclick="$('#modal-accountmanager').modal('hide')" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Add new account manager</h4>
+            </div>
+            <div class="modal-body">
+                <input id="AMId" type="hidden" />
+                <div class="row">
+                    <div class="col-md-12 form-group">
+                        <label class="control-label">Name@*<i style="color:red"> *</i>*@</label>
+                        <div class="">
+                            <input class="form-control" type="text" id="AMName" required />
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 form-group">
+                        <label class="control-label">Username</label>
+                        <div class="">
+                            <input class="form-control" type="text" id="AMUsername" />
+                        </div>
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label class="control-label">Password</label>
+                        <div class="form-group">
+                            <input class="form-control" type="password" id="AMPassword" />
+                            <i class="fa fa-eye icon_login_remote" style="color:#258e4f;cursor:pointer;position:absolute;top:35px;right:25px;"
+                               onclick="$('.icon_login_remote').toggleClass('fa-eye fa-eye-slash');
+                                        document.getElementById('AMPassword').type = document.getElementById('AMPassword').type == 'text' ? 'password' : 'text'"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12 form-group">
+                        <label class="control-label">Description</label>
+                        <div class="">
+                            <textarea rows="3" style="resize: vertical;" resize class="form-control" type="text" id="AMDescription" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default view_merchant" onclick="$('#modal-accountmanager').modal('hide')">Close</button>
+                <a class="btn btn-primary" onclick="saveAccountManager()">Save</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    tr td {
+        vertical-align: middle;
+    }
+</style>

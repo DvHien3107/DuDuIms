@@ -1,0 +1,535 @@
+﻿@{
+    var access = EnrichcousBackOffice.AppLB.Authority.GetAccessAuthority();
+
+}
+<div class="tab-pane active">
+    <div style="text-align:center">
+        <img id="load_partial_tab" src="~/Content/ajax-loaders/loading-partial.gif" style="display:none" />
+    </div>
+    <div class="content-tab-load">
+        <div id="partial_tab">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title"></h3>
+                    <div class="box-tools pull-right">
+                        <a class="btn btn-sm btn-info btn-header-lead" onclick="export_excel_paidpayment()" style="font-size:12px; margin-left:5px">
+                            <i class="fa fa-file-excel-o"></i> Export excel <img id="img_load_excel" src="/Content/ajax-loaders/ajax-loader-1.gif" style="display:none">
+                        </a>
+                    </div>
+                </div>
+                <div class="box-body">
+                    @if ((access.Any(k => k.Key.Equals("payroll_accounting")) == true && access["payroll_accounting"] == true) || (access.Any(k => k.Key.Equals("payroll_viewall")) == true && access["payroll_viewall"] == true))
+                    {
+                        <div class="row">
+                            @*<div class="input-group col-sm-2 pull-left" style="padding: 2px">
+                                    <label class="input-group-addon" style="min-width:100px">
+                                        Paid Number
+                                    </label>
+                                    <input type="text" id="PaidNumber" name="PaidNumber" placeholder="Paid Number" class="form-control" value="">
+                                </div>*@
+                            <div class="input-group col-sm-2 pull-left" style="padding: 2px">
+                                <label class="input-group-addon " style="min-width:100px">
+                                    Department
+                                </label>
+                                <select id="DepartMentId" name="DepartMentId" class="form-control change-filter">
+                                </select>
+                                <div class="loading-dropdown-dep" style="position: absolute;top: 8px;right: 7px;z-index: 999;background: white;font-size:17px">
+                                    <i class="fa fa-spinner fa-spin"></i>
+                                </div>
+                            </div>
+                            <div class="input-group col-sm-2 pull-left" style="padding: 2px">
+                                <label class="input-group-addon" style="min-width:100px">
+                                    Employee Name
+                                </label>
+                                <input type="text" id="EmpName" name="EmpName" placeholder="Employee Name" class="form-control change-filter" value="">
+                            </div>
+                            <div class="input-group col-sm-3 pull-left" style="padding: 2px">
+                                <label class="input-group-addon" style="min-width:100px">
+                                    Payment Methods & Date
+                                </label>
+                                <select id="PaidNumber" name="PaidNumber" class="form-control payment-method-search change-filter">
+                                    @if ((access.Any(k => k.Key.Equals("payroll_accounting")) == true && access["payroll_accounting"] == true))
+                                    {
+                                        <option value="">All</option>
+                                    }
+                                    @foreach (var item in ViewBag.employeePayrollPayment as List<SelectListItem>)
+                                    {
+                                        <option value="@item.Value">@item.Text</option>
+                                    }
+                                </select>
+                                <div class="loading-payment-method " style="display:none;position: absolute;top: 8px;right: 7px;z-index: 999;background: white;font-size:17px">
+                                    <i class="fa fa-spinner fa-spin"></i>
+                                </div>
+                            </div>
+                            @*<div class=" input-group col-sm-2 pull-left groups-div" style="padding: 2px;">
+                                    <label class="input-group-addon label-groups">
+                                        Payment Date
+                                    </label>
+                                    <input type="text" id="PaymentDate" name="PaymentDate" class="form-control datepicker" readonly>
+                                </div>*@
+                            <div class="input-group pull-left" style="padding: 2px">
+                                <button id="search-button" class="btn btn-primary"><i class="fa fa-search" aria-hidden="true"></i> Search</button>
+                            </div>
+                        </div>
+                    }
+                    <br />
+                    <div>
+                        <div>
+                            <style>
+                                .fc-button-group {
+                                    display: flex;
+                                    justify-content: center;
+                                }
+
+                                #Date {
+                                    width: 125px;
+                                    font-weight: bold;
+                                    border: none;
+                                    font-size: 16px;
+                                    color: white;
+                                    background: #2C3E50;
+                                }
+                            </style>
+                            <div class="fc-button-group">
+                                <button onclick="PrevYear()" type="button" class="btn btn-primary-custom" aria-label="prev" style="background: #2c3e50;color: white;border-radius: 7px 0px 0px 7px;margin-right: 1px;align-items:center">
+                                    <i class="fa fa-angle-left" aria-hidden="true"></i>
+                                </button>
+
+                                <span style="padding:6px" class="text-center" type="text" id="Date" name="Date" data-year="@DateTime.UtcNow.ToString("yyyy")">Year @DateTime.UtcNow.ToString("yyyy")</span>
+                                <button onclick="NextYear()" type="button" class="btn btn-primary-custom" aria-label="next" style="background: #2c3e50;color: white;border-radius: 0px 7px 7px 0px;margin-left: 1px;">
+                                    <i class="fa fa-angle-right" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                            <div class="progress" style="display:none;margin-top:2px">
+                                <div id="payroll_progess" class="progress-bar progress-bar-striped progress-bar-success" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                        <table id="paid_payment" class="table table-hover dataTable table-bordered table-striped" style="width:100%;">
+                            <thead>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                            @if ((access.Any(k => k.Key.Equals("payroll_accounting")) != true || access["payroll_accounting"] != true))
+                            {
+                                <tfoot>
+                                    <tr>
+                                        <th colspan="5" style="text-align:right">Total:</th>
+                                        <th id="total-basesalary"></th>
+                                        <th id="total-commission"></th>
+                                        <th id="total-all"></th>
+                                        <th></th>
+                                    </tr>
+                                </tfoot>
+                            }
+                        </table>
+                    </div>
+                </div>
+                <!-- /.box-body -->
+            </div>
+
+        </div>
+        <div class="loadding-tab" style="position: absolute; right: 50%;top: 50%;transform: translate(50%, -50%) ;display:none">
+            <img src="/Content/ajax-loaders/loading-partial.gif" width="75">
+        </div>
+    </div>
+</div>
+
+<div id="render-detail-popup-detail-popup">
+</div>
+<!--Xem chi tiet thong tin nhan vien-->
+<div class="modal fade" id="modal-default">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Member profile</h4>
+            </div>
+            <div class="modal-body">
+                <p id="loading"><img src="~/Content/ajax-loaders/ajax-loader-1.gif" /></p>
+                <div id="modal-content">
+                    <!--_MemberProfileSimplePartial Partial-->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+@{
+    var host = $"{HttpContext.Current.Request.Url.Scheme}://{HttpContext.Current.Request.Url.Authority}";
+}
+<div class="modal fade" id="Invoice" role="dialog" style="display: none;">
+    <div class="modal-dialog modal-content" style="min-width:900px">
+        <div class="modal-header">
+            <div class="modal-title pull-left"><h3 style="margin:0">View Invoice</h3></div>
+            <button type="button" class="btn btn-sm btn-warning" style="float:left; margin-left:20px" onclick="document.getElementById('invoice-view').contentWindow.print()"><i class="fa fa-print"></i> Print</button>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">×</span>
+            </button>
+        </div>
+        <div class="modal-body" style="padding:1px;height: 77vh;">
+            <iframe width="100%" height="100%" style="border: none;" id="invoice-view" data-src="@host/order/ImportInvoiceToPDF?_code=%code%&amp;flag=Invoice"></iframe>
+        </div>
+    </div>
+</div>
+<div class="loading" style="display:none;position: fixed;top: 50%;left: 50%;transform: translate(-50%, -50%);"><img src="/Content/ajax-loaders/loading2.gif" width="60"></div>
+@if ((access.Any(k => k.Key.Equals("payroll_accounting")) == true && access["payroll_accounting"] == true))
+{
+    <script>
+        var t = $(".dataTable").DataTable({
+            "language": {
+                "processing": '<img src="/Content/ajax-loaders/loading2.gif" width="60px" />',
+                "paginate": {
+                    "first": '<i class="fa fa-angle-double-left" aria-hidden="true"></i>',
+                    "last": '<i class="fa fa-angle-double-right" aria-hidden="true"></i>',
+                    "next": '<i class="fa fa-angle-right" aria-hidden="true"></i>',
+                    "previous": '<i class="fa fa-angle-left" aria-hidden="true"></i>'
+                },
+            },
+            'paging': true,
+            "pageLength": 10,
+            "serverSide": true, // for process server side
+            "processing": true, // for show progress bar
+            'lengthChange': false,
+            'searching': false,
+            'ordering': false,
+            'stateSave': true,
+            'info': false,
+            "scrollX": true,
+            'autoWidth': true,
+            "ajax": {
+                "url": "/Payroll/LoadListPaidByPayment",
+                "type": "POST",
+                "datatype": "json",
+                data: function (data) {
+                    data.PaidNumber = $('#PaidNumber').val();
+                    data.EmpName = $('#EmpName').val();
+                    data.PaymentMethod = $('#PaymentMethodSearch').val();
+                    data.PaymentDate = $('#PaymentDate').val();
+                    data.Year = $('#Date').attr("data-year");
+                    data.DepartMentId = $('#DepartMentId').val();
+                    return data;
+                },
+            },
+            'fnCreatedRow': function (nRow, aData, iDataIndex) {
+                $(nRow).attr('id', 'tr_' + aData.PaidNumber.toString());
+                $(nRow).attr('data-paidnumber', aData.PaidNumber.toString());
+            },
+            "columns": [
+                {
+                    "title": 'Paid Date',
+                    "render": function (data, type, row) {
+                        return '<span>' + row["PaidDate"] + '</span>';
+                    },
+                    "className": "open-detail",
+                },
+
+                {
+                    "title": 'Method',
+                    "data": "Method",
+                    "className": "open-detail",
+                },
+                {
+                    "title": 'Total Amount',
+                    "data": "TotalAmount",
+                    "className": "open-detail",
+                },
+                {
+                    "title": 'Total Employee',
+                    "data": "TotalMember",
+                    "className": "open-detail",
+                },
+                {
+                    "title": 'Date',
+                    "render": function (data, type, row) {
+                        return '<span>At: ' + row["Date"] + '</span></br><span> By: ' + row["CreateBy"] + '</span>';
+                    },
+                    "className": "open-detail",
+                },
+                {
+                    "render": function (data, type, row) {
+                        return '<a  onclick="showDetailPaidNumber(\'' + row["PaidNumber"] + '\')" class="btn btn-primary btn-sm detail" style="margin-right: 3px;" >Detail</a>';
+                    },
+                    "className": "text-center",
+                    "width": 'auto',
+                }
+            ]
+        });
+
+    </script>
+}
+else
+{
+    <script>
+        var totalBaseSalary;
+        var totalCommission;
+        var totalAll;
+        var t = $(".dataTable").DataTable({
+            "language": {
+                "processing": '<img src="/Content/ajax-loaders/loading2.gif" width="60px" />',
+                "paginate": {
+                    "first": '<i class="fa fa-angle-double-left" aria-hidden="true"></i>',
+                    "last": '<i class="fa fa-angle-double-right" aria-hidden="true"></i>',
+                    "next": '<i class="fa fa-angle-right" aria-hidden="true"></i>',
+                    "previous": '<i class="fa fa-angle-left" aria-hidden="true"></i>'
+                },
+            },
+            'paging': true,
+            "pageLength": 10,
+            "serverSide": true, // for process server side
+            "processing": true, // for show progress bar
+            'lengthChange': false,
+            'searching': false,
+            'ordering': false,
+            'stateSave': true,
+            'info': false,
+            "scrollX": true,
+            'autoWidth': true,
+            "ajax": {
+                "url": "/Payroll/LoadListPaidByEmployee",
+                "type": "POST",
+                "datatype": "json",
+                data: function (data) {
+                    data.PaidNumber = $('#PaidNumber').val();
+                    data.EmpName = $('#EmpName').val();
+                    data.PaymentMethod = $('#PaymentMethodSearch').val();
+                    data.PaymentDate = $('#PaymentDate').val();
+                    data.Year = $('#Date').attr("data-year");
+                    data.DepartMentId = $('#DepartMentId').val();
+                    return data;
+                },
+                'dataSrc': function (data) {
+                    totalBaseSalary = data.totalBaseSalary;
+                    totalCommission = data.totalCommission;
+                    totalAll = data.totalAll;
+                    return data.data;
+                },
+            },
+            'fnCreatedRow': function (nRow, aData, iDataIndex) {
+                $(nRow).attr('id', 'tr_' + aData.PaidNumber.toString());
+            },
+            "columns": [
+                {
+                    "title": 'Employee Id',
+                    "render": function (data, type, row) {
+                        return '<span>#' + row["EmpId"] + '</span>';
+                    },
+                },
+                {
+                    "title": 'Employee Name',
+                    "data": "EmpName",
+                },
+                {
+                    "title": 'Paid Number',
+                    "data": "PaidNumber",
+
+                },
+                {
+                    "title": 'Paid Date',
+                    "render": function (data, type, row) {
+                        return '<span>At: ' + row["Date"] + '</span></br><span> By: ' + row["CreateBy"] + '</span>';
+                    },
+
+                },
+                {
+                    "title": 'Paid Method',
+                    "data": "Method",
+
+                },
+                {
+                    "title": 'Total BaseSalary',
+                    "data": "TotalBaseSalary",
+
+                },
+                {
+                    "title": 'Total Commission',
+                    "data": "TotalCommission",
+
+                },
+                {
+                    "title": 'Total All',
+                    "data": "TotalAll",
+
+                },
+                {
+                    "render": function (data, type, row) {
+                        return '<a  onclick="ViewPopupDetailPayroll(\'' + row["EmpId"] + '\',\'' + row["PaidNumber"] + '\')" class="btn btn-primary btn-sm detail" style="margin-right: 3px;" >Detail</a>';
+                    },
+                    "className": "text-center",
+                    "width": 'auto',
+                }
+            ],
+            "footerCallback": function (row, data, start, end, display) {
+                var api = this.api(), data;
+                $(api.column(5).footer()).html(
+                    totalBaseSalary
+                );
+                $(api.column(6).footer()).html(
+                    totalCommission
+                );
+                $(api.column(7).footer()).html(
+                    totalAll
+                );
+            }
+        });
+    </script>
+}
+<script id="jquery-tab" type="text/javascript">
+    $("#search-button").click(function () {
+        $(".detail-payroll-payment").remove();
+        $(".dataTable").DataTable().ajax.reload();
+    })
+    function showDetailPaidNumber(paidNumberId, show = true) {
+        if ($(".tr-detail-" + paidNumberId).length) {
+            if (show == false) {
+                $(".div-detail-" + paidNumberId).slideUp(function () {
+                    $(".tr-detail-" + paidNumberId).hide();
+                });
+            }
+            else {
+                $(".tr-detail").hide();
+                $(".tr-detail-" + paidNumberId).show();
+                $(".div-detail-" + paidNumberId).slideDown(function () {
+                });
+            }
+            return;
+        }
+        $(".loading").show();
+        $.ajax({
+            type: "POST",
+            url: "/Payroll/DetailPaidPayment",
+            data: { "PaidNumber": paidNumberId, "DepartmentId": $("#DepartMentId").val(), "EmpName": $("#EmpName").val()},
+            success: function (data) {
+                $(".tr-detail").hide();
+                $("#tr_" + paidNumberId).after(data);
+                $(".div-detail-" + paidNumberId).slideDown();
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                alert('fail');
+            },
+            complete: function () {
+                $(".loading").hide();
+            },
+        });
+    }
+    function PrevMonth() {
+        const d = new Date($("#Date").val());
+        d.setDate(1);
+        d.setMonth(d.getMonth() - 1);
+        $("#Date").val(monthNames[d.getMonth()] + " " + d.getFullYear());
+        $(".dataTable").DataTable().ajax.reload();
+    }
+    function NextMonth() {
+        const d = new Date($("#Date").val());
+        d.setDate(1);
+        d.setMonth(d.getMonth() + 1);
+        $("#Date").val(monthNames[d.getMonth()] + " " + d.getFullYear());
+        $(".dataTable").DataTable().ajax.reload();
+    }
+    function PrevYear() {
+        const d = new Date($("#Date").attr("data-year"));
+        d.setFullYear(d.getFullYear() - 1);
+        $("#Date").attr("data-year", d.getFullYear());
+        $("#Date").html("Year " + d.getFullYear());
+        LoadPaymentMethod_Date();
+        $(".dataTable").DataTable().ajax.reload();
+    }
+    function NextYear() {
+        const d = new Date($("#Date").attr("data-year"));
+        d.setFullYear(d.getFullYear() + 1);
+        $("#Date").attr("data-year", d.getFullYear());
+        $("#Date").html("Year " + d.getFullYear());
+        LoadPaymentMethod_Date();
+        $(".dataTable").DataTable().ajax.reload();
+    }
+    function viewdetailemp(mn) {
+        $("#modal-default").modal('show');
+        $.ajax({
+            method: "POST",
+            url: "/account/GetMemberInfoSimple",
+            data: { "mn": mn },
+            dataType: "html"
+        })
+            .done(function (data) {
+                $("#modal-content").html(data);
+            })
+            .fail(function () {
+                alert("Oops! Something went wrong");
+                $("#modal-default").modal('hide');
+            })
+            .always(function () {
+                $("#loading").hide();
+            });
+    }
+    function ViewPopupDetailPayroll(MemberNumber, PaidNumber) {
+        $(".loading").show();
+        $.ajax({
+            method: "POST",
+            url: "/Payroll/PopUpDetailPayroll",
+            data: { "MemberNumber": MemberNumber, "PaidNumber": PaidNumber },
+            dataType: "html"
+        })
+            .done(function (data) {
+                $("#render-detail-popup-detail-popup").html(data);
+                $("#payroll-details-paid").modal('show');
+
+            })
+            .fail(function () {
+                alert("Oops! Something went wrong");
+
+            })
+            .always(function () {
+                $(".loading").hide();
+            });
+    }
+    function show_invoice(code) {
+        let src = $("#invoice-view").data("src").replace("%code%", code);
+        $("#invoice-view").attr("src", src);
+        $('#Invoice').modal('show');
+    }
+    $(".datepicker").datepicker({
+        changeMonth: true,
+        changeYear: true,
+        yearRange: '1950:2050'
+    });
+    //LoadPaymentMethod_Date();
+    function LoadDep() {
+        $(".loading-dropdown-dep").show();
+        var Date = $('#Date').val();
+        $.ajax({
+            type: "Post",
+            url: "/Payroll/LoadDepartment",
+            //data: { "Date": Date },
+            success: function (data) {
+                $('#DepartMentId').html('');
+                $.each(data, function (id, option) {
+                    $('#DepartMentId').append($('<option></option>').val(option.Value).html(option.Text));
+                });
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                alert('fail');
+            },
+            complete: function () {
+                $(".loading-dropdown-dep").hide();
+            }
+        });
+    }
+    LoadDep();
+
+    function export_excel_paidpayment() {
+        var PaidNumber = $('#PaidNumber').val();
+        var EmpName = $('#EmpName').val();
+        var Year = $('#Date').attr("data-year");
+        var DepartMentId = $('#DepartMentId').val();
+        window.location.href = "/Payroll/ExportExcelPaidPayment?PaidNumber=" + PaidNumber + "&EmpName=" + EmpName + "&Year=" + Year + "&DepartMentId=" + DepartMentId;
+    }
+    $('.change-filter').change(function () {
+        $(".detail-payroll-payment").remove();
+        $(".dataTable").DataTable().ajax.reload();
+    })
+</script>

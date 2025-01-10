@@ -1,0 +1,232 @@
+﻿@model EnrichcousBackOffice.Models.T_SupportTicket
+@using System.Text.RegularExpressions;
+@using EnrichcousBackOffice.AppLB
+@{
+    ViewBag.Title = "IMS - Ticket #" + EnrichcousBackOffice.AppLB.CommonFunc.view_TicketId(Model.Id);
+    var access = EnrichcousBackOffice.AppLB.Authority.GetAccessAuthority();
+    List<EnrichcousBackOffice.Models.T_SupportTicket> ticketRelated = ViewBag.ticketRelated;
+}
+
+<div @*ng-app="ngTicketInfoApp" ng-controller="ngTicketInfoSimpleController"*@ class="form-horizontal">
+
+    <input type="hidden" id="load_member" value="0" />
+    <input type="hidden" id="load_product" value="0" />
+
+    <div class="box box-info">
+        <div class="box-header with-border">
+            <h3 class="box-title">Ticket infomation</h3>
+        </div>
+
+        <div class="box-body">
+
+
+            <div class="form-group">
+                <label class="col-sm-12">Assigned </label>
+                <div class="col-sm-10">
+                    @if (string.IsNullOrWhiteSpace(Model.AssignedToMemberNumber))
+                    {
+                        <span>Unassigned</span>
+                    }
+                    else
+                    {
+                        <span> @Model.AssignedToMemberName</span>
+                    }
+
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="col-sm-12">Group</label>
+                <div class="col-sm-10">
+                    @if (Model.GroupID > 0)
+                    {
+                        <span> @Model.GroupName</span>
+                    }
+                    else
+                    {
+                        <span>Unassigned</span>
+                    }
+                </div>
+            </div>
+
+            <div class="form-group">
+
+                <div class="col-sm-10">
+                    <label>Type</label>
+                </div>
+                <div class="col-sm-10">
+                    @if (Model.TypeId > 0)
+                    {
+                        <span> @Model.TypeName</span>
+                    }
+                    else
+                    {
+                        <span>Unassigned</span>
+                    }
+                </div>
+            </div>
+            <div class="form-group">
+
+                <div class="col-sm-10">
+                    <label>Status</label>
+                </div>
+                <div class="col-sm-10" @if (Model.DateClosed != null) { @Html.Raw("style='text-decoration:line-through'") }>
+                    @(string.IsNullOrWhiteSpace(Model.StatusName) == true ? "Pending" : Model.StatusName)
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="col-sm-12">Priority</label>
+                <div class="col-sm-10">
+                    @Model.PriorityName
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="col-sm-12">Severity</label>
+                <div class="col-sm-10">
+                    @Model.SeverityName
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="col-sm-12">Category@*Project*@</label>
+                <div class="col-sm-10">
+                    @Model.ProjectName
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="col-sm-12">Version@*Milestone*@</label>
+                <div class="col-sm-10">
+                    @Model.MilestoneName
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="col-sm-12">Label</label>
+                <div class="col-sm-10">
+                    @if (!string.IsNullOrEmpty(Model.Tags))
+                    {
+                        foreach (var tag in Model.Tags.Split('|'))
+                        {
+                            if (!string.IsNullOrEmpty(tag))
+                            {
+                                <span class="label" style="background-color:@(tag.Split(new string[] { "::" },StringSplitOptions.RemoveEmptyEntries)[1])">@(tag.Split(new string[] { "::" }, StringSplitOptions.RemoveEmptyEntries)[0].Replace("[", "").Replace("]", ""))</span>
+                            }
+                        }
+                    }
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="col-sm-12">Days opened</label>
+                <div class="col-sm-10">
+                    <span id="localtime-@Model.Id">
+                        <script>convertLocalTime("@Model.Id", "@Model.DateOpened")</script>
+                    </span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-12">Days closed</label>
+                <div class="col-sm-10">
+                    @if (Model.DateClosed != null && Model.DateOpened != null)
+                    {
+                        <span>@((Model.DateClosed.Value - Model.DateOpened.Value).Days)</span>
+                    }
+                </div>
+            </div>
+
+            @*<div class="form-group">
+            <label class="col-sm-12">Due date</label>
+            <div class="col-sm-10">
+                @(Model.Deadline?.ToShortDateString())
+            </div>
+        </div>*@
+
+            <div class="form-group">
+                <label class="col-sm-12">Related ticket</label>
+                <div class="col-sm-10">
+                    @foreach (var item in ticketRelated)
+                    {
+                        <a @if (item.DateClosed != null) { @Html.Raw("style='text-decoration:line-through;'") } href="/ticket/detail/@item.Id" target="_blank" title="@item.Name" data-toggle="tooltip"><span class="label label-primary">Ticket #@CommonFunc.view_TicketId(item.Id)</span> </a>
+                    }
+
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="col-sm-12">Subcribe user</label>
+                <div class="col-sm-10">
+                    @if (string.IsNullOrWhiteSpace(Model.SubscribeMemberNumber) != true)
+                    {
+                        <span> @Model.SubscribeName</span>
+                    }
+                    else
+                    {
+                        <span>Unassigned</span>
+                    }
+
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-12">Ticket owner</label>
+                <div class="col-sm-10">
+                    @Model.CreateByName<br />
+                    <i><u>at </u>
+                       <span id="localtime-@Model.Id">
+                           <script>convertLocalTime("@Model.Id", "@Model.CreateAt")</script>
+                       </span></i>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+
+</div>
+
+
+
+
+<script type="text/javascript">
+    $(".datepicker").datepicker({
+        dateFormat: "mm/dd/yy",
+        changeMonth: true,
+        changeYear: true,
+        yearRange: '-70:+10'
+    });
+
+    $('[data-toggle="tooltip"]').tooltip();
+
+    /**
+     * create/update merchant
+     * @@param _id CustomerId
+     * @@param _update true/false
+     */
+    function update_merchant(_id, _update, code) {
+        //    alert(_id + "|" + _update);
+        $.ajax({
+            method: "POST",
+            url: "/merchantman/GetMerchantInfo",
+            data: { id: _id, update: _update, cuscode: code },
+            dataType: "html"
+        })
+            .done(function (data) {
+                $("#merchant_popup").html(data);
+                $("#modal-merchant").modal('show');
+            })
+            .fail(function () {
+                console.log("[GetMerchantInfo] - Oops! Something went wrong");
+                $("#modal-merchant").modal('hide');
+            })
+            .always(function () {
+                //$("#loading").hide();
+            });
+    }
+
+
+
+</script>
+

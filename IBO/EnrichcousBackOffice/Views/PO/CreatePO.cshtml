@@ -1,0 +1,234 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.PO_Request>
+@using EnrichcousBackOffice.Models;
+@using EnrichcousBackOffice.Models.CustomizeModel;
+@{
+    List<POhistory_model> purchase_history = ViewBag.purchase_history;
+    List<PO_Detail_vendor> po_details = ViewBag.details ?? new List<PO_Detail_vendor>();
+}
+<section class="content-header">
+    <h1>
+        Request Update
+        <small>Purchase Order</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li><i class="fa fa-reorder"></i> Purchase Order</li>
+        <li class="active">Request Update</li>
+    </ol>
+</section>
+
+<section class="content">
+    @if (TempData["e"] != null)
+    {
+        <div class="alert alert-warning alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+        </div>
+    }
+    else if (TempData["s"] != null)
+    {
+        <div class="alert alert-success alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+        </div>
+    }
+    <div class="row">
+        <div class="col-md-12">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Request Update</h3>
+                    <a class="pull-right" href="/PO/index"><i class="fa fa-arrow-left"></i> Go back</a>
+                </div>
+                <div class="box-body">
+                    <form id="createPO_form" action="/PO/CreatePOSubmit" method="post">
+                        <input type="hidden" name="PO_Code" value="@ViewBag.PO_Code" />
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>REQUEST DATE</th>
+                                    <th>REQUEST #</th>
+                                    <th>MODEL #</th>
+                                    <th>IMAGE</th>
+                                    <th>NAME</th>
+                                    <th>COLOR</th>
+                                    <th>REQUEST QTY</th>
+                                    @*<th>STATUS</th>*@
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="List_purchase_order">
+                                @foreach (var item in Model)
+                                {
+
+                                    <tr>
+                                        <td>
+                                            <input type="hidden" name="codes" value="@item.Code" />
+                                            <span id="localtime-@item.Code">
+                                                <script>convertLocalTime("@item.Code", "@item.CreatedAt")</script>
+                                            </span><br />
+                                            By <b>@item.CreatedBy</b>
+                                        </td>
+                                        <td><label style="color:green">@(item.Code)</label></td>
+                                        <td>
+                                            <label style="color:#c33600">@item.ModelName</label>
+                                        </td>
+                                        <td style="text-align:center"><img src="@(item.ModelPicture)" height="60" /> </td>
+                                        <td>
+                                            @item.ProductName
+                                        </td>
+                                        <td>
+                                            @item.Color
+                                        </td>
+                                        <td>
+                                            <input type="hidden" value="@item.Qty" />
+                                            @item.RequestQty
+                                        </td>
+                                        <td><a class="btn btn-warning" onclick=" edit_request('@item.Code')"><i class="fa fa-pencil"></i></a></td>
+                                        @*<td>@(item.Status)</td>*@
+                                    </tr>
+                                    <tr style="background-color:#eee">
+                                        <td colspan="9">
+                                            <h4>Vendor options </h4>
+
+                                            <input type="hidden" name="request_code" value="@item.Code" />
+                                            <div style="max-width:60%; border: 2px solid green !important">
+                                                <table id="vendor_table" class="table table-bordered" style="margin:0">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Select</th>
+                                                            <th>Vendor</th>
+                                                            <th>Price ($)</th>
+                                                            <th>Qty</th>
+                                                            <th>Vendor note</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody class="fit_input">
+                                                        @foreach (Vendor v in ViewBag.vendors)
+                                                        {
+                                                            var detail = po_details.Where(d => d.Detail.RequestCode == item.Code && d.VendorId == v.Id).FirstOrDefault();
+                                                            <tr style="border-top: 1px solid blue !important;" class="@if (detail?.Purchased==true) { @Html.Raw("_purchased") }">
+                                                                <td>
+                                                                    <input name="r_@(item.Code)" style="margin-top:0; height:20px; margin-top:10px" type="checkbox" @(detail != null ? "checked" : "") value="@(v.Id)" />
+                                                                </td>
+                                                                <td>@v.CompanyName<br /><label class="label label-success">@(detail?.Purchased == true ? "Purchased" : "")</label></td>
+                                                                <td>
+                                                                    <input min="0" type="number" value="@(detail!=null?detail.Detail.Price: 0)" name="price_@(item.Code)_@(v.Id)" />
+                                                                </td>
+                                                                <td>
+                                                                    <input min="0" pattern="['-]" type="number" value="@(detail!=null?detail.Detail.Qty: 0)" class="sub_qty" name="qty_@(item.Code)_@(v.Id)" />
+                                                                </td>
+                                                                <td>
+                                                                    <input name="note_@(item.Code)_@(v.Id)" value="@(detail?.Detail.Note)" />
+                                                                </td>
+
+                                                            </tr>
+                                                        }
+                                                        <tr style="background-color: #ffeadb">
+                                                            <td colspan="3" style="text-align:right"><b>Total</b></td>
+                                                            <td><input readonly class="total_qty" value="@(po_details.Where(d => d.Detail.RequestCode== item.Code).Sum(d=>d.Detail.Qty)??0)" /></td>
+                                                            <td></td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                        <button type="submit" class="btn btn-primary pull-right" style="margin-left:10px">Save</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+@Html.Partial("_EditPO_modal")
+<link href="~/Content/Selectize/css/selectize.default.css" rel="stylesheet" />
+<script src="~/Content/Selectize/js/standalone/selectize.min.js"></script>
+@section script{
+
+    <script src="~/Scripts/_EditPO_modal.js"></script>
+    <script>
+        $(function () {
+            $("#createPO_form").on('submit', function () {
+                var pass = true;
+                $(".total_qty").each(function () {
+                    if ($(this).val() == "0") {
+                        pass = false; return false;
+                    }
+                });
+                if (!pass) {
+                    noty({ "text": "Total QTY can not be zero!", "layout": "topRight", "type": "error" });
+                    return false;
+                }
+                overlayOn();
+            });
+            $('.sub_qty').on('input', function () {
+                var e = $(this).closest('tr').find('[type=checkbox]');
+                if ($(this).val() > 0) {
+                    if (!e.is(':checked')) {
+                        e.trigger("click");
+                    }
+                }
+                else {
+                    if (e.is(':checked')) {
+                        e.trigger("click");
+                    }
+                    if ($(this).val() < 0) {
+                        $(this).val(0)
+                    }
+                }
+                var total = 0;
+                $(this).closest("table").find('.sub_qty').each(function () {
+                    total += parseInt($(this).val());
+                })
+                $(this).closest("table").find(".total_qty").val(total);
+            });
+            $('[type=checkbox]').on('click', function () {
+
+                if (!$(this).is(':checked')) {
+                    var e = $(this).closest('tr').find('.sub_qty');
+                    e.val('0');
+                }
+            });
+            $("._purchased").css("background-color", "#dbecff").find("input").attr("disabled", true).removeAttr("name");
+        });
+        //$("select[name=status]").val('');
+        $('#request_modal').ajaxForm(function (data) {
+            if (data[0]) {
+                noty({ "text": data[1], "layout": "topRight", "type": "success" });
+                location.reload(false);
+            }
+            else {
+                noty({ "text": data[1], "layout": "topRight", "type": "error" });
+            }
+            $('#request_modal').modal('hide');
+            $("#request_save_img_load").hide();
+        });
+        function edit_request(code) {
+            if (confirm("Edit request will lose Vendor options information")) {
+                open_request(code);
+            }
+        }
+    </script>
+}
+<style>
+    table td {
+        position: relative;
+    }
+
+        table td .fit_input input {
+            position: absolute;
+            display: block;
+            top: 0;
+            left: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+            border: none;
+            padding: 10px;
+            box-sizing: border-box;
+            background-color: transparent;
+        }
+</style>

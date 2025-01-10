@@ -1,0 +1,227 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.C_BossStore>
+
+@{
+    ViewBag.Title = "Boss management";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    Dictionary<string, bool> p = ViewBag.p;
+}
+
+<section class="content-header">
+    <h1>
+        Boss Management
+        <small>Boss</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Dashboard</a></li>
+        <li><i class="fa fa-fa-users"></i> Boss store</li>
+    </ol>
+</section>
+
+<section class="content">
+    <div class="row">
+
+        @if (TempData["e"] != null)
+        {
+            <div class="alert alert-warning alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+            </div>
+        }
+        else if (TempData["s"] != null)
+        {
+            <div class="alert alert-success alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+            </div>
+        }
+        else
+        {
+            <div class="col-md-12">
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Boss manage</h3>
+                        <div class="pull-right box-tools">
+                            @if (p.Any(k => k.Key.Equals("boss_addnew")) == true && p["boss_addnew"] == true)
+                            {
+                                <button type="button" class="btn btn-primary btn-sm" onclick="open_modal_boss()">
+                                    <i class="fa fa-plus"></i> Add new boss
+                                </button>
+                            }
+                        </div>
+                    </div>
+                    <!-- /.box-header -->
+
+                    <div class="box-body">
+                        <div class="row col-md-12" style="padding-bottom:20px">
+                            <form id="search_Form" class="form-inline" role="form" action="/bossmanagement">
+                                <input type="text" style="max-width: 800px; width: 80%" id="search"
+                                       placeholder="Search owner name, contact name, phone number, email..."
+                                       class="form-control" name="search" value="@TempData["search"]" />
+                                <button class="btn btn-primary" type="submit">Search</button>
+                                <img id="loading_search" style="visibility: hidden; padding:20px" src="/Content/ajax-loaders/ajax-loader-1.gif" />
+                            </form>
+                        </div>
+                        <input type="hidden" name="hd_url" value="@Request.Url.PathAndQuery" />
+                        <div class="" id="data_list_boss">
+
+                        </div>
+                    </div>
+                    <!-- /.box-body -->
+                </div>
+                <!-- /.box -->
+            </div>
+        }
+
+    </div>
+</section>
+
+<!--Modal boss-->
+<div class="modal fade" id="modal_change_pass">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Change password</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <div class="nav-tabs-custom" style="margin-bottom: 0">
+                            <div class="tab-content box box-primary box-solid" style="height: auto; margin-bottom: 0">
+                                <div class="form-group">
+                                    <label class="control-label">New password <span style="color:red">*</span></label>
+                                    <input type="password" placeholder="Password..." class="form-control" id="password" name="password" value="" required />
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label">Confirm new password <span style="color:red">*</span></label>
+                                    <input type="password" placeholder="Confirm..." class="form-control" id="cf_password" name="cf_password" value="" required />
+                                </div>
+                                <span style="color: red;" id="msg_change_pass"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal" style="float:left">Close</button>
+                <button type="submit" class="btn btn-primary" onclick="changePass(this)">
+                    Save
+                    <img class="img_loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<!--/.End-->
+
+
+<div id="modal_addBoss">
+
+</div>
+
+
+@section script
+{
+    <!-- DataTables -->
+    <script src="~/content/admin/bower_components/datatables.net/js/jquery.dataTables.min.js"></script>
+    <script src="~/content/admin/bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js"></script>
+
+    <script type="text/javascript">
+        $(function () {
+            //var detailBossId = localStorage.getItem("detailBoss");
+            //if (detailBossId != "")
+            //    open_detail_boss(detailBossId);
+            overlayOn();
+            $.ajax({
+                url: '@Url.Action("ReloadIndex", "bossmanagement")',
+                type: "POST",
+                data: { search: $("#search").val() },
+                success: function (data) {
+                    $("#data_list_boss").html(data);
+                    overlayOff();
+                },
+            })
+        })
+        
+        function open_modal_boss(id, e) {
+            overlayOn();
+            let url = "/BossManagement/create";
+            if (id) url += `?key=${id}`;
+            $.ajax({
+                method: "GET",
+                url: url,
+            })
+                .done(function (data) {
+                    overlayOff();
+                    $("#modal_addBoss").html(data);
+                    $("#modal_add_new_boss").modal('show');
+                })
+                .fail(function () {
+                    overlayOff();
+                    alert("Oops! Something went wrong");
+                    $("#modal_add_new_boss").modal('hide');
+                })
+                .always(function () {
+                    //$("#loading").hide();
+                });
+        }
+
+        function delete_boss(id, e) {
+            if (confirm("Do you want to delete boss?")) {
+                let url = "/BossManagement/delete";
+                if (id) url += `?key=${id}`;
+                $.ajax({
+                    method: "GET",
+                    url: url
+                }).done(function (data) {
+                    if (data[0]) {
+                        window.location.href = "/bossmanagement"
+                    } else {
+
+                    }
+                }).fail(function () {
+
+                }).always(function () {
+
+                });
+            }
+            else {
+
+            }
+        }
+
+        function open_detail_boss(id) {
+            if ($("tr[id^=detail_boss_" + id + "]").length > 0) {
+                $("tr[id^=detail_boss_" + id + "]").remove();
+                $("#btn-togle-" + id).addClass('fa-angle-left').removeClass('fa-angle-down');
+                localStorage.setItem("detailBoss", "");
+            }
+            else {
+                overlayOn();
+                $("tr[id^=detail_boss]").remove();
+                $("tr[id^=view_]").css("background-color", "");
+
+                $("a[id^=btn-togle]").addClass('fa-angle-left').removeClass('fa-angle-down');
+                $("#btn-togle-" + id).addClass('fa-angle-down').removeClass('fa-angle-left');
+                let url = "/BossManagement/details";
+                if (id) url += `?key=${id}`;
+                $.ajax({
+                    method: "GET",
+                    url: url,
+                })
+                    .done(function (data) {
+                        overlayOff();
+                        $("#view_" + id).after(data);
+                        localStorage.setItem("detailBoss", id);
+                    })
+                    .fail(function () {
+                        alert("Oops! Something went wrong");
+                        overlayOff();
+                    })
+                    .always(function () {
+                    });
+            }
+        }
+
+    </script>
+}

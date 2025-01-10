@@ -1,0 +1,118 @@
+http://devcheckin490.enrichcous.com/Help
+http://devcheckin490.enrichcous.com/StoreProfile/2004001045
+
+
+output:
+{
+    "Status": 200.0,
+    "Message": "get success",
+    "Data": [
+        {
+            "storeId": "2004001045",
+            "storeName": "uat-smamper NAIL SPA",
+            "ContactName": "uat-smamper",
+            "lastUpdate": null,
+            "UpdateBy": null,
+            "Email": "uat-smamper@enrichcous.com",
+            "Password": "123",
+            "CellPhone": "3333333333",
+            "CreateBy": null,
+            "CreateAt": null,
+            "Status": "Activated",
+            "BusinessName": null,
+            "BusinessPhone": null,
+            "BusinessEmail": null,
+            "BusinessAddress": "3215 East Broad Street ,Richmond ,VA ,23223",
+            "BusinessStartDate": null,
+            "licenses": [
+                {
+                    "licenseCode": "EMAIL",
+                    "licenseType": "COUNT",
+                    "subscription_warning_date": null,
+                    "subscription_warning_msg": "",
+                    "count_warning_value": 0.0,
+                    "count_limit": 500,
+                    "count_current": 500,
+                    "start_period": "2020-04-17T00:00:00",
+                    "end_period": null,
+                    "status": "active",
+                    "link": null,
+                    "PairCodes": null
+                },
+                {
+                    "licenseCode": "CHECKIN",
+                    "licenseType": "COUNT",
+                    "subscription_warning_date": null,
+                    "subscription_warning_msg": "",
+                    "count_warning_value": 0.0,
+                    "count_limit": 1,
+                    "count_current": null,
+                    "start_period": "2020-04-17T00:00:00",
+                    "end_period": null,
+                    "status": "active",
+                    "link": "https://devcheckin449.enrichcous.com/home",
+                    "PairCodes": [
+                        {
+                            "PairingCode": "QUUARV",
+                            "PairingStatus": "PAIRED"
+                        },
+                        {
+                            "PairingCode": "KGRBEJ",
+                            "PairingStatus": "PAIRED"
+                        },
+                        {
+                            "PairingCode": "XERRBN",
+                            "PairingStatus": "PAIRED"
+                        },
+                        {
+                            "PairingCode": "WGHSDW",
+                            "PairingStatus": "PAIRED"
+                        }
+                    ]
+                },
+                {
+                    "licenseCode": "SALONCENTER",
+                    "licenseType": "COUNT",
+                    "subscription_warning_date": null,
+                    "subscription_warning_msg": "",
+                    "count_warning_value": 0.0,
+                    "count_limit": 1,
+                    "count_current": null,
+                    "start_period": "2020-04-17T00:00:00",
+                    "end_period": null,
+                    "status": "active",
+                    "link": null,
+                    "PairCodes": null
+                },
+                {
+                    "licenseCode": "SMS",
+                    "licenseType": "COUNT",
+                    "subscription_warning_date": null,
+                    "subscription_warning_msg": "",
+                    "count_warning_value": 0.0,
+                    "count_limit": 500,
+                    "count_current": 58,
+                    "start_period": "2020-04-17T00:00:00",
+                    "end_period": null,
+                    "status": "active",
+                    "link": null,
+                    "PairCodes": null
+                },
+                {
+                    "licenseCode": "MANGOPLUS",
+                    "licenseType": "FEATURE",
+                    "subscription_warning_date": null,
+                    "subscription_warning_msg": "",
+                    "count_warning_value": 0.0,
+                    "count_limit": 1,
+                    "count_current": null,
+                    "start_period": "2020-04-17T00:00:00",
+                    "end_period": null,
+                    "status": "active",
+                    "link": null,
+                    "PairCodes": null
+                }
+            ]
+        }
+    ]
+}

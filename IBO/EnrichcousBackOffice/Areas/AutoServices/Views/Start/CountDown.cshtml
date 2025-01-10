@@ -1,0 +1,52 @@
+﻿
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>CountDown</title>
+</head>
+<body>
+    <div id="getting-started">
+    </div>
+    <link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/content/admin/bower_components/font-awesome/css/font-awesome.min.css">
+    <link href="~/Content/css/jquery-ui.css" rel="stylesheet" />
+    <link rel="stylesheet" href="~/content/admin/bower_components/datatables.net-bs/css/dataTables.bootstrap.min.css" />
+    <link href="https://cdn.datatables.net/1.10.19/css/dataTables.bootstrap4.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700,300italic,400italic,600italic">
+    <script src="~/Scripts/bootstrap.min.js"></script>
+    <script src="~/Content/Admin/bower_components/jquery/dist/jquery.min.js"></script>
+    <script src="~/Scripts/jquery.form.min.js"></script>
+    <script src="/content/admin/bower_components/select2/dist/js/select2.full.min.js"></script>
+    <script src="~/Scripts/task_popup.js"></script>
+    <script src="~/Scripts/jquery-ui.min.js"></script>
+    <script src="~/content/admin/bower_components/datatables.net/js/jquery.dataTables.min.js"></script>
+    <script src="~/content/admin/bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/content/login/vendor/daterangepicker/moment.min.js"></script>
+    <script src="~/Content/scripts/jquery.countdown.min.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            var scantime = moment().utc().startOf('day').add(@ViewBag.ScanTime,"hours").add(8,"minutes");
+            if (scantime < moment()) { scantime = scantime.add(1, "days"); }
+            start_countDown(scantime);
+
+        });
+        function start_countDown(scantime) {
+            $('#getting-started').countdown(scantime.toDate(), function (event) {
+                $(this).html(event.strftime('%H:%M:%S'));
+            }).on("finish.countdown", function () {
+                scan();
+                start_countDown(scantime.add(1, "days"));
+            });
+        }
+        function scan() {
+            console.log("scaned");
+        }
+    </script>
+</body>
+</html>

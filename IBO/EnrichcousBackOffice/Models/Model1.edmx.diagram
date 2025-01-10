@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+ <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <!-- Diagram content (shape and connector positions) -->
+    <edmx:Diagrams>
+      <Diagram DiagramId="5ac66dc78cb54bb5b24bac8ddb75b9b6" Name="Diagram1" ZoomLevel="88">
+        <EntityTypeShape EntityType="Model1.sysdiagram" Width="1.5" PointX="16.75" PointY="25.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="Model1.A_FunctionInPage" Width="1.5" PointX="2.75" PointY="0.75" />
+        <EntityTypeShape EntityType="Model1.A_GrandAccess" Width="1.5" PointX="7.75" PointY="10.75" />
+        <EntityTypeShape EntityType="Model1.A_Page" Width="1.5" PointX="9.75" PointY="10.75" />
+        <EntityTypeShape EntityType="Model1.A_Role" Width="1.5" PointX="11.75" PointY="10.75" />
+        <EntityTypeShape EntityType="Model1.Ad_Country" Width="1.5" PointX="12.75" PointY="0.75" />
+        <EntityTypeShape EntityType="Model1.Ad_USAState" Width="1.5" PointX="5.75" PointY="13.75" />
+        <EntityTypeShape EntityType="Model1.C_BossStore" Width="1.5" PointX="7.75" PointY="13.75" />
+        <EntityTypeShape EntityType="Model1.C_CustomerAdditionalInfo" Width="1.5" PointX="9.75" PointY="13.75" />
+        <EntityTypeShape EntityType="Model1.C_CustomerTransaction" Width="1.5" PointX="13.75" PointY="10.75" />
+        <EntityTypeShape EntityType="Model1.C_MerchantProcess" Width="1.5" PointX="14.75" PointY="0.75" />
+        <EntityTypeShape EntityType="Model1.C_MerchantSubscribe" Width="1.5" PointX="15.75" PointY="4.75" />
+        <EntityTypeShape EntityType="Model1.C_Questionare" Width="1.5" PointX="15.75" PointY="11.75" />
+        <EntityTypeShape EntityType="Model1.C_Questionare_NonTechnician" Width="1.5" PointX="16.75" PointY="0.75" />
+        <EntityTypeShape EntityType="Model1.C_Questionare_Technician" Width="1.5" PointX="9.75" PointY="16.75" />
+        <EntityTypeShape EntityType="Model1.C_SalesLead" Width="1.5" PointX="17.75" PointY="4.75" />
+        <EntityTypeShape EntityType="Model1.C_SalesLead_Interaction_Status" Width="1.5" PointX="11.75" PointY="17.75" />
+        <EntityTypeShape EntityType="Model1.C_SalesLead_Status" Width="1.5" PointX="17.75" PointY="15.75" />
+        <EntityTypeShape EntityType="Model1.Calendar_Event" Width="1.5" PointX="5.75" PointY="18.75" />
+        <EntityTypeShape EntityType="Model1.Dejavo_Datasheet" Width="1.5" PointX="17.75" PointY="18.75" />
+        <EntityTypeShape EntityType="Model1.Device_Features" Width="1.5" PointX="2.75" PointY="3.75" />
+        <EntityTypeShape EntityType="Model1.External_Embed" Width="1.5" PointX="18.75" PointY="0.75" />
+        <EntityTypeShape EntityType="Model1.Form_CustomizeItems" Width="1.5" PointX="19.75" PointY="4.75" />
+        <EntityTypeShape EntityType="Model1.Form_CustomizeRequest" Width="1.5" PointX="19.75" PointY="7.75" />
+        <EntityTypeShape EntityType="Model1.I_Bundle" Width="1.5" PointX="19.75" PointY="10.75" />
+        <EntityTypeShape EntityType="Model1.I_Bundle_Device" Width="1.5" PointX="19.75" PointY="14.75" />
+        <EntityTypeShape EntityType="Model1.I_ProcessSetting" Width="1.5" PointX="19.75" PointY="17.75" />
+        <EntityTypeShape EntityType="Model1.I_ProgressFill" Width="1.5" PointX="20.75" PointY="0.75" />
+        <EntityTypeShape EntityType="Model1.ImportExcelHistory" Width="1.5" PointX="2.75" PointY="20.75" />
+        <EntityTypeShape EntityType="Model1.IMSLog" Width="1.5" PointX="7.75" PointY="20.75" />
+        <EntityTypeShape EntityType="Model1.License_Item" Width="1.5" PointX="19.75" PointY="20.75" />
+        <EntityTypeShape EntityType="Model1.License_Item_Group" Width="1.5" PointX="21.75" PointY="3.75" />
+        <EntityTypeShape EntityType="Model1.License_Product_Item" Width="1.5" PointX="21.75" PointY="6.75" />
+        <EntityTypeShape EntityType="Model1.Location" Width="1.5" PointX="21.75" PointY="9.75" />
+        <EntityTypeShape EntityType="Model1.O_MerchantForm" Width="1.5" PointX="9.75" PointY="21.75" />
+        <EntityTypeShape EntityType="Model1.O_Order_Refund" Width="1.5" PointX="11.75" PointY="21.75" />
+        <EntityTypeShape EntityType="Model1.O_Orders" Width="1.5" PointX="21.75" PointY="12.75" />
+        <EntityTypeShape EntityType="Model1.O_Orders_Service_Renewal" Width="1.5" PointX="13.75" PointY="21.75" />
+        <EntityTypeShape EntityType="Model1.O_Product_Line" Width="1.5" PointX="22.75" PointY="0.75" />
+        <EntityTypeShape EntityType="Model1.Order_Carrier" Width="1.5" PointX="2.75" PointY="23.75" />
+        <EntityTypeShape EntityType="Model1.Order_Products" Width="1.5" PointX="23.75" PointY="3.75" />
+        <EntityTypeShape EntityType="Model1.Order_UPSPackage" Width="1.5" PointX="23.75" PointY="9.75" />
+        <EntityTypeShape EntityType="Model1.Order_UPSTracking" Width="1.5" PointX="23.75" PointY="12.75" />
+        <EntityTypeShape EntityType="Model1.P_BankSupport" Width="1.5" PointX="23.75" PointY="17.75" />
+        <EntityTypeShape EntityType="Model1.P_BonusStrategySetting" Width="1.5" PointX="21.75" PointY="23.75" />
+        <EntityTypeShape EntityType="Model1.P_CommEmployeeSetting" Width="1.5" PointX="23.75" PointY="22.75" />
+        <EntityTypeShape EntityType="Model1.P_CommLevelSetting" Width="1.5" PointX="25.75" PointY="0.75" />
+        <EntityTypeShape EntityType="Model1.P_Department" Width="1.5" PointX="25.75" PointY="4.75" />
+        <EntityTypeShape EntityType="Model1.P_EmployeePayroll" Width="1.5" PointX="25.75" PointY="10.75" />
+        <EntityTypeShape EntityType="Model1.P_EmployeePayrollPayment" Width="1.5" PointX="25.75" PointY="17.75" />
+        <EntityTypeShape EntityType="Model1.P_Level" Width="1.5" PointX="25.75" PointY="22.75" />
+        <EntityTypeShape EntityType="Model1.P_Member" Width="1.5" PointX="2.75" PointY="26.75" />
+        <EntityTypeShape EntityType="Model1.P_MemberLevel" Width="1.5" PointX="23.75" PointY="26.75" />
+        <EntityTypeShape EntityType="Model1.P_MemberSubscription" Width="1.5" PointX="25.75" PointY="26.75" />
+        <EntityTypeShape EntityType="Model1.P_MemberType" Width="1.5" PointX="27.75" PointY="0.75" />
+        <EntityTypeShape EntityType="Model1.PO" Width="1.5" PointX="27.75" PointY="3.75" />
+        <EntityTypeShape EntityType="Model1.PO_Detail" Width="1.5" PointX="4.75" PointY="27.75" />
+        <EntityTypeShape EntityType="Model1.PO_Detail_Checkin" Width="1.5" PointX="6.75" PointY="27.75" />
+        <EntityTypeShape EntityType="Model1.PO_Request" Width="1.5" PointX="27.75" PointY="7.75" />
+        <EntityTypeShape EntityType="Model1.T_EmailTemplate" Width="1.5" PointX="8.75" PointY="27.75" />
+        <EntityTypeShape EntityType="Model1.T_EmailTemplateGroup" Width="1.5" PointX="10.75" PointY="27.75" />
+        <EntityTypeShape EntityType="Model1.T_Project_Milestone_Notes" Width="1.5" PointX="12.75" PointY="27.75" />
+        <EntityTypeShape EntityType="Model1.T_Project_Stage" Width="1.5" PointX="27.75" PointY="13.75" />
+        <EntityTypeShape EntityType="Model1.T_Project_Stage_Members" Width="1.5" PointX="14.75" PointY="27.75" />
+        <EntityTypeShape EntityType="Model1.T_Tags" Width="1.5" PointX="16.75" PointY="27.75" />
+        <EntityTypeShape EntityType="Model1.T_TicketAttribute" Width="1.5" PointX="27.75" PointY="17.75" />
+        <EntityTypeShape EntityType="Model1.T_TicketFeedback" Width="1.5" PointX="18.75" PointY="27.75" />
+        <EntityTypeShape EntityType="Model1.T_TicketSeverity" Width="1.5" PointX="27.75" PointY="21.75" />
+        <EntityTypeShape EntityType="Model1.T_TicketStage_Status" Width="1.5" PointX="27.75" PointY="25.75" />
+        <EntityTypeShape EntityType="Model1.Ts_Task" Width="1.5" PointX="20.75" PointY="28.75" />
+        <EntityTypeShape EntityType="Model1.UploadMoreFile" Width="1.5" PointX="29.75" PointY="0.75" />
+        <EntityTypeShape EntityType="Model1.Vendor" Width="1.5" PointX="29.75" PointY="3.75" />
+        <EntityTypeShape EntityType="Model1.Store_Services" Width="1.5" PointX="29.75" PointY="10.75" />
+        <EntityTypeShape EntityType="Model1.O_Device" Width="1.5" PointX="29.75" PointY="18.75" />
+        <EntityTypeShape EntityType="Model1.SystemConfiguration" Width="1.5" PointX="29.75" PointY="25.75" />
+        <EntityTypeShape EntityType="Model1.C_CustomerCard" Width="1.5" PointX="8.75" PointY="30.75" />
+        <EntityTypeShape EntityType="Model1.O_Product" Width="1.5" PointX="10.75" PointY="30.75" />
+        <EntityTypeShape EntityType="Model1.O_Product_Model" Width="1.5" PointX="22.75" PointY="30.75" />
+        <EntityTypeShape EntityType="Model1.M_Campaign" Width="1.5" PointX="31.75" PointY="0.75" />
+        <EntityTypeShape EntityType="Model1.C_MerchantProcessing" Width="1.5" PointX="31.75" PointY="4.75" />
+        <EntityTypeShape EntityType="Model1.C_Customer" Width="1.5" PointX="31.75" PointY="7.5" />
+        <EntityTypeShape EntityType="Model1.C_CustomerContact" Width="1.5" PointX="12.75" PointY="31.75" />
+        <EntityTypeShape EntityType="Model1.Order_Subcription" Width="1.5" PointX="14.75" PointY="31.75" />
+        <EntityTypeShape EntityType="Model1.C_OutgoingEmail" Width="1.5" PointX="31.625" PointY="29" IsExpanded="false" />
+        <EntityTypeShape EntityType="Model1.Option_Config" Width="1.5" PointX="4.75" PointY="32.75" />
+        <EntityTypeShape EntityType="Model1.M_Ads" Width="1.5" PointX="24.75" PointY="32.75" />
+        <EntityTypeShape EntityType="Model1.C_GiftCardsOrderingForm" Width="1.5" PointX="26.75" PointY="32.75" />
+        <EntityTypeShape EntityType="Model1.License_Product" Width="1.5" PointX="31.75" PointY="32.75" />
+        <EntityTypeShape EntityType="Model1.C_DemoScheduler" Width="1.5" PointX="33.75" PointY="0.75" />
+        <EntityTypeShape EntityType="Model1.P_MemberAvailableTime" Width="1.5" PointX="33.75" PointY="4.75" />
+        <EntityTypeShape EntityType="Model1.C_CustomerGiftcard" Width="1.5" PointX="33.75" PointY="9.75" />
+        <EntityTypeShape EntityType="Model1.T_TicketUpdateLog" Width="1.5" PointX="33.75" PointY="13.75" />
+        <EntityTypeShape EntityType="Model1.P_Notification" Width="1.5" PointX="8" PointY="1" />
+        <EntityTypeShape EntityType="Model1.P_NotificationTemplate" Width="1.5" PointX="5.75" PointY="1.875" />
+        <AssociationConnector Association="Model1.FK_Notification_NotificationTemplate" />
+        <EntityTypeShape EntityType="Model1.P_NotificationMapping" Width="1.5" PointX="10.25" PointY="1.75" />
+        <AssociationConnector Association="Model1.FK_NotificationMapping_Notification" />
+        <EntityTypeShape EntityType="Model1.C_Partner" Width="1.5" PointX="16.75" PointY="33.75" />
+        <EntityTypeShape EntityType="Model1.C_CustomerSupportingInfo" Width="1.5" PointX="33.75" PointY="17.75" />
+        <EntityTypeShape EntityType="Model1.C_PartnerCard" Width="1.5" PointX="33.75" PointY="21.75" />
+        <EntityTypeShape EntityType="Model1.Document_Category" Width="1.5" PointX="33.75" PointY="28.75" />
+        <EntityTypeShape EntityType="Model1.Document_File" Width="1.5" PointX="33.75" PointY="32.75" />
+        <EntityTypeShape EntityType="Model1.Ts_TaskTemplateCategory" Width="1.5" PointX="10.75" PointY="6" />
+        <EntityTypeShape EntityType="Model1.Ts_TaskTemplateField" Width="1.5" PointX="13" PointY="6.125" />
+        <AssociationConnector Association="Model1.FK_Ts_TaskTemplateField_Ts_TaskTemplateCategory" />
+        <EntityTypeShape EntityType="Model1.T_TicketStatus" Width="1.5" PointX="0.75" PointY="19" />
+        <EntityTypeShape EntityType="Model1.S_AddonSchedulerActivation" Width="1.5" PointX="35.75" PointY="0.75" />
+        <EntityTypeShape EntityType="Model1.T_TicketType" Width="1.5" PointX="0.75" PointY="23.75" />
+        <EntityTypeShape EntityType="Model1.T_TicketTypeMapping" Width="1.5" PointX="3" PointY="8.875" />
+        <AssociationConnector Association="Model1.FK_T_TicketTypeMapping_T_TicketType" />
+        <EntityTypeShape EntityType="Model1.T_TicketTranferMapping" Width="1.5" PointX="4.75" PointY="35.75" />
+        <EntityTypeShape EntityType="Model1.T_RemindersTicket" Width="1.5" PointX="3" PointY="15.625" />
+        <EntityTypeShape EntityType="Model1.T_Priority" Width="1.5" PointX="35.75" PointY="5.75" />
+        <EntityTypeShape EntityType="Model1.T_TicketStatusMapping" Width="1.5" PointX="3" PointY="5.875" />
+        <AssociationConnector Association="Model1.FK_T_TicketStatusMapping_T_TicketStatus" />
+        <EntityTypeShape EntityType="Model1.T_FileRelated" Width="1.5" PointX="3" PointY="12.25" />
+        <EntityTypeShape EntityType="Model1.T_SupportTicket" Width="1.5" PointX="0.75" PointY="1.125" />
+        <AssociationConnector Association="Model1.FK_T_FileRelated_T_SupportTicket" />
+        <AssociationConnector Association="Model1.FK_RemindersTicket_T_SupportTicket" />
+        <AssociationConnector Association="Model1.FK_T_TicketStatusMapping_T_SupportTicket" />
+        <AssociationConnector Association="Model1.FK_T_TicketTypeMapping_T_SupportTicket" />
+        <EntityTypeShape EntityType="Model1.P_PayrollFiles" Width="1.5" PointX="35.75" PointY="10.75" />
+        <EntityTypeShape EntityType="Model1.T_Project_Milestone" Width="1.5" PointX="5.75" PointY="6" />
+        <EntityTypeShape EntityType="Model1.T_Project_Milestone_Member" Width="1.5" PointX="8" PointY="6.875" />
+        <AssociationConnector Association="Model1.FK_T_Project_Milestone_Member_T_Project_Milestone" />
+        <EntityTypeShape EntityType="Model1.SMSExportFile" Width="1.5" PointX="10.75" PointY="35.75" />
+        <EntityTypeShape EntityType="Model1.Ad_Provinces" Width="1.5" PointX="35.75" PointY="15.75" />
+        <EntityTypeShape EntityType="Model1.P_EmployeeFiles" Width="1.5" PointX="18.75" PointY="35.75" />
+        <EntityTypeShape EntityType="Model1.Ad_Wards" Width="1.5" PointX="35.75" PointY="19.75" />
+        <EntityTypeShape EntityType="Model1.P_EmployeeBankCard" Width="1.5" PointX="20.75" PointY="35.75" />
+        <EntityTypeShape EntityType="Model1.SurveyIM" Width="1.5" PointX="35.75" PointY="23.75" />
+        <EntityTypeShape EntityType="Model1.RecurringHistory" Width="1.5" PointX="35.75" PointY="27.75" />
+        <EntityTypeShape EntityType="Model1.SurveyMeeting" Width="1.5" PointX="35.75" PointY="31.75" />
+        <EntityTypeShape EntityType="Model1.SurveyMeetingMapping" Width="1.5" PointX="33.75" PointY="36.75" />
+        <EntityTypeShape EntityType="Model1.ExpiresReportNote" Width="1.5" PointX="36.375" PointY="36.75" />
+        <EntityTypeShape EntityType="Model1.EnumValue" Width="1.5" PointX="38.375" PointY="0.75" />
+        <EntityTypeShape EntityType="Model1.SiteFunction" Width="1.5" PointX="38.375" PointY="3.75" />
+        <EntityTypeShape EntityType="Model1.SiteRole" Width="1.5" PointX="38.375" PointY="7.75" />
+        <EntityTypeShape EntityType="Model1.Site" Width="1.5" PointX="7.375" PointY="38.75" />
+        <EntityTypeShape EntityType="Model1.StoreBaseService" Width="1.5" PointX="38.375" PointY="11.75" />
+        <EntityTypeShape EntityType="Model1.AuthJiraVerify" Width="1.5" PointX="38.375" PointY="15.75" />
+        <EntityTypeShape EntityType="Model1.TwilioAccount" Width="1.5" PointX="23.375" PointY="38.75" />
+        <EntityTypeShape EntityType="Model1.TwilioCustomerProfile" Width="1.5" PointX="38.375" PointY="24.75" />
+        <EntityTypeShape EntityType="Model1.TwilioMessageService" Width="1.5" PointX="38.375" PointY="18.75" />
+        <EntityTypeShape EntityType="Model1.TwilioA2PTollFreeVerification" Width="1.5" PointX="25.375" PointY="38.75" />
+        </Diagram>
+    </edmx:Diagrams>
+  </edmx:Designer>
+</edmx:Edmx>

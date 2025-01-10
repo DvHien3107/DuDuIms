@@ -1,0 +1,569 @@
+﻿@model EnrichcousBackOffice.Models.CustomizeModel.MerchantFormView
+@using EnrichcousBackOffice.Models
+
+@{
+    C_Customer customer = ViewBag.Customer;
+}
+<content>
+    <div class="col col-md-12">
+        <div class="row">
+            <button type="button" class="btn btn-sm btn-success btn-flat pull-right" onclick="detailEmail()" style="margin-bottom:10px">
+                <i class="fa fa-plus"></i> New email
+                <img class="loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+            </button>
+        </div>
+    </div>
+
+    <table id="outgoing-email" class="table table-responsive table-hover table-striped" style="width: 100%">
+        <thead>
+            <tr class="bg-light-blue-gradient">
+                <th>#</th>
+                <th>Subject</th>
+                <th>Content</th>
+                <th style="min-width: 100px">Send By</th>
+                <th style="min-width: 70px">Send Date</th>
+                @*<th width="170"></th>*@
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</content>
+
+<div class="modal fade" role="dialog" aria-hidden="true" id="modal_new_email">
+    <div class="modal-dialog modal-dialog-centered modal-lg" @*style="width: 100%"*@>
+        <form method="post" action="/merchantman/saveoutgoingemail" enctype="multipart/form-data" id="form_new_email" class="msform" onsubmit="overlayOn()">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title">New email</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-12" style="margin-bottom: 10px">
+                            <label>To <span class="text-red">*</span></label>
+                            <input id="ToEmail" name="ToEmail" type="email" class="form-control" value="@(customer.Email ?? customer.SalonEmail ?? customer.MangoEmail)" required />
+                        </div>
+                        <div class="col-md-12" style="margin-bottom: 10px">
+                            <label>CC</label>
+                            <input id="CCEmail" name="CCEmail" type="email" class="form-control" />
+                        </div>
+                        <div class="col-md-12" style="margin-bottom: 10px">
+                            <label>Reply to</label>
+                            <input id="ReplyEmail" name="ReplyEmail" type="email" value="@ViewBag.ReplyTo" class="form-control" />
+                        </div>
+                        <div class="col-md-12" style="margin-bottom: 10px">
+                            <label>Subject <span class="text-red">*</span></label>
+                            <input id="Subject" name="Subject" type="text" class="form-control" required />
+                        </div>
+                        <div class="col-md-12" style="margin-bottom: 10px">
+                            <label>Content <span class="text-red">*</span></label>
+                            <textarea id="Content" name="Content" style="max-width: 100%; min-height: 100px; resize:vertical" class="ckeditor" required></textarea>
+                            @*<textarea id="Content" name="Content" style="max-width: 100%; min-height: 100px; resize:vertical" class="form-control" required></textarea>*@
+                        </div>
+
+                        <input id="Attachment" name="Attachment" type="hidden" value="" class="form-control" />
+                        <input id="CustomerCode" name="CustomerCode" type="hidden" value="@Model.Code" />
+                        <input id="Id" name="Id" type="hidden" value="" />
+
+                        @if (Model.List_pdf.Count > 0)
+                        {
+                            <div class="col-md-12" style="margin-bottom: 10px">
+                                <label>Attachment uploaded</label><br />
+                                <div id="attachment-old">
+                                    @foreach (var item in Model.List_pdf)
+                                    {
+                                        var avatar = "";
+                                        var xx = item.PDF_URL.LastIndexOf(".pdf");
+                                        if (item.PDF_URL.LastIndexOf(".pdf") >= 0)
+                                        {
+                                            avatar = "/upload/img/pdf.png";
+                                        }
+                                        else if (item.PDF_URL.LastIndexOf(".doc") == 0 || item.PDF_URL.LastIndexOf(".doc") == 1)
+                                        {
+                                            avatar = "/upload/img/word.png";
+                                        }
+                                        else if (item.PDF_URL.LastIndexOf(".xls") == 0 || item.PDF_URL.LastIndexOf(".xls") == 1)
+                                        {
+                                            avatar = "/upload/img/excel.jpg";
+                                        }
+                                        else if (item.PDF_URL.LastIndexOf(".jpeg") == -1 && item.PDF_URL.LastIndexOf(".jpg") == -1 &&
+                                            item.PDF_URL.LastIndexOf(".png") == -1 && item.PDF_URL.LastIndexOf(".gif") == -1 &&
+                                            item.PDF_URL.LastIndexOf(".bmp") == -1)
+                                        {
+                                            avatar = "/upload/img/no_image.jpg";
+                                        }
+
+                                        <p class="col-md-12" style="border:1px dotted green; padding:3px" id="file_@item.PDF_URL">
+                                            <label style="font-weight:unset; margin: 5px">
+                                                <input type="checkbox" name="OldAttachment" tag="@(item.PDF_URL.Replace("\\", "").Replace("/", ""))" value="@item.PDF_URL" class="flat-red department" />
+                                            </label>
+                                            @if (string.IsNullOrEmpty(avatar) == true)
+                                            {
+                                                <img style="height:40px;margin-left:0" alt="picture" src="@item.PDF_URL" />
+                                            }
+                                            else
+                                            {
+                                                <img style="height:40px;margin-left:0" alt="picture" src="@avatar" />
+                                            }
+                                            <i style="padding-left:5px">@item.PDF_URL</i>
+                                            <a style="padding-left:10px" href="@item.PDF_URL" target="_blank" data-toggle="tooltip" class="pull-right" title="View file">
+                                                <i class="glyphicon glyphicon-zoom-in"></i>
+                                            </a>
+                                            &nbsp; <img src="/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                                        </p>
+                                    }
+                                </div>
+                            </div>
+                        }
+
+                        <div class="col-md-12" style="margin-bottom: 10px">
+                            <label>New attachment</label><br />
+                            <div id="attachment-show">
+                            </div>
+                            <p class="col-md-12" style="border:1px dotted red; padding:3px; text-align:center; display: none" id="loading_upload_file">
+                                <img style="height:50px;margin-left:0" alt="picture" src="/Content/ajax-loaders/loading-partial.gif" />
+                            </p>
+
+                            <div class="group-attachment">
+                                <span class="btn btn-success fileinput-button">
+                                    <i class="glyphicon glyphicon-plus"></i>
+                                    <span>Add files...</span>
+                                    <input id="add_attachment"
+                                           accept=".xlsx, .xls, .csv, .doc, .docx, .docm, .pdf, .txt, .xml, .xps, .jpg, .jpeg, .gif, .png, .eps, .ppsx, .ppt, .pptx, .rar, .zip"
+                                           type="file" name="files" multiple="">
+                                </span>
+                                <i style="color: red">(* maximum size 50MB)</i>
+                            </div>
+                        </div>
+                        <div class="col-md-12" style="margin-bottom: 10px" id="tab_history_sent">
+                            <label>
+                                <a onclick="toggleHis()">
+                                    @*<i class="fa fa-minus" style="margin-right: 5px"></i>*@
+                                    History has been sent
+                                </a>
+                            </label>
+                            <textarea class="form-control" style="max-width: 100%; min-height: 100px; resize:vertical; line-height: 200%" disabled></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default btn-flat pull-left" data-dismiss="modal">Close</button>
+                    <div class="group-saving">
+                        <button type="submit" name="btn-submit" value="save" class="btn btn-success btn-flat pull-right">
+                            <i class="fa fa-check" aria-hidden="true"></i> Save
+                            <img class="loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                        </button>
+                        <button type="submit" name="btn-submit" value="send" class="btn btn-primary btn-flat pull-right" style="margin: 0 10px 0 0">
+                            <i class="fa fa-paper-plane-o" aria-hidden="true"></i> Send
+                            <img class="loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                        </button>
+                    </div>
+                    <div class="group-editing" style="display: none">
+                        <button type="button" class="btn btn-warning btn-flat pull-right" onclick="editEmail()">
+                            <i class="fa fa-pencil-square-o" aria-hidden="true"></i> Edit
+                            <img class="loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                        </button>
+                        <button type="submit" name="btn-submit" value="onlysend" class="btn btn-primary btn-flat pull-right" style="margin: 0 10px 0 0">
+                            <i class="fa fa-paper-plane-o" aria-hidden="true"></i> Send
+                            <img class="loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                        </button>
+                    </div>
+                    <div class="group-deleting">
+                        <button type="button" class="btn btn-danger btn-flat pull-right" onclick="removeEmail(this)" style="margin: 0 10px 0 0">
+                            <i class="fa fa-trash" aria-hidden="true"></i> Remove
+                            <img class="loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- /.modal-content -->
+        </form>
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+
+<!--icheck-->
+<link rel="stylesheet" href="/content/admin/plugins/iCheck/all.css" />
+<script src="/content/admin/plugins/iCheck/icheck.min.js"></script>
+<script src="/content/admin/bower_components/ckeditor/ckeditor.js"></script>
+
+<script>
+    var _dataFile = [];
+    var _dataEmail = [];
+    var _currentEmail = null;
+    $(function () {
+        var t = $("#outgoing-email").DataTable({
+            "language": {
+                "processing": '<img src="/Content/ajax-loaders/loading2.gif" width="60px" />',
+                "paginate": {
+                    "first": '<i class="fa fa-angle-double-left" aria-hidden="true"></i>',
+                    "last": '<i class="fa fa-angle-double-right" aria-hidden="true"></i>',
+                    "next": '<i class="fa fa-angle-right" aria-hidden="true"></i>',
+                    "previous": '<i class="fa fa-angle-left" aria-hidden="true"></i>'
+                },
+            },
+            "pageLength": 10,
+            "serverSide": true, // for process server side
+            "processing": true, // for show progress bar
+            'paging': true,
+            'lengthChange': true,
+            'searching': true,
+            'ordering': true,
+            'info': false,
+            'autoWidth': true,
+            'stateSave': false,
+            "ajax": {
+                "url": "/merchantman/loadoutgoingemail",
+                "type": "POST",
+                "datatype": "json",
+                data: function (data) {
+                    data.CustomerCode = '@Model.Code';
+                    return data;
+                },
+                'dataSrc': function (data) {
+                    _dataEmail = data.data;
+                    return data.data;
+                },
+            },
+            'fnCreatedRow': function (nRow, aData, iDataIndex) {
+                //$(nRow).hover(
+                //    function () {
+                //        $(this).find(".btn_group").css({ opacity: 0.0, visibility: "visible" }).animate({ opacity: 1.0 });
+                //    },
+                //    function () {
+                //        $(this).find(".btn_group").css({ opacity: 0.0, visibility: "hidden" }).animate({ opacity: 1.0 });
+                //    }
+                //);
+                $(nRow).attr('onclick', `detailEmail('${aData.Id}')`);
+            },
+            "columns": [
+                {
+                    "name": "EmailCode",
+                    "render": function (data, type, row) {
+                        return row["Id"];
+                    },
+                    "className": 'align-middle',
+                },
+                {
+                    "name": "Subject",
+                    "render": function (data, type, row) {
+                        return row["Subject"];
+                    },
+                    "className": 'align-middle',
+                },
+                {
+                    "name": "Content",
+                    "render": function (data, type, row) {
+                        return row["Content"]?.length >= 200 ? (row["Content"]?.substring(0, 200) + "...") : row["Content"];
+                    },
+                    "className": 'align-middle',
+                },
+                {
+                    "name": "SendBy",
+                    "render": function (data, type, row) {
+                        let html = '';
+                        if (row["HistorySend"] != null && row["HistorySend"] != '') {
+                            let arr = row["HistorySend"].split('|');
+                            let lastValue = arr[arr.length - 1];
+                            html = lastValue.split(',')[0];
+                        }
+                        return html;
+                    },
+                    "className": 'align-middle',
+                },
+                {
+                    "name": "SendDate",
+                    "render": function (data, type, row) {
+                        let html = '';
+                        if (row["HistorySend"] != null && row["HistorySend"] != '') {
+                            let arr = row["HistorySend"].split('|');
+                            let lastValue = arr[arr.length - 1];
+                            let date = lastValue.split(',')[1];
+                            let offset = moment().utcOffset();
+                            let local = moment.utc(date).utcOffset(offset).format("MMM DD, YYYY");
+                            html = local;
+                        }
+                        return html;
+                    },
+                    "className": 'align-middle',
+                },
+                //{
+                //    "name": "Action",
+                //    "render": function (data, type, row) {
+                //        let html = '';
+                //        if (row["HistorySend"] == null || row["HistorySend"] == '') {
+                //            html += `<a class="btn btn-sm btn-primary btn-flat" onclick="sendAds('', 'ads')"><i class="fa fa-paper-plane-o"></i> Send</a>
+                //                    <a class="btn btn-sm btn-warning btn-flat" onclick="sendAds('', 'ads')"><i class="fa fa-pencil-square-o"></i> Edit</a>
+                //                    <a class="btn btn-sm btn-danger btn-flat" onclick="sendAds('', 'ads')"><i class="fa fa-trash"></i> Delete</a>`;
+                //        }
+                //        else
+                //            html += `<a class="btn btn-sm btn-success btn-flat" onclick="sendAds('', 'ads')"><i class="fa fa-paper-plane-o"></i> Re-send</a>`;
+
+                //        return html;
+                //    },
+                //    "className": 'align-middle',
+                //}
+            ]
+        });
+    });
+    $('input[type="checkbox"].flat-red, input[type="radio"].flat-red').iCheck({
+        checkboxClass: 'icheckbox_square-blue',
+        radioClass: 'iradio_flat-blue'
+    }).on('ifToggled', function (event) {
+        let _temp = [..._dataFile];
+        $('#Attachment').val(_temp.concat($('input[name="OldAttachment"]:checked').map(function () { return this.value; }).get()).join("|"));
+    });;
+    function toggleHis() {
+        //$("#tab_history_sent .fa").toggleClass("fa-minus fa-plus");
+        $("#tab_history_sent textarea").fadeToggle();
+    }
+
+    $('#add_attachment').on("change", function () {
+        $('#loading_upload_file').show(300);
+        var formdata = new FormData();
+        var fileInput = document.getElementById('add_attachment');
+        for (i = 0; i < fileInput.files.length; i++) {
+            _dataFile.push("/Upload/Other/" + fileInput.files[i].name);
+            formdata.append(fileInput.files[i].name, fileInput.files[i]);
+        }
+
+        //Creating an XMLHttpRequest and sending
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/Upload/OriginUpload');
+        xhr.send(formdata);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState == 4) {
+                if (xhr.status == 200) {
+                    var data = JSON.parse(xhr.response);
+                    if (data[0]) {
+                        var Success = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"success"}');
+                        noty(Success);
+                        let _temp = [..._dataFile];
+                        $('#Attachment').val(_temp.concat($('input[name="OldAttachment"]:checked').map(function () { return this.value; }).get()).join("|"));
+                        reload_uploadfile();
+                    }
+                    else {
+                        $('#loading_upload_file').hide();
+                        var Error = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"error"}');
+                        noty(Error);
+                    }
+                }
+                else if (xhr.status == 413) {
+                    $('#loading_upload_file').hide();
+                    var Error = $.parseJSON('{"text":"Error: File size exceeded maximum length", "layout":"topRight", "type":"error"}');
+                    noty(Error);
+                }
+                else {
+                    $('#loading_upload_file').hide();
+                    var Error = $.parseJSON('{"text":"' + xhr.statusText + '", "layout":"topRight", "type":"error"}');
+                    noty(Error);
+                }
+            }
+        }
+        return;
+    });
+    function reload_uploadfile(isDetail = false) {
+        $('#attachment-show').empty();
+        for (i = 0; i < _dataFile.length; i++) {
+            if ($('input[name="OldAttachment"]').map(function () { return this.value; }).get().join('|').lastIndexOf(_dataFile[i]) >= 0) continue;
+            let avatar = "";
+            if (_dataFile[i].lastIndexOf(".pdf") >= 0) {
+                avatar = "/upload/img/pdf.png";
+            }
+            else if (_dataFile[i].lastIndexOf(".doc") >= 0 || _dataFile[i].lastIndexOf(".doc") >= 1) {
+                avatar = "/upload/img/word.png";
+            }
+            else if (_dataFile[i].lastIndexOf(".xls") >= 0 || _dataFile[i].lastIndexOf(".xls") >= 1) {
+                avatar = "/upload/img/excel.jpg";
+            }
+            else if (_dataFile[i].lastIndexOf(".jpeg") >= 0 || _dataFile[i].lastIndexOf(".jpg") >= 0 ||
+                _dataFile[i].lastIndexOf(".png") >= 0 || _dataFile[i].lastIndexOf(".gif") >= 0 ||
+                _dataFile[i].lastIndexOf(".bmp") >= 0) {
+                avatar = _dataFile[i];
+            }
+            else
+                avatar = "/upload/img/no_image.jpg";
+            var html = `<p class="col-md-12" style="border:1px dotted red; padding:3px" id="file_${_dataFile[i]}">
+                            <img style="height:40px;margin-left:0" alt="picture" src="${avatar}" />
+                            <i style="padding-left:5px">${_dataFile[i]}</i>
+                            <a style="padding-left:10px" href="../../Upload/other/${_dataFile[i]}" target="_blank" data-toggle="tooltip" class="pull-right" title="View file">
+                                <i class="glyphicon glyphicon-zoom-in"></i>
+                            </a>
+                            <a style="padding-left:10px; ${isDetail == true ? 'display:none' : ''}" onclick="reject_file('${_dataFile[i]}')" data-toggle="tooltip" class="pull-right btn-icon-remove-file" title="Delete file">
+                                <i class="glyphicon glyphicon-trash"></i>
+                            </a>
+                            &nbsp; <img src="/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                        </p>`;
+            $('#attachment-show').append(html);
+        }
+        $('#loading_upload_file').hide();
+    }
+    function reject_file(fname) {
+        _dataFile = _dataFile.filter(f => f != fname);
+        reload_uploadfile();
+    }
+
+    $("#form_new_email").ajaxForm(function (data) {
+        overlayOff();
+        if (data[0]) { //call api thanh cong
+            noty({ "text": data[1], "layout": "topRight", "type": "success" });
+            _dataFile = [];
+            $('#attachment-show').empty();
+            $("#form_new_email").trigger('reset');
+            $('#modal_new_email').modal('hide');
+            $('.loading').hide();
+            $("#outgoing-email").DataTable().ajax.reload();
+        } else { //call api fail
+            noty({ "text": data[1], "layout": "topRight", "type": "error" });
+        }
+    });
+
+    function detailEmail(id) {
+        $('#modal_new_email').modal('show');
+        var detailE = _dataEmail.find(c=>c.Id == id);
+        if (detailE == null) {
+            _currentEmail = null;
+            _dataFile = [];
+            $('.modal-title').html("New email");
+            $('#Id').val('');
+            $('#form_new_email').trigger("reset");
+            $('#ToEmail').prop("disabled", false).trigger('change');
+            $('#CCEmail').prop("disabled", false).trigger('change');
+            $('#ReplyEmail').prop("disabled", false).trigger('change');
+            $('#Subject').prop("disabled", false).trigger('change');
+            //$('#Content').prop("disabled", false).trigger('change');
+
+            $('#Content').html('');
+            var editor = CKEDITOR.instances["Content"];
+            if (editor) { editor.destroy(true); }
+            CKEDITOR.replace("Content", { readOnly: false});
+            CKEDITOR.instances["Content"].on("change", function (evt) {
+                $('#Content').val(evt.editor.getData());
+            });
+
+            $('input[name="OldAttachment"]').iCheck("uncheck").iCheck("enable").iCheck('update');
+            reload_uploadfile();
+            $('.group-attachment').show();
+            $('.group-saving').show();
+            $('.group-editing').hide();
+            $('.group-deleting').hide();
+            $('#tab_history_sent').hide();
+        }
+        else {
+            _currentEmail = detailE;
+            //show detail
+            $('.modal-title').html("Detail email");
+            $('#Id').val(detailE.Id);
+            $('#ToEmail').val(detailE.ToEmail).prop("disabled", true).trigger('change');
+            $('#CCEmail').val(detailE.CCEmail).prop("disabled", true).trigger('change');
+            $('#Subject').val(detailE.Subject).prop("disabled", true).trigger('change');
+            //$('#Content').val(detailE.Content).prop("disabled", true).trigger('change');
+
+            $('#Content').html(detailE.Content);
+            var editor = CKEDITOR.instances["Content"];
+            if (editor) { editor.destroy(true); }
+            CKEDITOR.replace("Content", { readOnly: true });
+
+            $('#ReplyEmail').val(detailE.ReplyEmail).prop("disabled", true).trigger('change');
+            $('#Attachment').val(detailE.Attachment);
+            $('.group-attachment').hide();
+
+            $('input[name="OldAttachment"]').iCheck("enable");
+            $('input[name="OldAttachment"]').map(function () { return this.value; }).get().forEach(function (file) {
+                if (detailE.Attachment?.lastIndexOf(file) >= 0)
+                    $('input[name=OldAttachment][tag="' + file.replaceAll("\\", "").replaceAll("/", "") + '"]').iCheck("check");
+                else
+                    $('input[name=OldAttachment][tag="' + file.replaceAll("\\", "").replaceAll("/", "") + '"]').iCheck("uncheck");
+            })
+            $('input[name="OldAttachment"]').iCheck("disable");
+
+            if (detailE.HistorySend != '' && detailE.HistorySend != null) {
+                let value = '';
+                let offset = moment().utcOffset();
+                detailE.HistorySend.split('|').forEach(d => {
+                    if (d != null && d != '') {
+                        let show = d.split(',');
+                        let local = moment.utc(show[1]).utcOffset(offset).format("MMM DD, YYYY, HH:mm:ss");
+                        value += show[0] + " sent at " + local + "\n";
+                    }
+                })
+                $('#tab_history_sent textarea').hide().val(value).trigger('change');
+            }
+
+            _dataFile = detailE.Attachment?.split('|').filter(f => $('input[name="OldAttachment"]').map(function () { return this.value; }).toArray().indexOf(f) == -1) ?? [];
+
+            reload_uploadfile(true);
+            $('#tab_history_sent').show();
+            $('.group-saving').hide();
+            if (detailE.Subject != 'Invoice is generated from Enrich & Co' )
+                $('.group-editing').show();
+            else
+                $('.group-editing').hide();
+            $('.group-deleting').show();
+        }
+    }
+
+    function editEmail() {
+        $('#ToEmail').prop("disabled", false).trigger('change');
+        $('#CCEmail').prop("disabled", false).trigger('change');
+        $('#ReplyEmail').prop("disabled", false).trigger('change');
+        $('#Subject').prop("disabled", false).trigger('change');
+        //$('#Content').prop("disabled", false).trigger('change');
+
+        //$('#Content').html(detailE.Content);
+        var editor = CKEDITOR.instances["Content"];
+        if (editor) { editor.destroy(true); }
+        CKEDITOR.replace("Content", { readOnly: false });
+
+        $('input[name="OldAttachment"]').iCheck("enable");
+        $('.group-attachment').show();
+        $('.btn-icon-remove-file').show();
+        $('.group-saving').show();
+        $('.group-editing').hide();
+        $('#tab_history_sent').hide();
+    }
+
+    function removeEmail(_e) {
+        if (confirm("Are you sure you want to remove this Email?") == true) {
+            $(_e).find(".loading").show();
+            $.ajax({
+                url: `/merchantman/removeoutgoingemail?key=${_currentEmail.Id}`,
+                type: "get",
+                success: function (data) {
+                    $(_e).find(".loading").hide();
+                    if (data[0]) {
+                        noty({ "text": data[1], "layout": "topRight", "type": "success" });
+                        $('#modal_new_email').modal("hide");
+                        $("#outgoing-email").DataTable().ajax.reload();
+                    }
+                    else {
+                        noty({ "text": data[1], "layout": "topRight", "type": "error" });
+                    }
+                },
+            })
+        }
+    }
+</script>
+
+<style type="text/css">
+    .fileinput-button {
+        position: relative;
+        overflow: hidden;
+        display: inline-block;
+    }
+
+        .fileinput-button input {
+            position: absolute;
+            top: 0;
+            right: 0;
+            margin: 0;
+            opacity: 0;
+            -ms-filter: 'alpha(opacity=0)';
+            font-size: 200px !important;
+            direction: ltr;
+            cursor: pointer;
+        }
+</style>

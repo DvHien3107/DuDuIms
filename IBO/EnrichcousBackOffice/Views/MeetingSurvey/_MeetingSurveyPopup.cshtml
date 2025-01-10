@@ -1,0 +1,153 @@
+﻿@model EnrichcousBackOffice.Models.SurveyMeeting
+@{
+    var AllMembers = ViewBag.Members as List<EnrichcousBackOffice.Models.P_Member>;
+    bool EndSurvey = false;
+    bool? Reopen = ViewBag.Reopen as bool?;
+    if (Model.EndDate.HasValue)
+    {
+        EndSurvey = Model.EndDate.Value <= DateTime.UtcNow;
+    }
+}
+
+<div id="survey-modal" class="modal fade">
+    <div class="modal-dialog modal-lg">
+        <form id="survey-form" method="post" action="/MeetingSurvey/InsertOrUpdateSurvey" enctype="multipart/form-data"  class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" style="font-size:2em" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                @if (Model.Id > 0)
+                {
+                    <h4 id="modal-merchant-title" class="modal-title">Update Survey</h4>
+                }
+                else
+                {
+                    <h4 id="modal-merchant-title" class="modal-title">@(Reopen==true?"Re-open Survey": "Add Survey")</h4>
+                }
+            </div>
+            <div class="modal-body">
+                @Html.AntiForgeryToken()
+
+                <input type="hidden" value="@Model.Id" name="Id" />
+                <input type="hidden" value="Reopen" name="Reopen" />
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group div-contactname">
+                            <label>Meeting Survey Name: <span style="color:red">*</span></label>
+                            <input type="text" class="form-control" name="SurveyName" value="@(Model.SurveyName)" required @(EndSurvey ? "readonly" : "") />
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group div-contactphone">
+                            <label>Start Time (UTC-5): <span style="color:red">*</span></label>
+                            <input type="datetime" class="form-control datepicker" name="StartDate" min="0" value="@(Model.StartDate)" @(EndSurvey ? "readonly" : "") required />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group div-contactphone">
+                            <label>Duration: <span style="color:red">*</span></label>
+
+                            <div class="input-group">
+                                <input type="number" class="form-control" name="MinuteDuration" value="@(Model.MinuteDuration)" @(EndSurvey ? "readonly" : "") required>
+                                <div class="input-group-addon">
+                                    <span>Minute(s)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group div-contactname">
+                            <label>Members: <span style="color:red">*</span></label>
+                            <select class="form-control select-2" name="AssignMemberNumbers" style="width:100%" @(EndSurvey ? "readonly" : "") multiple>
+                                @foreach (var item in AllMembers)
+                                {
+                                    <option value="@item.MemberNumber" @(Model.AssignMemberNumbers?.Split(',').Contains(item.MemberNumber) == true ? "selected" : "")>@item.FullName</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group div-contactname">
+                            <label>Question: <span style="color:red">*</span></label>
+                            <textarea type="text" class="form-control" name="Question" rows="3" @(EndSurvey ? "readonly" : "") required>@Model.Question</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                @if (EndSurvey ==false && Reopen!=true)
+                {
+                    <button type="submit" class="btn btn-primary">
+                        Save
+                        <img id="submit_loading" style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                    </button>
+                }
+                @if (Reopen==true)
+                {
+                    <button type="submit" class="btn btn-warning">
+                        Reopen
+                        <img id="submit_loading" style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                    </button>
+                }
+            </div>
+
+        </form>
+
+    </div>
+</div>
+
+
+<script>
+    $(".datepicker").datetimepicker();
+    $(".select-2").select2();
+    // this is the id of the form
+    $("#survey-form").submit(function (e) {
+        e.preventDefault(); // avoid to execute the actual submit of the form.
+        var form = $(this);
+        var actionUrl = form.attr('action');
+        let data = new FormData(document.getElementById("survey-form"));
+        $.ajax({
+            type: "POST",
+            url: actionUrl,
+            contentType: false,
+            processData: false,
+            data: data, // serializes the form's elements.
+            //if received a response from the server
+            success: function (data, textStatus, jqXHR) {
+                if (data.status) {
+                    success(data.message);
+                    $("#survey-modal").modal("hide");
+                    $("#surveyTable").DataTable().ajax.reload();
+                }
+                else {
+                    error(data.message);
+                }
+            },
+
+            //If there was no resonse from the server
+            error: function (jqXHR, textStatus, errorThrown) {
+
+            },
+
+            //capture the request before it was sent to server
+            beforeSend: function (jqXHR, settings) {
+
+            },
+
+            //this is called after the response or error functions are finished
+            //so that we can take some action
+            complete: function (jqXHR, textStatus) {
+
+            }
+        });
+
+    });
+</script>

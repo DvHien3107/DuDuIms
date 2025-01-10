@@ -1,0 +1,338 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.CustomizeModel.Device_Product_view>
+@using EnrichcousBackOffice.Models
+@{
+    var locations = new EnrichcousBackOffice.Models.WebDataModel().Locations.ToList();
+    var _access = EnrichcousBackOffice.AppLB.Authority.GetAccessAuthority();
+    var accessDelete = (_access.Any(k => k.Key.Equals("products_deletedevice")) == true && _access["products_deletedevice"] == true);
+}
+<div class="row" style="margin:30px">
+
+    <div class="col-md-3" style="padding:0">
+        <div class="input-group">
+            <span class="input-group-addon">
+                Location
+            </span>
+            <select class="form-control" id="search_location" onchange="Search()">
+                <option value="">--ALL--</option>
+                @foreach (var l in locations)
+                {
+                    <option value="@l.Id">@l.Name</option>
+                }
+            </select>
+        </div>
+    </div>
+    <div class="col-md-6" style="padding:0">
+        <div class="input-group">
+            <input type="text" class="form-control" id="SearchText" placeholder="Search by name, model, inv#, Serial#...">
+            <span class="input-group-btn">
+                <button class="btn btn-default" type="button" onclick="Search()"><span class="glyphicon glyphicon-search"></span></button>
+            </span>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <a class="btn btn-success btn-flat" onclick="export_excel()" @if (ViewBag.canExportExcel != true) { @Html.Raw("style='display:none'") }><i class="fa fa-file-excel-o"></i> Export excel <img id="export_excel_load_img" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" /></a>
+    </div>
+</div>
+<div class="form-group" id="content-product">
+
+    @foreach (var Item in Model)
+    {
+        string productPic = Item.item.FirstOrDefault()?.Picture;
+        <div class="row" id="row-@Item.Product.Code">
+            <div class="col-md-1" style="min-width: 80px; margin:0px 30px">
+                <img src="@(productPic)" onerror="this.onerror=null; this.src='/Upload/Img/no_image.jpg'" width="80" height="80" />
+            </div>
+            <div class="col-md-5">
+                <a class="" onclick="ShowDivicesList('@Item.Product.Code')"><h3>@Item.Product.Name</h3></a><br />
+                <b style="color:gray">Quantity: @(Item.item.Count)</b><br />
+                <b style="color:gray">
+                    Lastest modify:
+                    <span id="localtime-@Item.Product.Code">
+                        <script>convertLocalTime("@Item.Product.Code", "@Item.item.Max(m => m.Device.UpdateAt)")</script>
+                    </span>
+                </b><br />
+            </div>
+            <div class="col-md-5" style="margin:auto">
+                <a href="#" onclick="ShowDivicesList('@Item.Product.Code')" class="btn btn-success Btn-@Item.Product.Code"><span class="glyphicon glyphicon-plus"></span></a>
+                <a href="#" style="display:none" onclick="ShowDivicesList('@Item.Product.Code')" class="btn btn-warning Btn-@Item.Product.Code"><span class="glyphicon glyphicon-minus"></span></a>
+            </div>
+        </div>
+        <div class="row">
+            <div id="list_device-@Item.Product.Code" class="col" style="padding-left:25px; display:none">
+                <div style="float:left; background-color: #fbfbfb; border: 1px solid lightblue; border-radius: 6px; padding: 20px;width:95%;">
+                    @if (ViewBag.tabname != "Assigned"&& accessDelete)
+                    {
+                        <div style="text-align:right;margin-bottom:5px;">
+                            <button type="button" id="delete-button" data-product-code="@Item.Product.Code" class="delete-button btn btn-sm btn-danger"><i class="fa fa-trash" aria-hidden="true"></i> Delete</button>
+                        </div>
+                    }
+                        <table class="table table-striped Datatable-device" style="width:100%; margin-top: 20px">
+                            <thead>
+                                <tr>
+                                    @if (ViewBag.tabname != "Assigned" && accessDelete)
+                                    {
+
+                                        <th class="no-sort" width="10"><input type="checkbox" name="CheckBoxMaster" value="@Item.Product.Code" /></th>
+                                    }
+                                    <th>Inv Number</th>
+                                    <th style="width:250px">Serial Number</th>
+                                    <th>Model #</th>
+                                    <th>Color</th>
+                                    <th>Vendor</th>
+                                    <th>Location</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Item.item)
+                                {
+
+                                    <tr class="tr_device" id="device_@item.Device.DeviceId">
+                                        @if (ViewBag.tabname != "Assigned" && accessDelete)
+                                        {
+                                            <td>
+                                                @if ((item.Device.Inventory == 1 || item.Device.Junkyard == true)&&accessDelete)
+                                                {
+                                                    <input type="checkbox" class="SelectedItem" name="CheckBoxItem_@Item.Product.Code" value="@item.Device.DeviceId" />
+                                                }
+                                            </td>
+                                        }
+
+                                        <td><b style="color:darkgreen">#@item.Device.InvNumber</b></td>
+                                        <td>
+                                            <label class="srnum">@item.Device.SerialNumber</label>
+                                            <a class="btn btn-success edit_srnum_btn" style="padding: 1px 10px; float:right; visibility:hidden" onclick="edit_srnum('@item.Device.DeviceId')"><i class="fa fa-pencil"></i></a>
+                                            <div class="input-group sr_input" style="display:none">
+                                                <input class="form-control" id="sr_input_@item.Device.DeviceId" />
+                                                <span class="input-group-btn"><a class="btn btn-default btn_save" style="padding:5px; width: 40px; border-radius:0px" onclick="edit_srnum_save('@item.Device.DeviceId')"><i class="fa fa-check text-success" style="font-size: 1.4em"></i></a></span>
+                                                <span class="input-group-btn"><a class="btn btn-default btn_cancel" style="padding:5px;width: 40px" onclick="edit_srnum_cancel('@item.Device.DeviceId')"><i class="fa fa-close text-danger" style="font-size: 1.4em"></i></a></span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            @item.Model.ModelName<br />
+                                            <span class="status_product">
+                                                @if (item.Device.Junkyard ?? false)
+                                                {@Html.Raw("<i style='color:red'> (Junkyard)</i>") }
+                                            else if (item.Device.Inventory == 0)
+                                            { @Html.Raw("<i style='color:green'> (Assigned)</i>")}
+                                        else
+                                        { @Html.Raw("<i style='color:blue'> (Warehouse)</i>")}
+                                            </span>
+                                        </td>
+                                        <td>@(item.Color)</td>
+                                        <td>@(item.Device.VendorName)</td>
+                                        <td>
+                                            <span id="location_@item.Device.DeviceId">@item.Device.LocationName</span>
+
+                                        </td>
+                                        <td>
+                                            <a style=" margin:auto" onclick="view_device('@item.Device.DeviceId'@(item.Device.Inventory == 0?", true":""))" class="btn btn-primary njy-class"><span class="fa fa-eye"></span></a>
+                                            @if (item.Device.Inventory > 0)
+                                            {
+                                                <div class="btn-group">
+                                                    <button type="button" class="btn btn-warning dropdown-toggle" data-toggle="dropdown" aria-expanded="true">
+                                                        <span class="fa fa-exchange"></span>
+                                                    </button>
+                                                    <ul id="location_dd_@item.Device.DeviceId" class="dropdown-menu dropdown-menu-right dd_location">
+                                                        <li><input type="text" placeholder="Search.." onkeyup="filter_location(this)" class="form-control input-sm dd_input" style="padding:10px; margin:0px 10px"></li>
+                                                        @foreach (var loc in locations)
+                                                        {
+                                                            <li>
+                                                                <a class="@loc.Id @if (item.Device.LocationId == loc.Id)
+                                                    { @Html.Raw("disabled_location") }" onclick="change_location('@item.Device.DeviceId','@loc.Id','@loc.Name')">@loc.Name</a>
+                                                </li>
+                                            }
+                                                    </ul>
+                                                </div>}
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+            </div>
+        </div>
+        <hr />
+    }
+
+</div>
+
+<script type="text/javascript">
+    if ($("#SelectedTab").val() == "All")
+        $(".status_product").show();
+    else
+        $(".status_product").hide();
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip()
+    })
+    $(function () {
+        $('.Datatable-device').DataTable({
+            "columnDefs": [
+                { "orderable": false, "targets": 0 }
+            ]
+        });
+        $('#SearchText').keypress(function (e) {
+            if (e.which == 13) {//Enter key pressed
+                Search();
+            }
+        });
+        //$(".tr_device").hover(function () {
+        //    $(this).find(".edit_srnum_btn").css("visibility", "visible")
+        //}, function () {
+        //    $(this).find(".edit_srnum_btn").css("visibility", "hidden")
+        //});
+    });
+    function Search() {
+
+        var TabName = $("#SelectedTab").val();
+        var SearchText = $("#SearchText").val();
+        var search_location = $("#search_location").val();
+        $.ajax({
+            method: "POST",
+            url: "/Device/ChangeTab",
+            data: { TabName, SearchText, search_location },
+            dataType: "html"
+        })
+            .done(function (data) {
+                $("#Partial_Device_List").empty();
+                $("#Partial_Device_List").append(data);
+                $("#SearchText").val(SearchText);
+                $("#search_location").val(search_location);
+            })
+            .fail(function () {
+                alert("Oops! Something went wrong");
+            });
+    }
+    function ShowDivicesList(ProCode) {
+        $("#list_device-" + ProCode).toggle(300);
+        $(".Btn-" + ProCode).toggle();
+        //var Scroll = $("#row-"+ProCode).position();
+        //window.scrollTo(Scroll.left, Scroll.top-500);
+
+    }
+    function change_location(device_id, location_id, location_name, is_detail = false) {
+        if (confirm("Are you sure to change this device location to " + location_name + " ?")) {
+            $.ajax({
+                method: "POST",
+                url: "/device/ChangeLocation",
+                data: { device_id, location_id },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    if (data[0]) {
+                        noty({ "text": data[1], "layout": "topRight", "type": "success" });
+                        $("#location_" + device_id).html(location_name);
+                        $("#location_dd_" + device_id).find(".disabled_location").removeClass("disabled_location");
+                        $("#location_dd_" + device_id).find("." + location_id).addClass("disabled_location");
+                        if (is_detail) {
+                            $("#location_change .disabled_location").removeClass("disabled_location");
+                            $("#view_loc_" + location_id).addClass("disabled_location");
+                            $("#location").html(location_name);
+                        }
+                    } else {
+                        noty({ "text": data[1], "layout": "topRight", "type": "error" });
+                    }
+                })
+                .fail(function () {
+                })
+                .always(function () {
+                });
+        }
+    }
+    function filter_location(e_input) {
+        var f_text = $(e_input).val();
+        //$(e_input).closest('.dd_location').find('a').each(function () {
+        $('.dd_location').find('input').val(f_text);
+        $('.dd_location').find('a').each(function () {
+            if ($(this).html().toLowerCase().indexOf(f_text.toLowerCase()) > -1) {
+                $(this).closest('li').show();
+            } else {
+                $(this).closest('li').hide();
+            }
+        });
+    }
+
+    //serial number
+    function edit_srnum(id) {
+        $("#device_" + id).find(".srnum").hide(300);
+        $("#device_" + id).find(".edit_srnum_btn").hide(300);
+        $("#device_" + id).find(".sr_input").show(300);
+        $("#device_" + id).find("input").attr("placeholder", $("#device_" + id).find(".srnum").html().trim() || "Input Serial Number").focus();
+    }
+    function edit_srnum_cancel(id) {
+        $("#device_" + id).find(".srnum").show(300);
+        $("#device_" + id).find(".edit_srnum_btn").show(300);
+        $("#device_" + id).find(".sr_input").hide(300);
+    }
+    $(".sr_input").keypress(function (e) {
+        if (e.which == 13) {//Enter key pressed
+            $(this).find(".btn_save").trigger("click");
+        }
+    });
+    function edit_srnum_save(id) {
+        var serial_number = $("#sr_input_" + id).val();
+        if (confirm("Save serial number?")) {
+            $.ajax({
+                method: "POST",
+                url: "/device/SaveSerialNumber",
+                data: { device_id: id, serial_number },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    if (data[0]) {
+                        $("#device_" + id).find(".srnum").html(serial_number).show(300);
+                        $("#device_" + id).find(".edit_srnum_btn").show(300);
+                        $("#device_" + id).find(".sr_input").hide(300);
+                        noty({ "text": data[1], "layout": "topRight", "type": "success" });
+                    } else {
+                        noty({ "text": data[1], "layout": "topRight", "type": "error" });
+                    }
+                })
+                .fail(function () {
+                })
+                .always(function () {
+                });
+        }
+
+    }
+</script>
+<script>
+   
+    DeleteHandle.init();
+</script>
+<style>
+    .tr_device:hover .edit_srnum_btn {
+        visibility: visible !important;
+    }
+    a:hover {
+        text-decoration: none !important;
+    }
+
+    .dd_location {
+        background-color: #222d32;
+    }
+
+        .dd_location a {
+            font-weight: bold;
+            color: #fff !important;
+        }
+
+            .dd_location a:hover {
+                font-weight: bold;
+                color: #000 !important;
+            }
+
+            .dd_location a.disabled_location {
+                font-weight: bold;
+                pointer-events: none;
+                color: #999 !important;
+            }
+
+    .table-striped > tbody > tr:nth-of-type(odd) {
+        background-color: #f2f2f2 !important;
+    }
+
+    .table-striped > tbody > tr:nth-of-type(even) {
+        background-color: #fff !important;
+    }
+</style>

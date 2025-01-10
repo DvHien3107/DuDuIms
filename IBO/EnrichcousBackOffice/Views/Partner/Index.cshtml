@@ -1,0 +1,356 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.C_Partner>
+@using EnrichcousBackOffice.Models
+@using EnrichcousBackOffice.AppLB
+@{
+    ViewBag.Title = "Partner management";
+    var SaleMembers = ViewBag.SaleMembers as List<P_Member>;
+
+}
+<section class="content-header">
+    <h1>
+        Partner management
+        <small> Partner</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Dashboard</a></li>
+        <li><i class="fa fa-handshake-o"></i> Partner</li>
+    </ol>
+</section>
+<!-- Main content -->
+<section class="content">
+    <div class="row">
+        @if (TempData["e"] != null)
+        {
+            <div class="alert alert-warning alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+            </div>
+        }
+        else if (TempData["s"] != null)
+        {
+            <div class="alert alert-success alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+            </div>
+        }
+        <div class="col-md-12">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">List partner</h3>
+                    <div class="pull-right box-tools">
+                        <a href="#" onclick="window.history.back()" class="btn btn-link"><i class="fa fa-arrow-left"> Go back</i></a>&nbsp;&nbsp;&nbsp;
+                        <button type="button" class="btn btn-primary" onclick="loadDetail()">
+                            <i class="fa fa-plus"> Add new partner</i>
+                        </button>
+                    </div>
+                </div>
+                <!-- /.box-header -->
+                <div class="box-body">
+                    <div class="filter-group" id="search_form">
+                        <!--<div class="col-md-3 col-sm-6 form-group">
+                            <div class="input-group" style="width:100%">
+                                <div class="input-group-addon">
+                                    Sales Person
+                                </div>-->
+                        @*<select class="form-control member-in-dept select2 change-search" id="SalePerson" name="SalePerson" style="width: 100%">
+                                <option value="" @(TempData["SalePerson"]?.ToString() == "" ? "selected" : "")>All</option>
+                                <option value="Unassigned" @(TempData["SalePerson"]?.ToString() == "Unassigned" ? "selected" : "")>Unassigned</option>
+                                @foreach (var item in SaleMembers)
+                                {
+                                    <option value="@item.MemberNumber" @(TempData["SalePerson"]?.ToString() == item.MemberNumber ? "selected" : "")>@item.FullName #@item.MemberNumber</option>
+                                }
+                            </select>*@
+                        <!--</div>-->
+                        <!-- /.input group -->
+                        <!--</div>-->
+                        <div class="col-md-3 col-sm-6 form-group">
+                            <div class="input-group" style="width:100%">
+                                <div class="input-group-addon">
+                                    Status
+                                </div>
+                                <select class="form-control change-search" id="Status" name="Status">
+                                    <option value="" style="font-weight:bold">All</option>
+                                    <option value="1" style="font-weight:bold;color:green">Active</option>
+                                    <option value="0" style="font-weight:bold;color:darkred">Deactive</option>
+
+                                </select>
+                            </div>
+                            <!-- /.input group -->
+                        </div>
+                        <div class="col-md-6 col-sm-6 form-group">
+                            <div class="input-group" style="width:100%">
+                                <div class="input-group-addon">
+                                    Search By
+                                </div>
+                                <input type="text" class="form-control change-search" id="SearchText" name="SearchText" placeholder="Name | Phone | Email ..." value="" />
+                            </div>
+                            <!-- /.input group -->
+                        </div>
+
+                        <div class="col-md-3 col-sm-6 form-group">
+                            <button type="button" class="btn btn-primary btn-flat" id="search_submit" name="search_submit">
+                                <i class="fa fa-search"></i> Search
+                            </button>
+                        </div>
+                    </div>
+
+                    <table id="list_partner" class="table table-bordered table-striped" data-order='[[ 0, "desc" ]]' style="width: 100%">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Company name</th>
+                                @*<th>Contact</th>*@
+                                <th>Description</th>
+                                <th>Status</th>
+                                <th>Last updated</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- /.box-body -->
+            </div>
+            <!-- /.box -->
+        </div>
+
+    </div>
+</section>
+
+
+<div class="modal fade" id="modal_save_partner">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+        </div>
+    </div>
+</div>
+
+<div id="render_popup_add_member">
+
+</div>
+
+@section style
+{
+    <!--icheck-->
+    <link rel="stylesheet" href="/content/admin/plugins/iCheck/all.css" />
+    <link rel="stylesheet" href="/Content/infor-Member/StyleSheet1.css" />
+    <!-- DataTables -->
+    <link rel="stylesheet" href="~/content/admin/bower_components/datatables.net-bs/css/dataTables.bootstrap.min.css">
+    <style>
+        #search_form .form-group .input-group-addon {
+            width: 120px;
+        }
+
+        #search_form .form-group {
+            padding: 5px;
+            margin: 0 0 15px 0;
+        }
+    </style>
+}
+
+@section script
+{
+    <!-- DataTables -->
+    <script src="~/content/admin/bower_components/datatables.net/js/jquery.dataTables.min.js"></script>
+    <script src="~/content/admin/bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/Content/Admin/bower_components/moment/moment.js"></script>
+
+    <!--icheck-->
+    <script src="/content/admin/plugins/iCheck/icheck.min.js"></script>
+    <script src="~/Scripts/upload_and_review.js"></script>
+    <script src="https://cdn.jsdelivr.net/jquery.validation/1.16.0/jquery.validate.min.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            $('#list_partner').DataTable({
+                "language": {
+                    "processing": '<img src="/Content/ajax-loaders/loading2.gif" width="60px" />',
+                    "paginate": {
+                        "first": '<i class="fa fa-angle-double-left" aria-hidden="true"></i>',
+                        "last": '<i class="fa fa-angle-double-right" aria-hidden="true"></i>',
+                        "next": '<i class="fa fa-angle-right" aria-hidden="true"></i>',
+                        "previous": '<i class="fa fa-angle-left" aria-hidden="true"></i>'
+                    },
+                },
+                "pageLength": 10,
+                "serverSide": true, // for process server side
+                "processing": true, // for show progress bar
+                'paging': true,
+                'lengthChange': true,
+                'searching': false,
+                'ordering': true,
+                'info': false,
+                'autoWidth': true,
+                'stateSave': false,
+                'columnDefs': [
+                    { orderable: false, targets: 5 }
+                ],
+                "ajax": {
+                    "url": "/partner/loadlistpartner",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (data) {
+                        data.SearchText = $('#SearchText').val();
+                        data.Status = $('#Status').val();
+                        data.SalePerson = $('#SalePerson').val();
+                        return data;
+                    },
+                    'dataSrc': function (data) {
+                        return data.data;
+                    }
+                },
+                'fnCreatedRow': function (nRow, aData, iDataIndex) {
+                    //$(nRow).attr('onclick', `load_invoice('${aData.Customer.CustomerCode}', $(this))`);
+                },
+                "columns": [
+                    {
+                        "name": "Code",
+                        "render": function (data, type, row) {
+                            let html = `<b>${row["Code"]}</b><br/>`;
+                            if (row["Logo"] == null || row["Logo"] == "") {
+                                html += `<img src="../Content/Img/noimage.png" style="max-height:40px;max-width:160px" />`;
+                            }
+                            else {
+                                html += `<img onerror="this.src='../Content/Img/noimage.png'" src="${row["Logo"]}" style="max-height:40px;max-width:160px">`;
+                            }
+                            return html;
+                        },
+                        "className": 'align-middle',
+                    },
+                    {
+                        "name": "Name",
+                        "render": function (data, type, row) {
+                            let html = `<b><a href="/partner/save/${row["Id"]}"><span class="text-primary">${row["Name"].toUpperCase()}</span></a></b><br/>
+                                                <span>${row["Hotline"]}</span><br/>
+                                                <span>${row["Email"]}</span><br/>
+                                                <span style="text-align:justify;">${row["Address"]}</span>`;
+                            return html;
+                        },
+                        "className": 'align-middle',
+                    },
+                    //{
+                    //    "name": "ContactName",
+                    //    "render": function (data, type, row) {
+                    //        let html = `<b><span class="">${row["ContactName"]}</span></b><br/>
+                    //                                        <i class="" style="padding-left:10px">Phone number: ${row["Phone"]}</i>`;
+                    //        return html;
+                    //    },
+                    //},
+                    {
+                        "name": "Description",
+                        "render": function (data, type, row) {
+                            let html = '';
+                            if (row["Url"] != null && row["Url"] != "") {
+                                html += `<a href="${row["Url"]}" target="_blank">${row["Url"]}</a><br/>`;
+                            }
+                            html += `<span>${row["Description"]}</span>`
+                            return html;
+                        },
+                        "className": 'align-middle',
+                    },
+                    {
+                        "name": "Status",
+                        "render": function (data, type, row) {
+                            let html = '';
+                            if (row["Status"] == 1) html = `<label class="label label-success">Active</label>`;
+                            else html = `<label class="label label-default">Deactive</label>`;
+                            return html;
+                        },
+                    },
+                    {
+                        "name": "LastUpdated",
+                        "render": function (data, type, row) {
+                            let html = '';
+                            if (row["CreateAt"] != null && row["CreateAt"] != '') {
+                                let offset = moment().utcOffset();
+                                let local = moment.utc(row["CreateAt"]).utcOffset(offset).format("MMM DD, YYYY");
+                                return local;
+                            }
+                            return html;
+                        },
+                        "className": 'align-middle',
+                    },
+                    {
+                        "name": "LastUpdated",
+                        "render": function (data, type, row) {
+                            let html = `<button class="btn btn-success btn-sm" style="margin-bottom:5px" onclick="addUser('${row["SiteId"]}')"><i class="fa fa-plus" aria-hidden="true"></i> Add User</button>
+                                            <a class="btn btn-warning btn-sm" style="margin-bottom:5px" href="/partner/save/${row["Id"]}"  onclick="overlayOn()"><i class="fa fa-pencil-square-o" aria-hidden="true"></i> Edit</a>
+                                            <button class="btn btn-danger btn-sm" style="margin-bottom:5px" onclick="removePartner('${row["Id"]}', '${row["Code"]}')"><i class="fa fa-trash-o" aria-hidden="true"></i> Delete</button>`;
+
+                            return html;
+                        },
+                        "className": 'align-middle',
+                    }
+                ]
+            })
+
+            $('#search_form').on('change paste', 'input, select, textarea', function () {
+                $('#list_partner').DataTable().ajax.reload();
+            });
+        });
+
+        function loadDetail(id = "") {
+            overlayOn();
+            $.ajax({
+                method: "get",
+                url: `/partner/detail?id=${id}`
+            }).done(function (data) {
+                $('#modal_save_partner .modal-content').html(data);
+                $('#modal_save_partner').modal();
+            }).fail(function (data) {
+                var mess = $.parseJSON('{"text":"' + data.statusText + '", "layout":"topRight", "type":"error"}');
+                noty(mess);
+            }).always(function () {
+                overlayOff();
+            });
+        }
+
+        function removePartner(id, code) {
+            if (confirm('Are you sure that you want to delete partner #' + code + '?')) {
+                overlayOn();
+                $.ajax({
+                    method: "get",
+                    url: `/partner/delete?id=${id}`
+                }).done(function (data) {
+                    if (data[0]) {
+                        var mess = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"success"}');
+                        noty(mess);
+                        $('#list_partner').DataTable().ajax.reload();
+                    }
+                    else {
+                        var mess = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"error"}');
+                        noty(mess);
+                    }
+                }).fail(function (data) {
+                    var mess = $.parseJSON('{"text":"' + data.statusText + '", "layout":"topRight", "type":"error"}');
+                    noty(mess);
+                }).always(function () {
+                    overlayOff();
+                });
+            }
+        }
+
+        function addUser(siteId) {
+            $("#img_load_add_member").show();
+            $.ajax({
+                method: "get",
+                url: "/MemberMan/GetPopUpInsertOrUpdateMember",
+                data: {
+                    'siteId':siteId
+                },
+                dataType: "html"
+            })
+                .done(function (data) {
+                    $("#render_popup_add_member").html(data);
+                    $("#editInfor").modal('show');
+                })
+                .fail(function () {
+                    alert("Oops! Something went wrong");
+                })
+                .always(function () {
+                    $("#img_load_add_member").hide();
+                });
+
+        }
+    </script>
+}

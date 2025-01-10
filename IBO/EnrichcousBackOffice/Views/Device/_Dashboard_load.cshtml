@@ -1,0 +1,228 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.CustomizeModel.OrderPackage_view>
+@using EnrichcousBackOffice.AppLB
+
+<table id="bundle_dashboard_list" class="table table-bordered table-striped dataTable">
+    <thead>
+        <tr>
+            <th>Order#</th>
+            <th>Ticket#</th>
+            <th>Merchant name</th>
+            <th>Station</th>
+            <th>Total</th>
+            <th>Status</th>
+            <th>Last update</th>
+            <th style="width:109px"></th>
+        </tr>
+    </thead>
+    <tbody>
+    </tbody>
+</table>
+
+<script>
+    $(function () {
+        var t = $("#bundle_dashboard_list").DataTable({
+            "language": {
+                "processing": '<img src="/Content/ajax-loaders/loading2.gif" width="60px" />',
+                "paginate": {
+                    "first": '<i class="fa fa-angle-double-left" aria-hidden="true"></i>',
+                    "last": '<i class="fa fa-angle-double-right" aria-hidden="true"></i>',
+                    "next": '<i class="fa fa-angle-right" aria-hidden="true"></i>',
+                    "previous": '<i class="fa fa-angle-left" aria-hidden="true"></i>'
+                },
+            },
+            "pageLength": 10,
+            "serverSide": true, // for process server side
+            "processing": true, // for show progress bar
+            'paging': true,
+            'lengthChange': true,
+            'searching': true,
+            'ordering': true,
+            'info': false,
+            'autoWidth': true,
+            'stateSave': false,
+            'order': [[0, 'desc']],
+            "ajax": {
+                "url": "/Device/LoadDeployment",
+                "type": "POST",
+                "datatype": "json",
+                data: function (data) {
+                    data.Status = '@TempData["Page"]';
+                    return data;
+                },
+                'dataSrc': function (data) {
+                    return data.data;
+                },
+            },
+            'fnCreatedRow': function (nRow, aData, iDataIndex) {
+                //$(nRow).hover(
+                //    function () {
+                //        $(this).find(".btn_group").css({ opacity: 0.0, visibility: "visible" }).animate({ opacity: 1.0 });
+                //    },
+                //    function () {
+                //        $(this).find(".btn_group").css({ opacity: 0.0, visibility: "hidden" }).animate({ opacity: 1.0 });
+                //    }
+                //);
+                //$(nRow).attr('onclick', `detailAds('${aData.Id}', $(this))`);
+            },
+            columnDefs: [
+                { targets: 7, orderable: false }
+            ],
+            "columns": [
+                {
+                    "name": "OrderCode",
+                    "render": function (data, type, row) {
+                        return `<a href="#" onclick="show_invoice('${row["OrdersCode"]}')">#<b>${row["OrdersCode"]}</b></a>`;
+                    },
+                    "className": 'align-middle',
+                },
+                {
+                    "name": "Ticket",
+                    "render": function (data, type, row) {
+                        let html = '';
+                        if (row["TicketCode"] > 0) {
+                            html = `<a href="/ticket/detail/${row["TicketCode"]}?urlback=/device/dashboard">#<b>${row["TicketCode"]}</b></a><br />`;
+                        }
+                        return html;
+                    },
+                    "className": 'align-middle',
+                },
+                {
+                    "name": "MerchantName",
+                    "render": function (data, type, row) {
+                        return row["CustomerName"];
+                    },
+                    "className": 'align-middle',
+                },
+                {
+                    "name": "Station",
+                    "render": function (data, type, row) {
+                        let html = '';
+                        row["Packages"].forEach(p => {
+                            html += `<span> #${p.Code} - ${p.Name}</span><br />`;
+                        })
+
+                        return html;
+                    },
+                    "className": 'align-middle',
+                },
+                {
+                    "name": "Total",
+                    "render": function (data, type, row) {
+                        return `<b>$${row["GrandTotal"]}</b>`;
+                    },
+                    "className": 'align-middle',
+                },
+                {
+                    "name": "Status",
+                    "render": function (data, type, row) {
+                        let html = '';
+                        if (row["BundelStatus"] == '@UserContent.DEPLOYMENT_PACKAGE_STATUS.Complete.ToString()')
+                            html = '<div class="label label-success">COMPLETE</div>';
+                        else
+                            html = '<div class="label label-default">PREPARATION</div>'
+                        return html;
+                    },
+                    "className": 'align-middle',
+                },
+                {
+                    "name": "LastUpdate",
+                    "render": function (data, type, row) {
+                        let last = row["UpdatedBy"];
+                        let html = '';
+                        if (last != null && last != '') {
+                            last = last.split('|').pop().replace("-", "<br/>");
+                            let name = last.substring(last.indexOf("<br/>"));
+                            let date = last.substring(0, last.indexOf("<br/>"))
+                            let offset = moment().utcOffset();
+                            let local = moment.utc(date).utcOffset(offset).format("MMM DD, YYYY LT");
+
+                            html = `<span id="localtime-update-${row["Id"]}">${local}
+                                    </span>${name}`;
+                        }
+                        return html;
+                    },
+                    "className": 'align-middle',
+                },
+                {
+                    "name": "Action",
+                    "render": function (data, type, row) {
+                        let html = '';
+                        if (row["BundelStatus"] == '@UserContent.DEPLOYMENT_PACKAGE_STATUS.Preparation.ToString()')
+                            html = '<a class="btn btn-default disabled">Not ready</a>'
+                        else if (row["BundelStatus"] == '@UserContent.DEPLOYMENT_PACKAGE_STATUS.Complete.ToString()')
+                            html = `<a class="btn btn-primary" onclick="show_progress_modal(${row["Id"]})">View</a>`;
+                        else
+                            html = `<a class="btn btn-warning" onclick="show_progress_modal(${row["Id"]})">Update</a>`;
+                        return html;
+                    },
+                    "className": 'align-middle',
+                },
+            ]
+        });
+    });
+</script>
+
+@*@foreach (var item in Model)
+    {
+        <tr @if (item.BundelStatus == "Completed") { @Html.Raw("class='strikeout'") }>
+            <td><a href="#" onclick="show_invoice('@item.OrdersCode')">#<b>@item.OrdersCode</b></a></td>
+            <td>
+                @if (item.TicketCode > 0)
+                {
+                    <a href="/ticket/detail/@item.TicketCode?urlback=/device/dashboard">#<b>@item.TicketCode</b></a><br />
+                }
+            </td>
+            <td>@item.CustomerName</td>
+
+            <td>
+                @foreach (var p in item.Packages)
+                {
+                    <span> #@p.Code - @p.Name</span><br />
+                }
+            </td>
+
+            <td><label class="label label-primary">@(item.GrandTotal?.ToString("#,##0 đ"))</label></td>
+            <td>
+                @if (item.BundelStatus == "Complete")
+                {
+                    <div class="label label-success">COMPLETE</div>
+                }
+                else
+                {
+                    <div class="label label-default">PREPARATION</div>
+                }
+            </td>
+            @{
+                //var lastUpdate = EnrichcousBackOffice.AppLB.CommonFunc.GetLastRowString(item.UpdatedBy ?? "", '|').Replace("-", "<br/>").Replace("/", " "));
+                var lastUpdate = item.UpdatedBy?.Split('|').Last().Replace("-", "<br/>");
+                DateTime date = DateTime.MinValue;
+                string name = "";
+                if (!string.IsNullOrEmpty(lastUpdate))
+                {
+                    date = Convert.ToDateTime(lastUpdate.Substring(0, lastUpdate.IndexOf("<br/>")));
+                    name = lastUpdate.Substring(lastUpdate.IndexOf("<br/>"));
+                }
+            }
+            <td>
+                <span id="localtime-update-@item.Id">
+                    <script>convertLocalTime("update-" + @item.Id, "@date")</script>
+                </span>
+                @(Html.Raw(name))
+            </td>
+            <td style="padding:5px">
+                @if (item.BundelStatus == UserContent.DEPLOYMENT_PACKAGE_STATUS.Preparation.ToString())
+                {
+                    <a class="btn btn-default disabled">Not ready</a>
+                }
+                else if (item.BundelStatus == UserContent.DEPLOYMENT_PACKAGE_STATUS.Complete.ToString())
+                {
+                    <a class="btn btn-primary" onclick="show_progress_modal(@item.Id)">View</a>
+                }
+                else
+                {
+                    <a class="btn btn-warning" onclick="show_progress_modal(@item.Id)">Update</a>
+                }
+            </td>
+
+        </tr>
+    }*@

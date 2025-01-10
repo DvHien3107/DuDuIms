@@ -1,0 +1,62 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.T_SupportTicket>
+
+@*<div class="detail-sales-lead" style="margin: auto;float: none;padding: 10px 10px 10px 0;text-align: right;display: flex;flex-wrap: wrap;">
+        <a target="_blank" href="/ticket_new/update?page=SupportTicket&id=0&cid=@ViewBag.CustomerID&urlback=/Merchantman/Detail/@ViewBag.CustomerID?tab=ticket&t=all" class="btn btn-primary pull-right" style="margin-left:auto;">
+            <i class="fa fa-plus"></i> New ticket
+        </a>
+    </div>*@
+@*<div id="Ticket_Wrapper" style="padding: 1rem;-webkit-box-shadow: 0 1px 5px 0 rgb(0 0 0 / 30%);box-shadow: 0 1px 5px 0 rgb(0 0 0 / 30%);border-radius: 1rem;">
+
+    </div>*@
+
+@*<div class="box box-primary box-solid" style="border-radius:unset">
+        <div class="box-header with-border">
+            <h4 class="box-title">Tickets</h4>
+        </div>
+        <div class="box-body">
+        </div>
+    </div>*@
+
+
+<div class="content-ticket">
+    <div>
+        <a class="btn  btn-sm btn-app btn-change-statustk btn-info active" data-status="all">
+            <span class="badge bg-yellow" id="all"></span>
+            <i class="fa fa-reorder"></i> All ticket
+        </a>
+        <a class="btn  btn-sm btn-app btn-change-statustk" data-status="opened">
+            <span class="badge bg-blue" id="opened"></span>
+            <i class="fa fa-eye"></i> Open ticket
+        </a>
+        <a class="btn btn-sm btn-app btn-change-statustk" data-status="closed">
+            <span class="badge bg-red" id="closed"></span>
+            <i class="fa fa-eye-slash"></i> Close ticket
+        </a>
+        <a target="_blank" href="/ticket_new/update?page=SupportTicket&id=0&cid=@ViewBag.CustomerID&urlback=/Merchantman/Detail/@ViewBag.CustomerID?tab=ticket&t=all" class="btn btn-primary pull-right" style="margin-left:auto;">
+            <i class="fa fa-plus"></i> New ticket
+        </a>
+    </div>
+    <div>
+        <div class="input-group pull-right" style="padding: 2px">
+            <button id="search-ticket-submit" class="btn btn-primary"><i class="fa fa-search" aria-hidden="true"></i> Search</button>
+        </div>
+        <div class="input-group col-sm-4 pull-right" style="padding: 2px">
+            <input type="text" id="SearchText-Ticket" name="SearchText-Ticket" placeholder="Ticket Name" class="form-control change-filter" value="">
+        </div>
+    </div>
+    <div class="mailbox-messages">
+        <table class="table table-hover table-striped datatable" style="width:100%" id="ticketTable" data-order='[[0,"desc"]]'>
+        </table>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    HandleTicketTab.Init();
+</script>
+
+<style>
+    .badge{
+        top: 0 !important;
+    }
+</style>

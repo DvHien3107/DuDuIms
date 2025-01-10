@@ -1,0 +1,176 @@
+﻿
+
+@{
+    Layout = null;
+    ViewBag.Title = "IMS System";
+}
+
+<!-- Content Header (Page header) -->
+@*<section class="content-header">
+        <h1>
+            Dashboard
+            <small>Statistical settings</small>
+        </h1>
+        <ol class="breadcrumb">
+            <li><a href="/home"><i class="fa fa-dashboard"></i> Home</a></li>
+            <li class="active">Dashboard</li>
+        </ol>
+    </section>*@
+
+
+<!-- Main content -->
+@*<section class="content">
+
+
+    <section class="content">
+        <div class="row">
+
+            <div class="col-md-12">
+                <div class="box box-primary">
+                    <div class="box-header with-border bg-warning">
+                        <h3 class="box-title pull-left" style="margin-top:5px">IMS CALENDAR</h3>
+                        <div class="pull-right">
+                            <button class="btn btn-default"> + New Event</button>
+                        </div>
+                    </div>
+                    <div class="box-body">*@
+
+<!--calendar-->
+@*</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </section>*@
+
+
+
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <meta charset='utf-8' />
+
+
+    <link href="~/Content/Admin/bower_components/fullcalendar/core/main.min.css" rel="stylesheet" />
+    <link href="~/Content/Admin/bower_components/fullcalendar/daygrid/main.min.css" rel="stylesheet" />
+    <link href="~/Content/Admin/bower_components/fullcalendar/timegrid/main.min.css" rel="stylesheet" />
+    <link href="~/Content/Admin/bower_components/fullcalendar/list/main.min.css" rel="stylesheet" />
+
+    <script src="~/Content/Admin/bower_components/fullcalendar/core/main.min.js"></script>
+    <script src="~/Content/Admin/bower_components/fullcalendar/interaction/main.min.js"></script>
+    <script src="~/Content/Admin/bower_components/fullcalendar/daygrid/main.min.js"></script>
+    <script src="~/Content/Admin/bower_components/fullcalendar/timegrid/main.min.js"></script>
+    <script src="~/Content/Admin/bower_components/fullcalendar/list/main.min.js"></script>
+
+    <script type="text/javascript">
+        var d = new Date();
+      
+        var m = (d.getMonth() + 1) >= 10 ? (d.getMonth() + 1) : '0' + (d.getMonth() + 1);
+        var da = d.getDate() >= 10 ? d.getDate() : '0' + d.getDate();
+        var date_now = d.getFullYear() + "-" +m + "-" + da;
+        var calendar;
+        document.addEventListener('DOMContentLoaded', function () {
+            var calendarEl = document.getElementById('calendar');
+            calendar = new FullCalendar.Calendar(calendarEl, {
+                plugins: ['interaction', 'dayGrid', 'timeGrid', "list"],
+                header: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
+                },
+                defaultDate: date_now,
+                navLinks: true, // can click day/week names to navigate views
+                selectable: true,
+                selectMirror: true,
+                select: function (arg) {
+                    var title = prompt('Event Title:');
+                    if (title) {
+                        calendar.addEvent({
+                            title: title,
+                            start: arg.start,
+                            end: arg.end,
+                            allDay: arg.allDay
+                        })
+                    }
+                    calendar.unselect()
+                },
+                editable: true,
+                eventLimit: true, // allow "more" link when too many events
+                eventClick: function (info) {
+                    info.el.style.borderColor = 'red';
+                    alert('Event: ' + info.event.id);
+                    //alert('Coordinates: ' + info.jsEvent.pageX + ',' + info.jsEvent.pageY);
+                    //alert('View: ' + info.view.type);
+                    // change the border color just for fun
+                    console.log(info);
+                    info.el.style.borderColor = '';
+
+                },
+                events: {
+                    url: '/test/GetAllEvent',
+                    method: 'POST',
+                    extraParams: {
+                        year: d.getFullYear()
+                    },
+                    failure: function () {
+                        alert('there was an error while fetching events!');
+                    },
+                 
+                }
+
+            });
+            calendar.render();
+            
+
+        });
+
+        
+
+        function abc() {
+            //extendedProps
+            calendar.addEvent({ title: 'demo remove event', start: '2020-03-09T11:08:00', allDay: true, id:123456789 });
+            //calendar.refetchEvents();
+            var s = calendar.getEventById('123456789');
+            console.log(s);
+            //s.remove();
+            //var event = calendar.getEventById('a');
+            //event.setProp('title', 'new title');
+
+           
+            
+        }
+
+        //add event
+        //remove event.
+        //refesh event sau khi update.
+        //loa
+
+    </script>
+
+    <style>
+
+
+        body {
+            margin: 40px 10px;
+            padding: 0;
+            font-family: Arial, Helvetica Neue, Helvetica, sans-serif;
+            font-size: 14px;
+        }
+
+        #calendar {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <button onclick="abc()">LOAD CALENDAR</button>
+    <div id='calendar'>
+
+    </div>
+
+</body>
+</html>
+
+
+

@@ -1,0 +1,28 @@
+﻿@foreach (var et in Model)
+{
+    <div class="row" style="margin-bottom:20px">
+        <div class="col-md-10">
+            <div class="box box-default box-solid box-sm" style="padding:0px; border-radius:unset;margin-bottom:0px">
+                <div class="box-header with-border" style="padding:5px">
+                    <a href="#" onclick="$('#btn_@et.Id').trigger('click')">
+                        <h4 class="box-title col-md-10" style="font-weight: normal">Subject: @et.Name</h4>
+                    </a>
+                    <div class="box-tools pull-right">
+                        <a class="btn fa fa-caret-down" data-toggle="collapse" id="btn_@et.Id" href="#collapse_@et.Id" role="button" aria-expanded="false" title="Show content"
+                           onclick="ShowContent('@et.Id')">
+                        </a>
+                    </div>
+                </div>
+
+                <div class="box-body" style="padding:0px 10px">
+                    <div class="collapse" id="collapse_@et.Id">
+                        <div style="height: 30px"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <a class="btn btn-primary btn-sm" onclick="SelectEmailtemplate('@et.Id')" title="Select"> Select</a>
+        </div>
+    </div>
+}

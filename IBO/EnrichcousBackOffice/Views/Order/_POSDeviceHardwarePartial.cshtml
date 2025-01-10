@@ -1,0 +1,117 @@
+﻿@model EnrichcousBackOffice.Models.O_Product_Model
+@using EnrichcousBackOffice.Controllers
+
+@{
+    var list_Model_cDevice = ViewBag.list_Model_cDevice as List<Model_count_device>;
+    int _inventory = ViewBag.Inventory == null ? 0 : ViewBag.Inventory;
+    var list_vendor = ViewBag.ListVendor as List<VendorCustomize>;
+}
+
+
+@if (ViewBag.Error != null)
+{
+    <br />
+    <center>
+        <span class="text-danger" style="font-weight:bold"><i class="icon fa fa-warning"></i> @ViewBag.Error</span>
+    </center>
+}
+else if (Model == null)
+{
+    <br />
+    <center>
+        <span class="text-danger" style="font-weight:bold"><i class="icon fa fa-warning"></i> This product has no model</span>
+    </center>
+}
+else
+{
+    <div>
+        <hr />
+        <input type="hidden" name="hd_product_KEY" value="1" />
+        <input type="hidden" name="hd_product_code" value="@(Model?.ProductCode)" />
+        <input type="hidden" name="hd_model_code" value="@(Model?.ModelCode)" />
+        <input type="hidden" name="hd_model_name" value="@(Model?.ModelName)" />
+        <input type="hidden" name="hd_original_number" value="@(ViewBag.OriginalNumber ?? 0)" />
+        <input type="hidden" name="hd_add_update" />
+
+        <div class="col-md-5" style="padding-left:0px">
+            <img id="p_picture" class="img-thumbnail" src="@(string.IsNullOrEmpty(Model.Picture) == true ? "/Upload/Img/no_image.jpg" : Model.Picture)" style="width:210px" />
+        </div>
+        <div class="col-md-7" style="padding-right:0px">
+            @*<div class="form-group">
+                    <label class="control-label">Vendor:</label>
+                    <select class="form-control" name="vendor" onchange="select_vendor()">
+                        @foreach (var item in list_vendor)
+                        {
+                            <option value="@item.VendorId">@item.VendorName</option>
+                        }
+                    </select>
+                </div>*@
+
+            <div class="form-group">
+                <label class="control-label">Model:</label>
+                <select id="p_model" class="form-control" name="p_model" style="width:100%" onchange="select_model()">
+                    @if (list_Model_cDevice.Count > 0)
+                    {
+                        foreach (var item in list_Model_cDevice)
+                        {
+                            <option @if (ViewBag.FeatureEdit != null && ViewBag.FeatureEdit == item.ModelCode) { @Html.Raw("selected") } value="@item.ModelCode">- @(item.ModelName) - @(item.DeviceCount + " items")</option>
+                        }
+                    }
+                    else
+                    {
+                        <option disabled>- No Model</option>
+                    }
+
+                </select>
+            </div>
+            <div class="form-group form-inline" id="color_show" style="display:none">
+                <label class="control-label" style="width:35%">Color:</label>
+                <label class="label label-warning color" style="width:64%"></label>
+            </div>
+            <div class="form-group form-inline">
+                <label class="control-label" style="width:35%">Inventory:<br /><span style="color:#00a65a; font-size:11px">(Remaining amount)</span></label>
+                <input type="text" class="form-control" name="p_inventory" value="@_inventory" style="width:64%" disabled />
+            </div>
+            <div class="form-group form-inline">
+                <label class="control-label" style="width:35%">Quantity:</label>
+                <div class="input-group" style="width:64%">
+                    <div class="input-group-addon" style="cursor:pointer" onclick="$('#p_quantity').val(parseInt($('#p_quantity').val()) - 1)">
+                        <i class="fa fa-minus"></i>
+                    </div>
+                    <input type="text" id="p_quantity" class="form-control" value="@ViewBag.Quantity" name="p_quantity" readonly />
+                    <div class="input-group-addon" style="cursor:pointer" onclick="$('#p_quantity').val(parseInt($('#p_quantity').val()) + 1)">
+                        <i class="fa fa-plus"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group form-inline">
+                <label class="control-label" style="width:35%">Price:</label>
+                <div class="input-group" style="width:64%">
+                    <div class="input-group-addon"><i class="fa fa-dollar"></i></div>
+                    <input type="text" class="form-control" name="p_price" value="@(Model?.Price?.ToString("#,##0.##"))" onblur="change_price_format('device')" />
+                </div>
+            </div>
+
+            <div class="pull-right">
+                <button type="button" class="btn btn-primary btn-flat" onclick="add_device()">
+                    <i class="fa fa-plus"></i><span id="btn_name"> Add</span>
+                    <img id="add_dv_loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                </button>&nbsp;&nbsp;
+                <button type="button" class="btn btn-default btn-flat" onclick="close_div_POS()">
+                    <i class="fa fa-close"></i><span id="_btn_close"> Close</span>
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+<script type="text/javascript">
+    $('#p_feature').select2();
+
+    function close_div_POS() {
+        $("#div_POS_Device_Hardware").hide('alow');
+        $("#pos_device").val("");
+        $("#pos_device").prop("disabled", false);
+        $("#_option_select").prop("disabled", false);
+    }
+</script>

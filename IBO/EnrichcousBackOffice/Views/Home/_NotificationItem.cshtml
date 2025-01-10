@@ -1,0 +1,64 @@
+﻿@model EnrichcousBackOffice.Models.CustomizeModel.Nofitication.NotificationModel
+@using EnrichcousBackOffice.Services.Notifications
+@using EnrichcousBackOffice.AppLB
+@helper RenderIconFromCategory(string Category)
+{
+    switch (Category)
+    {
+        case NotificationCategoryDefine.Ticket:
+            @*<i style="color:#fac144 !important" class="fa fa-ticket" aria-hidden="true"></i>*@
+            <span class="label label-primary"><i class="fa fa-ticket" aria-hidden="true"></i> Ticket</span>
+            break;
+        case NotificationCategoryDefine.TicketReminder:
+            @*<i style="color:#fac144 !important" class="fa fa-ticket" aria-hidden="true"></i>*@
+            <span class="label label-primary"><i class="fa fa-ticket" aria-hidden="true"></i> Ticket</span>
+            break;
+        case NotificationCategoryDefine.Order:
+            @*<i style="color:#e55353 !important" class="fa fa-shopping-cart" aria-hidden="true"></i>*@
+            <span class="label label-success"><i class="fa fa-shopping-cart" aria-hidden="true"></i> Order</span>
+            break;
+        case NotificationCategoryDefine.SalesLead:
+            @*<i style="color:#39f !important" class="fa fa-user text-warning" aria-hidden="true"></i>*@
+            <span class="label label-info"><i class="fa fa-user" aria-hidden="true"></i> SalesLead</span>
+            break;
+        case NotificationCategoryDefine.Task:
+            @*<i style="color:#39f !important" class="fa fa-pencil-square-o" aria-hidden="true"></i>*@
+            <span class="label label-warning"><i class="fa fa-pencil-square-o" aria-hidden="true"></i> Task</span>
+            break;
+        default:
+            break;
+    };
+
+}
+
+<li class="notification-item" id="notification-item-@Model.Id">
+    <span class="notification-more-button"
+          onclick="showMarkAsRead('@Model.Id',this)"><i class="fa fa-ellipsis-h" aria-hidden="true"></i></span>
+    <div id="myDropdown-@Model.Id" class="dropdown-notification-action-content" data-content="@Model.Id">
+        <a href="javascript:void(0)" class="btn-notification-read" id="btn-mark-read-@Model.Id" onclick="markAsRead(this, '@Model.Id');" style="@(Model.IsView ? "display:none" : "")">Mark as read</a>
+        <a href="javascript:void(0)" class="btn-notification-unread" id="btn-mark-unread-@Model.Id" onclick="markAsRead(this, '@Model.Id', false);" style="@(Model.IsView ? "" : "display:none")">Mark as unread</a>
+    </div>
+
+    <a href="javascript:void(0);" id="notification-container-@Model.Id" class="notification-container @(Model.IsView?"notification-read":"") notification_@(Model.TemplateId)_@(Model.EntityId)" data-link="@(Model.Category ==NotificationCategoryDefine.SalesLead?(Model.Url+"&mode=iframe"):(Model.Url+"?mode=iframe"))" onclick="setIframeTicket(this);markAsRead(this, '@Model.Id');">
+        <span class="notification-mark-read-icon"><i id="icon-view-@Model.Id" class="fa icon-view @(Model.IsView?"fa-eye":"fa-bell-o bell") icon-view" aria-hidden="true"></i></span>
+        <p>@RenderIconFromCategory(Model.Category)</p>
+        <p class="notification-content">@Html.Raw(Model.Description)</p>
+        <p>
+            <span class="text-danger">@(Model.CreateBy??"System")</span>
+            <span class="notification-time">
+                <i class="fa fa-clock-o" aria-hidden="true"></i>
+
+
+                <span id="time-notification-readat-@Model.Id" class="time-noti-read time-noti-read-define" style="@(Model.IsView?"":"display:none")">
+                    @(Model.ViewTime!=null? Model.ViewTime.Value.UtcToIMSDateTime().ToString("MMM dd, yyyy hh:mm tt"):"")
+                </span>
+
+                <span id="time-notification-createat-@Model.Id" class="time-noti-raw time-noti time-noti-createat" style="@(Model.IsView?"display:none":"")">
+                    @(Model.CreateAt!=null? Model.CreateAt.UtcToIMSDateTime().ToString("MMM dd, yyyy hh:mm tt"):"")
+                </span>
+
+
+            </span>
+        </p>
+    </a>
+</li>

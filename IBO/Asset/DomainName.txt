@@ -1,0 +1,53 @@
+
+https://pro64.emailserver.vn:2096/
+info@mangoforsalon.com / ?W80*!^%&arr
+
+---------------
+server ims dev:
+35.239.206.23
+son-ims|hdhg@315RN!19
+sql:
+sa|cc@3347RT@19
+-------------------
+:.DEV
+-------------------
+POS: https://dev-manage.enrichcous.com/
+CHECKIN: https://dev-checkin.enrichcous.com/home
+API: https://dev-api.enrichcous.com/swagger/
+MANGOSLICE: https://dev-slice.enrichcous.com/
+SMARTCHECKIN: https://dev-manage.enrichcous.com/BookOnline?parameters=q4GkAACezsoiKrRHhCzs8w%3d%3d
+-------------------
+:.UAT
+-------------------
+POS: https://uat-manage.enrichcous.com:4443/
+CHECKIN: https://uat-checkin.enrichcous.com:4443/login
+API: http://192.168.1.12:8041/swagger/
+MANGOSLICE: https://uat-slice.enrichcous.com:4443/Account/Login
+SMARTCHECKIN: https://uat-manage.enrichcous.com:4443/BookOnline?parameters=UFQgjGok7dYx6vx1doz27w%3d%3d
+-------------------
+:.STAGING
+-------------------
+POS: https://staging-manage.enrichcous.com/
+CHECKIN: https://staging-checkin.enrichcous.com/
+API: http://api2.enrichpos/swagger/
+MANGOSLICE: https://staging-slice.enrichcous.com/account/login
+SMARTCHECKIN: https://staging-manage.enrichcous.com/BookOnline?parameters=1SrBrianPtfHZVhrSsQJNA%3d%3d
+
+
+-------------------
+List time zon nha em
+[POSLINK]/admin/salon/getLstTimeZoneAPI()
+Update Timezone vào POS nha em
+[POSLINK]/admin/salon/UpdateTimeZoneBySel(string time, string name, string IMSID)
+--------------------by nhat
+
+
+
+-------------------
+:.PRODUCT
+-------------------
+POS: http://manage2.mangoforsalon.com/
+CHECKIN: https://checkin.mangoforsalon.com/
+API: http://10.142.0.32:8017/swagger/
+MANGOSLICE: https://slice.mangoforsalon.com/account/login
+SMARTCHECKIN: https://manage2.mangoforsalon.com/BookOnline?parameters=eCE5xUs7o10Xf7pezzvFmw%3d%3d

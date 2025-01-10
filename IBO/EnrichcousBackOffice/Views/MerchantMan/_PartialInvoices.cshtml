@@ -1,0 +1,315 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.O_Orders>
+@using EnrichcousBackOffice.Models.CustomizeModel;
+@using EnrichcousBackOffice.Models;
+@using EnrichcousBackOffice.Utils.IEnums
+@using EnrichcousBackOffice.AppLB
+@using Inner.Libs.Helpful
+@{
+    List<long> colected = ViewBag.colected ?? new List<long>();
+    var Subscr_his = ViewBag.Subscr_his as List<Subscription_History_view>;
+}
+<ul id="history_tabs" class="nav nav-tabs">
+    <li class="active" style="margin-left:20px"><a data-toggle="tab" href="#history_invoices">Invoices</a></li>
+    <li><a data-toggle="tab" href="#histrory_subscriptions">Subscriptions</a></li>
+</ul>
+
+<div class="tab-content" style="padding:20px">
+    <div id="history_invoices" class="tab-pane fade in active">
+        <table class="table table-bordered table-striped">
+            <thead style="background-color: #AAD3EA">
+                <tr>
+                    <th>#</th>
+                    <th>Created date</th>
+                    <th>Due date</th>
+                    <th>Status</th>
+                    <th>Amount</th>
+                    <th>Receipt</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Count() > 0)
+                {
+                    foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                <a href="/order/estimatesdetail/?code=@item.OrdersCode&url_back=/merchantman/detail/?code=@item.CustomerCode">#@item.OrdersCode</a>
+                            </td>
+                            <td>
+                                @if (item.CreatedAt.HasValue)
+                                {
+                                    <span>
+                                        @item.CreatedAt.Value.UtcToIMSDateTime().ToString("MMM dd, yyyy")
+                                    </span>
+                                }
+                            </td>
+                            <td>
+                                @if (item.DueDate.HasValue)
+                                {
+                                    <span>
+                                        @item.DueDate.Value.ToString("MMM dd, yyyy")
+                                    </span>
+                                }
+                            </td>
+                            <td>
+                                @* @(colected.Contains(item.Id) ? "Collected" : "New") *@
+                                @{ var label = "danger";
+                                    var status = Ext.EnumParse<InvoiceStatus>(item.Status);
+                                    switch (status)
+                                    {
+                                        case InvoiceStatus.Open: label = "default"; break;
+                                        case InvoiceStatus.Paid_Wait: label = "warning"; break;
+                                        case InvoiceStatus.Closed: label = "success"; break;
+                                    }
+                                }
+                                <span class="label label-@(label)" @(status == InvoiceStatus.Paid_Wait ? "data-html=\"true\" data-toggle=\"tooltip\" data-original-title=\"" + item.PaymentMethod + "<br/>" + item.PaymentNote + "\" style=\"cursor: pointer\"" : "")>@(status.Code<string>())</span>
+                                @if (item.Status == InvoiceStatus.Open.ToString())
+                                {
+                                    <div class="btn-group" style="float:right">
+                                        <button type="button" class="btn btn-warning btn-sm dropdown-toggle" data-toggle="dropdown" aria-expanded="true">
+                                            <b style="line-height: 25px; font-size: 2em; display: block; margin-top: -12px; color:#fff">...</b>
+                                        </button>
+                                        <ul class="dropdown-menu" style="box-shadow: 5px 10px 8px #888888;">
+                                            <li><a href="/order/sendetimatesinvoice?_code=@item.OrdersCode&flag=Invoice" target="_blank"><i class="fa fa-file-text"></i> Email to merchant</a></li>
+                                            <li><a href="#" onclick="resend_payment_email('@item.OrdersCode')"><i class="fa fa-envelope"></i>Email payment link</a></li>
+                                            <li><a href="#" onclick="resend_payment_sms('@item.OrdersCode')"><i class="fa fa-comment"></i>SMS payment link</a></li>
+                                            <li><a href="#" onclick="FOC('@item.OrdersCode')"><i class="fa fa-check-circle"></i>FOC</a></li>
+                                        </ul>
+                                    </div>
+                                }
+                            </td>
+                            <td><b>@(item.GrandTotal?.ToString("$#,##0.#0"))</b></td>
+                            <td><a onclick="show_invoice('@item.OrdersCode')">[View receipt]</a></td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="6" style="text-align:center">(This merchant does not have any invoice)</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div id="histrory_subscriptions" class="tab-pane fade">
+        <div class="row" style="margin:0">
+            @if (Subscr_his != null && Subscr_his.Count > 0)
+            {
+                <table class="table table-bordered table-hover" style="margin-bottom:0">
+                    <thead>
+                        <tr style="border: 1px solid var(--main-color-2); background-color: var(--main-color-1); color: #fff; font-weight:bold">
+                            <th style="width: 10px"></th>
+                            <th>Product</th>
+                            <th>Type</th>
+                            <th>Period</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Current Status</th>
+
+                        </tr>
+                    </thead>
+
+                    @foreach (var sub in Subscr_his)
+                    {
+                        <tbody id="his_@sub.Product.Code" class="prd_his" style="border: 1px solid #ddd; margin-bottom: -2px; padding:0; overflow: hidden">
+                            <tr class="product_head" style="padding:7px 20px; text-align:left; cursor:pointer" onclick="show_subs_his('@sub.Product.Code')">
+                                <td>
+                                    <i class="fa fa-plus pull-right" style="font-size:1.5em;margin:0"></i>
+                                    <i class="fa fa-minus pull-right" style="font-size:1.5em;margin:0"></i>
+                                </td>
+                                <td><b style="padding-right: 10px">@sub.Product.Name</b></td>
+                                <td>
+                                    @if (sub.Product.isAddon == true)
+                                    {<label class="label label-warning">Addon</label>}
+                                    else
+                                    { <label class="label label-success">Product</label>}
+                                </td>
+                                <td>@(sub.Product.SubscriptionDuration ?? "ONETIME")</td>
+                                <td id="localtime-start_@sub.Product.Id">
+                                    <script>convertLocalTime("start_@sub.Product.Id", "@(sub.Subscription.Where(s => s.Active != -1).Min(s => s.EffectiveDate))", "MMMddyyyy")</script>
+                                </td>
+                                <td id="localtime-end_@sub.Product.Id">
+                                    <script>convertLocalTime("end_@sub.Product.Id", "@(sub.Subscription.Where(s => s.Active != -1).Max(s => s.RenewDate))","MMMddyyyy")</script>
+                                </td>
+                                <td>
+                                    @if (sub.Subscription.Max(s => s.Active) == 1 && sub.Product.isAddon != true)
+                                    {
+                                        <label class="label label-success">Active</label>
+                                    }
+                                    else if (sub.Subscription.Max(s => s.Active) == 0)
+                                    {
+                                        <label class="label label-default">Deactive</label>
+                                    }
+                                    else if (sub.Subscription.Max(s => s.Active) == -1)
+                                    {
+                                        <label class="label label-warning">Waiting</label>
+                                    }
+                                    else if (sub.Subscription.Max(s => s.Active) == -2 || sub.Product.isAddon == true)
+                                    {
+                                        <label class="label label-info">History</label>
+                                    }
+                                </td>
+
+                            </tr>
+                            <tr>
+                                <td colspan="90" style="padding:0px;">
+                                    <div class="list_his" style="overflow-y:hidden; display:none; margin:10px; border: 1px solid var(--main-color-1)">
+                                        <table class="table table-bordered table-hover table-striped" style="margin-bottom:0px">
+                                            <thead>
+                                                <tr>
+                                                    <th style="width:25%">Effective Date</th>
+                                                    <th style="width:5%">Status</th>
+                                                    <th style="width:20%">Last Update</th>
+                                                    <th style="width:10%">Invoice</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var s in sub.Subscription)
+                                                {
+                                                    <tr>
+                                                        <td>
+                                                            @s.EffectiveDate.Value.ToString("MMM dd, yyyy") @if (s.RenewDate.HasValue)
+                                                            {<span>- @s.RenewDate.Value.ToString("MMM dd, yyyy")</span>}
+                                                        </td>
+                                                        <td>
+                                                            @if (s.Active == 1 && sub.Product.isAddon != true)
+                                                            {
+                                                                <label class="label label-success">Active</label>
+                                                            }
+                                                            else if (s.Active == 0)
+                                                            {
+                                                                <label class="label label-default">Deactive</label>
+                                                            }
+                                                            else if (s.Active == -1)
+                                                            {
+                                                                <label class="label label-warning">Waiting</label>
+                                                            }
+                                                            else if (s.Active == -2 || sub.Product.isAddon == true)
+                                                            {
+                                                                <label class="label label-info">History</label>
+                                                            }
+                                                        </td>
+                                                        <td>@s.LastUpdateAt <span style="display: inline-block">by @s.LastUpdateBy</span></td>
+                                                        <td>@if (!string.IsNullOrEmpty(s.OrderCode))
+                                                        {<span>#@s.OrderCode <br /><a onclick="show_invoice('@s.OrderCode')">[View receipt]</a></span>}</td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    }
+                </table>
+            }
+        </div>
+    </div>
+</div>
+<style>
+    .prd_his .fa {
+        cursor: pointer;
+    }
+
+        .prd_his .fa.fa-plus {
+            display: inherit;
+        }
+
+        .prd_his .fa.fa-minus {
+            display: none;
+        }
+
+    .prd_his.active .fa.fa-plus {
+        display: none;
+    }
+
+    .prd_his.active .fa.fa-minus {
+        display: inherit;
+    }
+</style>
+
+<script>
+    function show_subs_his(code) {
+        if ($('#his_' + code).hasClass("active")) {
+            $('#his_' + code).removeClass("active");
+            $('#his_' + code + " .list_his").slideUp(200);
+        } else {
+            $('.prd_his.active').removeClass("active").find('.list_his').slideUp(200);
+            $('#his_' + code).addClass("active");
+            $('#his_' + code + " .list_his").slideDown(300);
+        }
+    }
+    function resend_payment_email(order_code) {
+
+        if (confirm("Do you want to resend payment email?")) {
+            overlayOn();
+            $.ajax({
+                url: "/order/ResendPaymentEmail",
+                dataType: "json",
+                method: "post",
+                data: { order_code }
+            })
+                .done(function (data) {
+                    if (data[0]) {
+                        success(data[1], "topRight");
+                    } else {
+                        error(data[1]);
+                    }
+                })
+                .fail(function () {
+                })
+                .always(function () {
+                    overlayOff();
+                });
+        }
+    }
+    function resend_payment_sms(order_code) {
+        if (confirm("Do you want to send payment SMS?")) {
+            overlayOn();
+            $.ajax({
+                url: "/order/ResendPaymentSMS",
+                dataType: "json",
+                method: "post",
+                data: { order_code }
+            })
+                .done(function (data) {
+                    if (data[0]) {
+                        success(data[1], "topRight");
+                    } else {
+                        error(data[1]);
+                    }
+                })
+                .fail(function () {
+                })
+                .always(function () {
+                    overlayOff();
+                });
+        }
+    }
+
+    function FOC(order_code) {
+
+        if (confirm("Do you want to set FOC to this Invoice?")) {
+            overlayOn();
+            $.ajax({
+                url: "/order/FOC",
+                dataType: "json",
+                method: "post",
+                data: { order_code }
+            })
+                .done(function (data) {
+                    if (data[0]) {
+
+                        location.reload();
+                    } else {
+                        error(data[1]);
+                    }
+                })
+                .fail(function () {
+                })
+                .always(function () {
+                    overlayOff();
+                });
+        }
+    }
+</script>
+

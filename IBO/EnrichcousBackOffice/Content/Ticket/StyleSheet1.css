@@ -1,0 +1,45 @@
+﻿.title-transfer th {
+    text-align: center
+}
+
+td p {
+    /*margin: 10px*/
+}
+
+td li {
+    background-color: var(--main-color-1);
+    border-color: var(--main-color-2);
+    padding: 5px 3px;
+    color: #fff;
+    list-style: none;
+    border-radius: 5px;
+    width: auto;
+}
+
+.wrapper-update {
+    background-color: #d2d6de78;
+    max-height: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -webkit-line-clamp: 4;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    max-width: 250px;
+}
+
+.read-more-update .content_tooltip {
+    visibility: hidden;
+    min-width: 250px;
+    background-color: #555;
+    color: #fff;
+    border-radius: 6px;
+    padding: 5px 3px;
+    font-size: 13px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    max-width: 330px;
+    left: 50%;
+    transform: translate(-22%,-13px);
+    opacity: 0;
+    transition: opacity 0.3s;

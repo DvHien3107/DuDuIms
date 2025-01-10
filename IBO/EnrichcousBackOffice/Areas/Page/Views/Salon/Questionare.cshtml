@@ -1,0 +1,1032 @@
+@model EnrichcousBackOffice.Models.C_Questionare
+@using EnrichcousBackOffice.Models
+@using EnrichcousBackOffice.ViewControler
+
+@{
+    Layout = "~/Areas/Page/Views/Shared/_Questionare_Layout.cshtml";
+
+    var cus = ViewBag.Customer as C_Customer;
+    ViewBag.Title = "Questionare form - " + (string.IsNullOrEmpty(Model.SalonName) == true ? cus.BusinessName : Model.SalonName);
+
+    var list_nonTech = ViewBag.ListNonTechnician as List<QuestNonTechViewService>;
+    var list_Tech = ViewBag.ListTechnician as List<QuestTechViewService>;
+    var nextKey_nonTech = list_nonTech?.Count() + 1;
+    var nextKey_Tech = list_Tech?.Count() + 1;
+}
+
+<div class="container forms-form">
+    <div class="logo">
+        <img src="~/Areas/Page/Content/img/logo.png" />
+    </div>
+    <h1>Salon Starter Questionnaire</h1>
+
+    @if (TempData["error"] != null)
+    {
+        <div class="alert alert-warning alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <span><i class="icon fa fa-warning"></i> @TempData["error"]</span>
+        </div>
+    }
+    else if (TempData["success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <span><i class="icon fa fa-check"></i> @TempData["success"]</span>
+        </div>
+    }
+    <style>
+        .img-paking {
+            height: 250px;
+            width: 250px;
+        }
+
+        .img-display img {
+            object-fit: contain;
+            display: block;
+            max-width: 250px;
+            max-height: 250px;
+        }
+
+
+        .custom-file-upload {
+            margin-top: 15px;
+            background: #2b97e6;
+            color: white;
+            padding: 3px 10px;
+            font-size: 14px;
+        }
+
+            .custom-file-upload i {
+                padding-right: 7px;
+            }
+
+        .view-name-img {
+            width: 200px !important;
+            height: 28px !important;
+        }
+        .SS4_Name, .SS4_Name:focus, .SS4_Name:hover {
+            border: none;
+            outline:none;
+            box-shadow:none;
+        }
+    </style>
+    @*
+
+        @if ((ViewBag.Authorization ?? false) == false)
+        {
+            <link rel="stylesheet" type="text/css" href="/content/login/css/util.css">
+            <link rel="stylesheet" type="text/css" href="/content/login/css/main.css">
+
+            <div class="wrap-login100" style="margin: 30px auto;border: 1px solid black;box-shadow: 1px 1px #888888;">
+                <div class="tab-content" style="">
+                    <div id="" class="tab-pane fade in active" style="position: relative;">
+                        <label style="position: absolute;top: 20px;left: 30px;">Please login to continue</label>
+                        <form class="login100-form validate-form" action="/Page/salon/QuestionnaireLogin" method="post" style="padding: 65px 80px 65px 190px">
+                            <input type="hidden" name="customer_id" value="@ViewBag.CustomerId" />
+                            <input type="hidden" name="customer_name" value="@ViewBag.CustomerName" />
+                            <input type="hidden" name="update" value="@(ViewBag.Update ? "true" : "false")" />
+                            <div class="wrap-input100 validate-input m-b-26" data-validate="Email is required">
+                                <span class="label-input100">Your Email</span>
+                                <input class="input100" type="text" name="email" placeholder="Enter your email">
+                                <span class="focus-input100"></span>
+                            </div>
+
+                            <div class="wrap-input100 validate-input m-b-18" data-validate="Password is required">
+                                <span class="label-input100">Password</span>
+                                <input class="input100" type="password" name="password" placeholder="Enter password">
+                                <span class="focus-input100"></span>
+                            </div>
+
+                            <div class="container-login100-form-btn">
+                                <button class="login100-form-btn" type="submit">
+                                    Login
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            return;
+        }
+    *@
+    <form id="questionare_form" action="questionare" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="Id" value="@Model.Id" />
+        <input type="hidden" name="cusId" value="@cus.Id" />
+        <input type="hidden" name="cusCode" value="@cus.CustomerCode" />
+        <div class="forms-progress progress-steps">
+            <ul class="nav nav-tabs">
+                <li id="li_information" class="li_tabs active"><a><span>Information</span></a></li>
+                <li id="li_boarding" class="li_tabs"><a><span>Boarding</span></a></li>
+                <li id="li_specifics" class="li_tabs"><a><span>Salon Specifics</span></a></li>
+                <li id="li_checkout" class="li_tabs"><a><span>Check Out</span></a></li>
+                <li id="li_question" class="li_tabs"><a><span>Security & Payroll Question</span></a></li>
+            </ul>
+        </div>
+        <div class="tab-content col-md-12 col-xs-12">
+            <div id="information" class="tab-pane fade active in">
+                <h2>Information</h2>
+                <div class="form-item col-md-12 col-xs-12">
+                    <div class="form">
+                        <div class="item col-md-12 col-xs-12">
+
+                            <div class="form-group col-md-6">
+                                <label for="SalonName">Salon Name <span class="offscreen">*</span></label>
+                                <input type="text" id="SalonName" class="form-control" name="SalonName" value="@(string.IsNullOrEmpty(Model.SalonName) == true ? cus.BusinessName : Model.SalonName)" placeholder="Salon Name" required>
+                                <span id="error_SalonName" class="fa fa-exclamation-circle errspan" style="display:none"></span>
+                            </div>
+
+                            <div class="form-group col-md-6">
+                                <label for="ContactName">Your Name <span class="offscreen">*</span></label>
+                                <input type="text" id="ContactName" class="form-control" name="ContactName" value="@(string.IsNullOrEmpty(Model.ContactName) == true ? cus.ContactName : Model.ContactName)" placeholder="Your Name" required>
+                                <span id="error_ContactName" class="fa fa-exclamation-circle errspan" style="display:none"></span>
+                            </div>
+
+
+                            <div class="form-group col-md-6">
+                                <label for="SalonName">Salon Email (Where your customers email you)<span class="offscreen">*</span></label>
+                                <input type="text" id="SalonEmail" class="form-control" name="SalonEmail" value="@(string.IsNullOrEmpty(Model.SalonEmail) == true ? cus.SalonEmail : Model.SalonEmail)" placeholder="Salon Email" required>
+                                <span id="error_SalonEmail" class="fa fa-exclamation-circle errspan" style="display:none"></span>
+                            </div>
+
+                            <div class="form-group col-md-6">
+                                <label for="SalonName">Owner Email (for you to electronically sign) <span class="offscreen">*</span></label>
+                                <input type="text" id="OwnerEmail" class="form-control" name="OwnerEmail" value="@(string.IsNullOrEmpty(Model.OwnerEmail) == true ? cus.Email : Model.OwnerEmail)" placeholder="Owner Email" required>
+                                <span id="error_OwnerEmail" class="fa fa-exclamation-circle errspan" style="display:none"></span>
+                            </div>
+
+                            <div class="form-group col-md-6">
+                                <label for="ContactNumber">Best Contact Number (Mobile) <span class="offscreen">*</span></label>
+                                <input type="text" id="ContactNumber" class="form-control" name="ContactNumber" value="@(string.IsNullOrEmpty(Model.ContactNumber) == true ? cus.OwnerMobile : Model.ContactNumber)" placeholder="Best Contact Number" required>
+                                <span id="error_ContactNumber" class="fa fa-exclamation-circle errspan" style="display:none"></span>
+                            </div>
+
+
+
+
+
+                            @*<div class="form-group">
+                        <label for="SalesRep">Sales Rep</label>
+                        <input type="text" id="SalesRep" class="form-control" name="SalesRep" value="@Model.SalesRep" placeholder="Sales Rep">
+                    </div>*@
+                            <div class="form-group col-md-6">
+
+                                <div><label>Can we text you?</label></div>
+                                <div class="form-check-inline">
+                                    <label class="label-radio">
+                                        <input class="input-radio" type="radio" name="AllowTexting" value="1" @if (Model.AllowTexting != false) { @Html.Raw("checked") }> Yes
+                                    </label>
+                                </div>
+                                <div class="form-check-inline">
+                                    <label class="label-radio">
+                                        <input class="input-radio" type="radio" name="AllowTexting" value="0" @if (Model.AllowTexting == false) { @Html.Raw("checked") }> No
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="clearfix"></div>
+
+
+
+
+                            <div class="form-group col-md-6">
+                                <label for="SalonAddress1">Salon address 1 <span class="offscreen">*</span></label>
+                                <input type="text" id="SalonAddress1" class="form-control" name="SalonAddress1" value="@(string.IsNullOrEmpty(Model.SalonAddress1) == true ? cus.SalonAddress1 : Model.SalonAddress1)" placeholder="Address 1" required>
+                                <span id="error_SalonAddress1" class="fa fa-exclamation-circle errspan" style="display:none"></span>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="SalonAddress2">Salon address 2</label>
+                                <input type="text" id="SalonAddress2" class="form-control" name="SalonAddress2" value="@(string.IsNullOrEmpty(Model.SalonAddress2) == true ? cus.SalonAddress2 : Model.SalonAddress2)" placeholder="Address 2">
+                                <span id="error_SalonAddress2" class="fa fa-exclamation-circle errspan" style="display:none"></span>
+                            </div>
+
+                            <div class="form-group col-md-4">
+                                <label for="city">City <span class="offscreen">*</span></label>
+                                <input type="text" id="SalonCity" class="form-control" name="SalonCity" value="@(string.IsNullOrEmpty(Model.SalonCity) == true ? cus.SalonCity : Model.SalonCity)" placeholder="City" required>
+                                <span id="error_SalonCity" class="fa fa-exclamation-circle errspan" style="display:none"></span>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="state">State <span class="offscreen">*</span></label>
+                                <input type="text" id="SalonState" class="form-control SalonState" name="SalonState" value="@(string.IsNullOrEmpty(Model.SalonState) == true ? cus.SalonState : Model.SalonState)" placeholder="State" required>
+                                <span id="error_SalonState" class="fa fa-exclamation-circle errspan" style="display:none"></span>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="state">Zipcode <span class="offscreen">*</span></label>
+                                <input type="text" id="SalonZipcode" class="form-control" name="SalonZipcode" value="@(string.IsNullOrEmpty(Model.SalonZipcode) == true ? cus.SalonZipcode : Model.SalonZipcode)" placeholder="Zipcode" required>
+                                <span id="error_SalonZipcode" class="fa fa-exclamation-circle errspan" style="display:none"></span>
+                            </div>
+
+
+                            <div class="form-group col-md-6">
+                                <label for="SalonPhone">Salon phone number</label>
+                                <input type="text" id="SalonPhone" class="form-control" name="SalonPhone" value="@(string.IsNullOrEmpty(Model.SalonPhone) == true ? cus.SalonPhone : Model.SalonPhone)" placeholder="Salon phone number" required>
+                                <span id="error_SalonPhone" class="fa fa-exclamation-circle errspan" style="display:none"></span>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="SalonTimeZone">Time zone <span class="offscreen">*</span></label>
+                                <select id="SalonTimeZone" required class="form-control" name="SalonTimeZone">
+                                    <option value="">N/A</option>
+                                    <option @(cus.SalonTimeZone == "Eastern" ? "selected" : "") value="Eastern">Eastern</option>
+                                    <option @(cus.SalonTimeZone == "Central" ? "selected" : "") value="Central">Central</option>
+                                    <option @(cus.SalonTimeZone == "Mountain" ? "selected" : "") value="Mountain">Mountain</option>
+                                    <option @(cus.SalonTimeZone == "Pacific" ? "selected" : "") value="Pacific">Pacific</option>
+                                    <option @(cus.SalonTimeZone == "VietNam" ? "selected" : "") value="Pacific">VietNam</option>
+                                </select>
+                                <span id="error_SalonTimeZone" class="fa fa-exclamation-circle errspan" style="display:none"></span>
+                            </div>
+
+
+                            <div class="submit col-md-12 col-xs-12">
+                                <button type="button" id="btn_information" class="btn btn-warning">Next</button>
+                                <div class="page-numbering">1 / 5</div>
+                            </div>
+
+                        </div>
+                        <div class="clearfix"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="boarding" class="tab-pane fade">
+                <h2>Boarding</h2>
+                <div class="form-item col-md-12 col-xs-12">
+                    <div class="form">
+                        <div class="item col-md-12 col-xs-12">
+                            <div style="margin-bottom: 10px">
+                                <div class="form-group">
+                                    <label for="owners_drivers_license">Please attach a photo of the following: </label>
+                                    <div class="col-md-12" style="border:1px solid #d2d6de; padding:5px;margin-bottom:10px">
+                                        <h5>Owner's Drivers License :</h5>
+                                        <div class="col-sm-6 form-group Drivers_License_Front_Image-groups">
+                                            <i for="Drivers_License_Front_Image">Front Side</i>
+
+                                            <br />
+                                            <label class="custom-file-upload" style="margin-top:15px;">
+                                                <input type="file" id="Drivers_License_Front_Image" accept="image/*" onchange="UploadImageBoarding(this)" class="upload-input" name="Drivers_License_Front_Image" value="@Model.Drivers_License_Front_Image" style="display:none" required />
+                                                <i class="fas fa-file-upload"></i> Select file
+                                            </label>
+                                            <span id="Drivers_License_Front_Image-dl" class="view-name-img" name="view-name-upload" aria-invalid="false">
+                                                @(!string.IsNullOrEmpty(Model.Drivers_License_Front_Image) ? Model.Drivers_License_Front_Image.Substring(Model.Drivers_License_Front_Image.LastIndexOf('/')+1):"")
+                                            </span>
+                                       
+                                            <div class="img-display" style="margin-top:15px">
+                                                <img class="img-display img-fluid" id="Drivers_License_Front_Image-display" src="@Model.Drivers_License_Front_Image" />
+                                            </div>
+                                        </div>
+                                        <script>
+                                            function UploadImageBoarding(el) {
+                                                //$('#Drivers_License_Front_Image').change(function () {
+                                                ////$('#title').val(this.value ? this.value.match(/([\w-_]+)(?=\.)/)[0] : '');
+                                                var name = $(el).attr('id');
+                                                $('#' + name + '-dl').html(el.files && el.files.length ? el.files[0].name : '');
+                                                if (el.files && el.files[0]) {
+                                                    debugger;
+                                                    var FR = new FileReader();
+                                                    FR.addEventListener("load", function (e) {
+                                                        $('#' + name + '-display').attr("src", e.target.result);
+                                                    });
+                                                    FR.readAsDataURL(el.files[0]);
+                                                }
+                                            }
+                                        </script>
+                                        <div class="col-sm-6 form-group Drivers_License_Back_Image-groups" style="transform: translateX(3px);">
+                                            <i for="Drivers_License_Back_Image">Back Side</i>
+                                            <br />
+                                            <label class="custom-file-upload" style="margin-top:15px;">
+                                                <input type="file" id="Drivers_License_Back_Image" accept="image/*" onchange="UploadImageBoarding(this)" class="upload-input" name="Drivers_License_Back_Image" value="@Model.Drivers_License_Back_Image" style="display:none" required/>
+                                                <i class="fas fa-file-upload"></i> Select file
+                                            </label>
+                                            <span id="Drivers_License_Back_Image-dl" class="view-name-img" name="view-name-upload" aria-invalid="false">
+                                                @(!string.IsNullOrEmpty(Model.Drivers_License_Back_Image) ? Model.Drivers_License_Back_Image.Substring(Model.Drivers_License_Back_Image.LastIndexOf('/')+1):"")
+                                            </span>
+
+                                            <div class="img-display" style="margin-top:15px">
+                                                <img class="img-display img-fluid" id="Drivers_License_Back_Image-display" src="@Model.Drivers_License_Back_Image" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12" style="border:1px solid #d2d6de; padding:5px;margin-bottom:10px">
+                                        <h5>SS-4 :</h5>
+                                        <div class="col-sm-12 form-group SS4-groups">
+                                            <label class="custom-file-upload" style="margin-top:15px;">
+                                                <input type="file" id="SS4" onchange="uploadSS4(this)" accept="application/msword, application/vnd.ms-excel, application/vnd.ms-powerpoint,text/plain, application/pdf, image/*" class="upload-input" name="SS4" value="@Model.SS4" style="display:none" />
+                                                <i class="fas fa-file-upload"></i> Select file
+                                            </label>
+                                            <input type="text" id="SS4_Name" class="SS4_Name" value="@(!string.IsNullOrEmpty(Model.SS4)? Model.SS4.Substring(Model.SS4.LastIndexOf('/')+1):"")" name="SS4_Name" readonly />
+                                            @if (!string.IsNullOrEmpty(Model.SS4))
+                                            {
+                                                <a class="download-ss4" href="/Upload/DownloadFile_?file=@Model.SS4"><i class="fas fa-download"></i> </a>
+                                            }
+                                            else
+                                            {
+                                                <div class="note-ss4" style="margin-top:10px">
+                                                    <i>"This is the document issued to you from the IRS stating your business name and Tax ID"</i>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                    <script>
+                                        function uploadSS4(el) {
+                                            $('#SS4_Name').val(el.files && el.files.length ? el.files[0].name : '');
+                                            $(".download-ss4").remove();
+                                            $(".note-ss4").remove();
+                                        }
+                                    </script>
+                                    <div class="col-md-12" style="border:1px solid #d2d6de; padding:5px;margin-bottom:10px">
+                                        <div class="form-group VoidedBusinessCheck-groups" style="padding: 10px">
+                                            <h5 for="send_to_ownersemail">Voided Business Check </h5>
+                                            <label class="custom-file-upload" style="margin-top:15px;">
+                                                <input type="file" id="VoidedBusinessCheck" accept="image/*" onchange="UploadImageBoarding(this)" class="upload-input" name="VoidedBusinessCheck" value="@Model.VoidedBusinessCheck" style="display:none" />
+                                                <i class="fas fa-file-upload"></i> Select file
+                                            </label>
+                                            <span id="VoidedBusinessCheck-dl" class="view-name-img" name="view-name-upload" aria-invalid="false">
+                                                @(!string.IsNullOrEmpty(Model.VoidedBusinessCheck) ? Model.VoidedBusinessCheck.Substring(Model.VoidedBusinessCheck.LastIndexOf('/')+1):"")
+                                            </span>
+                                            <div class="img-display" style="margin-top:15px">
+                                                <img class="img-display img-fluid" id="VoidedBusinessCheck-display" src="@Model.VoidedBusinessCheck" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                           
+                            <div>
+                                <div class="form-group">
+                                    <label for="send_to_ownersemail">Your merchant application will be sent to the owner's email address you listed </label>
+                                    <input id="SendToOwnersEmail"   type="text" class="form-control" name="SendToOwnersEmail" value="@Model.SendToOwnersEmail" style="width:100%"/>
+                             
+                                    <script>
+                                        function validateEmail(email) {
+                                            const re = /^(([^<>()[\]\\.,;:\s@@"]+(\.[^<>()[\]\\.,;:\s@@"]+)*)|(".+"))@@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+                                            return re.test(String(email).toLowerCase());
+                                        }
+                                        $(document).ready(function () {
+                                               $("#SendToOwnersEmail").tagEditor({
+                                                delimiter: ',',
+                                                placeholder: 'Enter email ...',
+                                                onChange: function(field, editor, tags) {
+                                                    var tags = $('#SendToOwnersEmail').tagEditor('getTags')[0].tags;
+                                                    for (i = 0; i < tags.length; i++) {
+                                                        if (!validateEmail(tags[i])) {
+                                                            $('#SendToOwnersEmail').tagEditor('removeTag', tags[i]);
+                                                        }
+                                                    }
+                                                },
+                                                beforeTagSave: function (field, editor, tags, tag, val) {
+                                                    if (!validateEmail(val)) {
+                                                        noty({ "text": "Please enter a valid email !", "layout": "topRight", "type": "error" });
+                                                    }
+                                                },
+                                               });
+                                        });
+
+                                    </script>
+                                    </div>
+                                </div>
+                                <div class="submit col-md-12 col-xs-12">
+                                <button type="button" id="btn_boarding" class="btn btn-warning">Next</button>
+                                <div class="page-numbering">2 / 5</div>
+                            </div>
+
+                        </div>
+                        <div class="clearfix"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="specifics" class="tab-pane fade">
+                <h2>Salon Specifics</h2>
+                <div class="form-item col-md-12">
+                    <div class="form">
+                        <div class="item col-md-12 col-xs-12">
+                            <div>
+                                <div class="form-group">
+                                    <label for="SalonHours">Salon Hours:</label>
+                                    <textarea id="SalonHours" class="form-control" name="SalonHours" wrap="soft" rows="3">@Html.Raw(Model.SalonHours)</textarea>
+                                </div>
+                                @*<div class="form-group">
+                                        <div><label for="EthernetWire">Do you currently have ethernet wired to your reception desk? (POS cannot run on WiFi)</label></div>
+                                        <div class="form-check-inline">
+                                            <label class="label-radio">
+                                                <input type="radio" class="input-radio" name="EthernetWire" value="1" onclick="$('#field-pos').slideUp('slow')" @if (Model.EthernetWrite != false) { @Html.Raw("checked") }>Yes
+                                            </label>
+                                        </div>
+                                        <div class="form-check-inline">
+                                            <label class="label-radio">
+                                                <input type="radio" class="input-radio" name="EthernetWire" value="0" onclick="$('#field-pos').slideDown('slow')" @if (Model.EthernetWrite == false) { @Html.Raw("checked") }>No
+                                            </label>
+                                        </div>
+                                        <div id="field-pos" @if (Model.EthernetWrite != false) { @Html.Raw("style='display:none'") }>
+                                            <div>
+                                                <p style="padding-left: 30px">Below is a diagram of how the POS unit will be configured.There has to be a wired connection from the salon's internet source in to the POS unit for it to work properly.</p>
+                                                <p style="padding-left: 30px; border:unset" class="thumbnail">
+                                                    <img src="~/Areas/Page/Content/img/SCO-Install-Diagram-Color-Coded-for-Merchants.jpg" />
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>*@
+                                @*<div class="form-group">
+                                        <div><label for="PromotionDiscount">Do you want to run any promotional discounts right now (i.e.. Grand opening 10% off)?</label></div>
+                                        <div class="form-check-inline">
+                                            <label class="label-radio">
+                                                <input type="radio" class="input-radio" name="PromotionDiscount" value="1" onclick="$('#text-multiplelines').slideDown('slow')" @if (string.IsNullOrEmpty(Model.PromotionType) == false) { @Html.Raw("checked") }>Yes
+                                            </label>
+                                        </div>
+                                        <div class="form-check-inline">
+                                            <label class="label-radio">
+                                                <input type="radio" class="input-radio" name="PromotionDiscount" value="0" onclick="$('#text-multiplelines').slideUp('slow')" @if (string.IsNullOrEmpty(Model.PromotionType) == true) { @Html.Raw("checked") }>No
+                                            </label>
+                                        </div>
+                                        <div id="text-multiplelines" @if (string.IsNullOrEmpty(Model.PromotionType) == true) { @Html.Raw("style='display:none'") }>
+                                            <label for="PromotionType">Promo Type <span class="offscreen">*</span></label>
+                                            <textarea class="form-control" id="PromotionType" name="PromotionType" placeholder="ex. Grand opening 10% off" wrap="soft" rows="3">@Html.Raw(Model.PromotionType)</textarea>
+                                            <span id="error_PromotionType" class="fa fa-exclamation-circle errtextarea" style="display:none"></span>
+                                        </div>
+                                    </div>*@
+                                <div class="form-group">
+                                    <div><label for="ServicesCharge_SupplyFee">Do any of your menu items have a Services Charge?</label></div>
+                                    <div class="form-check-inline">
+                                        <label class="label-radio">
+                                            <input type="radio" class="input-radio" name="ServicesCharge_SupplyFee" value="1" onclick="$('#text-multiplelines1').slideDown('slow')" @if (string.IsNullOrEmpty(Model.ServiceFee) == false) { @Html.Raw("checked") }> Yes
+                                        </label>
+                                    </div>
+                                    <div class="form-check-inline">
+                                        <label class="label-radio">
+                                            <input type="radio" class="input-radio" name="ServicesCharge_SupplyFee" value="0" onclick="$('#text-multiplelines1').slideUp('slow')" @if (string.IsNullOrEmpty(Model.ServiceFee) == true) { @Html.Raw("checked") }> No
+                                        </label>
+                                    </div>
+                                    <div id="text-multiplelines1" @if (string.IsNullOrEmpty(Model.ServiceFee) == true) { @Html.Raw("style='display:none'") }>
+                                        <label for="ServiceFee">Service Fees <span class="offscreen">*</span></label>
+                                        <textarea class="form-control" id="ServiceFee" name="ServiceFee" placeholder="ex. Pedicure $2" wrap="soft" rows="3">@Html.Raw(Model.ServiceFee)</textarea>
+                                        <span id="error_ServiceFee" class="fa fa-exclamation-circle errtextarea" style="display:none"></span>
+                                    </div>
+                                </div>
+                                @*<div class="form-group">
+                                        <div><label for="GeneralDiscount">Do you have any general discounts? (ie. %5 off for cash)</label></div>
+                                        <div class="form-check-inline">
+                                            <label class="label-radio">
+                                                <input type="radio" class="input-radio" name="GeneralDiscount" value="1" onclick="$('#discount').slideDown('slow')" @if (string.IsNullOrEmpty(Model.DiscountType) == false) { @Html.Raw("checked") }>Yes
+                                            </label>
+                                        </div>
+                                        <div class="form-check-inline">
+                                            <label class="label-radio">
+                                                <input type="radio" class="input-radio" name="GeneralDiscount" value="0" onclick="$('#discount').slideUp('slow')" @if (string.IsNullOrEmpty(Model.DiscountType) == true) { @Html.Raw("checked") }>No
+                                            </label>
+                                        </div>
+                                        <div id="discount" class="col-md-12 col-xs-12" @if (string.IsNullOrEmpty(Model.DiscountType) == true) { @Html.Raw("style='display:none'") }>
+                                            <div class="col-md-6">
+                                                <label for="DiscountType">Discount Type <span class="offscreen">*</span></label>
+                                                <textarea class="form-control" id="DiscountType" name="DiscountType" wrap="soft" rows="3">@Html.Raw(Model.DiscountType)</textarea>
+                                                <span id="error_DiscountType" class="fa fa-exclamation-circle errtextarea" style="display:none"></span>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div><label for="TechCommDiscounts">Does the discount impact technician commissions?</label></div>
+                                                <div class="form-check-inline">
+                                                    <label class="label-radio">
+                                                        <input type="radio" class="input-radio" name="TechCommDiscounts" value="1" @if (Model.TechCommDiscount == true) { @Html.Raw("checked") }>Yes
+                                                    </label>
+                                                </div>
+                                                <div class="form-check-inline">
+                                                    <label class="label-radio">
+                                                        <input type="radio" class="input-radio" name="TechCommDiscounts" value="0" @if (Model.TechCommDiscount != true) { @Html.Raw("checked") }>No
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>*@
+                                <div class="form-group">
+                                    <label for="TechOrder">What is turn order for the technicians?</label>
+                                    <select id="TechOrder" class="form-control" name="TechOrder">
+                                        <option @if (Model.TechOrder == "Credit count/time") { @Html.Raw("selected") } value="Credit count/time">Credit count/time</option>
+                                        <option @if (Model.TechOrder == "Rotation") { @Html.Raw("selected") } value="Rotation">Rotation</option>
+                                        <option @if (Model.TechOrder == "Turn count/time") { @Html.Raw("selected") } value="Clock In Time">Turn count/time</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="form-group">
+                                    <label for="DollarAmount">Dollar amount for 1 turn</label>
+                                    <input type="text" class="form-control" name="DollarAmount" value="@Model.DollarAmount" placeholder="ie: $20">
+                                </div>
+                                <div class="form-group">
+                                    <label for="add-file">Please attach a copy of your menu or email it into contact@enrichcous.com</label>
+                                    <div id="morefile" style="border:1px solid #d2d6de; padding:5px">
+                                        @Html.Partial("_UploadMoreFilesPartial", ViewBag.MoreFiles as List<UploadMoreFile>, new ViewDataDictionary { { "upload", true } })
+                                    </div>
+                                </div>
+                                @*<div class="form-group">
+                                        <label>Take Snapshot</label>
+                                        <div class="switch">
+                                            <input type="radio" class="switch-input" name="view4" value="week4" id="week4" onclick="$('#div_snap').hide()" @if (ViewBag.MoreFilesSnap == null) { @Html.Raw("checked") }>
+                                            <label for="week4" class="switch-label switch-label-off">Off</label>
+                                            <input type="radio" class="switch-input" name="view4" value="month4" id="month4" onClick="$('#div_snap').show()" @if (ViewBag.MoreFilesSnap != null) { @Html.Raw("checked") }>
+                                            <label for="month4" class="switch-label switch-label-on">On</label>
+                                            <span class="switch-selection"></span>
+                                        </div>
+                                    </div>*@
+
+                                @*<div class="form-group">
+                                        <div id="div_snap" style="border:1px solid #d2d6de; padding:5px @if(Model.Id == null){@Html.Raw(";display:none")}">
+                                            @Html.Partial(" ", ViewBag.MoreFilesSnap as List<UploadMoreFile>, new ViewDataDictionary { { "upload", true } })
+                                        </div>
+                                    </div>*@
+
+                                <div class="form-group">
+                                    <div><label for="ComboSpecialDiscount">Do you have any menu items that receive a price reduction when done together? (I.e. combos or specials)</label></div>
+                                    <div class="form-check-inline">
+                                        <label class="label-radio">
+                                            <input type="radio" class="input-radio" name="ComboSpecialDiscount" value="1" @if (Model.ComboSpecialDiscount == true) { @Html.Raw("checked") }> Yes
+                                        </label>
+                                    </div>
+                                    <div class="form-check-inline">
+                                        <label class="label-radio">
+                                            <input type="radio" class="input-radio" name="ComboSpecialDiscount" value="0" @if (Model.ComboSpecialDiscount != true) { @Html.Raw("checked") }> No
+                                        </label>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="submit col-md-12 col-xs-12">
+                                <button type="button" id="btn_back_specifics" class="btn btn-warning">Back</button>
+                                <button type="button" id="btn_specifics" class="btn btn-warning">Next</button>
+                                <div class="page-numbering">3 / 5</div>
+                            </div>
+                        </div>
+                        <div class="clearfix"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="checkout" class="tab-pane fade">
+                <h2>Check Out</h2>
+                <div class="form-item col-md-12">
+                    <div class="form">
+                        <div class="item col-md-12 col-xs-12">
+                            <div>
+                                <div class="form-group">
+                                    <label for="ComboSpecialDiscount">Simply pos captures signatures on the terminal. </label>
+                                </div>
+                                <div class="form-group">
+                                    <div><label for="ComboSpecialDiscount">Do you want the customer to add tips on the terminal?</label></div>
+                                    <div class="form-check-inline">
+                                        <label class="label-radio">
+                                            <input type="radio" class="input-radio" name="CustomerAddTips" value="true" onclick="$('#SuggestPercentTip_group').slideDown('slow'); $('#Receipt_sample').slideUp('slow')"
+                                                   @if (Model.CustomerAddTips == true) { @Html.Raw("checked") }> Yes
+                                        </label>
+                                    </div>
+                                    <div class="form-check-inline">
+                                        <label class="label-radio">
+                                            <input type="radio" class="input-radio" name="CustomerAddTips" value="false" onclick="$('#SuggestPercentTip_group').slideUp('slow');$('#Receipt_sample').slideDown('slow')"
+                                                   @if (Model.CustomerAddTips != true) { @Html.Raw("checked") }> No
+                                        </label>
+                                    </div>
+                                </div>
+                                @*<div class="form-group" id="SuggestPercentTip_group" @if (Model?.CustomerAddTips != true) { @Html.Raw("style='display:none'") }>
+                                        <div>
+                                            <label for="DollarAmount">Do you want to suggest percentage tip amounts?</label>
+                                        </div>
+                                        <div class="form-check-inline">
+                                            <label class="label-radio">
+                                                <input type="radio" class="input-radio" name="SuggestPercentTip" value="true"
+                                                       @if (Model.SuggestPercentTip == true) { @Html.Raw("checked") }>Yes
+                                            </label>
+                                        </div>
+                                        <div class="form-check-inline">
+                                            <label class="label-radio">
+                                                <input type="radio" class="input-radio" name="SuggestPercentTip" value="false"
+                                                       @if (Model.SuggestPercentTip != true) { @Html.Raw("checked") }>No
+                                            </label>
+                                        </div>
+                                    </div>*@
+                                @*<div class="form-group" id="Receipt_sample" @if (Model?.CustomerAddTips == true) { @Html.Raw("style='display:none'") }>
+                                        <label for="DollarAmount">Receipt will print like sample shown</label><br />
+                                        <img src="~/Upload/Img/Receipt_sample.png" />
+                                    </div>*@
+                            </div>
+                            <div class="submit col-md-12 col-xs-12">
+                                <button type="button" id="btn_back_checkout" class="btn btn-warning">Back</button>
+                                <button type="button" id="btn_checkout" class="btn btn-warning">Next</button>
+                                <div class="page-numbering">4 / 5</div>
+                            </div>
+                        </div>
+                        <div class="clearfix"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="question" class="tab-pane fade">
+                <h2>Security & Payroll Question</h2>
+                <div class="form-item">
+                    <div class="form">
+                        <h3>Receptionists/Managers & Other Non Tech's</h3>
+                        <div class="item col-md-12 col-xs-12">
+                            @foreach (var item in list_nonTech)
+                            {
+                                <div id="manager@(item.Key)" style="background-color: @(item.Key % 2 == 0 ? Html.Raw("white") : Html.Raw("whitesmoke")); padding:5px">
+                                    <div>
+                                        <i class="fa fa-times-circle text-primary" style="cursor:pointer" onclick="removeManagerItem('@item.Key')"></i>
+                                        <b> Item @(item.Key)</b>
+                                        <input type="hidden" id="manager_id@(item.Key)" name="manager_id@(item.Key)" value="@item.Id" />
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Name <span style="color:red">*</span></label>
+                                            <input type="text" class="form-control" id="manager_name@(item.Key)" name="manager_name@(item.Key)" value="@item.Name" placeholder="Name">
+                                            <span id="error_M_name@(item.Key)" class="fa fa-exclamation-circle errspan" style="display:none"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Job</label>
+                                            <input type="text" class="form-control" id="manager_job@(item.Key)" name="manager_job@(item.Key)" value="@item.Job" placeholder="Job">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Pay</label>
+                                            <input type="text" class="form-control" id="manager_pay@(item.Key)" name="manager_pay@(item.Key)" value="@item.Pay" placeholder="$15/hr $200/Month">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Adjust/View Payroll</label>
+                                            <div class="switch">
+                                                <input type="radio" id="manager_payroll_yes@(item.Key)" class="switch-input" name="manager_payroll@(item.Key)" value="0" @if (item.AdjustViewPayroll == false) { @Html.Raw("checked") }>
+                                                <label for="manager_payroll_yes@(item.Key)" class="switch-label switch-label-off">Yes</label>
+                                                <input type="radio" id="manager_payroll_no@(item.Key)" class="switch-input" name="manager_payroll@(item.Key)" value="1" @if (item.AdjustViewPayroll == true) { @Html.Raw("checked") }>
+                                                <label for="manager_payroll_no@(item.Key)" class="switch-label switch-label-on">No</label>
+                                                <span class="switch-selection"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="clearfix"></div>
+                                </div>
+                            }
+
+                            <div id="manager@(nextKey_nonTech)" style="background-color: @(nextKey_nonTech % 2 == 0 ? Html.Raw("white") : Html.Raw("whitesmoke")); padding:5px">
+                                <div>
+                                    <i class="fa fa-times-circle text-primary" style="cursor:pointer" onclick="removeManagerItem('@nextKey_nonTech')"></i>
+                                    <b> Item @(nextKey_nonTech)</b>
+                                    <input type="hidden" id="manager_id@(nextKey_nonTech)" name="manager_id@(nextKey_nonTech)" value="@(nextKey_nonTech)" />
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Name <span style="color:red">*</span></label>
+                                        <input type="text" class="form-control" id="manager_name@(nextKey_nonTech)" name="manager_name@(nextKey_nonTech)" placeholder="Name">
+                                        <span id="error_M_name@(nextKey_nonTech)" class="fa fa-exclamation-circle errspan" style="display:none"></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Job</label>
+                                        <input type="text" class="form-control" id="manager_job@(nextKey_nonTech)" name="manager_job@(nextKey_nonTech)" placeholder="Job">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Pay</label>
+                                        <input type="text" class="form-control" id="manager_pay@(nextKey_nonTech)" name="manager_pay@(nextKey_nonTech)" placeholder="$15/hr $200/Month">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Adjust/View Payroll</label>
+                                        <div class="switch">
+                                            <input type="radio" id="manager_payroll_yes@(nextKey_nonTech)" class="switch-input" name="manager_payroll@(nextKey_nonTech)" value="0" checked>
+                                            <label for="manager_payroll_yes@(nextKey_nonTech)" class="switch-label switch-label-off">Yes</label>
+                                            <input type="radio" id="manager_payroll_no@(nextKey_nonTech)" class="switch-input" name="manager_payroll@(nextKey_nonTech)" value="1">
+                                            <label for="manager_payroll_no@(nextKey_nonTech)" class="switch-label switch-label-on">No</label>
+                                            <span class="switch-selection"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="clearfix"></div>
+                            </div>
+
+                            <div id="btn_addmanager_item" class="item-add col-md-12 col-xs-12">
+                                <input type="hidden" id="hd_managerItem" name="hd_managerItem" value="@(nextKey_nonTech + 1)" />
+                                <div style="cursor:pointer" class="btn btn-primary" onclick="addManagerItem()">
+                                    <i class="fa fa-plus"></i><span> Add</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="item-note">
+                            <div class="col-md-6 note">
+                                <div class="form-group">
+                                    <label for="Note">Note about Receptionists/Managers & Other Non Tech's</label>
+                                    <textarea class="form-control" id="Note" name="Note" placeholder="Note" wrap="soft" rows="3">@Html.Raw(Model.Note)</textarea>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <span>Standard Receptionists/Manager abilities include being able to adjust the turn queue, voiding items, and adjusting tickets and selling gift cards. </span>
+                                <br />
+                                <span>Please note if you want to revise this.</span>
+                            </div>
+                        </div>
+
+                        <h3>Technician List</h3>
+                        <div class="item col-md-12 col-xs-12">
+                            @foreach (var item in list_Tech)
+                            {
+                                <div id="tech@(item.Key)" style="background-color: @(item.Key % 2 == 0 ? Html.Raw("white") : Html.Raw("whitesmoke")); padding:5px">
+                                    <div>
+                                        <i class="fa fa-times-circle text-primary" style="cursor:pointer" onclick="removeTechItem('@item.Key')"></i>
+                                        <b> Item @item.Key</b>
+                                        <input type="hidden" id="tech_id@(item.Key)" name="tech_id@(item.Key)" value="@item.Id" />
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-group">
+                                            <label>Technician Name <span style="color:red">*</span></label>
+                                            <input type="text" class="form-control" id="tech_name@(item.Key)" name="tech_name@(item.Key)" value="@item.Name">
+                                            <span id="error_T_name@(item.Key)" class="fa fa-exclamation-circle errspan" style="display:none"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-group">
+                                            <label>Nickname</label>
+                                            <input type="text" class="form-control" id="tech_nickname@(item.Key)" name="tech_nickname@(item.Key)" value="@item.NickName">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-group">
+                                            <label>Commission</label>
+                                            <input type="text" class="form-control" id="tech_comm@(item.Key)" name="tech_comm@(item.Key)" value="@item.Commission" placeholder="Commission">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-group">
+                                            <label for="PayrollSplit">Payroll Split Check/Cash for payroll</label>
+                                            <input type="text" class="form-control" id="tech_pay@(item.Key)" name="tech_pay@(item.Key)" value="@item.PayrollSplitCheckOrCash" placeholder="60/40 70/30">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-group">
+                                            <label>Add Discounts</label>
+                                            <div class="switch">
+                                                <input type="radio" id="tech_dis_yes@(item.Key)" class="switch-input" name="tech_discout@(item.Key)" value="0" @if (item.AddDiscounts == false) { @Html.Raw("checked") }>
+                                                <label for="tech_dis_yes@(item.Key)" class="switch-label switch-label-off">Yes</label>
+                                                <input type="radio" id="tech_dis_no@(item.Key)" class="switch-input" name="tech_discout@(item.Key)" value="1" @if (item.AddDiscounts == true) { @Html.Raw("checked") }>
+                                                <label for="tech_dis_no@(item.Key)" class="switch-label switch-label-on">No</label>
+                                                <span class="switch-selection"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-group">
+                                            <label>Adjust Prices</label>
+                                            <div class="switch">
+                                                <input type="radio" id="tech_price_yes@(item.Key)" class="switch-input" name="tech_price@(item.Key)" value="0" @if (item.AdjustPrices == false) { @Html.Raw("checked") }>
+                                                <label for="tech_price_yes@(item.Key)" class="switch-label switch-label-off">Yes</label>
+                                                <input type="radio" id="tech_price_no@(item.Key)" class="switch-input" name="tech_price@(item.Key)" value="1" @if (item.AdjustPrices == true) { @Html.Raw("checked") }>
+                                                <label for="tech_price_no@(item.Key)" class="switch-label switch-label-on">No</label>
+                                                <span class="switch-selection"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="clearfix"></div>
+                                </div>
+                            }
+
+                            <div id="tech@(nextKey_Tech)" style="background-color: @(nextKey_Tech % 2 == 0 ? Html.Raw("white") : Html.Raw("whitesmoke")); padding:5px">
+                                <div>
+                                    <i class="fa fa-times-circle text-primary" style="cursor:pointer" onclick="removeTechItem('@nextKey_Tech')"></i>
+                                    <b> Item @nextKey_Tech</b>
+                                    <input type="hidden" id="tech_id@(nextKey_Tech)" name="tech_id@(nextKey_Tech)" value="@(nextKey_Tech)" />
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>Technician Name <span style="color:red">*</span></label>
+                                        <input type="text" class="form-control" id="tech_name@(nextKey_Tech)" name="tech_name@(nextKey_Tech)">
+                                        <span id="error_T_name@(nextKey_Tech)" class="fa fa-exclamation-circle errspan" style="display:none"></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>Nickname</label>
+                                        <input type="text" class="form-control" id="tech_nickname@(nextKey_Tech)" name="tech_nickname@(nextKey_Tech)">
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>Commission</label>
+                                        <input type="text" class="form-control" id="tech_comm@(nextKey_Tech)" name="tech_comm@(nextKey_Tech)" placeholder="Commission">
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label for="PayrollSplit">Payroll Split Check/Cash for payroll</label>
+                                        <input type="text" class="form-control" id="tech_pay@(nextKey_Tech)" name="tech_pay@(nextKey_Tech)" placeholder="60/40 70/30">
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>Add Discounts</label>
+                                        <div class="switch">
+                                            <input type="radio" id="tech_dis_yes@(nextKey_Tech)" class="switch-input" name="tech_discout@(nextKey_Tech)" value="0" checked>
+                                            <label for="tech_dis_yes@(nextKey_Tech)" class="switch-label switch-label-off">Yes</label>
+                                            <input type="radio" id="tech_dis_no@(nextKey_Tech)" class="switch-input" name="tech_discout@(nextKey_Tech)" value="1">
+                                            <label for="tech_dis_no@(nextKey_Tech)" class="switch-label switch-label-on">No</label>
+                                            <span class="switch-selection"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>Adjust Prices</label>
+                                        <div class="switch">
+                                            <input type="radio" id="tech_price_yes@(nextKey_Tech)" class="switch-input" name="tech_price@(nextKey_Tech)" value="0" checked>
+                                            <label for="tech_price_yes@(nextKey_Tech)" class="switch-label switch-label-off">Yes</label>
+                                            <input type="radio" id="tech_price_no@(nextKey_Tech)" class="switch-input" name="tech_price@(nextKey_Tech)" value="1">
+                                            <label for="tech_price_no@(nextKey_Tech)" class="switch-label switch-label-on">No</label>
+                                            <span class="switch-selection"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="clearfix"></div>
+                            </div>
+
+
+                            <div id="btn_addtech_item" class="item-add col-md-12 col-xs-12">
+                                <input type="hidden" id="hd_techItem" name="hd_techItem" value="@(nextKey_Tech + 1)" />
+                                <div style="cursor:pointer" class="btn btn-primary" onclick="addTechItem()">
+                                    <i class="fa fa-plus"></i><span> Add</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="item col-md-12 col-xs-12" style="margin-top:10px">
+                            <div class="form-group">
+                                <div><label for="PayoutCreditCard">Do you pay out credit card tips daily?</label></div>
+                                <div class="form-check-inline">
+                                    <label class="label-radio">
+                                        <input type="radio" class="input-radio" name="PayoutCreditCard" value="1" onclick="$('#credit').slideUp()" @if (Model.PayoutCreditCard == true) { @Html.Raw("checked") }> Yes
+                                    </label>
+                                </div>
+                                <div class="form-check-inline">
+                                    <label class="label-radio">
+                                        <input type="radio" class="input-radio" name="PayoutCreditCard" value="0" onclick="$('#credit').slideDown()" @if (Model.PayoutCreditCard != true) { @Html.Raw("checked") }> No
+                                    </label>
+                                </div>
+                                <div id="credit" class="col-md-12 col-xs-12" @if (Model.PayoutCreditCard == true) { @Html.Raw("style='display:none'") }>
+                                    <div class="col-md-12">
+                                        <div class="text-singleline col-md-12">
+                                            <div><label>Do you charge a fee for tips taken via credit card?  </label></div>
+                                            <div class="form-check-inline">
+                                                <label class="label-radio">
+                                                    <input type="radio" class="input-radio" name="ChargeFeeTips" value="true" @if (Model.ChargeFeeTips == true) { @Html.Raw("checked") }> Yes
+                                                </label>
+                                            </div>
+                                            <div class="form-check-inline">
+                                                <label class="label-radio">
+                                                    <input type="radio" class="input-radio" name="ChargeFeeTips" value="false" @if (Model.ChargeFeeTips != true) { @Html.Raw("checked") }> No
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div><label>Do you give a commission for product sales? </label></div>
+                                <div class="form-check-inline">
+                                    <label class="label-radio">
+                                        <input type="radio" class="input-radio" name="CommissionProductSales" value="true" @if (Model.CommissionProductSales == true) { @Html.Raw("checked") }> Yes
+                                    </label>
+                                </div>
+                                <div class="form-check-inline">
+                                    <label class="label-radio">
+                                        <input type="radio" class="input-radio" name="CommissionProductSales" value="false" @if (Model.CommissionProductSales != true) { @Html.Raw("checked") }> No
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div><label for="TechSellGiftCard">Do you want technicians to be able to sell gift cards?</label></div>
+                                <div class="form-check-inline">
+                                    <label class="label-radio">
+                                        <input type="radio" class="input-radio" name="TechSellGiftCard" value="1" onclick="$('#text-multiplelines3').slideDown()" @if (string.IsNullOrEmpty(Model.AUTHORIZED_Seller) == false) { @Html.Raw("checked") }> Yes
+                                    </label>
+                                </div>
+                                <div class="form-check-inline">
+                                    <label class="label-radio">
+                                        <input type="radio" class="input-radio" name="TechSellGiftCard" value="0" onclick="$('#text-multiplelines3').slideUp()" @if (string.IsNullOrEmpty(Model.AUTHORIZED_Seller) == true) { @Html.Raw("checked") }> No
+                                    </label>
+                                </div>
+                                <div id="text-multiplelines3" @if (string.IsNullOrEmpty(Model.AUTHORIZED_Seller) == true) { @Html.Raw("style='display:none'") }>
+                                    <label for="AUTHORIZED_Seller">List of AUTHORIZED sellers <span class="offscreen">*</span></label>
+                                    <textarea class="form-control" id="AUTHORIZED_Seller" name="AUTHORIZED_Seller" wrap="soft" rows="3">@Html.Raw(Model.AUTHORIZED_Seller?.Replace("<br/>", "\n"))</textarea>
+                                    <span id="error_AUTHORIZED_Seller" class="fa fa-exclamation-circle errtextarea" style="display:none"></span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div>
+                                    <label for="TechMakeAppointment">Do you want technicians to be able to make appointments?</label>
+                                </div>
+                                <div class="form-check-inline">
+                                    <label class="label-radio">
+                                        <input type="radio" class="input-radio" name="TechMakeAppointment" value="1" onclick="$('#text-multiplelines4').slideDown()" @if (string.IsNullOrEmpty(Model.AUTHORIZED_Tech) == false) { @Html.Raw("checked") }> Yes
+                                    </label>
+                                </div>
+                                <div class="form-check-inline">
+                                    <label class="label-radio">
+                                        <input type="radio" class="input-radio" name="TechMakeAppointment" value="0" onclick="$('#text-multiplelines4').slideUp()" @if (string.IsNullOrEmpty(Model.AUTHORIZED_Tech) == true) { @Html.Raw("checked") }> No
+                                    </label>
+                                </div>
+                                <div id="text-multiplelines4" @if (string.IsNullOrEmpty(Model.AUTHORIZED_Tech) == true) { @Html.Raw("style='display:none'") }>
+                                    <label for="AUTHORIZED_Tech">List of AUTHORIZED technicians <span class="offscreen">*</span></label>
+                                    <textarea class="form-control" id="AUTHORIZED_Tech" name="AUTHORIZED_Tech" wrap="soft" rows="3">@Html.Raw(Model.AUTHORIZED_Tech?.Replace("<br/>", "\n"))</textarea>
+                                    <span id="error_AUTHORIZED_Tech" class="fa fa-exclamation-circle errtextarea" style="display:none"></span>
+                                </div>
+                            </div>
+                            @*<div class="form-group">
+                                    <label for="CompletedTo">Where would you like your system Completed to?</label>
+                                    <select class="form-control" id="ShippedTo" name="ShippedTo">
+                                        <option value="We will contact you to confirm before we ship">We will contact you to confirm before we ship</option>
+                                        <option @if (Model.ShippedTo == "Salon") { @Html.Raw("selected") } value="Salon">Salon</option>
+                                        <option @if (Model.ShippedTo == "Home") { @Html.Raw("selected") } value="Home">Home</option>
+                                        <option @if (Model.ShippedTo == "Other") { @Html.Raw("selected") } value="Other">Other</option>
+                                    </select>
+                                </div>*@
+                                                <div class="form-group">
+                                                    <label for="OtherRequest">Other Special Requests?</label>
+                                                    <textarea class="form-control" id="OtherRequest" name="OtherRequest" wrap="soft" rows="3">@Html.Raw(Model.OtherRequest)</textarea>
+                                                </div>
+</div>
+                        <div class="clearfix"></div>
+                        <div class="submit col-md-12 col-xs-12">
+                            <button type="button" id="btn_back_question" class="btn btn-warning">Back</button>
+                            <button type="button" id="btn_submit" class="btn btn-warning">
+                                Submit <img id="submit_loading" style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                            </button>
+                            <div class="page-numbering">5 / 5</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<style type="text/css">
+    .ui-autocomplete {
+        max-height: 145px;
+        overflow-y: auto;
+        background-color: white;
+        border: 1px solid #cccccc;
+        width: 251px !important;
+    }
+</style>
+
+@section script{
+    <script src="~/Scripts/upload_and_review.js"></script>
+
+
+
+    <script type="text/javascript">
+        $(function () {
+
+            $.ajax({
+                method: "POST",
+                url: "@Url.Action("LoadListState", "Merchantman", new {area = "" })",//"Merchantman/LoadListState",
+                dataType: "json"
+            })
+                .done(function (data) {
+                    //alert("ok");
+                    //console.log(data);
+                    $(".SalonState").autocomplete({
+                        source: data[0],
+                        minLength: 0
+                    }).focus(function () {
+                        $(this).autocomplete('search', $(this).val())
+                    });
+
+                });
+
+
+
+
+            var _label = $("#morefile").find("label").not(".custom-file-upload");
+            //console.log(_label);
+            for (i = 0; i < _label.length; i++) {
+                _label[i].remove();
+            }
+        });
+
+        function readURL(input) {
+            if (input.files && input.files[0]) {
+                var inputid = $(input).attr("id");
+                var reader = new FileReader();
+
+                reader.onload = function (e) {
+                    //$('#blah').attr('src', e.target.result);
+                    var content = '<br/><img id="img_' + inputid + '" src="' + e.target.result + '" height="150"/><br>';
+                    $(content).insertBefore("#btn-add-more");
+                }
+
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        $("#snap1").change(function () {
+            readURL(this);
+        });
+    </script>
+}
+

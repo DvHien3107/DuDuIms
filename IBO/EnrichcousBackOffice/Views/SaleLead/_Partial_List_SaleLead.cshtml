@@ -1,0 +1,212 @@
+﻿@using EnrichcousBackOffice.Utils
+@using Inner.Libs.Helpful
+@using EnrichcousBackOffice.ViewModel
+@model IEnumerable<EnrichcousBackOffice.ViewModel.SaleLeadInfo>
+@{
+    var status = Session["lead_status"] as List<EnrichcousBackOffice.Models.C_SalesLead_Status>;
+    var access = EnrichcousBackOffice.AppLB.Authority.GetAccessAuthority();
+}
+@functions
+{
+    string ContactAddressView(SaleLeadInfo lead)
+    {
+        return String.Join(", ", new[]
+        {
+            lead.ContactAddress,
+            lead.City,
+            lead.State,
+            lead.Country
+        }.Where(entry => (entry?.Trim() ?? "") != ""));
+    }
+    string SalonAddressView(SaleLeadInfo lead)
+    {
+        return String.Join(", ", new[]
+        {
+            lead.SalonAddress1,
+            lead.SalonCity,
+            lead.SalonState,
+            lead.BusinessCountry
+        }.Where(entry => (entry?.Trim() ?? "") != ""));
+    }
+
+    string DateView(DateTime? date, string by)
+    {
+        string dateView = date.HasValue ? date.Value.ToString("yyyy-MM-dd") : "";
+        if (by != null && by.Trim() != "")
+        {
+            dateView = $"{dateView}<br/><span style='color: gray;font-size: 12px;'>By {by}</span>";
+        }
+        return dateView;
+    }
+
+    string TimeView(string time)
+    {
+        if (string.IsNullOrEmpty(time))
+        {
+            return "";
+        }
+        var h = int.Parse(time.Substring(11, 2));
+        var m = time.Substring(14, 2);
+        var ap = "AM";
+        if (h > 12)
+        {
+            ap = "PM";
+            h = h - 12;
+        }
+        return $"({h}:{m} {ap})";
+    }
+}
+
+<table id="" style="width: 100%;border-collapse: collapse;" class="table table-hover table-striped dataTable sale-lead">
+    <thead>
+        <tr>
+            <th>Last Updated</th>
+            <th>Lead Info</th>
+            <th>Last Appointment</th>
+            <th>Next Appointment</th>
+            <th style="width: 75px;">Rate</th>
+            <th>Status</th>
+            <th width="150px"></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var lead in Model.Select((value, i) => new { i, value }))
+        {
+        <tr class="lead-info hover" id="tr_@lead.value.CustomerCode" data-lead-item="@lead.value.CustomerCode">
+            <td>
+                @Html.Raw(DateView(lead.value.UpdateAt, lead.value.UpdateBy))
+            </td>
+            <td>
+                <label class="text-success">@lead.value.BusinessName</label>
+                <img id="img_load_@lead.value.CustomerCode" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" /> <br />
+                Contact: <label class="text-primary">@lead.value.ContactName</label><br />
+            </td>
+            <td>
+                @if (lead.value.LatestAppointment != null)
+                {
+                    <label class="appoint-note">@lead.value.LatestAppointment.Name</label><br />
+                    <span>@Html.Raw(lead.value.LatestAppointment.Description.Replace("\n", "<br />"))</span><br />
+                    string starDate = Convert.ToDateTime(lead.value.LatestAppointment.StartEvent).ToString("MMM dd, yyy (hh:mm tt)");
+
+                    <i>
+                        @starDate
+                    </i><br />
+                    if (lead.value.LatestAppointment.Done == null)
+                    {
+                        <span class="text-bold text-red">Miss this time!</span>
+                    }
+                }
+            </td>
+            <td>
+
+                @if (lead.value.NextAppointment != null)
+                {
+
+
+                    <label class="appoint-note">@lead.value.NextAppointment.Name</label><img src="~/Content/Img/ringing-bell.gif" style="height: 15px;" /><br />
+                    <span>@Html.Raw(lead.value.NextAppointment.Description.Replace("\n", "<br />"))</span><br />
+                    <i>@(AppFunc.ParseTime(lead.value.NextAppointment.StartEvent.Substring(0, 10)).ToString("MMM dd, yyyy").Replace("\n", "<br />")) @(TimeView(lead.value.NextAppointment.StartEvent))</i><br />
+                }
+            </td>
+
+            <td>
+                @if (lead.value.PotentialRateScore >= 1)
+                {
+                    for (int i = 0; i < lead.value.PotentialRateScore; i++)
+                    {
+                        <img src="~/Content/Img/star-on.png" alt="star" />
+                    }
+                    <br />
+                    <p>(@lead.value.PotentialRateScore star)</p>
+                }
+                else
+                {
+                    <img src="~/Content/Img/star-on.png" alt="star" />
+                    <br />
+                    <p>(1 star)</p>
+                }
+            </td>
+            <td style="text-align: center;vertical-align: inherit; ">
+                <label class="label" style="color:@lead.value.SL_StatusColor;font-size: 15px;"></label>
+                <div class="btn-group on_rows lead_status">
+                    <button style="background-color:@lead.value.SL_StatusColor;color:white;width:100px;border:none">@lead.value.SL_StatusName</button>
+                </div>
+            </td>
+            <td style="text-align: center;vertical-align: inherit;">
+                <div class="dropdown">
+                    <button class="btn btn-default dropdown-toggle" style="padding: 3px 15px; outline: none;" type="button" data-toggle="dropdown">
+                        <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-button-action on_rows">
+                        @if (lead.value.SL_Status == 1)
+                        {
+                            <li><a onclick="open_lead_popup('@lead.value.Id')">Edit</a></li>
+                        }
+                        <li><a onclick="new_appoiment('@lead.value.CustomerCode')">Add Appoiment</a></li>
+                        @if (lead.value.SL_Status == 1)
+                        {
+                            <li><a onclick="open_trial_account('@lead.value.Id')">Open Trial Account</a></li>
+                        }
+                        else
+                        {
+                            if (lead.value.SL_Status == 2)
+                            {
+                                if (access.Any(k => k.Key.Equals("customer_view_trialaccount")) == true && access["customer_view_trialaccount"] == true)
+                                {
+                                    <li><a href="/merchantman/detail/@lead.value.Id" target="_blank">Dashboard</a></li>
+                                }
+                            }
+                            else
+                            {
+                                if (access.Any(k => k.Key.Equals("customer_view")) == true && access["customer_view"] == true)
+                                {
+                                    <li><a href="/merchantman/detail/@lead.value.Id" target="_blank">Dashboard</a></li>
+                                }
+                            }
+                        }
+                        <li><a onclick="show_appoiment('@lead.value.CustomerCode',true)">Detail</a></li>
+                    </ul>
+                </div>
+            </td>
+        </tr>
+        }
+    </tbody>
+</table>
+<style>
+    .appoint-note {
+        color: darkgoldenrod;
+    }
+
+    .lead_status li.disabled {
+        background-color: #eee;
+        cursor: not-allowed;
+    }
+
+        .lead_status li.disabled > a {
+            pointer-events: none;
+        }
+    .dropdown-toggle {
+        transition: all .1s linear;
+    }
+
+        .dropdown-toggle:focus, .dropdown-toggle:hover {
+            color: #007bff !important;
+            border: 1px solid #007bff !important;
+            opacity: 0.8 !important;
+            background: white !important;
+            -webkit-box-shadow: 0 0 10px #979a9e;
+            box-shadow: 0 0 5px #979a9e;
+        }
+
+    .dropdown-button-action li a {
+        transition: all .1s linear;
+        font-size: 15px;
+    }
+
+        .dropdown-button-action li a:hover {
+            font-weight: 600;
+            color: #007bff !important;
+            background: #ecf0f5;
+        }
+    
+</style>

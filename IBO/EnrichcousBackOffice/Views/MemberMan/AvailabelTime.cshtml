@@ -1,0 +1,599 @@
+﻿@using EnrichcousBackOffice.Services
+@using EnrichcousBackOffice.ViewModel
+@using EnrichcousBackOffice.Utils.IEnums
+@using Inner.Libs.Helpful
+@model EnrichcousBackOffice.Models.P_MemberAvailableTime
+@{
+    ViewBag.Title = "My Time Manage";
+    List<TimeZoneModel>
+    listTimeZone = new MerchantService().ListTimeZone();
+
+
+}
+
+<section class="content-header">
+    <h1>
+        My Time Manage
+        <small>Member management</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Dashboard</a></li>
+        <li>Partners</li>
+        <li><a href="/memberman"></a>Member</li>
+        <li class="active">My Time Manage</li>
+
+    </ol>
+</section>
+<!-- Main content -->
+
+<section class="content container-fluid">
+    <div class="row">
+        @if (TempData["e"] != null)
+        {
+            <div class="alert alert-warning alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-warning"></i>@TempData["e"]</span>
+            </div>
+        }
+
+        @if (TempData["s"] != null)
+        {
+            <div class="alert alert-success alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-check"></i>@TempData["s"]</span>
+            </div>
+        }
+        <div class="content">
+            <div class="col-md-12">
+                <form method="post" action="/MemberMan/SaveAvailableTime" id="Availabel-Form">
+
+                    <div class="form-horizontal">
+                        <style>
+                            .label-wrapper {
+                                min-width: 120px;
+                                margin-right: 5px;
+                            }
+
+                            .form-group label {
+                                margin-right: 15px;
+                            }
+
+                            .form-group .name-day {
+                                margin-left: 5px;
+                            }
+                        </style>
+                        <div class="box box-default">
+                            <div class="box-header with-border">
+                                <span>My Time Manage</span>
+                                <div class="pull-right">
+                                    <a href="/DemoScheduler" class="btn btn-success"><i class="fa fa-calendar" aria-hidden="true"></i> Demo Scheduler</a>
+                                </div>
+                            </div>
+                            <div class="box-body" id="render-content">
+                                <div class="row">
+                                    <div class="col-sm-12">
+                                        <div class="form-group">
+                                            <div class="label-wrapper" style="text-align:right;float:left;">
+                                                <label class="control-label">Time Zone :<span style="color:red">*</span></label>
+                                            </div>
+                                            <select class="form-control timezone" style="width: auto" id="TimeZone" name="TimeZone">
+                                                <option value="">N/A</option>
+                                                @if (listTimeZone.Count > 0)
+                                                {
+                                                    if (!string.IsNullOrEmpty(Model.TimeZone) && !listTimeZone.Any(x => x.Name.Contains(Model.TimeZone)))
+                                                    {
+                                                            <option selected value="@(Model?.TimeZone)">
+                                                                (UTC @(Model?.TimeZoneNumber)) @(Model?.TimeZone)
+                                                            </option>
+                                                    }
+                                                    foreach (TimeZoneModel time in listTimeZone)
+                                                    {
+                                                        <option @if (Model?.TimeZone == time.Name) { @Html.Raw("selected") } value="@time.Name">(UTC @time.TimeDT) @time.Name</option>
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    if (!string.IsNullOrEmpty(Model?.TimeZone) && Model?.TimeZone != "Eastern" && Model?.TimeZone != "Central" && Model?.TimeZone != "Mountain" && Model?.TimeZone != "Pacific" && Model?.TimeZone != "VietNam")
+                                                    {
+                                                        <option selected value="@(Model?.TimeZone)">
+                                                            (UTC @(Model?.TimeZoneNumber)) @(Model?.TimeZone)
+                                                        </option>
+                                                    }
+                                                    <option @if (Model?.TimeZone == "Eastern") { @Html.Raw("selected") } value="Eastern">(UTC @(TIMEZONE_NUMBER_BY_ID.Eastern.Text())) @(TIMEZONE_NUMBER_BY_ID.Eastern.Code<string>())</option>
+                                                    <option @if (Model?.TimeZone == "Central") { @Html.Raw("selected") } value="Central">(UTC  @(TIMEZONE_NUMBER_BY_ID.Central.Text())) @(TIMEZONE_NUMBER_BY_ID.Central.Code<string>())</option>
+                                                    <option @if (Model?.TimeZone == "Mountain") { @Html.Raw("selected") } value="Mountain">(UTC  @(TIMEZONE_NUMBER_BY_ID.Mountain.Text())) @(TIMEZONE_NUMBER_BY_ID.Mountain.Code<string>())</option>
+                                                    <option @if (Model?.TimeZone == "Pacific") { @Html.Raw("selected") } value="Pacific">(UTC  @(TIMEZONE_NUMBER_BY_ID.Pacific.Text())) @(TIMEZONE_NUMBER_BY_ID.Pacific.Code<string>())</option>
+                                                    <option @if (Model?.TimeZone == "VietNam") { @Html.Raw("selected") } value="VietNam">(UTC  @(TIMEZONE_NUMBER_BY_ID.VietNam.Text())) @(TIMEZONE_NUMBER_BY_ID.VietNam.Code<string>())</option>
+                                                }
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                @*<div class="row">
+            <div class="col-sm-5">
+                <div class="form-group">
+                    <div class="label-wrapper" style="text-align:right;float:left;">
+                        <label class="control-label">Date :</label>
+                    </div>
+                    <div>
+                        <div style="display:flex;">
+                            <input class="form-control date-only" name="StartDate" type="text" value="@(Model?.StartDate != null ? Model.StartDate.Value.ToString("HH:mm"):"")"> <span style="line-height:32px;margin:0px 10px;"> To</span>
+                            <input class="form-control date-only" name="EndDate" type="text" value="@(Model?.EndDate != null ? Model.EndDate.Value.ToString("HH:mm"):"")">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>*@
+                                <div class="row">
+                                    <div class="col-sm-5">
+                                        <div class="form-group">
+                                            <div class="label-wrapper" style="text-align:right;float:left;">
+                                                <label class="control-label">Time :<span style="color:red">*</span></label>
+                                            </div>
+                                            <div>
+                                                <div style="display:flex;">
+                                                    <input class="form-control time-only" name="StartTime" type="text" value="@(Model?.StartTime != null ? new DateTime(Model.StartTime.Value.Ticks).ToString("HH:mm"):"9:00 AM")" required> <span style="line-height:32px;margin:0px 10px;"> To</span>
+                                                    <input class="form-control time-only" name="EndTime" type="text" value="@(Model?.EndTime != null ?new DateTime(Model.EndTime.Value.Ticks).ToString("HH:mm"):"9:00 PM")" required>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-12">
+                                        <div class="form-group">
+                                            <div class="label-wrapper" style="text-align:right;float:left;">
+                                                <label class="control-label">Day of week : <span style="color:red">*</span></label>
+                                            </div>
+                                            <div>
+                                                <div>
+                                                    <div class="form-group" style="transform:translateY(7px)">
+                                                        <label>
+                                                            <input type="checkbox" class="minimal" name="DayOfWeek" value="1" @(Model.DaysOfWeek != null ? Model.DaysOfWeek.Split(',').Contains("1") ? "checked" : "" : "")>
+                                                            <span class="name-day">Mon</span>
+                                                        </label>
+                                                        <label>
+                                                            <input type="checkbox" class="minimal" name="DayOfWeek" value="2" @(Model.DaysOfWeek != null ? Model.DaysOfWeek.Split(',').Contains("2") ? "checked" : "" : "")>
+                                                            <span class="name-day">Tue</span>
+                                                        </label>
+                                                        <label>
+                                                            <input type="checkbox" class="minimal" name="DayOfWeek" value="3" @(Model.DaysOfWeek != null ? Model.DaysOfWeek.Split(',').Contains("3") ? "checked" : "" : "")>
+                                                            <span class="name-day">Wed</span>
+                                                        </label>
+                                                        <label>
+                                                            <input type="checkbox" class="minimal" name="DayOfWeek" value="4" @(Model.DaysOfWeek != null ? Model.DaysOfWeek.Split(',').Contains("4") ? "checked" : "" : "")>
+                                                            <span class="name-day">Thu</span>
+                                                        </label>
+                                                        <label>
+                                                            <input type="checkbox" class="minimal" name="DayOfWeek" value="5" @(Model.DaysOfWeek != null ? Model.DaysOfWeek.Split(',').Contains("5") ? "checked" : "" : "")>
+                                                            <span class="name-day">Fri</span>
+                                                        </label>
+                                                        <label>
+                                                            <input type="checkbox" class="minimal" name="DayOfWeek" value="6" @(Model.DaysOfWeek != null ? Model.DaysOfWeek.Split(',').Contains("6") ? "checked" : "" : "")>
+                                                            <span class="name-day">Sat</span>
+                                                        </label>
+                                                        <label>
+                                                            <input type="checkbox" class="minimal" name="DayOfWeek" value="0" @(Model.DaysOfWeek != null ? Model.DaysOfWeek.Split(',').Contains("0") ? "checked" : "" : "")>
+                                                            <span class="name-day">Sun</span>
+                                                        </label>
+                                                    </div>
+                                                    <script>
+                                                        //iCheck for checkbox and radio inputs
+                                                        $('input[type="checkbox"].minimal, input[type="radio"].minimal').iCheck({
+                                                            checkboxClass: 'icheckbox_minimal-blue',
+                                                            radioClass: 'iradio_minimal-blue'
+                                                        })
+                                                    </script>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <button type="submit" name="save" class="btn bg-blue">
+                                        <i class="fa fa-floppy-o"></i>
+                                        Save <img class="loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none">
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- /.box-body -->
+                        </div>
+                    </div>
+                </form>
+                <div class="box box-default">
+                    <div class="box-body">
+                        @*@if (Model.CreatedBy != null)
+                        {*@
+                            <div id="calendar"></div>
+                        @*}
+                        else
+                        {
+                             <span>You need to save the default recurring availabel time to display this calendar</span>
+                        }*@
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="modal fade" id="event_modal" role="dialog" style="">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <form action="/MemberMan/CreateOrUpdateSpecificTime" method="post" id="event_form">
+                <div class="modal-header">
+                    <button style="font-size:19px" type="button" class="close" data-dismiss="modal"><i class="fa fa-close"></i></button>
+
+                    <h4 class="modal-title" style="margin-right:50px"><i class="fa fa-pencil-square-o"></i>&nbsp;Update Availabel Time</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <span id="title-popup-cru" style="font-size: 18px;text-align: center;display: block;"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label style="width:100%;">
+                                    Start
+                                </label>
+                                <div style="display:flex;flex-wrap:nowrap">
+                                    <input class="form-control datepicker" name="StartDate" onkeydown="return false" required readonly />
+                                    <input class="form-control time-only" style="margin-left:5px;" name="StartTime" onkeydown="return false" required />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="input-group form-group">
+                                <label>End </label>
+                                <div style="display:flex;flex-wrap:nowrap">
+                                    <input class="form-control datepicker" name="EndDate" onkeydown="return false" required readonly />
+                                    <input class="form-control time-only" style="margin-left:5px;" name="EndTime" onkeydown="return false" required />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Status </label>
+                                <select class="form-control" name="Status">
+                                    <option value="true">Availabel</option>
+                                    <option value="false">Not Availabel</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label>Note </label>
+                                <textarea id="desc" class="form-control" wrap="soft" name="Note" rows="5"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button name="btnsubmit" value="save" type="submit" class="btn btn-sm btn-primary">Save</button>
+                    <button data-dismiss="modal" class="btn btn-sm btn-default">Close</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section style{
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.min.css" rel="stylesheet" />
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar-scheduler@5.8.0/main.min.css' rel='stylesheet' />
+    <style>
+        .fc-license-message {
+            display: none;
+        }
+
+        .w-100 {
+            width: 100%;
+        }
+
+        .fc-widget-content {
+            background-color: green !important;
+        }
+
+        .fc-axis {
+            background-color: white;
+        }
+
+        .fc-bgevent {
+            opacity: 1;
+        }
+
+        .event-content {
+            font-weight: 600;
+            font-size: 14px;
+            color: #636f83;
+        }
+
+        .note-event {
+            display: block;
+            color: #e55353;
+            white-space: break-spaces;
+        }
+
+        .fc-direction-ltr .fc-daygrid-event.fc-event-end, .fc-direction-rtl .fc-daygrid-event.fc-event-start {
+            margin-right: 0px;
+        }
+
+        .fc-direction-ltr .fc-daygrid-event.fc-event-start, .fc-direction-rtl .fc-daygrid-event.fc-event-end {
+            margin-left: 0px;
+        }
+
+        .fc-daygrid-dot-event {
+            display: flex;
+            align-items: center;
+            padding: 0px;
+        }
+
+        .default-cell {
+            background: #ebedef;
+            cursor: pointer;
+        }
+
+        .availabel {
+            background-color: white ;
+        }
+
+        .not-availabel {
+            background-color: #e55353 !important;
+        }
+            .not-availabel .time{
+                text-decoration:line-through;
+            }
+            .default-cell:hover {
+                opacity: 0.8;
+            }
+
+        .not-availabel .event-content, .not-availabel .fc-daygrid-day-number, .not-availabel .event-content .note-event {
+            color: white !important;
+            display: block;
+        }
+
+        .fc-daygrid-event-harness {
+            margin-top: 0px !important;
+        }
+
+        .fc-daygrid-dot-event.fc-event-mirror, .fc-daygrid-dot-event:hover {
+            background: transparent;
+        }
+        .fc-daygrid-event {
+            background-color: transparent;
+        }
+    </style>
+}
+
+@section script{
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"></script>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar-scheduler@5.8.0/main.min.js'></script>
+    <script>
+    </script>
+    <script>
+        $(function () {
+            $('.date-only').datetimepicker({
+                format: 'MM-DD-YYYY'
+            });
+            $('.time-only').datetimepicker({
+                format: 'LT'
+            });
+            $(".timezone").select2()
+        });
+    </script>
+    <script>
+
+        var calendar;
+        var date = new Date();
+        var d = date.getDate();
+        var m = date.getMonth();
+        var y = date.getFullYear();
+        function renderCalendar() {
+            var calendarEl = document.getElementById('calendar');
+            calendar = new FullCalendar.Calendar(calendarEl, {
+                views: {
+                    timeGrid: {
+                        titleFormat: { // will produce something like "Tuesday, September 18, 2018"
+                            month: 'short',
+                            year: 'numeric',
+                            day: 'numeric',
+                            weekday: 'short'
+                        },
+                    }
+
+                },
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: ''
+
+                },
+                allDaySlot: false,
+                events: function (fetchInfo, successCallback, failureCallback) {
+                    jQuery.ajax({
+                        type: 'POST',
+                        url: '/MemberMan/GetAllSpecificAvailabelTime',
+                        success: function (events) {
+                            successCallback(events);
+                        }
+                    });
+                },
+                eventTimeFormat: { // like '14:30:00'
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    meridiem: true
+                },
+
+                height: 630,
+                //defaultDate: date_now,
+                navLinks: false, // can click day/week names to navigate views
+                selectable: true,
+                selectMirror: true,
+                agendaEventMinHeight: 100,
+                editable: false,
+                dayCellClassNames: 'default-cell',
+                eventDidMount: function (arg) {
+                    var events = calendar.getEvents();
+                    let eventsFilter = events.filter((evt) => evt.start.setHours(0, 0, 0, 0) == arg.event.start.setHours(0, 0, 0, 0));
+                    if (eventsFilter.length == 2 && arg.event.groupId === 'recurring') {
+                        $(arg.el).hide();
+                    }
+                    else {
+                        $(arg.el).parents('.fc-daygrid-day').addClass(arg.event.classNames);
+                    }
+
+                },
+                slotDuration: "00:15:00",
+                slotLabelInterval: "01:00",
+                eventContent: function (arg) {
+                    let innerText = '';
+                    //var events = calendar.getEvents();
+                    //let eventsFilter = events.filter((evt) => evt.start.setHours(0, 0, 0, 0) == arg.event.start.setHours(0, 0, 0, 0)
+                    //    && evt.id == (arg.event.id));
+                    if (arg.event.groupId === 'recurring') {
+                        innerText += '<div class="text-center w-100 event-content">';
+                        innerText += moment(arg.event.start).format('LT') + ' - ' + moment(arg.event.end).format('LT');
+                        innerText += '</div>';
+                        return { html: innerText }
+                    }
+                    else {
+
+                        innerText += '<div class="text-center event-content w-100">';
+                        innerText +='<span class="time">'+ moment(arg.event.start).format('LT') + ' - ' + moment(arg.event.end).format('LT')+'</span>';
+                        innerText += '<span class="note-event">' + arg.event.title + '</span>';
+                        innerText += '</div>';
+                        return { html: innerText }
+                    }
+
+                    return false
+                },
+                //slotMinTime: '09:00:00',
+                //slotMaxTime: '21:00:00',
+                select: function (arg) {
+                    var events = calendar.getEvents();
+                    let eventsFilter = events.filter((evt) => evt.start.setHours(0, 0, 0, 0) == arg.start.setHours(0, 0, 0, 0));
+                    if (eventsFilter.length > 0) {
+                        let status = false;
+                        if (eventsFilter[0].classNames[0] === 'availabel') {
+                            status = true;
+                        }
+                        view_update_availabe_time(eventsFilter[0].start, eventsFilter[0].end, eventsFilter[0].title, status);
+                    }
+                    else {
+                        view_new_availabe_time(arg.start);
+                    }
+                    calendar.unselect()
+                },
+                eventClick: function (info) {
+                    info.el.style.borderColor = 'red';
+                    let status = false;
+                    if (info.event.classNames[0] === 'availabel') {
+                        status = true;
+                    }
+                    view_update_availabe_time(info.event.start, info.event.end, info.event.title, status);
+                    info.el.style.borderColor = '';
+                },
+                eventResize: function (info) {
+                    if (!confirm("Is this okay?")) {
+                        info.revert();
+                    }
+                    else {
+                        update_start_end_event(info);
+                    }
+                },
+
+            });
+            calendar.render();
+        }
+        renderCalendar();
+
+        function view_update_availabe_time(start = null, end = null, Note = null, status = true) {
+            console.log(status);
+            $("#event_modal").modal("show");
+            $("#title-popup-cru").html(moment(start).format('dddd, MMMM Do, YYYY'));
+            $("#event_modal").find("[name='StartDate']").val(moment(new Date(start)).format("MM/DD/YYYY"));
+            $("#event_modal").find("[name='EndDate']").val(moment(new Date(end)).format("MM/DD/YYYY"));
+            $("#event_modal").find("[name='StartTime']").val(moment(new Date(start)).format("h:mm A")).change();
+            $("#event_modal").find("[name='EndTime']").val(moment(new Date(end)).format("h:mm A")).change();
+            $("#event_modal").find("[name='Status']").val(status.toString());
+            if (Note != null && Note !== 'null') {
+                $("#event_modal").find("[name='Note']").val(Note);
+            }
+            else {
+                $("#event_modal").find("[name='Note']").val('');
+            }
+        }
+        function view_new_availabe_time(start = null, status = true) {
+            $("#event_modal").modal("show");
+            $("#title-popup-cru").html(moment(start).format('dddd, MMMM Do, YYYY'));
+            $("#event_modal").find("[name='StartDate']").val(moment(new Date(start)).format("MM/DD/YYYY"));
+            $("#event_modal").find("[name='EndDate']").val(moment(new Date(start)).format("MM/DD/YYYY"));
+            $("#event_modal").find("[name='StartTime']").val('09:00 AM');
+            $("#event_modal").find("[name='EndTime']").val('09:00 PM');
+            $("#event_modal").find("[name='Note']").val('');
+            $("#event_modal").find("[name='Status']").val(status.toString());
+        }
+
+        $('#event_form').submit(function (e) {
+            e.preventDefault(); // avoid to execute the actual submit of the form.
+            var form = $(this);
+            var url = form.attr('action');
+            var loading = form.find('.loading');
+            $(loading).show();
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: form.serialize(), // serializes the form's elements.
+                success: function (data) {
+                    if (data.status) {
+
+                        let MsgSuccess = $.parseJSON('{"text":"' + data.message + '", "layout":"topRight", "type":"success"}');
+                        noty(MsgSuccess);
+                        calendar.refetchEvents();
+                        $("#event_modal").modal("hide");
+                    }
+                    else {
+                        let MsgError = $.parseJSON('{"text":"' + data.message + '", "layout":"topRight", "type":"error"}');
+                        noty(MsgError);
+                    }
+
+                },
+                complete: function () {
+                    $(loading).hide();
+                },
+            });
+        })
+
+        //$("#Availabel-Form").submit(function (e) {
+        //    e.preventDefault();
+        //    var form = $(this);
+        //    var url = form.attr('action');
+        //    var loading = form.find('.loading');
+        //    $(loading).show();
+        //    $.ajax({
+        //        type: "POST",
+        //        url: url,
+        //        data: form.serialize(), // serializes the form's elements.
+        //        success: function (data) {
+        //            if (data.status) {
+        //                let MsgSuccess = $.parseJSON('{"text":"' + data.message + '", "layout":"topRight", "type":"success"}');
+        //                calendar.refetchEvents();
+        //                noty(MsgSuccess);
+        //            }
+        //            else {
+        //                let MsgError = $.parseJSON('{"text":"' + data.message + '", "layout":"topRight", "type":"error"}');
+        //                noty(MsgError);
+        //            }
+
+        //        },
+        //        complete: function () {
+        //            $(loading).hide();
+        //        },
+        //    });
+
+        //});
+    </script>
+}

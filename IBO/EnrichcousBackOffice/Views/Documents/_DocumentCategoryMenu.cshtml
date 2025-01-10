@@ -1,0 +1,49 @@
+﻿@model List<EnrichcousBackOffice.Models.Document_Category>
+@{
+    var categorySelected = ViewBag.CategorySelectedId as int?;
+    var access = EnrichcousBackOffice.AppLB.Authority.GetAccessAuthority();
+    var cMem = EnrichcousBackOffice.AppLB.Authority.GetCurrentMember();
+    const string CategoryViewFunctionCodePrefix = "document_category_view_";
+}
+@if (Model.Count > 0)
+{
+    foreach (var parentCategory in Model.Where(x => x.ParentId == null).OrderBy(x => x.DisplayOrder))
+    {
+        if (cMem.RoleCode?.Contains("admin") == true || (access.Any(k => k.Key.Equals(CategoryViewFunctionCodePrefix + parentCategory.Id)) == true && access[CategoryViewFunctionCodePrefix + parentCategory.Id] == true))
+        {
+            <ul class="category_wrapper">
+                <li class="category_parrent pointer-event">
+                    <div id="category_menu_@parentCategory.Id" class="category_menu category-parent-header" onclick="ExpandSubmenu(this,@parentCategory.Id)">
+                        <span class="category_name">@parentCategory.Name</span>
+                        @if (Model.Where(x => x.ParentId == parentCategory.Id).Count() > 0)
+                        {
+                            <a class="pull-right expand-button">
+                                <i class="fa fa-angle-right icon-expand"></i>
+                            </a>
+                        }
+                    </div>
+                    @if (Model.Where(x => x.ParentId == parentCategory.Id).Count() > 0)
+                    {
+                        <ul class="child_category_wrapper">
+                            @foreach (var subcategory in Model.Where(x => x.ParentId == parentCategory.Id).OrderBy(x => x.DisplayOrder))
+                            {
+                                <li id="category_menu_@subcategory.Id" class="category_menu child_category pointer-event" onclick="LoadCategory(@subcategory.Id)">- @subcategory.Name</li>
+                            }
+                        </ul>
+                    }
+
+
+                </li>
+
+
+            </ul>
+
+
+        }
+
+    }
+}
+else
+{
+    <span>No category</span>
+}

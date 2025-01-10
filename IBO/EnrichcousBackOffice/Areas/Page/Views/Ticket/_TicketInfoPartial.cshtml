@@ -1,0 +1,322 @@
+﻿@model EnrichcousBackOffice.Models.T_SupportTicket
+@using EnrichcousBackOffice.Models
+@using System.Globalization
+@using System.Threading
+@using EnrichcousBackOffice.Models.CustomizeModel.Ticket
+
+@{
+    var db = new WebDataModel();
+    var severity = ViewBag.Severity as List<EnrichcousBackOffice.Models.T_TicketSeverity>;
+    var access = EnrichcousBackOffice.AppLB.Authority.GetAccessAuthority();
+    var cMem_FullName = EnrichcousBackOffice.AppLB.Authority.GetCurrentMember()?.FullName;
+    //List<EnrichcousBackOffice.Models.T_SupportTicket> ticketRelated = ViewBag.ticketRelated == null ? new List<EnrichcousBackOffice.Models.T_SupportTicket>() : ViewBag.ticketRelated;
+    List<StagesModel> stages = ViewBag.list_stages ?? new List<StagesModel>();
+    List<T_TicketStatus> status = ViewBag.status ?? new List<T_TicketStatus>();
+    List<T_Project_Milestone> versions = ViewBag.versions ?? new List<T_Project_Milestone>();
+
+    CultureInfo cultureInfo = Thread.CurrentThread.CurrentCulture;
+    TextInfo textInfo = cultureInfo.TextInfo;
+
+    List<T_Project_Milestone> projects = ViewBag.projects ?? new List<T_Project_Milestone>();
+    T_Project_Stage stage = ViewBag.stage ?? new T_Project_Stage();
+    T_Project_Milestone project_version = ViewBag.project_version ?? new T_Project_Milestone();
+    List<T_Project_Milestone> project_version_lists = ViewBag.project_version_lists ?? new List<T_Project_Milestone>();
+    var accessEditCustomer = access.Any(k => k.Key.Equals("customer_update")) == true && access["customer_update"] == true;
+    List<T_Tags> Labels = ViewBag.Label as List<T_Tags>;
+    List<P_Department> DepartmentList = ViewBag.Department as List<P_Department>;
+    var customer = db.C_Customer.FirstOrDefault(c => c.CustomerCode == Model.CustomerCode);
+    var Page = ViewBag.Page as string;
+    List<T_Priority> Priority = ViewBag.Priority as List<T_Priority>;
+
+    string PageDeployment = "DeploymentTicket";
+    string PageSupportTicket = "SupportTicket";
+    string PageDevelopmentsTicket = "DevelopmentsTicket";
+
+
+}
+<style type="text/css">
+    .color-label {
+        width: 18px;
+        height: 18px;
+        margin-top: 2px;
+        border-radius: 2px;
+        margin-right: 7px
+    }
+    #divSubcribeUser span {
+        background-color: var(--main-color-1);
+        border: 1px solid var(--main-color-1);
+        padding: 3px 10px;
+        color: #FFF;
+        border-radius: 4px;
+        margin-top: 7px;
+        margin-left: 7px;
+        display: inline-block;
+    }
+
+    .avatar-select-2 {
+        width: 20px;
+        height: auto;
+        margin-right: 5px;
+    }
+    .form-group span.select2-container {
+        width: 100% !important;
+    }
+
+    .hide {
+        display: none;
+    }
+</style>
+<input type="hidden" id="Page" name="Page" value="@Page" />
+<input type="hidden" class="unsetChange" id="ActionFeedBack" name="ActionFeedBack" value="false" />
+<div>
+
+    @Html.HiddenFor(m => m.Id)
+
+
+    <div class="box box-custom" id="ticket_info_partial">
+
+        <div class="box-header with-border">
+            <h3 class="box-title">Ticket Information</h3>
+        </div>
+        <div class="box-body">
+            <fieldset style="border: 1px #ccc solid; padding:10px; margin-bottom: 20px">
+                <div class="form-group">
+                    <label>Merchant:</label>
+
+                    @*<div class="pull-right">
+
+                    <a style="cursor:pointer" onclick="update_merchant(0, '@(accessEditCustomer==true ? "true":"false")' == 'true' ,$('#merchant').val())" title="View merchant detail" data-toggle="tooltip"><i class="glyphicon glyphicon-eye-open"></i></a>
+                </div>*@
+                    <input type="hidden" name="hdmerchant" value="@Model.CustomerCode" />
+                    <img id="loading_merchant" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="width:20px;display:none" />
+                    <select name="merchant" id="merchant" class="form-control select2">
+                        <option value="">N/A</option>
+                        @if (customer != null)
+                        {
+                            <option data-partner="@(customer.PartnerCode??"Simply")" value="@customer.CustomerCode" selected>@(customer?.BusinessName) - @(customer?.AddressLine())</option>
+                        }
+
+                    </select>
+                </div>
+                <div class="form-group  @(Page!=PageDevelopmentsTicket?"hide":"")">
+                    <label>Project:</label>
+                    @*<span class="pull-right">
+                    <a id="undo_project_btn" style="display:none" data-toggle="tooltip" data-placement="top" title="Undo project changes"><i class="fa fa fa-undo" style="font-size: 1.2em; font-weight:bold; padding:3px"></i></a>
+                </span>*@
+                    <select id="Project_select" name="Project_select" class="form-control " data-cur="@stage.ProjectId" required>
+                        <option value="">--Select project--</option>
+                        @foreach (var p in projects)
+                        {
+                            <option value="@p.Id" @(stage.ProjectId == p.Id ? "selected" : "")>@p.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-group  @(Page!=PageDevelopmentsTicket?"hide":"")">
+
+                    <label>Main Version:</label>
+                    <select id="project_versions" name="ProjectVersion" data-cur="@project_version.Id" class="form-control" required>
+                        @foreach (var v in project_version_lists)
+                        {
+                            <option data-prj="@(v.ParentId??"")" value="@v.Id"
+                                    @(v.Id == project_version.Id ? "selected data-cur=1" : "")
+                                    @(v.ParentId != stage.ProjectId ? "hidden disabled " : "")>
+                                @v.Name
+                            </option>
+                        }
+                    </select>
+                </div>
+                @*fake stage to type*@
+
+                @if (Page != PageDevelopmentsTicket)
+                {
+                    <div class="form-group hide">
+                        <label>Stages:</label>
+                        <select id="stages" name="forward_stage" class="form-control" multiple required>
+                            @foreach (var s in stages)
+                            {
+                                <option value="@s.Stage.Id" data-prj="@(s.Stage.ProjectId??"")" data-ver="@(string.Join(",",s.VersionIds))"
+                                        class="@((s.Stage.ProjectId != stage.ProjectId || !s.VersionIds.Contains(project_version.Id)) ? "optInvisible" : "") @(s.Stage.Id==Session["stageId"]?.ToString()?"cur_stage":"")">
+                                    @s.Stage.Name
+                                </option>
+                            }
+                        </select>
+
+                    </div>
+                    <div class="form-group hide">
+                        <div id="table_forward_stage">
+                        </div>
+                    </div>
+
+                }
+                else
+                {
+                    <div class="form-group hide">
+                        <label>Stages:</label>
+                        <select id="stages" name="forward_stage" class="form-control" multiple required>
+                            @foreach (var s in stages)
+                            {
+                                <option value="@s.Stage.Id" data-prj="@(s.Stage.ProjectId??"")" data-ver="@(string.Join(",",s.VersionIds))"
+                                        class="@((s.Stage.ProjectId != stage.ProjectId || !s.VersionIds.Contains(project_version.Id)) ? "optInvisible" : "")">
+                                    @s.Stage.Name
+                                </option>
+                            }
+                        </select>
+                        <div id="table_forward_stage hide" style="padding:10px">
+                        </div>
+                    </div>
+                }
+
+
+
+                <div class="form-group @(Page!=PageDevelopmentsTicket?"hide":"")">
+                    <label>Affected Subversion</label>
+
+                    <select id="available_versions" data-placeholder="N/A" name="AffectedVersion" class="form-control select2" multiple>
+                        @*<option value="">Unselect</option>*@
+                        @foreach (var v in versions)
+                        {
+                            <option value="@v.Id" @(!string.IsNullOrEmpty(Model.AffectedVersionId) && Model.AffectedVersionId.Split(',').Any(x => x == v.Id) == true ? "selected" : "")>@v.Name</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="form-group @(Page!=PageDevelopmentsTicket?"hide":"")">
+                    <label>Fixed Subversion</label>
+                    <select id="fixed_versions" data-placeholder="N/A" name="FixedVersion" class="form-control select2" multiple>
+                        @*<option value="">Unselect</option>*@
+                        @foreach (var v in versions)
+                        {
+                            <option value="@v.Id" @(!string.IsNullOrEmpty(Model.FixedVersionId) && Model.FixedVersionId.Split(',').Any(x => x == v.Id) ? "selected" : "")>@v.Name</option>
+                        }
+                    </select>
+                </div>
+
+                <!--Tags-->
+                <!--/end Tags-->
+                <div class="form-group">
+                    <label>Type</label>
+                    <input type="hidden" name="hdtype" value="@Model.TypeId" />
+                    <img id="loading_type" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="width:20px;display:none" />
+                    <select name="type" id="type" class="form-control select2" multiple required>
+                        @foreach (var item in ViewBag.Type as List<T_TicketType>)
+                        {
+                            <option value="@item.Id" @(Model?.T_TicketTypeMapping.Any(y => y.TypeId == item.Id) == true ? "selected" : "")>@item.TypeName</option>
+                        }
+                    </select>
+                </div>
+
+
+                <div class="form-group">
+                    <label>Status</label>
+                    <img id="loading_status" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="width:20px;display:none" />
+                    <select id="status" class="form-control select2" name="StatusId" required>
+
+                        @if (status?.Count > 0)
+                        {
+                            foreach (var s in status.OrderBy(s => s.Order))
+                            {
+                                <option value="@s.Id" @(Model?.T_TicketStatusMapping.Any(y => y.StatusId == s.Id) == true ? "selected" : "")>@s.Name</option>
+                            }
+                        }
+                        else
+                        {
+                            <option value="">Open</option>
+                        }
+                    </select>
+                </div>
+
+                @*<div class="form-group">
+                <label>
+                    <span class="pull-left">
+                        Label <img id="choose_tags_loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                    </span>
+                </label>
+
+                <select id="form-label" name="label" multiple="multiple" data-placeholder="Not yet...">
+                    @foreach (var label in Labels)
+                    {
+                        <option @(!string.IsNullOrEmpty(Model.Tags) ? (Model.Tags.Split(',').Contains(label.Id) ? "selected" : "") : "") data-color="@label.Color" value="@label.Id">@label.Name</option>
+                    }
+                </select>
+            </div>*@
+
+
+
+
+
+            </fieldset>
+            @*<fieldset style="border: 1px #ccc solid; padding:10px">
+
+            <legend style="border: 1px #ccc solid; width:auto; padding:0 10px; margin:0 5px; background-color:#fff; font-size:14px"><b>Ticket Option</b></legend>
+            <div class="form-group">
+                <label>Deadline:</label>
+                <input name="Deadline" id="Deadline" class="form-control" type="date" value="@(Model.Deadline.HasValue ? Model.Deadline.Value.ToString("yyyy-MM-dd") : "")" />
+            </div>
+            <div class="form-group">
+                <label>Estimated Completion Time <span id="GMT_display"></span></label>
+                <input type="hidden" name="GMT" id="GMT" value="" />
+                <div class="row" style="position:relative">
+                    <div class="col-sm-6">
+                        <input class="form-control" name="EstimatedCompletionTimeFrom" placeholder="From" id="estimate-complete-time-from" />
+                    </div>
+                    <span style="position:absolute;left:50%;bottom:7px;transform:translateX(-50%)">To</span>
+                    <div class="col-sm-6">
+                        <input class="form-control" name="EstimatedCompletionTimeTo" placeholder="To" id="estimate-complete-time-to" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                    <label>Category:<img id="category_loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display: none" /></label>
+                    <select id="category" class="form-control select2" name="category" data-allow-clear="true" data-placeholder="Not yet...">
+                        @if (Model.CategoryId != null)
+                        {
+                            <option value="@Model.CategoryId" selected>@(Model.CategoryName)</option>
+                        }
+                    </select>
+                </div>
+
+
+        </fieldset>*@
+            <fieldset style="border: 1px #ccc solid; padding:10px; margin-bottom:20px; background-color:#f0f0f0;margin-top:1rem;">
+                <div class="form-group">
+                    <label><i class="fa fa-pencil" aria-hidden="true"></i> Note</label>
+                    <textarea class="form-control" name="Note" rows="4"></textarea>
+                </div>
+            </fieldset>
+        </div>
+
+    </div>
+
+
+</div>
+<div id="tags_popup_modal">
+    <!--Append _TagsPopupPartial-->
+</div>
+
+
+
+<style type="text/css">
+    #table_forward_stage tr td {
+        padding: 3px;
+        vertical-align: middle;
+    }
+
+        #table_forward_stage tr td:last-child {
+            width: 70px;
+            text-align: center;
+        }
+
+        #table_forward_stage tr td:first-child {
+            width: 30%;
+            background-color: var(--main-color-1);
+            color: #fff;
+            font-weight: bold;
+            border-color: var(--main-color-2);
+            text-align: center;
+        }
+
+    .select2-container .select2-results__option.optInvisible {
+        display: none;
+    }
+</style>

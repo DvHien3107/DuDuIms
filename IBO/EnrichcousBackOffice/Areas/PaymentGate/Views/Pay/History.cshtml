@@ -1,0 +1,114 @@
+﻿@model string
+
+@{
+    ViewBag.Title = "Thanh toán thành công";
+    Layout = "~/Areas/PaymentGate/Views/Shared/_Layout.cshtml";
+    List<EnrichcousBackOffice.Models.C_CustomerPayment> transactions = ViewBag.Transactions;
+    var host = $"{HttpContext.Current.Request.Url.Scheme}://{HttpContext.Current.Request.Url.Authority}";
+}
+
+@section title{
+    Lịch sử thanh toán
+}
+
+@section content_page_script{
+    <script>
+        var table = $(".dataTable").DataTable({
+            columnDefs: [{
+                targets: 0,
+                searchable: true,
+                visible: false
+            }]
+        });
+
+        function show_invoice(code) {
+            let src = $("#invoice-view").data("src").replace("%code%", code);
+            $("#invoice-view").attr("src", src);
+            $('#Invoice').modal('show');
+        }
+    </script>
+}
+
+@section content_header{
+    @if (transactions.Count == 0)
+    {
+        <div class="alert alert-warning alert-dismissible" style="margin: 0">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <span><i class="icon fa fa-times-circle-o"></i> Không có lịch sử</span>
+        </div>
+    }
+}
+
+@section content_left {
+    @if (transactions.Count > 0)
+    {
+        <h5 class="box-title">Lịch sử giao dịch</h5>
+        <br />
+        <div class="col-md-12">
+            <table class="table dataTable">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Thời gian</th>
+                        <th>Mã đơn hàng</th>
+                        <th>Ngân hàng</th>
+                        <th>Số thẻ</th>
+                        <th>Tổng tiền</th>
+                        <th>Mô tả</th>
+                        <th>Người thực hiện</th>
+                        <th>Trạng thái</th>
+                    </tr>
+                </thead>
+                <tbody id="list_his">
+                    @foreach (var t in transactions)
+                    {
+                        <tr>
+                            <td></td>
+                            <td>@(t.CreateAt?.ToString("yyyy-MM-dd"))</td>
+                            <td><b>#@t.OrderCode</b><br /><a href="#" onclick="show_invoice('@t.OrderCode')" style="color:dodgerblue"> [View receipt]</a></td>
+                            <td>@t.BankName</td>
+                            <td>@t.CardNumber</td>
+                            <td>@(((double)t.Amount).ToString("#,##0 đ"))</td>
+                            <td>@t.PaymentNote</td>
+                            <td>@(string.IsNullOrEmpty(t.UpdateBy) ? t.CreateBy : t.UpdateBy )</td>
+                            <td>
+                                @if (string.IsNullOrEmpty(t.StatusCode))
+                                {
+                                    <label class="label label-warning">@t.Status</label>
+                                }
+                                else
+                                {
+                                    if (t.StatusCode.Equals("000"))
+                                    {
+                                        <label class="label label-success">@t.Status</label>
+                                    }
+                                    else
+                                    {
+                                        <label class="label label-warning">@t.Status</label>
+                                    }
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+}
+
+@section content_right {
+    <div class="modal fade" id="Invoice" role="dialog">
+        <div class="modal-dialog modal-content" style="min-width:900px">
+            <div class="modal-header">
+                <div class="modal-title pull-left"><h3 style="margin:0">View Invoice</h3></div>
+                <button type="button" class="btn btn-sm btn-warning" style="float:left; margin-left:20px" onclick="document.getElementById('invoice-view').contentWindow.print()"><i class="fa fa-print"></i> Print</button>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" style="padding:1px;height: 77vh;">
+                <iframe width='100%' height='100%' style="border: none;" id="invoice-view" data-src='@host/order/ImportInvoiceToPDF?_code=%code%&flag=Invoice'></iframe>
+            </div>
+        </div>
+    </div>
+}

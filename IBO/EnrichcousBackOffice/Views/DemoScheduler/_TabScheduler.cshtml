@@ -1,0 +1,21 @@
+﻿<input type="hidden" id="Status_Tab" value="scheduler" />
+@Html.Partial("_FilterTab")
+
+<table class="table table-bordered table-striped-custom demo-scheduler">
+    <thead class="">
+        <tr>
+            <th class="vertical-middle text-center" rowspan="2">Date</th>
+            <th class="vertical-middle text-center" rowspan="2">Salon</th>
+            <th class="vertical-middle text-center" rowspan="2">Note</th>
+            <th class="text-center" colspan="3">Schedule</th>
+            <th rowspan="2"></th>
+        </tr>
+        <tr>
+            <th>Assign</th>
+            <th>Demo Time</th>
+            <th>Status</th>
+            @*<th style="border-right: 1px solid #f4f4f4;">Attendees</th>*@
+        </tr>
+    </thead>
+</table>
+<script src="~/Scripts/DemoSheduler/TabLoad.js"></script>

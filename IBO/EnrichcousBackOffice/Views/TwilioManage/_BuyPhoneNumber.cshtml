@@ -1,0 +1,382 @@
+﻿@using Enrich.Services.Utils.Twilio;
+@using EnrichcousBackOffice.Models;
+@model EnrichcousBackOffice.Models.TwilioCustomerProfile
+@{ 
+    var customer = ViewBag.Customer as C_Customer;
+    var account = ViewBag.Account as TwilioAccount;
+}
+<div class="modal fade" id="request-toll-free-popup" role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-content modal-lg">
+        <form action="/TwilioManage/RequestTollFreeVerificationSubmit" method="post" id="request-twilio-phonenumber-form">
+            <div class="modal-header">
+                <div class="modal-title pull-left">Request Toll-Free Verification</div>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div style="">
+                    <input type="hidden" name="StoreCode" id="StoreCode" value="@account.StoreCode" />
+                    <input type="hidden" name="SId" id="StoreCode" value="@account.SId" />
+                    @if (Model == null || Model.CustomerProfileSId== null || Model.CustomerProfileSId == "")
+                    {
+                        <div style="color:red;padding:5px">Merchant don't have twilio customer profile please input business and contact information.</div>
+                        <p style="font-size: 13px; padding: 5px">More Info: <a href="https://www.twilio.com/docs/sms/a2p-tollfree-messaging-compliance-api-onboarding-guide#toll-free-verification-request-parameters" target="_blank">https://www.twilio.com/docs/sms/a2p-tollfree-messaging-compliance-api-onboarding-guide#toll-free-verification-request-parameters</a></p>
+                        <div class="panel panel-default product-info-panel">
+                            <div class="panel-heading">
+                                <span>Business Information</span>
+                            </div>
+                            <div class="panel-body" style="padding:15px">
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label>
+                                                Business Name
+                                                <span class="ico-help" title="" data-original-title="The business name."><i class="fa fa-question-circle"></i></span>
+                                                <span style="color:red">*</span>
+                                            </label>
+                                            <input type="text" class="form-control" id="BusinessName" name="BusinessName" value="@customer.BusinessName" maxlength="500" placeholder="Business Name" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label>
+                                                Business Website
+                                                <span class="ico-help" title="" data-original-title="The business website. (Ppprove facebook,instagram,twiter...)"><i class="fa fa-question-circle"></i></span>
+                                                <span style="color:red">*</span>
+                                            </label>
+                                            <input type="text" class="form-control" id="BusinessWebsite" name="BusinessWebsite" value="@customer.Website" maxlength="500" placeholder="Business Website" required>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-sm-12">
+                                        <div class="form-group">
+                                            <label>
+                                                Business Street Address
+                                                <span class="ico-help" title="" data-original-title="The business address."><i class="fa fa-question-circle"></i></span>
+                                                <span style="color:red">*</span>
+                                            </label>
+                                            <input type="text" class="form-control" id="BusinessStreetAddress" name="BusinessStreetAddress" value="@customer.SalonAddress1" maxlength="100" placeholder="Business Street Address" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-3">
+                                        <div class="form-group">
+                                            <label>
+                                                Business City
+                                                <span class="ico-help" title="" data-original-title="The business city."><i class="fa fa-question-circle"></i></span>
+                                                <span style="color:red">*</span>
+                                            </label>
+                                            <input type="text" class="form-control" id="BusinessCity" name="BusinessCity" value="@customer.SalonCity" maxlength="100" placeholder="Business City" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-3">
+                                        <div class="form-group">
+                                            <label>
+                                                State Province Region
+                                                <span class="ico-help" title="" data-original-title="The business state province region."><i class="fa fa-question-circle"></i></span>
+                                                <span style="color:red">*</span>
+                                            </label>
+                                            <input type="text" class="form-control" id="BusinessStateProvinceRegion" name="BusinessStateProvinceRegion" maxlength="100" value="@customer.BusinessState" placeholder="Business State Province Region" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-3">
+                                        <div class="form-group">
+                                            <label>
+                                                Postal Code
+                                                <span class="ico-help" title="" data-original-title="The business postal code."><i class="fa fa-question-circle"></i></span>
+                                                <span style="color:red">*</span>
+                                            </label>
+                                            <input type="text" class="form-control" id="BusinessPostalCode" name="BusinessPostalCode" maxlength="100" value="@customer.SalonZipcode" placeholder="Business Postal Code" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-3">
+                                        <div class="form-group">
+                                            <label>
+                                                Country
+                                                <span class="ico-help" title="" data-original-title="The business country."><i class="fa fa-question-circle"></i></span>
+                                                <span style="color:red">*</span>
+                                            </label>
+                                            <input type="text" class="form-control" id="BusinessCountry" name="BusinessCountry" maxlength="100" value="US" placeholder="Business Country" required>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <div class="panel panel-default product-info-panel">
+                            <div class="panel-heading">
+                                <span>Contact Information</span>
+                            </div>
+                            <div class="panel-body">
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label>
+                                                Contact First Name
+                                                <span class="ico-help" title="" data-original-title="The business contact first name."><i class="fa fa-question-circle"></i></span>
+                                                <span style="color:red">*</span>
+                                            </label>
+                                            <input type="text" class="form-control" id="BusinessContactFirstName" name="BusinessContactFirstName" value="@customer.OwnerName" placeholder="Contact First Name" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label>
+                                                Contact Last Name
+                                                <span class="ico-help" title="" data-original-title="The business contact last name."><i class="fa fa-question-circle"></i></span>
+                                                <span style="color:red">*</span>
+                                            </label>
+                                            <input type="text" class="form-control" id="BusinessContactLastName" name="BusinessContactLastName" value="@customer.OwnerName" placeholder="Contact Last Name" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label>
+                                                Contact Email
+                                                <span class="ico-help" title="" data-original-title="The business contact email."><i class="fa fa-question-circle"></i></span>
+                                                <span style="color:red">*</span>
+                                            </label>
+                                            <input type="email" class="form-control" id="BusinessContactEmail" name="BusinessContactEmail" value="@customer.SalonEmail" placeholder="Contact Email" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label>
+                                                Contact Phone
+                                                <span class="ico-help" title="" data-original-title="The business contact phone."><i class="fa fa-question-circle"></i></span>
+                                                <span style="color:red">*</span>
+                                            </label>
+                                            <input type="text" class="form-control" id="BusinessContactPhone" name="BusinessContactPhone" value="@customer.OwnerMobile" placeholder="Contact Phone" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label>
+                                                Notification Email
+                                                <span class="ico-help" title="" data-original-title="The nofitication email"><i class="fa fa-question-circle"></i></span>
+                                                <span style="color:red">*</span>
+                                            </label>
+                                            <input type="email" class="form-control" id="NotificationEmail" name="NotificationEmail" value="@customer.Email" placeholder="Notification Email" required>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <input type="hidden" id="CustomerProfileSId" name="CustomerProfileSId" value="@Model.CustomerProfileSId" />
+                    }
+
+                    <div class="panel panel-default product-info-panel">
+                        <div class="panel-heading">
+                            <span>Toll-Free Information</span>
+                        </div>
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label>Buy Phone Number (Toll-Free)<span style="color:red">*</span> <i onclick="reLoadPhoneNumber()" class="fa fa-refresh" aria-hidden="true"></i></label>
+                                        <select class="form-control" id="TollfreePhoneNumberSid" name="TollfreePhoneNumberSid" required>
+                                            <option value="">N/A</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label>Message Volume (Monthly)<span style="color:red">*</span></label>
+                                        <select class="form-control" name="MessageVolume" id="MessageVolume" style="width: 100%;" required>
+                                            <option value="">N/A</option>
+                                            <option value="10">10</option>
+                                            <option value="100">100</option>
+                                            <option value="1,000">1,000</option>
+                                            <option value="10,000">10,000</option>
+                                            <option value="100,000">100,000</option>
+                                            <option value="250,000">250,000</option>
+                                            <option value="500,000">500,000</option>
+                                            <option value="750,000">750,000</option>
+                                            <option value="1,000,000">1,000,000</option>
+                                            <option value="5,000,000">5,000,000</option>
+                                            <option value="10,000,000+">10,000,000+</option>
+
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label>Use Case Categories <span style="color:red">*</span></label>
+                                        <select class="form-control select2" name="UseCaseCategories" id="UseCaseCategories" style="width: 100%;" multiple required>
+                                            <option value="">N/A</option>
+                                            @foreach (var field in typeof(TwilioUseCaseCategories).GetFields())
+                                            {
+                                                if (field.IsLiteral)
+                                                {
+                                                    string value = field.GetValue(null).ToString();
+                                                    <option value="@value">@value</option>
+                                                }
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label>
+                                            Use Case Summary
+                                            <span><a href="https://www.twilio.com/docs/sms/a2p-tollfree-messaging-compliance-api-onboarding-guide?code-sample=code-submit-a-toll-free-verification-request&code-language=C%23&code-sdk-version=6.x#use-case-summary" target="_blank">Read more</a></span>
+                                            <span style="color:red">*</span>
+                                        </label>
+                                        <textarea class="form-control" name="UseCaseSummary" id="UseCaseSummary" rows="3" required placeholder="Example: This number is used to send out promotional offers and coupons to the customers of for example the John’s Coffee Shop"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="form-group">
+                                        <label>
+                                            Production Message Sample
+                                            <span><a href="https://www.twilio.com/docs/sms/a2p-tollfree-messaging-compliance-api-onboarding-guide?code-sample=code-submit-a-toll-free-verification-request&code-language=C%23&code-sdk-version=6.x#production-message-sample" target="_blank">Read more</a></span>
+                                            <span style="color:red">*</span>
+                                        </label>
+                                        <textarea class="form-control" name="ProductionMessageSample" id="ProductionMessageSample" placeholder="Example: Thank you for being a loyal customer of John’s Coffee Shop. Enjoy 10% off your next purchase. Reply STOP to opt out." rows="3" required></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label>Opt In Type <span style="color:red">*</span></label>
+                                        <select class="form-control" name="OptInType" id="OptInType" style="width: 100%;" required>
+                                            <option value="">N/A</option>
+                                            @foreach (var field in typeof(TwilioOptInType).GetFields())
+                                            {
+                                                if (field.IsLiteral)
+                                                {
+                                                    string value = field.GetValue(null).ToString();
+                                                    <option value="@value">@value</option>
+                                                }
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label>Opt In Image Urls <span style="color:red">*</span></label>
+                                        <textarea class="form-control" name="OptInImageUrls" id="OptInImageUrls" rows="3" placeholder="each url = 1 line." required></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="form-group">
+                                        <label>Type of use case for POS:<span style="color:red">*</span></label>
+                                        <label style="margin-right:5px; margin-left:5px">
+                                            <input type="checkbox" name="PosUsingForOperation" value="true" checked>
+                                            Operation
+                                        </label>
+                                        <label>
+                                            <input type="checkbox" name="PosUsingForPosPromotion" value="true">
+                                            Promotion
+                                        </label>
+                                    </div>
+                                </div>  
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-12">
+                                        <div class="form-group">
+                                            <label>Additional Information (Optional)</label>
+                                            <textarea class="form-control" name="AdditionalInformation" id="AdditionalInformation" rows="3"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                    </div>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary" onsubmit="overlayOn()">Submit</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    $(".select2").select2();
+    function loadPhoneNumber() {
+        $.ajax({
+            url: '/twiliomanage/GetListPhoneNumberAvailable', // Replace with the actual URL to fetch phone number
+            method: 'POST',               // Use the appropriate HTTP method (GET, POST, etc.)
+            dataType: 'json',           // Specify the expected data type
+            data: {Id:@account.Id},
+            success: function (response) {
+                var selectElement = $('#TollfreePhoneNumberSid');
+                selectElement.empty();
+
+                // Append the "N/A" option
+                selectElement.append($('<option>', {
+                    value: '',
+                    text: 'N/A'
+                }));
+
+                // Append options from the response
+                response.forEach(function (phoneNumber) {
+                    selectElement.append($('<option>', {
+                        value: phoneNumber,
+                        text: phoneNumber
+                    }));
+                });
+            },
+            error: function (xhr, status, error) {
+                // This function will be executed if there's an error with the AJAX request
+                console.error('Error:', error);
+            }
+        });
+    }
+
+    // Call the function to initiate the AJAX request
+    loadPhoneNumber();
+
+    function reLoadPhoneNumber() {
+        loadPhoneNumber();
+        success('reload phone success');
+    }
+    $("#request-twilio-phonenumber-form").on('submit', function (e) {
+        e.preventDefault();
+        if(confirm('Are you sure request toll-free verification with this information !'))  {
+            overlayOn();
+            var form = $(this);
+            var actionUrl = form.attr('action');
+            $.ajax({
+                type: "post",
+                url: actionUrl,
+                data: form.serialize(),
+                success: function (data) {
+                    if (data.status) {
+                        $("#request-toll-free-popup").modal("hide");
+                        $('#detail-phone-table').DataTable().ajax.reload();
+                        success(data.message)
+                    }
+                    else {
+                        error(data.message)
+                    }
+                },
+                error: function (data) {
+                    Error('An error occurred.')
+                },
+                complete: function (data) {
+                    overlayOff();
+                }
+            });
+        }
+    });
+
+    $(document).ready(function () {
+        $('.ico-help').tooltip();
+    });
+</script>

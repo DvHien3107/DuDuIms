@@ -1,0 +1,119 @@
+﻿@model List<EnrichcousBackOffice.Models.CustomizeModel.Ticket.TranferHistoryModel>
+@{
+    @*var ListMappingTo = ViewBag.listTranferTo as List<EnrichcousBackOffice.Models.CustomizeModel.Ticket.TranferToModel>;
+        var MappingFrom = ViewBag.listTranferFrom as EnrichcousBackOffice.Models.CustomizeModel.Ticket.TranferFromModel;
+        var db = new EnrichcousBackOffice.Models.WebDataModel();*@
+}
+<style>
+    #transfer-table thead tr th {
+        white-space: nowrap;
+    }
+
+    .assign-avatar {
+        margin-right: 5px;
+    }
+</style>
+<div>
+    <ul class="timeline">
+
+        <!-- timeline time label -->
+        <li class="time-label">
+            <span class="bg-green">
+                Transfer History
+            </span>
+        </li>
+        <!-- /.timeline-label -->
+        <!-- timeline item -->
+        @foreach (var trans in Model.OrderByDescending(x=>x.TransferAt))
+        {
+            <li>
+                <!-- timeline icon -->
+                <i class="fa fa-exchange bg-blue" aria-hidden="true"></i>
+                <div class="timeline-item">
+                    <span class="time"><i class="fa fa-clock-o" aria-hidden="true"></i> <span class="time-tranfer">@trans.TransferAt</span></span>
+                    <h3 class="timeline-header" style="background: #ecf0f5;"> @trans.FromProjectName <i class="fa fa-angle-double-right" aria-hidden="true"></i> @trans.ToProjectName </h3>
+
+                    <div class="timeline-body">
+                    @Html.Raw(trans.Note)
+                    </div>
+
+                    <div class="timeline-footer">
+                        <i>Transfer By : @trans.TranferBy.FullName</i>
+                    </div>
+                </div>
+            </li>
+        }
+
+        <!-- END timeline item -->
+
+
+    </ul>
+
+</div>
+<script>
+    $(".time-tranfer").html(function (index, value) {
+        return moment(value+' +00:00').format('lll');
+    });
+</script>
+@*<script>
+        function initToolTip() {
+            $(".updated-td").hover(function () {
+                var ticketId = $(this).find(".read-more-update").attr('data-id');
+                var el = $(this).find(".read-more-update");
+                if ($(el).attr('loaded')) {
+                    return;
+                }
+                else {
+                    $('.content_tooltip_' + ticketId).html('<i class="fa fa-spinner fa-pulse"></i>');
+                    $.ajax({
+                        url: '/ticket_new/getLastUpdateDetail',
+                        type: 'get',
+                        data: { ticketId },
+                        success: function (response) {
+                            if (response.status) {
+                                let html = '';
+                                $.each(response.data, function (i, item) {
+                                    if (item.Name == 'Label') {
+                                        var labelArray = item.NewValue.split('|');
+                                        html += '<span><p>- ' + item.Name + ': "</p>';
+                                        $.each(labelArray, function (x, y) {
+
+                                            let labelvalue = y.split('::')
+                                            let name = labelvalue[0].replace('[', '').replace(']', '');
+                                            let backgroundcolor = labelvalue[1];
+                                            html += '<span style="margin-right:5px;background-color:' + backgroundcolor + '">' + name + '</span>'
+                                        });
+                                        html += '"</span><br/>'
+                                    }
+                                    else {
+                                        var newValue = item.NewValue ? item.NewValue.toString() : "";
+                                        //if (newValue.length > 150) {
+                                        //    newValue = '<span>' + newValue.substring(0, 150).toString() + '</span>' + "...";
+                                        //}
+                                        html += '<span> <span>- ' + item.Name + ': </span>' + newValue + '</span><br/>';
+                                    }
+
+                                });
+                                // Setting content option
+                                $('.content_tooltip_' + ticketId).html(html);
+                            }
+                            else {
+
+                                $('.content_tooltip_' + ticketId).html("- No data");
+                            }
+                            $(el).attr('loaded', 'true')
+                        }
+                    });
+                }
+
+            })
+        }
+        $(".time-tranfer").html(function (index, value) {
+            return  moment(value).format('lll');
+        });
+        initToolTip();
+    </script>*@
+
+
+
+

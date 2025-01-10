@@ -1,0 +1,163 @@
+﻿@model EnrichcousBackOffice.Models.CustomizeModel.PO_manager_view
+@using EnrichcousBackOffice.Models;
+
+@{
+    WebDataModel db = new WebDataModel();
+    var po = Model;
+    var locations = new EnrichcousBackOffice.Models.WebDataModel().Locations.ToList();
+    List<PO_Detail_Checkin> checkedin_list = db.PO_Detail_Checkin.Where(c => c.POCode == po.PO.POCode).ToList();
+}
+
+<tr class="st_detail" id="detail_@po.PO.POCode">
+    <td colspan="5" style="padding:10px; border: 2px solid var(--main-color-1);">
+        <div class="div-detail-@po.PO.POCode">
+            <input type="hidden" name="po_vendor" value="@po.PO.VendorId" />
+            <input type="hidden" name="po_code" value="@po.PO.POCode" />
+            <div style=" margin: 10px 0;">
+                <table class="table table-bordered table-hover" style="width:100%; margin:0">
+                    <thead>
+                        <tr class="bg-olive">
+                            <th>Product name</th>
+                            <th>Color</th>
+                            <th>Image</th>
+                            <th>Qty (remain)</th>
+                            <th>Model</th>
+                            <th>Check in</th>
+                            <th>Location</th>
+                            <th style="width: 50px"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in po.Detail)
+                        {
+                            if (item.Detail.RemainQty != 0)
+                            {
+                                <tr id="@item.Detail.Id">
+                                    <td><b>@item.Detail_request.ProductName</b></td>
+                                    <td>@(!string.IsNullOrEmpty(item.Detail_request.Color) ? item.Detail_request.Color : "N/A")</td>
+                                    <td><img height="60" src="@(item.Detail.ModelPicture??"/Upload/Img/no_image.jpg")" onerror="this.onerror=null; this.src='/Upload/Img/no_image.jpg'" /></td>
+                                    <td>@item.Detail.Qty <b>@(item.Detail.RemainQty != null ? "(" + item.Detail.RemainQty.ToString() + ")" : "")</b></td>
+                                    <td style="width:200px">
+                                        @if (!string.IsNullOrEmpty(item.Detail.ModelCode))
+                                        {
+                                            <b>@item.Detail.ModelName</b>
+                                        }
+                                        else
+                                        {
+                                            <div class="create_model_alert">
+                                                <b style="color:red">Undefined</b>
+                                                <a style="display:none" onclick="CreateModel_show('@item.Detail.Id','@item.Detail_request.ProductName','@item.Detail_request.Color','@po.PO.VendorName')"> ( <i class="fa fa-pencil"></i>add model)</a>
+                                            </div>
+                                        }
+                                        <label @if (item.Detail.CheckedIn == true) { @Html.Raw("style='display:none'") } class="label label-default status_enroute">Enroute</label>
+                                        <label @if (item.Detail.CheckedIn != true) { @Html.Raw("style='display:none'") } class="label label-primary status_rtg">RTG</label>
+                                    </td>
+                                    <td>
+                                        @if (item.Detail.CheckedIn != true)
+                                        {
+                                            <a class="btn btn-primary btn-sm" onclick="checkin('@item.Detail.Id')">Check-in</a>
+                                            @*<input class="check" type="checkbox" name="detail_id" style="height:20px; width:20px" value="@item.Detail.Id" />*@
+                                        }
+                                        else
+                                        {<label class="label label-success"><i class="fa fa-check"></i></label>}
+                                    </td>
+                                    <td>
+                                        @if (item.Detail.CheckedIn != true)
+                                        {
+                                            <div class="ci_info" style="display:none">
+                                                <div class="input-group" style="width:250px">
+                                                    <div class="input-group-addon">Location</div>
+                                                    <select name="@(item.Detail.Id)_location" class="form-control">
+                                                        @foreach (var location in locations)
+                                                        {
+                                                            <option value="@location.Id">@location.Name</option>
+                                                        }
+                                                    </select>
+                                                </div>
+                                                <div class="input-group" style="width:250px">
+                                                    <div class="input-group-addon">Qty</div>
+                                                    <input type="number" name="@(item.Detail.Id)_qty" class="form-control" value="@(item.Detail.RemainQty??item.Detail.Qty)" min="1" max="@(item.Detail.RemainQty??item.Detail.Qty)" />
+                                                </div>
+                                            </div>
+                                        }
+                                    </td>
+                                    <td></td>
+                                </tr>
+                            }
+                            foreach (var ck in checkedin_list.Where(c => c.PO_Detail_id == item.Detail.Id))
+                            {
+                                <tr onclick="toggleInventory('@ck.Id', this)">
+                                    <td><b>@item.Detail_request.ProductName</b></td>
+                                    <td>@(!string.IsNullOrEmpty(item.Detail_request.Color) ? item.Detail_request.Color : "N/A")</td>
+                                    <td><img height="60" src="@(item.Detail_request.ModelPicture??"/Upload/Img/no_image.jpg")" /></td>
+                                    <td>@ck.Qty</td>
+                                    <td>
+                                        <b>@item.Detail.ModelName</b>
+                                        <label class="label label-primary status_rtg">RTG</label>
+                                    </td>
+                                    <td>
+                                        <label class="label label-success"><i class="fa fa-check"></i></label>
+                                    </td>
+                                    <td><div>@ck.LocationName</div></td>
+                                    <td>
+                                        <span class="btn btn-default btn-flat dropdown-toggle btn-action"
+                                              style="padding: 3px 15px; outline: none;"><i class="icon fa fa-chevron-right" id="toggle-@ck.Id" aria-hidden="true"></i></span>
+                                    </td>
+                                </tr>
+                                <tr id="toggle-inv-@ck.Id" style="display: none">
+                                    <td colspan="8">
+                                        <div style="border: 1px solid #3d9970; background-color: #ffffff">
+                                            <input type="hidden" name="CustomerCode" value="@ViewBag.CustomerCode" />
+                                            <div style="padding: 10px; margin: -10px 20px; display: inline-block; transform: translateY(-9px); background-color: #ffffff; color: #076aa4">
+                                                <span class="box-title">Inventory number</span>
+                                            </div>
+                                            <div class="panel-body" style="padding: 0 10px 10px 10px;font-size:20px;">
+                                                <input type="text" class="form-control change-search" onchange="searching_inv($(this).val(), '@ck.Id')" placeholder="Search..." style="margin-bottom: 10px"/><br />
+                                                @{ var inventories = ck.InvNumbers.Split(','); }
+                                                @foreach (var inv in inventories)
+                                                {
+                                                    <label class="label label-primary" id="inv_@inv">@inv</label>
+                                                }
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+
+                    </tbody>
+                </table>
+            </div>
+            <div class="pull-left">
+                <a class="btn btn-primary" onclick="download_excel('@po.PO.POCode')"><i class="fa fa-download"></i> Export to Excel <img class="img_load" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" /></a>
+            </div>
+            @*<div class="pull-right">
+                    <button type="submit" class="check_in_submit btn btn-success" style="display:none"><i class="fa fa-check"></i> Done</button>
+                </div>*@
+        </div>
+    </td>
+</tr>
+
+<script>
+    $(function () {
+        var t = $('.load-data-checkin').DataTable({
+            'paging': false,
+            'lengthChange': false,
+            'searching': true,
+            'ordering': false,
+            'info': false,
+            'autoWidth': true,
+            'retrieve': true,
+        })
+    })
+
+    function toggleInventory(code) {
+        $('#toggle-inv-' + code).fadeToggle();
+        $('#toggle-' + code).toggleClass('fa-chevron-right fa-chevron-down');
+    }
+
+    function searching_inv(stext, code) {
+        $('#toggle-inv-' + code + ' label[id^=inv_]').hide();
+        $('#toggle-inv-' + code + ' label:contains("' + stext + '")').show();
+    }
+</script>

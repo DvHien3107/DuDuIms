@@ -1,0 +1,12 @@
+link login: https://account-d.docusign.com/oauth
+account: noreply.enrichcous@gmail.com
+password: test01234
+
+--------------------------------------------------
+ <!--DocuSign RestAPI-->
+    <add key="DocuSign_RestAPI" value="https://demo.docusign.net/restapi" />
+    <add key="DocuSign_Url_Oauth" value="https://account-d.docusign.com/oauth" />
+    <add key="DocuSign_Account_Id" value="10076075" />
+    <add key="DocuSign_Integrator_Key" value="d83ac534-c998-4a27-9c02-e382766fcb7e" />
+    <add key="DocuSign_Secret_Key" value="6bc4aa73-5349-4ee5-906a-1465b20a2f26" />
+    <add key="DocuSign_Authorization" value="ZDgzYWM1MzQtYzk5OC00YTI3LTljMDItZTM4Mjc2NmZjYjdlOjZiYzRhYTczLTUzNDktNGVlNS05MDZhLTE0NjViMjBhMmYyNg==" />

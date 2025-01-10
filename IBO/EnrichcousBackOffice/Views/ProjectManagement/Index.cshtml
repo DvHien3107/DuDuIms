@@ -1,0 +1,969 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.T_Project_Stage>
+@using EnrichcousBackOffice.Models;
+@using EnrichcousBackOffice.AppLB;
+
+@{
+    List<P_Member> members = (ViewBag.member ?? new List<P_Member>());
+    List<T_Project_Milestone> projects = (ViewBag.projects ?? new List<T_Project_Milestone>());
+    List<T_Project_Milestone> project_versions = (ViewBag.project_versions ?? new List<T_Project_Milestone>());
+    List<P_Department> deparments = (ViewBag.deparments ?? new List<P_Department>());
+    var selected_product = projects.FirstOrDefault()?.Id;
+    var DevelopmentBuildInCode = EnrichcousBackOffice.Utils.IEnums.BuildInCodeProject.Development_Ticket.ToString();
+    var DeploymentBuildInCode =  EnrichcousBackOffice.Utils.IEnums.BuildInCodeProject.Deployment_Ticket.ToString();
+    var SupportBuildInCode = EnrichcousBackOffice.Utils.IEnums.BuildInCodeProject.Support_Ticket.ToString();
+}
+
+
+<section class="content-header">
+    <h1>
+        Project Management
+        <small>Project</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li class="active">Project Management</li>
+    </ol>
+</section>
+
+<!-- Main content -->
+<section class="content">
+    <div class="row">
+        <div class="col-md-3">
+
+            <div class="box box-primary" style="min-height:80vh;">
+                <div class="box-header with-border">
+                    <h3 class="box-title" style="font-weight:bold">Project</h3><button class="pull-right btn btn-success btn-sm" onclick="new_project()" style="margin:-5px"><i class="fa fa-plus"></i> New Project</button>
+                </div>
+
+                <div class="box-body">
+                    <div id="list_project" class="list-group">
+
+                        @foreach (var pj in projects)
+                        {
+                            <div href="#" id="project_@pj.Id" data-id="@pj.Id" class="@(pj.Active!=true?"disabled":"") project list-group-item list-group-item-action noselect @(pj.Id==selected_product?"active":"")" onclick="select_project('@pj.Id')" style="border-radius:0">
+                                <span class="pj_name">@pj.Name</span>
+                                <img class="loading" style="display:none" src="\Content\ajax-loaders\ajax-loader-1.gif" />
+
+                                <div class="btn-group pull-right option_btn_dropdown">
+                                    <span class="option_btn fa fa-pencil dropdown-toggle hover" data-toggle="dropdown" aria-expanded="false" style="" onclick="edit_project('@pj.Id')"></span>
+                                    @if (!(pj.BuildInCode == DeploymentBuildInCode || pj.BuildInCode == SupportBuildInCode))
+                                    {
+                                        <span class="option_btn fa fa-trash dropdown-toggle hover" data-toggle="dropdown" aria-expanded="false" style="" onclick="project_delete('@pj.Id')"></span>
+                                    }
+
+                                </div>
+                            </div>
+                        }
+                        @*<div class="list-group-item list-group-item-action" style="border-radius:0; padding: 3px">
+                                <form id="new_project" action="/projectmanager/Project_New" method="post" class="input-group" style="display:none; overflow-y:hidden">
+                                    <input class="form-control" name="name" required placeholder="New Project Name" />
+                                    <div class="input-group-btn"><button class="btn btn-primary"><i class="fa fa-check"></i></button><button type="button" class="btn btn-default" onclick="new_project(false)"><i class="fa fa-close"></i></button></div>
+                                </form>
+                                <button id="new_project_btn" class="btn btn-sm btn-success btn-flat" style="width:100%" onclick="new_project(true)"><i class="fa fa-plus"></i> New Project</button>
+                            </div>*@
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- /.col -->
+        <div class="col-md-9">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title" style="font-weight:bold">Project Version</h3><button class="pull-right btn btn-success btn-sm" onclick="new_project_version()" style="margin:-5px"><i class="fa fa-plus"></i> New Version</button>
+                </div>
+                <div class="box-body" id="project_version_list" style="display:table">
+                    @foreach (var ver in project_versions)
+                    {
+                    <span class="btn btn-info btn-flat project_version" data-id="@ver.Id" onclick="edit_project_version(this)" data-project="@ver.ParentId" style="cursor:text; @(selected_product!=ver.ParentId?"display:none":"")">
+                        <span class="name" style="padding:0px 15px; min-width:100px; display:inline-block">@ver.Name</span>
+                       
+                            <i onclick="delete_project_version(this)" class="glyphicon glyphicon-remove delete_project_version" style="cursor:pointer; padding:10px; margin:-10px"></i>
+                        
+
+                    </span>
+                    }
+
+                </div>
+                <template id="project_version_temp">
+                    <span class="btn btn-info btn-flat project_version" onclick="edit_project_version(this)" data-id="{Id}" data-project="{ParentId}" style="cursor:text"><span class="name" style="padding:0px 15px; min-width:100px; display:inline-block">{Name}</span> <i onclick="delete_project_version(this)" class="glyphicon glyphicon-remove delete_project_version" style="cursor:pointer; padding:10px; margin:-10px"></i></span>
+                </template>
+            </div>
+
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title" style="font-weight:bold">Stage</h3><button class="pull-right btn btn-success btn-sm" onclick="new_stage()" style="margin:-5px"><i class="fa fa-plus"></i> New Stage</button>
+                </div>
+                <div class="box-body">
+                    @if (TempData["e"] != null)
+                    {
+                        <div class="alert alert-warning alert-dismissible">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                            <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+                        </div>
+                    }
+                    else if (TempData["s"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                            <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+                        </div>
+                    }
+                    <table id="stage_table" class="table table-bordered table-hover" style="margin-bottom:0">
+                        <thead>
+                            <tr style="background-color: var(--main-color-1); color:white">
+                                <th></th>
+                                <th>Stage</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        @foreach (var item in Model.OrderBy(m => m.Name))
+                        {
+                            <tbody id="stage_@item.Id" data-project="@item.ProjectId" class="stage" style="margin: 10px; padding:0; overflow: hidden; @(item.ProjectId == selected_product ? "" : "display:none")">
+                                <tr style="padding:7px 20px; text-align:left; cursor:pointer; height:40px;" onclick="show_subs('@item.Id')">
+                                    <td style="width:10px">
+                                        <i class="fa fa-plus pull-right" style="font-size:1.5em;margin:0"></i>
+                                        <i class="fa fa-minus pull-right" style="font-size:1.5em;margin:0"></i>
+                                    </td>
+                                    <td><b class="stage_name text-green">@item.Name</b> <i style="margin-left:15px; color:gray" class="stage_description fa fa-info-circle" data-toggle="tooltip" data-placement="right" title="@(item.Desc ?? "No description")"></i></td>
+                                    <td style="width: 204px;text-align:center;">
+                                        <button class="btn btn-primary btn-sm" style="width:60px" onclick="add_member('@item.Id')"><i class="fa fa-user-plus"></i></button>
+                                        <button class="btn btn-warning btn-sm" style="width:60px" onclick="edit_stage('@item.Id')"><i class="fa fa-pencil"></i></button>
+                                      
+                                            <button class="btn btn-danger btn-sm" style="width:60px" onclick="delete_stage('@item.Id')"><i class="fa fa-trash"></i></button>
+                                         
+                                    </td>
+                                </tr>
+                                <tr style=" overflow-y: auto">
+                                    <td id="list_mem_content_@item.Id" colspan="90" style="padding:0px;background-color: #f5f5f5; ">
+
+                                        <img class="list_mem loader center-block" style="display:none; padding:20px" src="\Content\ajax-loaders\ajax-loader-1.gif" />
+                                    </td>
+                                </tr>
+                            </tbody>
+                        }
+                    </table>
+                </div>
+            </div>
+
+        </div>
+        <!-- /.col -->
+    </div>
+    <!-- /.row -->
+</section>
+
+<!-- Modal -->
+<div id="stage_form_modal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <form action="/ProjectManagement/Stage_save" method="post" class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">New stage</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <input name="project_id" hidden />
+                        <input name="id" hidden />
+                        <div class="form-group">
+                            <label>Stage name <span class="text-red">*</span></label>
+                            <input name="name" class="form-control" />
+                        </div>
+                        <div class="form-group">
+                            <label>Stage description</label>
+                            <textarea name="description" class="form-control" rows="4" style="resize:none"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+<div id="project_form_modal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <form action="/ProjectManagement/Project_save" method="post" class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">New Project</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <input name="project_id" hidden />
+                        <input name="Id" hidden />
+                        <div class="form-group">
+                            <label>Project name <span class="text-red">*</span></label>
+                            <input name="Name" class="form-control" required />
+                        </div>
+                        <div class="form-group">
+                            <label>Project description</label>
+                            <textarea name="Description" class="form-control" rows="4" style="resize:none"></textarea>
+                        </div>
+                        <div class="form-group" style="font-size: 16px">
+                            <label class="label label-success" style="cursor:pointer"><span style="padding: 0 10px">Active</span> <input type="checkbox" name="Active" value="True" style="vertical-align: sub; border:1px solid #fff"> </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+<!-- Modal -->
+<div id="addmember_modal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <form action="/ProjectManagement/Select_members" method="post" class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Select Members</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="input-group">
+                            <span class="input-group-addon">Project version</span>
+                            <select id="version_select" name="project_version" class="form-control" onchange="load_member()">
+                                <option value="">---Select version---</option>
+                                @foreach (var v in project_versions)
+                                {
+                                    <option class="project_version" data-project="@v.ParentId" value="@(v.Id)">
+                                        @v.Name
+                                    </option>
+                                }
+                            </select>
+                            <script>$("#version_select").on("change", function () { if ($(this).val()) { $(".select_member").slideDown() } else { $(".select_member").slideUp() } })</script>
+                        </div>
+                        <div class="select_member" style="display:none">
+                            <hr />
+                            <input id="stage_id" name="stage_id" type="hidden" />
+                            <div class="input-group">
+                                <span class="input-group-addon">Department</span>
+                                <select id="department" class="form-control">
+                                    <option value="all">---All Department---</option>
+                                    @foreach (var d in deparments)
+                                    {
+                                        <option value="@(d.GroupMemberNumber)">
+                                            @d.Name
+                                        </option>
+                                    }
+                                </select>
+                            </div>
+                            <select id="select_members" multiple="multiple" name="Members">
+                                @foreach (var m in members)
+                                {
+                                    <option value="@m.MemberNumber">@m.FullName - @m.MemberNumber</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                <button type="submit" class="btn btn-primary select_member" style="display:none">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+<!-- Modal -->
+<div id="version_form_modal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <form action="/ProjectManagement/ProjectVersionSave" method="post" class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">New Version </h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label>Version<span class="text-red">*</span></label>
+                            <input name="name" class="form-control" />
+                            <input type="hidden" name="project_id" />
+                            <input type="hidden" name="versionId" />
+                        </div>
+                        <label>Notes: </label> <a class="btn btn-sm" onclick="add_note()"><i class="fa fa-plus"></i> Add note</a>
+                        <div id="notes_list" class="row custom-scroll" style="max-height: 65vh; overflow-y:auto; padding:0 15px">
+                        </div>
+                        <template id="note_template">
+                            <div class="note" style="width: 0px;  transition: width .5s;overflow: hidden; padding-bottom:10px">
+                                <div class="input-group">
+                                    <div class="input-group-addon handle"><i class="fa fa-arrows"></i></div>
+                                    <input class="form-control note_title" name="note_title{i}" placeholder="Note title *" required/>
+                                    <div class="input-group-btn"><button type="button" class="btn btn-flat btn-outline-danger" tabindex="-1" onclick="remove_note(this)"><i class="fa fa-close"></i></button></div>
+                                </div>
+                                <input class="form-control note_order" type="hidden" name="note_order{i}" value="{i}" />
+                                <textarea class="form-control note_content" name="note_content{i}" style="resize: vertical; margin-top: -1px" rows="3" placeholder="Note content"></textarea>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+
+                <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+@section script
+{
+    <script src="~/Scripts/Sortable.js"></script>
+    <script src="~/Content/DualListMulti/multi.js"></script>
+    <script src="~/Scripts/noty-cfg.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            $('.setted').iCheck('check');
+
+            $('[data-toggle="tooltip"]').tooltip();
+            $("#stage_form_modal").on("submit", function () {
+
+                overlayOn();
+            });
+            $("#stage_form_modal").ajaxForm(function (data) {
+
+                if (data[0]) {
+                    success(data[1]);
+                    if ($("#stage_" + data[2].Id).length > 0) {
+                        $("#stage_" + data[2].Id + " .stage_name").html(data[2].Name);
+                        $("#stage_" + data[2].Id + " .stage_description").prop("title", data[2].Desc).tooltip('fixTitle');
+                    } else {
+                        var new_s = $("#stage_template").html();
+                        new_s = new_s.replace(/{Id}/g, data[2].Id).replace(/{Name}/g, data[2].Name)
+                            .replace(/{Project_Id}/g, data[2].ProjectId).replace(/{Desc}/g, data[2].Desc);
+                        if ($(".stage").length > 0) {
+                            $(".stage").last().after(new_s);
+                        } else {
+                            $("#stage_table").append(new_s);
+                        }
+                        $("#stage_" + data[2].Id + " .stage_description").tooltip();
+                    }
+                    $("#stage_form_modal").modal("hide");
+
+                } else {
+                    error(data[1]);
+                }
+                overlayOff();
+            });
+            $("#addmember_modal").on("submit", function () {
+                overlayOn();
+            });
+            $("#addmember_modal").ajaxForm(function (data) {
+                if (data[0]) {
+                    success(data[1]);
+                    $("#addmember_modal").modal("hide");
+                    show_subs(data[2], true);
+                } else {
+                    error(data[1]);
+                }
+                overlayOff();
+            });
+            $("#select_members").multi({
+                non_selected_header: 'Members',
+                selected_header: 'Member in Stage'
+            });
+            $("#department").on("change", function () {
+                var dep = this.value;
+                $("#select_members option.hidden").removeClass("hidden");
+                if (dep != "all") {
+                    $("#select_members option").each(function () {
+                        if (!dep.includes($(this).val())) {
+                            $(this).addClass("hidden");
+                        }
+                    });
+                }
+                $("#select_members").trigger("change");
+            });
+
+            $("#project_form_modal").ajaxForm(function (data) {
+
+                if (data[0]) {
+                    if ($("#project_" + data[1].Id).length > 0) {
+                        $("#project_" + data[1].Id).find(".pj_name").html(data[1].Name);
+                        $("#project_" + data[1].Id).data("order", data[1].Order);
+
+                    } else {
+                        var new_p = $("#project_template").html();
+                        new_p = new_p.replace(/{Id}/g, data[1].Id).replace(/{Name}/g, data[1].Name);
+                        $("#list_project").append(new_p);
+                    }
+                    $("#list_project .project").sort(function (a, b) {
+                        return $(a).find(".pj_name").text().toLowerCase().localeCompare($(b).find(".pj_name").text().toLowerCase());
+                    }).appendTo("#list_project");
+
+                    if (data[1].Active) {
+                        $("#project_" + data[1].Id).removeClass("disabled");
+                        select_project(data[1].Id);
+                    } else {
+                        $("#project_" + data[1].Id).addClass("disabled");
+                    }
+                    success(data[2]);
+                    $("#project_form_modal").modal("hide");
+                } else {
+                    error(data[1]);
+                }
+            })
+            $("#version_form_modal").ajaxForm(function (data) {
+                if (data[0]) {
+                    success(data[1]);
+                    if (data[2]) {
+                        var el = $("#project_version_temp").html().replace(/{Id}/g, data[3].Id).replace(/{ParentId}/g, data[3].ParentId).replace(/{Name}/g, data[3].Name);
+                        $("#project_version_list").append($(el));
+                        $("#version_select").append(`<option class="project_version" data-project="${data[3].ParentId}" value="${data[3].Id}">${data[3].Name}</option>`);
+                        
+                    } else {
+                        $(".project_version[data-id=" + data[3].Id + "] .name").html(data[3].Name);
+                    }
+                    $('#version_form_modal').modal('hide');
+                } else {
+                    error(data[1]);
+                    console.log(data);
+                }
+            })
+            $(".project.active").trigger("click");
+            $("#notes_list").disableSelection();
+            new Sortable($("#notes_list")[0], {
+                handle: '.handle',
+                animation: 150,
+                ghostClass: 'grabbing_note',
+                onSort: function (evt) {
+                    $(".note").each(function (index) {
+                        $(this).find(".note_order").val(index);
+                    })
+                },
+            });
+            
+        });
+        function add_note() {
+            var new_note = $($('#note_template').html().replace(/{i}/g, $('#notes_list .note').length)).appendTo($('#notes_list'));
+                
+            new_note.css('width', '100%');
+            new_note.find(".note_title").focus();
+            $("#notes_list").scrollTop($("#notes_list")[0].scrollHeight);
+            
+        }
+
+        function new_project_version() {
+            $("#notes_list").empty();
+            $('#version_form_modal input[name=name]').val("");
+            $('#version_form_modal input[name=versionId]').val("");
+            $('#version_form_modal .modal-title').html($('.project.active .pj_name').text() + " - New Version");
+            $('#version_form_modal').modal('show');
+        }
+        function edit_project_version(el) {
+            overlayOn();
+            var versionId = $(el).data("id");
+            $.ajax({
+                method: "POST",
+                url: "/ProjectManagement/ProjectVersionLoad",
+                data: { versionId },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    if (data[0]) {
+
+                        $("#notes_list").empty();
+                        $('#version_form_modal input[name=name]').val(data[1].version.Name);
+                        $('#version_form_modal input[name=versionId]').val(versionId);
+                        for (var i in data[1].notes) {
+                            var note = data[1].notes[i];
+                            var note_el = $($('#note_template').html().replace(/{i}/g, $('#notes_list .note').length)).appendTo($('#notes_list'));
+                            note_el.css('width', '100%');
+                            note_el.find(".note_title").val(note.Name);
+                            note_el.find(".note_content").val(note.Content);
+                        }
+
+                        $('#version_form_modal .modal-title').html($('.project.active .pj_name').text() + " - Edit Version \"" + data[1].version.Name + "\"");
+                        $('#version_form_modal').modal('show');
+                    } else {
+                        error(data[1]);
+                        console.log(data);
+                    }
+                })
+                .fail(function () {
+                    alert("unselect member fail!");
+                })
+                .always(function () {
+                    overlayOff();
+                });
+        }
+        function delete_project_version(_el) {
+            event.stopPropagation();
+            var el = $(_el).closest(".project_version");
+            var old_name = el.find(".name").html().trim();
+            if (confirm("Are you sure to delete version \"" + old_name + "\"?")) {
+                var versionId = el.data("id");
+                $.ajax({
+                    method: "POST",
+                    url: "/ProjectManagement/ProjectVersionDelete",
+                    data: { versionId },
+                    dataType: "json"
+                })
+                    .done(function (data) {
+                        if (data[0]) {
+                            success(data[1]);
+                            $(".version_" + versionId).remove();
+                            el.remove();
+                        } else {
+                            error(data[1]);
+                            console.log(data);
+                        }
+                    })
+                    .fail(function () {
+                        alert("delete_project_version fail!");
+                    })
+                    .always(function () {
+                    });
+            }
+        }
+        function remove_note(_el) {
+            var el = $(_el).closest(".note");
+            if ((!el.find(".note_title").val() && !el.find("note_content").val()) || confirm("Do you really to remove this note?")) {
+                el.hide(300).find('input').val('').removeAttr('required');
+            }
+        }
+        //project
+        function new_project() {
+            $("#project_form_modal .modal-title").html("NEW PROJECT");
+            $('#project_form_modal [name=Id]').val("");
+            $('#project_form_modal input:text').val("");
+            $('#project_form_modal textarea').val("");
+            $('#project_form_modal input:checkbox').prop("checked", "checked");
+            $('#project_form_modal').modal("show");
+        }
+        function edit_project(id) {
+            overlayOn();
+            $.ajax({
+                method: "POST",
+                url: "/ProjectManagement/getProject",
+                data: { id },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    if (data[0]) {
+                        $("#project_form_modal .modal-title").html("EDIT PROJECT");
+                        $('#project_form_modal [name="Id"]').val(id);
+                        $('#project_form_modal [name="Name"]').val(data[1].Name);
+                        $('#project_form_modal [name="Description"]').val(data[1].Description);
+                        $('#project_form_modal [name="Order"]').val(data[1].Order);
+                        $('#project_form_modal [name="Active"]').prop("checked", data[1].Active || false);
+                        $('#project_form_modal').modal("show");
+                    } else {
+                        error(data[1]);
+                        console.log(data);
+                    }
+                })
+                .fail(function () {
+                    alert("edit project fail!");
+                })
+                .always(function () {
+                    overlayOff();
+                });
+        }
+        function project_delete(id) {
+            if (confirm("Deleting the project will also delete all of its stages and its related information. Are you sure?")) {
+                overlayOn();
+                $.ajax({
+                    method: "POST",
+                    url: "/ProjectManagement/Project_delete",
+                    data: { id },
+                    dataType: "json"
+                })
+                    .done(function (data) {
+                        if (data[0]) {
+                            success("Delete Project completed");
+                            $(`#project_${data[1].Id}`).remove();
+                            $(`#stage_table [data-project=${data[1].Id}]`).remove();
+                        } else {
+                            error(data[1]);
+                            console.log(data);
+                        }
+                    })
+                    .fail(function () {
+                        alert("project_delete fail!");
+                    })
+                    .always(function () {
+                        overlayOff();
+                    });
+            }
+        }
+        function select_project(id) {
+            if (!$(Event.target).closest(".option_btn_dropdown").length && !$(Event.target).closest(".project.disabled").length) {
+                $(".project.active").removeClass("active");
+                $("#project_" + id).addClass("active");
+                var sl = $(`.stage[data-project=${id}]`).show();
+                $(".stage").not(sl).hide();
+
+                var proj_vers = $(`.project_version[data-project=${id}]`).show();
+                $(".project_version").not(proj_vers).hide();
+
+                $("[name=project_id]").val(id);
+            }
+
+        }
+        //stage
+        function new_stage() {
+            $('[name="id"]').val("");
+            $('[name="description"]').val("");
+            $('[name="name"]').val("");
+            $('#stage_form_modal').modal("show");
+        }
+        function edit_stage(id) {
+            event.stopPropagation();
+            overlayOn();
+            $.ajax({
+                method: "POST",
+                url: "/ProjectManagement/getStage",
+                data: { id },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    if (data[0]) {
+                        $("#stage_form_modal .modal-title").html("EDIT STAGE");
+                        $('[name="id"]').val(id);
+                        $('[name="description"]').val(data[1].Desc);
+                        $('[name="name"]').val(data[1].Name);
+                        $('#stage_form_modal').modal("show");
+                    } else {
+                        error(data[1]);
+                        console.log(data);
+                    }
+                })
+                .fail(function () {
+                    alert("rename_pj fail!");
+                })
+                .always(function () {
+                    overlayOff();
+                });
+        }
+        function delete_stage(id) {
+            event.stopPropagation();
+            if (confirm("Deleting this stage will also delete all of its related information. Are you sure?")) {
+                overlayOn();
+                $.ajax({
+                    method: "POST",
+                    url: "/ProjectManagement/Delete_Stage",
+                    data: { id },
+                    dataType: "json"
+                })
+                    .done(function (data) {
+                        if (data[0]) {
+                            success("Delete Stage completed");
+                            $(`#stage_${data[1].Id}`).remove();
+                        } else {
+                            error(data[1]);
+                            console.log(data);
+                        }
+                    })
+                    .fail(function () {
+                        alert("project_delete fail!");
+                    })
+                    .always(function () {
+                        overlayOff();
+                    });
+            }
+        }
+        function show_subs(code, force_load = false) {
+            var onshow = $('#stage_' + code + " .list_mem:visible").length > 0;
+            if (!$(event.target).closest("button").length) {
+                if ($('#stage_' + code).hasClass("active") && !force_load) {
+                    $('#stage_' + code).removeClass("active");
+                    $('#stage_' + code + " .list_mem").slideUp(200);
+                } else {
+                    $('.stage.active').not('#stage_' + code).removeClass("active").find('.list_mem').slideUp(200);
+                    $('#stage_' + code).addClass("active");
+                    $('#stage_' + code + " .list_mem").slideDown(300);
+                }
+
+            }
+            if ($('#stage_' + code).has(".list_mem.loader").length || force_load) {
+                $.ajax({
+                    method: "POST",
+                    url: "/ProjectManagement/getMembers",
+                    data: { stage_id: code },
+                    dataType: "html"
+                })
+                    .done(function (data) {
+
+                        $("#list_mem_content_" + code).html(data);
+                        if (onshow) {
+                            $('#stage_' + code + " .list_mem:not(:visible)").show();
+                        } else {
+                            $('#stage_' + code + " .list_mem:not(:visible)").slideDown(300);
+                        }
+                    })
+                    .fail(function () {
+                        alert("add member fail!");
+                    })
+                    .always(function () {
+
+                    });
+            }
+        }
+        function add_member(stage_id) {
+            event.stopPropagation();
+            $("#version_select").val("").trigger("change");
+            $("#stage_id").val(stage_id);
+            $("#addmember_modal").modal("show");
+        }
+        function load_member() {
+            var version_id = $("#version_select").val();
+            var stage_id = $("#stage_id").val();
+            if (version_id) {
+                overlayOn();
+                $.ajax({
+                    method: "POST",
+                    url: "/ProjectManagement/getStageMember",
+                    data: { version_id, stage_id },
+                    dataType: "json"
+                })
+                    .done(function (data) {
+                        if (data[0]) {
+
+                            $(".search-input").val("");
+                            $("#select_members").val(data[1]).trigger('change');
+
+                        } else {
+                            error(data[1]);
+                            console.log(data);
+                        }
+                    })
+                    .fail(function () {
+                        alert("add member fail!");
+                    })
+                    .always(function () {
+                        overlayOff()
+                    });
+            }
+        }
+        function unselect_member(version_id, stage_id, member_number) {
+            overlayOn();
+            $.ajax({
+                method: "POST",
+                url: "/ProjectManagement/unselectMember",
+                data: { version_id, stage_id, member_number },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    if (data[0]) {
+                        success(data[1]);
+                        $("#addmember_modal").modal("hide");
+                        show_subs(stage_id, true);
+                    } else {
+                        error(data[1]);
+                        console.log(data);
+                    }
+                })
+                .fail(function () {
+                    alert("unselect member fail!");
+                })
+                .always(function () {
+                    overlayOff();
+                });
+
+        }
+    </script>
+    <script id="project_template" type="text/x-handlebars-template">
+        <div href="#" id="project_{Id}" data-id="{Id}" class="project list-group-item list-group-item-action noselect" onclick="select_project('{Id}')" style="border-radius:0">
+            <span class="pj_name">{Name}</span>
+            <img class="loading" style="display:none" src="\Content\ajax-loaders\ajax-loader-1.gif" />
+            <div class="btn-group pull-right option_btn_dropdown">
+                <span class="option_btn fa fa-pencil dropdown-toggle hover" data-toggle="dropdown" aria-expanded="false" style="" onclick="edit_project('{Id}')"></span>
+                <span class="option_btn fa fa-trash dropdown-toggle hover" data-toggle="dropdown" aria-expanded="false" style="" onclick="project_delete('{Id}')"></span>
+            </div>
+        </div>
+    </script>
+    <script id="stage_template" type="text/x-handlebars-template">
+        <tbody id="stage_{Id}" data-project="{Project_Id}" class="stage" style="margin: 10px; padding:0; overflow: hidden;">
+            <tr style="padding:7px 20px; text-align:left; cursor:pointer; height:40px;" onclick="show_subs('{Id}')">
+                <td style="width:10px">
+                    <i class="fa fa-plus pull-right" style="font-size:1.5em;margin:0"></i>
+                    <i class="fa fa-minus pull-right" style="font-size:1.5em;margin:0"></i>
+                </td>
+                <td><b class="stage_name text-green">{Name}</b> <i style="margin-left:15px; color:gray" class="stage_description fa fa-info-circle" data-toggle="tooltip" data-placement="right" title="{Desc}"></i></td>
+                <td style="width: 204px">
+                    <button class="btn btn-primary btn-sm" style="width:60px" onclick="add_member('{Id}')"><i class="fa fa-user-plus"></i></button>
+                    <button class="btn btn-warning btn-sm" style="width:60px" onclick="edit_stage('{Id}')"><i class="fa fa-pencil"></i></button>
+                    <button class="btn btn-danger btn-sm" style="width:60px" onclick="delete_stage('{Id}')"><i class="fa fa-trash"></i></button>
+                </td>
+            </tr>
+            <tr>
+                <td id="list_mem_content_{Id}" colspan="90" style="padding:0px;">
+
+                    <img class="list_mem loader center-block" style="display:none; padding:20px" src="\Content\ajax-loaders\ajax-loader-1.gif" />
+                </td>
+            </tr>
+        </tbody>
+    </script>
+}
+@section style
+{
+    <link href="~/Content/DualListMulti/multi.min.css" rel="stylesheet" />
+    <style>
+        #notes_list .input-group-addon {
+            cursor: grab;
+        }
+
+            #notes_list .input-group-addon:active:hover {
+                cursor: grabbing;
+            }
+
+        .grabbing_note .handle {
+            background-color: #c8ebfb;
+        }
+
+        req::after {
+            content: "*";
+            color: red;
+            font-weight: bold;
+        }
+
+        .btn-outline-danger {
+            border-color: #dc3545 !important;
+        }
+        /* #notes_list .note:nth-child(even) {
+            padding-left: 50px;
+        }
+
+        #notes_list .note:nth-child(odd) {
+            padding-right:50px;
+        }*/
+        .project_version {
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+
+        .delete_project_version:hover {
+            color: darkblue;
+        }
+
+        .multi-wrapper .non-selected-wrapper, .multi-wrapper .selected-wrapper {
+            height: 400px;
+        }
+
+            .multi-wrapper .non-selected-wrapper .selected {
+                display: none;
+            }
+
+        .multi-wrapper a {
+            color: #000;
+        }
+
+        .stage td {
+            vertical-align: middle !important;
+        }
+
+        tr.strikeout {
+            text-decoration: line-through;
+        }
+
+        .stage .fa {
+            cursor: pointer;
+        }
+
+            .stage .fa.fa-plus {
+                display: inherit;
+            }
+
+            .stage .fa.fa-minus {
+                display: none;
+            }
+
+        .stage.active > tr:first-child {
+            background-color: #d9ecf6;
+        }
+
+            .stage.active > tr:first-child:hover {
+                background-color: #c8d9e2;
+            }
+
+        .stage.active .fa.fa-plus {
+            display: none;
+        }
+
+        .stage.active .fa.fa-minus {
+            display: inherit;
+        }
+
+        .option_btn_dropdown {
+            margin: -7px -10px;
+        }
+
+        .option_btn {
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            display: none;
+        }
+
+            .option_btn:hover {
+                background-color: #0002;
+            }
+
+        .project {
+            cursor: pointer;
+        }
+
+            .project:hover {
+                background-color: #0002;
+            }
+
+                .project:hover .option_btn, .open > .option_btn {
+                    display: inline-block;
+                }
+
+        .dropdown-menu {
+            box-shadow: 5px 10px 8px #888888;
+        }
+
+            .dropdown-menu li a {
+                padding: 10px;
+            }
+
+        .project .set_active {
+            display: none;
+        }
+
+        .project .set_deactive {
+            display: block;
+        }
+
+        .project.disabled .set_active {
+            display: block;
+        }
+
+        .project.disabled .set_deactive {
+            display: none;
+        }
+
+        .list_mem {
+            overflow-y: auto;
+            max-height: 500px;
+        }
+
+        .btn_row_hover {
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        tr:hover > td > .btn_row_hover {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+
+}

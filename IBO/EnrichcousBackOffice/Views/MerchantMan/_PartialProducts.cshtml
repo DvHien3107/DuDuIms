@@ -1,0 +1,196 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.CustomizeModel.Devices_in_Order>
+@{
+    bool e = false;
+}
+@foreach (var item in Model)
+{
+    if (item.Devices.Count() == 0)
+    {
+        continue;
+    }
+    e = true;
+    <div class="col-md-12">
+        <div class="box box-primary box-solid" style="border-radius:unset">
+            <div class="box-header with-border" style="cursor:pointer" onclick="show_invoice('@item.Order.OrdersCode')">
+                <h4 class="box-title" style="padding-right:30px">
+                    <label>Invoice #@item.Order.OrdersCode</label>
+                </h4>
+                @if (!string.IsNullOrWhiteSpace(item.Order.UpdatedBy))
+                {
+                    <label>
+                        Invoice date:
+                        <span>
+                            <span id="localtime-invoice-@item.Order.Id">
+                                <script>convertLocalTime("invoice-@item.Order.Id", "@item.Order.CreatedAt", "MMMddyyyy")</script>
+                            </span>
+                        </span>&nbsp;&nbsp;
+                    </label>
+                    <label>
+                        Last updated: @(EnrichcousBackOffice.AppLB.CommonFunc.GetLastRowString(item.Order.UpdatedBy, '|')) @*@(item.Order.UpdatedAt?.ToString("dd MMM,yyyy")) by @item.Order.UpdatedBy*@
+                        <span id="localtime-update-@item.Order.Id">
+                            <script>convertLocalTime("update-@item.Order.Id", "@item.Order.UpdatedAt", "MMMddyyyy")</script>
+                        </span>
+                    </label>
+                }
+                else
+                {
+                    <label>
+                        Invoice date:
+                        <span>
+                            <span id="localtime-invoice-@item.Order.Id">
+                                <script>convertLocalTime("invoice-@item.Order.Id", "@item.Order.CreatedAt", "MMMddyyyy")</script>
+                            </span>
+                        </span>&nbsp;&nbsp;
+                    </label>
+                    <label>
+                        Last updated: @*@(item.Order.CreatedAt?.Add(TimeZoneInfo.Local.BaseUtcOffset).ToString("dd MMM,yyyy"))*@
+                        <span id="localtime-@item.Order.Id">
+                            <script>convertLocalTime("@item.Order.Id", "@item.Order.CreatedAt", "MMMddyyyy")</script>
+                        </span>
+                    </label>
+                }
+
+                <div class="pull-right">
+                    <span>[Click here to open]</span>&nbsp;&nbsp;
+                    <label>Status: @item.Order.Status</label>
+                </div>
+            </div>
+            <div class="box-body">
+
+                <div class="col-md-12">
+                    <table class="table table-bordered table-striped dataTable table-hover">
+                        <thead>
+                            <tr>
+                                <th>No.</th>
+                                <th>Inv#</th>
+                                <th>Serial number</th>
+                                <th>Product name</th>
+                                <th>Price</th>
+                                <th>QTY</th>
+                                <th>Total amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{ int i = 1;}
+                            @foreach (var device in item.Devices)
+                            {
+                                <tr @*onclick="show_deviceinfo('@device.Id')"*@>
+                                    <td>@(i++)</td>
+                                    <td>
+                                        @if (!string.IsNullOrWhiteSpace(device.InvNumbers))
+                                        {
+                                            foreach (var inv in @device.InvNumbers.Split(',').ToList())
+                                            {
+                                                <span class="label label-default">@inv</span>
+                                            }
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (!string.IsNullOrWhiteSpace(device.SerNumbers))
+                                        {
+                                            foreach (var inv in @device.SerNumbers.Split(',').ToList())
+                                            {
+                                                <span class="label label-default">@inv</span>
+                                            }
+                                        }
+                                    </td>
+                                    <td>@device.ProductName <br />Model: @device.ModelName</td>
+                                    <td>$@device.Price</td>
+                                    <td>@device.Quantity</td>
+                                    <td>$@device.TotalAmount</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (!e)
+{
+    <div class="col-md-12">
+        <div class="box box-primary" style="border-radius:unset">
+            <div class="box-body">
+                Not found
+            </div>
+
+        </div>
+    </div>
+
+}
+
+<div class="modal fade" id="o_device_info" role="dialog">
+    <div class="modal-dialog">
+
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title" id="o_device_info_title">Order product detail</h4>
+            </div>
+            <div class="modal-body" style="padding:0px 50px">
+                <div class="row">
+                    <table class="table table-bordered table-striped dataTable">
+                        <tbody>
+                            <tr>
+                                <td style="width:35%"><b>OrdersCode</b></td>
+                                <td id="OrdersCode"></td>
+                            </tr>
+                            <tr>
+                                <td><b>ProductName</b></td>
+                                <td id="ProductName"></td>
+                            </tr>
+                            <tr>
+                                <td><b>Inv#</b></td>
+                                <td id="InvNumber"></td>
+                            </tr>
+                            <tr>
+                                <td><b>Price</b></td>
+                                <td id="Price"></td>
+                            </tr>
+                            <tr>
+                                <td><b>Quantity</b></td>
+                                <td id="Quantity"></td>
+                            </tr>
+                            <tr>
+                                <td><b>TotalAmount</b></td>
+                                <td id="TotalAmount"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+<script>
+    function show_deviceinfo(id) {
+        $.ajax({
+            method: "POST",
+            url: "/order/GetOrderDeviceInfo",
+            data: { id },
+            dataType: "json"
+        })
+            .done(function (data) {
+                if (data[0] == true) {
+                    $('#OrdersCode').html(data[1]["OrderCode"]);
+                    $('#ProductName').html(data[1]["ProductName"]);
+                    $('#InvNumber').html(data[1]["InvNumbers"]);
+                    $('#Price').html(data[1]["Price"]);
+                    $('#Quantity').html(data[1]["Quantity"]);
+                    $('#TotalAmount').html(data[1]["TotalAmount"]);
+                    $('#o_device_info').modal("show");
+                }
+            })
+            .fail(function () {
+            })
+            .always(function () {
+            });
+    }
+</script>

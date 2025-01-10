@@ -1,0 +1,93 @@
+﻿@using Enrich.DataTransfer.EnrichUniversal.Ticket
+@using Enrich.DataTransfer.JiraConnector
+@{
+    var IMSStatus = ViewBag.IMSStatus as List<TicketStatusDto>;
+    var JiraStatus = ViewBag.JiraStatus as List<JiraStatusDto>;
+    var statusMappings = ViewBag.StatusMappings as List<StatusMappingDto>;
+}
+<div class="modal fade" id="config-mapping-popup" role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-content">
+        <form action="/JiraConfigurationMapping/CreateOrUpdateConfigMapping" method="post" id="config-mapping-form">
+            <input type="hidden" name="projectMappingId" value="@ViewBag.ProjectMappingId" />
+            <div class="modal-header">
+                <div class="modal-title pull-left">Jira Configuration Mapping</div>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div style="display: flex; align-items: center; justify-content: center; vertical-align: middle; ">
+                    <div style=" padding-right: 179px;">
+                        <label>IMS Status</label>
+
+                    </div>
+
+                    <div>
+                        <label>Jira Status</label>
+
+                    </div>
+                </div>
+                @{
+                    int i = 0;
+                }
+                @foreach (var imsStt in IMSStatus)
+                {
+
+                    <div style="display: flex; align-items: center; justify-content: center; vertical-align: middle;margin-top:5px">
+                        <div>
+                            <input type="hidden" class="form-control" name="jiraStatusDtos[@i].IMSId" value="@imsStt.Id" style="width:200px" readonly />
+                            <input class="form-control" name="jiraStatusDtos[@i].IMSName" value="@imsStt.Name" style="width:200px" readonly />
+                        </div>
+                        <span style="padding: 0px 20px;"><i class="fa fa-angle-double-right" aria-hidden="true"></i></span>
+                        <div>
+
+                            <select class="form-control" name="jiraStatusDtos[@i].JiraId" style="width: 200px;">
+                                <option value="">N/A</option>
+                                @foreach (var jiraStt in JiraStatus)
+                                {
+                                    <option value="@jiraStt.Id" @(statusMappings.Any(x => x.IMSId == imsStt.Id.ToString() && x.JiraId == jiraStt.Id) ? "selected" : "") )>@jiraStt.Name</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    i++;
+                }
+
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary" onsubmit="overlayOn()">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    $("#config-mapping-form").on('submit', function (e) {
+        e.preventDefault();
+        overlayOn();
+        var form = $(this);
+        var actionUrl = form.attr('action');
+        $.ajax({
+            type: "post",
+            url: actionUrl,
+            data: form.serialize(),
+            success: function (data) {
+                if (data.status) {
+                    success(data.message);
+                    $("#config-mapping-popup").modal("hide");
+                }
+                else {
+                    error(data.message)
+                }
+            },
+            error: function (data) {
+                Error('An error occurred.')
+            },
+            complete: function (data) {
+                overlayOff();
+            }
+
+        });
+
+    });
+</script>

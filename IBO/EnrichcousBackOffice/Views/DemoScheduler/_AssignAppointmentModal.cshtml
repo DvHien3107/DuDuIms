@@ -1,0 +1,176 @@
+﻿@{ 
+    var ListMember = ViewBag.ListMember as List<EnrichcousBackOffice.Models.P_Member>;
+}
+@*modal assign*@
+<style>
+    .avatar-select-2{
+        width:30px;
+        height:auto;
+        margin-right:10px;
+    }
+</style>
+<div class="modal fade" id="modal-assign-demo-scheduler">
+    <div class="modal-dialog modal-md" style="max-width:800px;">
+        <div class="modal-content">
+            <form id="form-assign-demo-scheduler" method="post" action="/DemoScheduler/AssignDemoScheduler">
+                <div class="modal-header">
+                    <button type="button" class="close"  onclick="FetchReloadData()" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                    <h4 id="modal-department-title" class="modal-title">
+                        Assign To
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="DemoSchedulerId" value="@ViewBag.DemoSchedulerId" />
+                    <div class="col-12">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label>Member <span style="color:red">*</span></label>
+                                    <select class="form-control" style="width:100%" name="AssignToMember" id="AssignToMember">
+                                        @foreach (var m in ListMember)
+                                        {
+                                            <option value="@m.MemberNumber" data-avatar="@(!string.IsNullOrEmpty(m.Picture)?m.Picture:(m.Gender=="Male"?"/Upload/Img/Male.png":"/Upload/Img/FeMale.png"))">@m.FullName #@m.MemberNumber</option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">
+                            Assign
+                            <img class="loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none">
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="modal-send-email-authorize">
+    <div class="modal-dialog modal-md" style="max-width:800px;">
+        <div class="modal-content">
+            <form id="form-send-email-authorize" method="post" action="/MemberMan/SendEmailRequireGoogleAuth">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                    <h4 id="modal-department-title" class="modal-title">
+                       Send Email Google Auth
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="Email" value="" />
+                    <div class="col-12">
+                        <div class="row">
+                            <div class="col-md-12">
+                                This account not yet google authorized  , do you want to send google authorization email to this person ?
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="col-12">
+                        <button type="button" onclick="FetchReloadData()" class="btn btn-default" data-dismiss="modal" aria-label="Close">
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            Send Email
+                            <img class="loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none">
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    function formatMember(member) {
+        if (!member.id) {
+            return member.text;
+        }
+        var avatar = $(member.element).attr("data-avatar");
+        var $member = $(
+            '<span><img class="avatar-select-2" src="' + avatar + '" class="img-flag" /> ' + member.text + '</span>'
+        );
+        return $member;
+    };
+
+    $("#AssignToMember").select2({
+        placeholder: "Select a member",
+        templateResult: formatMember
+    })
+    $("#form-assign-demo-scheduler").submit(function (e) {
+        e.preventDefault(); // avoid to execute the actual submit of the form.
+        if ($(this).find('[name="AssignToMember"]').val() === '') {
+            let MsgSuccess = $.parseJSON('{"text":"please select member !", "layout":"topRight", "type":"warning"}');
+            noty(MsgSuccess);
+            return false;
+        }
+        var form = $(this);
+        var url = form.attr('action');
+        var DemoSchedulerId = form.find('[name="DemoSchedulerId"]').val();
+        var MemberNumber = form.find('[name="AssignToMember"]').val();
+        var loading = form.find('.loading');
+        $(loading).show();
+        $.ajax({
+            type: "POST",
+            url: url,
+            data: { DemoSchedulerId, MemberNumber}, // serializes the form's elements.
+            success: function (data) {
+                if (data.status === 1) {
+                    $("#modal-assign-demo-scheduler").modal("hide");
+                    $("#render-popup-calendar").html(data.message);
+                    $("#modal-calendar-demo-scheduler").modal({ backdrop: 'static', keyboard: false });
+                }
+                else if (data.status === 0) {
+                    $("#modal-assign-demo-scheduler").modal("hide");
+                    $("#modal-send-email-authorize").modal({ backdrop: 'static', keyboard: false });
+                    $("#form-send-email-authorize").find('[name="Email"]').val(data.message);
+                }
+                
+            },
+            complete: function () {
+                $(loading).hide();
+            },
+        });
+
+
+    });
+    $("#form-send-email-authorize").submit(function (e) {
+        e.preventDefault(); // avoid to execute the actual submit of the form.
+        var form = $(this);
+        var url = form.attr('action');
+        var email = form.find('[name="Email"]').val();
+        var loading = form.find('.loading');
+        $(loading).show();
+        $.ajax({
+            type: "POST",
+            url: url,
+            data: { email }, // serializes the form's elements.
+            success: function (data) {
+                FetchReloadData();
+                if (data.status) {
+                    $("#modal-send-email-authorize").modal("hide");
+                    let MsgSuccess = $.parseJSON('{"text":"Send email success !", "layout":"topRight", "type":"success"}');
+                    noty(MsgSuccess);
+                }
+                else {
+                    let MsgError = $.parseJSON('{"text":'+data.message+', "layout":"topRight", "type":"error"}');
+                    noty(MsgError);
+                }
+
+            },
+            complete: function () {
+                $(loading).hide();
+            },
+        });
+
+
+    });
+</script>

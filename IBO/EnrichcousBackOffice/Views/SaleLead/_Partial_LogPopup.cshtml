@@ -1,0 +1,193 @@
+﻿@using EnrichcousBackOffice.Models
+@using EnrichcousBackOffice.ViewControler
+@using EnrichcousBackOffice.Utils.IEnums
+@{
+    System.Collections.ObjectModel.ReadOnlyCollection<TimeZoneInfo> tz = TimeZoneInfo.GetSystemTimeZones();
+    List<C_SalesLead_Status> leadStatus = SaleLeadViewService.SalesLeadStatuses();
+}
+<div class="modal fade in" id="log_popup" role="dialog" style="display: none; padding-right: 17px;">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <form id="log_form" action="/salelead/AppoimentSave" method="post">
+                <div class="modal-header">
+                    <button style="font-size:19px" type="button" class="close" data-dismiss="modal"><i class="fa fa-close"></i></button>
+
+                    <h4 class="modal-title" style="margin-right:50px">
+                    </h4>
+                </div>
+
+                <div id="loading_over" style="width: 100%; height: 100%;position: absolute;top: 0;left: 0;opacity: 0.3; background-color:grey; z-index:999;display:none">
+                    <img style="margin:40% auto; display:block; height:50px" src="/Content/ajax-loaders/loading-partial.gif">
+                </div>
+                <input type="hidden" id="log_lead_id" name="lead_id" />
+                <input type="hidden" name="appointment_id" />
+                <input type="hidden" name="Type" value="Note" />
+               
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-12 hide">
+                            <div class="form-group">
+                                <label>Title :</label>
+                                <input class="form-control" type="text" name="title" value="Note" required="">
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label>Note :</label>
+                                <textarea id="desc" class="form-control" wrap="soft" name="description" rows="5"></textarea>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label style="width:100%;">
+                                    Interaction Status :  
+                                    <span class="pull-right">
+                                        <i class="fa fa-plus" id="InsertInteractionStatus" style="font-weight:bold; color:var(--main-color-1); cursor:pointer;" title="Add new"></i>&nbsp;&nbsp;&nbsp;
+                                        <i class="fa fa-edit" id="UpdateInteractionStatus" style="font-weight:bold; color:#f39c12; cursor:pointer;" title="Edit"></i>&nbsp;&nbsp;&nbsp;
+                                        <i class="fa fa-trash" id="DeleteInteractionStatus" style="font-weight:bold; color:#dd4b39; cursor:pointer;" title="Delete"></i>&nbsp;&nbsp;&nbsp;
+                                    </span>
+                                </label>
+                                <select class="form-control StatusInteraction" id="StatusInteraction" type="text" name="StatusInteraction">
+                                    <option value="">N/A</option>
+                                </select>
+                                <div class="loading-StatusInteraction" style="position: absolute; top: 30px; right: 18px; z-index: 999; background: white; font-size: 17px;">
+                                    <i class="fa fa-spinner fa-spin"></i>
+                                </div>
+                            </div>
+                          
+                        </div>
+                        <div class="col-md-6">
+                            <div class="input-group form-group">
+                                <label>Call Of Number :</label>
+                                <input class="form-control" type="number" min="0" step="1" name="CallOfNumber" autocomplete="off">
+                                <div class="loading-CallOfNumber" style="position: absolute; top: 30px; right: 7px; z-index: 999; background: white; font-size: 17px;">
+                                    <i class="fa fa-spinner fa-spin"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button name="btnsubmit" value="save" type="submit" class="btn btn-sm btn-primary" onsubmit="$('#loading_over').show()">Save</button>
+                    <button data-dismiss="modal" class="btn btn-sm btn-default">Close</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    $(function () {
+        $("body").delegate(".datepicker", "focusin", function () {
+            $(this).datepicker();
+        });
+    });
+    function new_log(code) {
+        $("#log_popup").find("form").resetForm();
+        $("#log_popup").find('[name=appointment_id]').val(null);
+        $("textarea[name=description]").html("");
+        $("#event_done_0").prop("checked", true);
+        $("#event_done_0").parent().addClass("active");
+        $("#event_done_1").parent().removeClass("active");
+        $("#log_popup").find('[name=lead_id]').val(code);
+        $("#log_popup").find(".modal-title").html("<i class='fa fa-pencil-square-o'></i>&nbsp;Update Note/Status");
+        getStatusAndCallOfNumber(code);
+        LoadAutoComplete();
+        $("#log_popup").modal("show");
+    }
+    function edit_log(code, appointment_id, img_loading_id) {
+        if (img_loading_id) {
+            $("#" + img_loading_id).show();
+        }
+        $.ajax({
+            method: "POST",
+            url: "/salelead/getLogInfo",
+            data: { appointment_id },
+            dataType: "json"
+        })
+            .done(function (data) {
+                if (data[0]) {
+                    var h = Number(data[1].StartEvent.substring(11, 13));
+                    var ap = "AM";
+                    if (h > 12) {
+                        ap = "PM";
+                        h = h - 12;
+                    }
+                    $("#log_popup").find("form").resetForm();
+                    $("#log_popup").find('[name=lead_id]').val(code);
+                    $("input[name=title]").val(data[1].Name);
+                    $("#span_ticket").empty();
+                    $("textarea[name=description]").html(data[1].Description);
+                    $("#lastUpdated").html(data[1].LastUpdateBy);
+                    $(".update_event_flag").show();
+                    $("#log_popup").find('[name=appointment_id]').val(data[1].Id);
+                    $("#log_popup").find(".modal-title").html("<i class='fa fa-pencil-square-o'></i>&nbsp;Update Note/Status");
+
+                    getStatusAndCallOfNumber(code);
+                    $("#log_popup").modal("show");
+                } else {
+                    noty({ "text": data[1], "layout": "topRight", "type": "error" });
+                }
+            })
+            .fail(function () {
+
+                alert("edit_appointment fail");
+            })
+            .always(function () {
+                $("#" + img_loading_id).hide();
+            });
+    }
+    $("#log_form").ajaxForm(function (data) {
+        if (data[0]) {
+            noty({ "text": data[1], "layout": "topRight", "type": "success" });
+            UpdateRow($('#log_lead_id').val(), true)
+            $("#log_popup").modal("hide");
+        } else {
+            noty({ "text": data[1], "layout": "topRight", "type": "error" });
+        }
+        $('#loading_over').hide();
+    })
+
+    function getStatusAndCallOfNumber(SalesLeadId) {
+        $('.loading-StatusInteraction').show();
+        $('.loading-CallOfNumber').show();
+        $.ajax({
+            method: "Get",
+            url: "/SaleLead/GetStatusAndCallOfNumber",
+            data: { "SalesLeadId": SalesLeadId},
+            dataType: "json"
+        })
+            .done(function (data) {
+                LoadAutoComplete(SalesLeadId,data.status);
+                $("#log_popup").find('[name=CallOfNumber]').val(data.callofnumber);
+                $('.loading-StatusInteraction').hide();
+                $('.loading-CallOfNumber').hide();
+            })
+    }
+  
+    function LoadAutoComplete(SalesLeadId,selectedValue) {
+        $.ajax({
+            method: "Get",
+            url: "/SaleLead/LoadInteraction_Status",
+            dataType: "json"
+        })
+            .done(function (data) {
+                $('[name=StatusInteraction]').html('');
+                $('[name=StatusInteraction]').append('<option value="">N/A</option>');
+                $.each(data, function (id, option) {
+                    $('[name=StatusInteraction]').append($('<option></option>').val(option.Value).html(option.Text));
+                });
+                $("#log_popup").find('[name=StatusInteraction]').val(selectedValue);
+            })
+    }
+    $(document).ready(function () {
+        HandleInteractionStatus.Init();
+    })
+</script>
+
+<style>
+    .ui-datepicker {
+        position: relative;
+        z-index: 10000 !important;
+    }
+</style>

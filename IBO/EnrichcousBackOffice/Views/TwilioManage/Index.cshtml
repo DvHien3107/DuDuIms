@@ -1,0 +1,329 @@
+﻿
+@{
+    ViewBag.Title = "Twilio Account Manage";
+}
+<style>
+    tr {
+        height: 50px
+    }
+
+    .open-detail {
+        cursor: pointer;
+    }
+</style>
+<section class="content-header">
+    <h1>
+        Twilio Account Manage
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Dashboard</a></li>
+        <li><i class="fa fa-credit-card"></i>Jira Configuration Mapping</li>
+    </ol>
+</section>
+
+<section class="content">
+    <div class="row">
+
+        @if (TempData["e"] != null)
+        {
+            <div class="alert alert-warning alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+            </div>
+        }
+        else if (TempData["s"] != null)
+        {
+            <div class="alert alert-success alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+            </div>
+        }
+
+
+        <div class="col-md-12">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Twilio Account Manage</h3>
+                </div>
+                <!-- /.box-header -->
+
+                <div class="box-body">
+
+                    <div class="col-md-12" style="padding: 0; display: flex; justify-content: space-between;">
+                        <div class="input-group" style="width:300px;font-size:13px">
+                            <div class="input-group-addon">
+                                Search
+                            </div>
+                            <input class="form-control" name="search_text" id="search_text" placeholder="Search By Store Name, Store Code, Account Name" onchange="$('#main-table').DataTable().ajax.reload()">
+                        </div>
+                        <button onclick="createAccount()" class="btn btn-primary"><i class="fa fa-plus" aria-hidden="true"></i> Create Account</button>
+                    </div>
+                    
+                </div>
+                <hr />
+                <div class="render-table" style="padding:0px 15px">
+                    <table id="main-table" class="table table-bordered table-striped">
+                    </table>
+                </div>
+                <!-- /.box-body -->
+            </div>
+            <!-- /.box -->
+        </div>
+
+    </div>
+</section>
+<div id="create-account-render">
+
+</div>
+
+<div id="render-popup-request-toll-free">
+
+</div>
+
+<div id="detail-toll-free-verification">
+
+</div>
+
+@section script{
+
+    <script>
+        var dataT = $('#main-table').DataTable({
+            "language": {
+                "processing": '<img src="/Content/ajax-loaders/loading2.gif" width="60px" />',
+            },
+            "pageLength": 10,
+            "serverSide": true, // for process server side
+            "processing": true, // for show progress bar
+            'paging': true,
+            'lengthChange': true,
+            'searching': false,
+            'ordering': false,
+            'info': false,
+            'autoWidth': true,
+            'stateSave': false,
+            "ajax": {
+                "url": "/TwilioManage/GetTwilioAccount",
+                "type": "POST",
+                data: function (data) {
+                    data.SearchText = $("#search_text").val();
+                    return data;
+                },
+                "datatype": "json",
+            },
+            fnCreatedRow: function (nRow, aData, iDataIndex) {
+                $(nRow).attr('id', 'tr_' + aData.Id.toString());
+                $(nRow).attr('data-id', aData.Id.toString());
+            },
+            "columns": [
+                {
+                    "title": "Business Name",
+                    "name": "StoreCode",
+                    "data": "StoreCode",
+                    render: function (data, type, row, meta) {
+                        let html = '';
+                        html += `<a target="_blank" href="/merchantman/detail/${row['CustommerId']}"><b class="text-success">${row['BusinessName']} </b></a>`;
+                        html += `<br/><i>Store Code: <b>${row['StoreCode']}</b></i>`
+                        return html;
+                    },
+                    "className": 'align-middle open-detail',
+                },
+                {
+                    "title": "Account Name",
+                    "name": "Name",
+                    "data": "Name",
+                    "className": 'align-middle open-detail',
+                },
+                {
+                    "title": "SId",
+                    "name": "SId",
+                    "data": "SId",
+                    "className": 'align-middle open-detail',
+                },
+                {
+                    "title": "Total Phone Number",
+                    "name": "TotalPhoneNumber",
+                    "data": "TotalPhoneNumber",
+                    "className": 'align-middle open-detail',
+                    render: function (data, type, row, meta) {
+                        let html = '';
+                        html += `<strong class="text text-success">Approved: ${row["totalPhoneApproved"]}</strong><br />`;
+                        html += `<strong class="text text-warning">In review: ${row["totalPhonePending"]}</strong><br />`;
+                        html += `<strong class="text text-danger">Rejected: ${row["totalPhoneReject"]}</strong>`;
+                        return html;
+                    },
+                },
+                {
+                    "title": "Status",
+                    "name": "Status",
+                    "data": "Status",
+                    render: function (data, type, row, meta) {
+                        let className = '';
+                        if (row['Status'].toString().toLowerCase() == "active") {
+                            className = 'success';
+                            return `<span class="label label-${className}">Active</span>`;
+                        }
+                        else if (row['Status'].toString().toLowerCase() == "suspended") {
+                            className = 'warning';
+                            return `<span class="label label-${className}">Suspended</span>`;
+                        }
+                        else if (row['Status'].toString().toLowerCase() == "closed") {
+                            className = 'danger';
+                            return `<span class="label label-${className}">Closed</span>`;
+                        }
+                        else {
+                            return "";  
+                        }
+                    },
+                    "className": 'align-middle open-detail',
+                },
+                {
+                    name: 'Create Date',
+                    render: function (data, type, row, meta) {
+                        let html = '';
+                        let Date = moment.utc(row['CreatedDate']).format("MMM DD, YYYY");
+                        html += `<span>${Date}</span>`;
+                        html += `</br><span>${row['CreatedBy']}</span>`;
+                        return html;
+                    },
+                },
+                {
+                    "title": "",
+                    "name": "",
+                    "data": "",
+                    "render": function (data, type, row) {
+                        return `  
+                                     <button class='btn btn-primary btn-sm' onclick="showDetailPhone(${row["Id"]})">Detail</button>
+                                    <button class='btn btn-warning btn-sm' onclick="suspendAccount(${row["Id"]})">Suspend</button>
+                                   <button class='btn btn-danger btn-sm' onclick="closingAccount(${row["Id"]})">Close</button>`;
+                    },
+                    "className": 'align-middle',
+                }
+            ]
+        })
+
+
+        function createAccount() {
+            overlayOn();
+            $.ajax({
+                type: "get",
+                url: "/TwilioManage/CreateAccountTwilio",
+                success: function (data) {
+                    $("#create-account-render").html(data);
+                    $("#create-account-popup").modal("show");
+                },
+                error: function (data) {
+                    console.log('An error occurred.');
+                    console.log(data);
+                },
+                complete: function (data) {
+                    overlayOff();
+                }
+            });
+        }
+
+        function suspendAccount(Id) {
+            overlayOn();
+            $.ajax({
+                type: "POST",
+                url: "/TwilioManage/SuspendAccount",
+                data: {Id},
+                success: function (data) {
+                    if (data.status) {
+                        success(data.message)
+                    }
+                    else {
+                        error(data.message)
+                    }
+                },
+                error: function (data) {
+                    console.log('An error occurred.');
+                    console.log(data);
+                },
+                complete: function (data) {
+                    overlayOff();
+                }
+            });
+        }
+
+
+        function closingAccount(Id) {
+            overlayOn();
+            $.ajax({
+                type: "POST",
+                url: "/TwilioManage/ClosingAccount",
+                data: { Id },
+                success: function (data) {
+                    if (data.status) {
+                        success(data.message);
+                      
+                    }
+                    else {
+                        error(data.message)
+                    }
+                },
+                error: function (data) {
+                    console.log('An error occurred.');
+                    console.log(data);
+                },
+                complete: function (data) {
+                    overlayOff();
+                }
+            });
+        }
+
+
+
+        function showDetailPhone(Id, show = true) {
+            overlayOn();
+            if ($(".tr-detail-" + Id).length) {
+                if (show == false) {
+                    overlayOff();
+                    $(".div-detail-" + Id).slideUp(function () {
+                        $(".tr-detail-" + Id).hide();
+
+                    });
+                }
+                else {
+                    overlayOff();
+                    $(".tr-detail").hide();
+                    $(".tr-detail-" + Id).show();
+                    $(".div-detail-" + Id).slideDown(function () {
+                    });
+                }
+                return;
+            }
+            else {
+                $(".tr-detail").remove();
+            }
+            $(".loading").show();
+            $.ajax({
+                type: "POST",
+                url: "/TwilioManage/DetailAccount",
+                data: { "Id": Id },
+                success: function (data) {
+                    $(".tr-detail").hide();
+                    $("#tr_" + Id).after(data);
+                    $(".div-detail-" + Id).slideDown();
+                },
+                error: function (xhr, ajaxOptions, thrownError) {
+                    alert('fail');
+                },
+                complete: function () {
+                    $(".loading").hide();
+                    overlayOff();
+                },
+            });
+        }
+
+        $(document).on("click", "table#main-table .open-detail", function (e) {
+            e.preventDefault();
+            if ($(e.target).closest(".on_rows").length == 0) {
+                showDetailPhone($(this).parent("tr").data("id"));
+            }
+        });
+
+
+ 
+
+    </script>
+}

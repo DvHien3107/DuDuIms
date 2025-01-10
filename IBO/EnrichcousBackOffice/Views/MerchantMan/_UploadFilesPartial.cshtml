@@ -1,0 +1,197 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.UploadMoreFile>
+@{
+    long TableId = ViewBag.TableId;
+    string TableName = ViewBag.TableName;
+
+    //HDSD
+    //@Html.Partial("_UploadFilesPartial", new UploadMoreFile(), new ViewDataDictionary { { "TableId", "" }, { "TableName", "" } })
+    
+    //function reload_uploadfile() {
+    //    $.ajax({
+    //        method: "POST",
+    //        url: "/MerchantMan/ReLoadFile",
+    //        data: { "id": "@MerchantId" },
+    //        dataType: "html"
+    //    })
+    //        .done(function (data) {
+    //            $('#UploadFilesPartial').html(data);
+    //        })
+    //        .fail(function () {
+    //        })
+    //        .always(function () {
+    //        });
+    //}
+
+}
+<input type="hidden" id="TableId" value="@TableId" />
+<input type="hidden" id="TableName" value="@TableName" />
+@if (Model != null)
+{
+
+    foreach (var item in Model)
+    {
+        string filename = "";
+        if (item.FileName.Length > 30)
+        {
+            filename = "..." + item.FileName.Substring(item.FileName.Length - 30);
+        }
+        else
+        {
+            filename = item.FileName;
+        }
+
+        var avatar = "";
+        if (item.FileName.LastIndexOf(".pdf") == 0)
+        {
+            avatar = "/upload/img/pdf.png";
+        }
+        else if (item.FileName.LastIndexOf(".doc") == 0 || item.FileName.LastIndexOf(".doc") == 1)
+        {
+            avatar = "/upload/img/word.png";
+        }
+        else if (item.FileName.LastIndexOf(".xls") == 0 || item.FileName.LastIndexOf(".xls") == 1)
+        {
+            avatar = "/upload/img/excel.jpg";
+        }
+        else if (item.FileName.LastIndexOf(".jpeg") == -1 && item.FileName.LastIndexOf(".jpg") == -1 &&
+            item.FileName.LastIndexOf(".png") == -1 && item.FileName.LastIndexOf(".gif") == -1 &&
+            item.FileName.LastIndexOf(".bmp") == -1)
+        {
+            avatar = "/upload/img/no_image.jpg";
+        }
+        if (item.FileName.Contains("http") == false && item.FileName.Contains("www") == false)
+        {
+            <div class="form-group">
+                <div class="col-sm-12">
+                    <div style="padding-left:0px;" class="col-md-12" id="f_@item.UploadId">
+                        <p class="col-md-12" style="border:1px dotted red; padding:3px">
+                            @if (string.IsNullOrEmpty(avatar) == true)
+                            {
+                                <img style="height:100px;margin-left:0" alt="picture" src="@item.FileName" />
+                            }
+                            else
+                            {
+                                <img style="height:100px;margin-left:0" alt="picture" src="@avatar" />
+                            }
+
+                            <i style="padding-left:5px">@filename</i>
+                            <a style="padding-left:10px" href="@Url.Action("downloadfile", "upload", new { id = item.UploadId })" data-toggle="tooltip" class="pull-right" title="Download">
+                                <i class="glyphicon glyphicon-download"></i>
+                            </a>
+                            <a style="padding-left:10px" href="@item.FileName" target="_blank" data-toggle="tooltip" class="pull-right" title="View file">
+                                <i class="glyphicon glyphicon-zoom-in"></i>
+                            </a>
+                            <a style="padding-left:10px" onclick="fdelete('@item.UploadId')" data-toggle="tooltip" class="pull-right" title="Delete file">
+                                <i class="glyphicon glyphicon-trash"></i>
+                            </a>
+                            &nbsp; <img src="~/Content/ajax-loaders/ajax-loader-1.gif" id="floading_@item.UploadId" style="display:none" />
+                        </p>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="form-group">
+                <div class="col-sm-12">
+                    <div style="padding-left:0px;" class="col-md-12" id="f_@item.UploadId">
+                        <p class="col-md-12" style="border:1px dotted red; padding:3px">
+                            <img style="height:100px;margin-left:0" alt="picture" src="@item.FileName" />
+                            <i style="padding-left:10px">@filename</i>
+                            <a href="@item.FileName" target="_blank" data-toggle="tooltip" class="pull-right" title="View file">
+                                <i class="glyphicon glyphicon-zoom-in"></i>
+                            </a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+}
+<div class="form-group" id="loading_upload_file" style="display:none">
+    <div class="col-sm-12">
+        <div style="padding-left:0px;" class="col-md-12">
+            <p class="col-md-12" style="border:1px dotted red; padding:3px; text-align:center">
+                <img style="height:100px;margin-left:0" alt="picture" src="/Content/ajax-loaders/loading-partial.gif" />
+            </p>
+        </div>
+    </div>
+</div>
+
+<div class="col-md-12">
+    <span class="btn btn-success fileinput-button">
+        <i class="glyphicon glyphicon-plus"></i>
+        <span>Add files...</span>
+        <input id="add_attachment"
+               accept=".xlsx, .xls, .csv, .doc, .docx, .docm, .pdf, .txt, .xml, .xps, .jpg, .jpeg, .gif, .png, .eps, .ppsx, .ppt, .pptx, .rar, .zip"
+               type="file" name="files" multiple="">
+    </span>
+    <i style="color: red">(* maximum size 50MB)</i>
+</div>
+
+<script type="text/javascript">
+    $('#add_attachment').on("change", function () {
+        $('#loading_upload_file').show(300);
+        var formdata = new FormData();
+        formdata.append('TableId', $('#TableId').val());
+        formdata.append('TableName', $('#TableName').val());
+        var fileInput = document.getElementById('add_attachment');
+        for (i = 0; i < fileInput.files.length; i++) {
+            formdata.append(fileInput.files[i].name, fileInput.files[i]);
+        }
+        //Creating an XMLHttpRequest and sending
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/Upload/DirectUpload');
+        xhr.send(formdata);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState == 4) {
+                if (xhr.status == 200) {
+                    var data = JSON.parse(xhr.response);
+                    if (data[0]) {
+                        var Success = $.parseJSON('{"text":"' + data[1] + '", "layout":"top", "type":"success"}');
+                        noty(Success);
+                        reload_uploadfile();
+                    }
+                    else {
+                        $('#loading_upload_file').hide();
+                        var Error = $.parseJSON('{"text":"' + data[1] + '", "layout":"top", "type":"error"}');
+                        noty(Error);
+                    }
+                }
+                else if (xhr.status == 413) {
+                    $('#loading_upload_file').hide();
+                    var Error = $.parseJSON('{"text":"Error: File size exceeded maximum length", "layout":"top", "type":"error"}');
+                    noty(Error);
+                }
+                else {
+                    $('#loading_upload_file').hide();
+                    var Error = $.parseJSON('{"text":"' + xhr.statusText + '", "layout":"top", "type":"error"}');
+                    noty(Error);
+                }
+            }
+        }
+        return false;
+    });
+
+</script>
+<style type="text/css">
+    .fileinput-button {
+        position: relative;
+        overflow: hidden;
+        display: inline-block;
+    }
+
+        .fileinput-button input {
+            position: absolute;
+            top: 0;
+            right: 0;
+            margin: 0;
+            opacity: 0;
+            -ms-filter: 'alpha(opacity=0)';
+            font-size: 200px !important;
+            direction: ltr;
+            cursor: pointer;
+        }
+</style>
+
+

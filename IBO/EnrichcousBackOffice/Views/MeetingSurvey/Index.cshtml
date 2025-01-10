@@ -1,0 +1,383 @@
+﻿@{
+    ViewBag.Title = "Metting Survey";
+}
+<style>
+
+    .star:before {
+        content: '★ ';
+        color: #ffc700;
+    }
+</style>
+<link href="~/Content/Admin/bower_components/bootstrap-daterangepicker/daterangepicker.css" rel="stylesheet" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.min.css" rel="stylesheet" />
+<section class="content-header">
+    <h1>
+        Survey
+    </h1>
+    <ol class="breadcrumb">
+        <li>
+            <a href="/home"><i class="fa fa-dashboard"></i> Home</a>
+        </li>
+
+        <li>Survey</li>
+    </ol>
+</section>
+<section class="content">
+    <div class="row">
+
+        @if (TempData["e"] != null)
+        {
+            <div class="alert alert-warning alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+            </div>
+        }
+        else if (TempData["s"] != null)
+        {
+            <div class="alert alert-success alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+            </div>
+        }
+
+        <div class="col-md-12">
+            <div class="box box-primary">
+                <div class="box-header ">
+                    <button onclick="createOrUpdateSurvey('')" class="btn btn-primary pull-right">Add Survey <img id="add-button-loading" style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" /></button>
+                    <div id="filter" style="width:100%; padding:0 20px 20px 0">
+                        <form id="search_form">
+                            <div class="row form-inline filter-group">
+                                <!--</div>-->
+                                <div class="col-md-3 col-sm-6 form-group">
+                                    <div class="input-group" style="width:100%">
+                                        <div class="input-group-addon">
+                                            <i class="fa fa-calendar"></i> Date
+                                        </div>
+
+                                        <input type="text" class="form-control search-input" id="date_search">
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3 col-sm-6 form-group" style="margin-bottom:5px;">
+                                    <div class="input-group" style="width:100%">
+                                        <div class="input-group-addon" style="width:70px;">
+                                            Search By
+                                            <div class="ico-help" title="" data-original-title="Search by name"></div>
+                                        </div>
+                                        <input type="text" class="form-control search-input" placeholder="Survey Name" name="SearchText">
+                                    </div>
+                                    <!-- /.input group -->
+                                </div>
+
+
+
+                                <div class="col-md-2 col-sm-4 form-group">
+                                    <button type="button" class="btn btn-primary btn-flat" id="search_submit" name="search_submit">
+                                        <i class="fa fa-search"></i>
+                                        Search
+                                        <img id="search_loading" src="/Content/ajax-loaders/ajax-loader-1.gif" style="display:none">
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="box-body">
+                    <table id="surveyTable" class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <td class="on_rows">Survey Name</td>
+                                <td class="on_rows">Status</td>
+                                <td class="on_rows">Start Date (UTC -5)</td>
+                                <td class="on_rows">Duration (Minute)</td>
+                                <td class="on_rows">Average Rate</td>
+                                <td></td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+<div id="render-popup-or-update">
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"></script>
+<script src="~/Content/Admin/bower_components/bootstrap-daterangepicker/daterangepicker.js"></script>
+<script>
+    $('#date_search').daterangepicker(
+        {
+            "showDropdowns": true,
+            "minYear": 1950,
+            "maxYear": 2050,
+            "autoApply": true,
+            //"alwaysShowCalendars": true,
+            "ranges": {
+                //'Today': [moment(), moment()],
+                //'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                //'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+                //'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+                'This Month': [moment().startOf('month'), moment().endOf('month')],
+                'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')],
+                'Nearest 3 months': [moment().subtract(3, 'month').startOf('month'), moment()],
+                'This Year': [moment().startOf('year'), moment().endOf('year')],
+                'Last Year': [moment().subtract(1, 'year').startOf('year'), moment().subtract(1, 'year').endOf('year')]
+            },
+            "locale": {
+                "customRangeLabel": "Custom Date",
+                "format": "MMM D, YYYY",
+            },
+            "startDate": moment().subtract(3, 'month').startOf('month'),
+            "endDate": moment(),
+        },
+    )
+    $(".search-input").change(function () {
+        $("#surveyTable").DataTable().ajax.reload();
+
+    })
+    $(document).ready(function () {
+        $("#surveyTable").DataTable({
+            processing: true,
+            serverSide: true,
+            ajax:
+            {
+                url: "/meetingsurvey/ListSurvey",
+                type: "POST",
+                dataType: "json",
+                data: function (data) {
+                    data.FromDate = $("#date_search").data('daterangepicker').startDate.format('YYYY-MM-DD');
+                    data.ToDate = $("#date_search").data('daterangepicker').endDate.format('YYYY-MM-DD');
+                    data.Search = $('[name="SearchText"]').val();
+                    return data;
+                }
+            },
+            info: true,
+            searching: false,
+            paging: true,
+            pagingType: 'simple_numbers',
+            language: {
+                "emptyTable": "No data available in table",
+                "info": "_START_-_END_ of _TOTAL_ items",
+                "infoEmpty": "No records",
+                "infoFiltered": "(filtered from _MAX_ total entries)",
+                "thousands": ",",
+                "lengthMenu": "Show _MENU_ items",
+                "loadingRecords": "Loading...",
+                "processing": '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>',
+                "zeroRecords": "No matching records found",
+                "paginate": {
+                    "first": '<i class="fa fa-angle-double-left" aria-hidden="true"></i>',
+                    "last": '<i class="fa fa-angle-double-right" aria-hidden="true"></i>',
+                    "next": '<i class="fa fa-angle-right" aria-hidden="true"></i>',
+                    "previous": '<i class="fa fa-angle-left" aria-hidden="true"></i>'
+                },
+            },
+            pageLength: 15,
+            lengthChange: false,
+            order: [[0, "desc"]],
+            ordering: true,
+            fnCreatedRow: function (nRow, aData, iDataIndex) {
+                // $(nRow).attr('onclick', `showDetailSurvey('${aData.Id}')`);
+                $(nRow).attr('id', 'tr_' + aData.Id.toString());
+                $(nRow).attr('data-id', aData.Id.toString());
+            },
+            columns: [
+                {
+
+                    name: 'SurveyName',
+                    data: 'SurveyName',
+                    className: "open-detail",
+
+                },
+                {
+
+                    name: 'Status',
+                    data: 'Status',
+                    className: "open-detail",
+                    render: function (data, type, row, meta) {
+                        if (data == 1) {
+                            return `<label class="label label-warning">Comming Soon</label>`;
+                        }
+                        else if (data == 2) {
+                            return `<label class="label label-success">In Progress</label>`;
+                        }
+                        else {
+                            return `<label class="label label-danger">End</label>`;
+                        }
+                    },
+                },
+                {
+
+                    name: 'StartDate',
+                    data: 'StartDate',
+                    className: "open-detail",
+
+                },
+                {
+
+                    name: 'MinuteDuration',
+                    data: 'MinuteDuration',
+                    className: "open-detail",
+                },
+                {
+
+                    name: 'AverageRate',
+                    data: 'AverageRate',
+                    render: function (data, type, row, meta) {
+                        if (data) {
+                            return `${data} <span class="star"></span>`
+                        }
+                        else {
+                            return '';
+                        }
+
+                    },
+                    className: "open-detail",
+                },
+
+                {
+
+                    "name": "Action",
+                    "class": "text-center",
+                    "render": function (data, type, row) {
+                        var activeButtons = '';
+                        activeButtons += `<li class=""><a href="javascript:void(0)" style="margin-right:5px;" onclick="showDetailSurvey('${row['Id']}')"><i class="fa fa-search"></i>Detail</a></li>`;
+                        activeButtons += `<li class=""><a href="javascript:void(0)" style="margin-right:5px;" onclick="createOrUpdateSurvey('${row['Id']}')"><i class="fa fa-pencil"></i>Edit</a></li>`;
+                        if (row['Reopen']) {
+                            activeButtons += `<li class=""><a href="javascript:void(0)" style="margin-right:5px;" onclick="createOrUpdateSurvey(${row['Id']},'true')"><i class="fa fa-refresh"></i>Reopen</a></li>`;
+                        }
+                        // if (row['ShowDelete']) {
+                        activeButtons += `<li class=""><a href="javascript:void(0)" style="margin-right:5px;" onclick="deleteSurvey(${row['Id']})"><i class="fa fa-trash"></i>Delete</a></li>`;
+                        // }
+                        return `<div class="btn-group">
+                                <div class="dots-menu btn-group">
+                                    <div class="dropdown-dot" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></div>
+                                    <ul class="dropdown-menu dropdown-menu-right">
+                                      ${activeButtons}
+                                    </ul>
+                                </div>
+                            </div>`;
+                    },
+                    "orderable": false,
+
+                },
+            ]
+        });
+        $('#search_submit').click(function () {
+            $('#surveyTable').DataTable().ajax.reload();
+            return false;
+        });
+
+    });
+
+    function createOrUpdateSurvey(Id, reopen = false) {
+        if (!Id) {
+            $("#add-button-loading").show();
+        }
+        $.ajax({
+            type: "POST",
+            url: "/MeetingSurvey/GetPopupCreateOrUpdateSurvey",
+            data: { Id, reopen },
+            dataType: "html",
+            //if received a response from the server
+            success: function (data, textStatus, jqXHR) {
+                $("#render-popup-or-update").html(data);
+                $("#survey-modal").modal("show");
+            },
+            //If there was no resonse from the server
+            error: function (jqXHR, textStatus, errorThrown) {
+
+            },
+
+            //capture the request before it was sent to server
+            beforeSend: function (jqXHR, settings) {
+
+            },
+
+            complete: function (jqXHR, textStatus) {
+                $("#add-button-loading").hide();
+            }
+        })
+    }
+
+    function showDetailSurvey(SurveyId, show = true) {
+        overlayOn();
+        if ($(".tr-detail-" + SurveyId).length) {
+            if (show == false) {
+                overlayOff();
+                $(".div-detail-" + SurveyId).slideUp(function () {
+                    $(".tr-detail-" + SurveyId).hide();
+
+                });
+            }
+            else {
+                overlayOff();
+                $(".tr-detail").hide();
+                $(".tr-detail-" + SurveyId).show();
+                $(".div-detail-" + SurveyId).slideDown(function () {
+                });
+            }
+            return;
+        }
+        $(".loading").show();
+        $.ajax({
+            type: "POST",
+            url: "/MeetingSurvey/ListFeedback",
+            data: { "SurveyId": SurveyId },
+            success: function (data) {
+                $(".tr-detail").hide();
+                $("#tr_" + SurveyId).after(data);
+                $(".div-detail-" + SurveyId).slideDown();
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                alert('fail');
+            },
+            complete: function () {
+                $(".loading").hide();
+                overlayOff();
+            },
+        });
+    }
+
+
+    function deleteSurvey(Id) {
+        if (confirm('are you sure delete this survey')) {
+            overlayOn();
+            $.ajax({
+                type: "POST",
+                url: "/MeetingSurvey/DeleteSurvey",
+                data: { "Id": Id },
+                success: function (data) {
+                    if (data.status) {
+                        success(data.message);
+                        $('#surveyTable').DataTable().ajax.reload();
+                    }
+                    else {
+                        success(data.message);
+                    }
+                },
+                error: function (xhr, ajaxOptions, thrownError) {
+                    alert('fail');
+                },
+                complete: function () {
+
+                    overlayOff();
+                },
+            });
+        }
+
+    }
+
+
+    $(document).on("click", "table#surveyTable .open-detail", function (e) {
+        e.preventDefault();
+        if ($(e.target).closest(".on_rows").length == 0) {
+            showDetailSurvey($(this).parent("tr").data("id"));
+        }
+    });
+</script>

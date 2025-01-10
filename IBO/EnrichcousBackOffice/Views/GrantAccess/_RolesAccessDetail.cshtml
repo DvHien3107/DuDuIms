@@ -1,0 +1,103 @@
+﻿@using EnrichcousBackOffice.Models
+
+@{
+    WebDataModel db = new WebDataModel();
+
+    var roleInfo = ViewBag.rolesInfo as A_Role;
+    var Pages = ViewBag.Page as List<A_Page>;
+    var Functions = ViewBag.Functions as List<A_FunctionInPage>;
+
+    var allGrandAccess = db.A_GrandAccess.Where(x=>x.RoleCode == roleInfo.RoleCode).ToList();
+}
+
+<style type="text/css">
+    .fixform {
+        margin: 0 12px 0 12px;
+    }
+</style>
+
+
+
+@using (Html.BeginForm("Save", "GrantAccess", FormMethod.Post, new { @class = "fixform" }))
+{
+    <div class="box box box-primary box-solid col-md-12" style="padding:0px">
+        <div class="box-header with-border">
+            <h4 class="box-title" style="font-weight: normal"> Grant access for: @roleInfo.RoleName</h4>
+        </div>
+        <div class="box-body">
+            <div class="row">
+
+                <input type="hidden" name="hd_role_code" value="@roleInfo.RoleCode" />
+                <input type="hidden" name="hd_role_name" value="@roleInfo.RoleName" />
+                <input type="hidden" name="siteid" value="@ViewBag.SiteId" />
+                @foreach (var item in Pages)
+                {
+                    var FunctionInPage = Functions.Where(x => x.PageCode == item.PageCode).OrderBy(c => c.Order).ToList();
+                    if (FunctionInPage.Count() > 0)
+                    {
+                        List<A_GrandAccess> GrandAccess = new List<A_GrandAccess>();
+                        foreach (var x in allGrandAccess)
+                        {
+                            foreach (var y in FunctionInPage)
+                            {
+                                if (x.FunctionCode == y.FunctionCode)
+                                {
+                                    GrandAccess.Add(x);
+                                }
+                            }
+                        }
+                        var accessExist = GrandAccess.Any(x => x.Access == true && x.RoleCode == roleInfo.RoleCode);
+                        <div class="col-md-4">
+                            <div class="thumbnail" style="background-color:ghostwhite">
+                                <div class="caption">
+                                    <input @if (accessExist == true) { @Html.Raw(@"checked=""checked""") } type="checkbox" value="true"
+                                           name="chk-all-@item.PageCode" id="chk-all-@item.PageCode" onclick="checkAccess('@item.PageCode')" />
+                                    <label for="chk-all-@item.PageCode" style="color:#317eac;font-weight:bold; display:inline-block"> @item.PageName</label>
+
+                                    <div class="well" id="well-@item.PageCode" @if (accessExist == true) { @Html.Raw(@"style=""background-color:lightskyblue""") }>
+                                        @foreach (var itemFunc in FunctionInPage)
+                                        {
+                                            bool access = allGrandAccess.Where(x => x.FunctionCode == itemFunc.FunctionCode).ToList().Any(a => a.Access == true && a.RoleCode == roleInfo.RoleCode);
+                                            <p>
+                                                <input @if (access) { @Html.Raw(@"checked=""checked""") } type="checkbox" value="true" name="chk-func-@itemFunc.FunctionCode" id="chk-func-@itemFunc.FunctionCode" />
+                                                <label for="chk-func-@itemFunc.FunctionCode" style="display:inline-block"> @itemFunc.FunctionName</label>
+                                            </p>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="clearfix"></div>
+    <div>
+        <button type="submit" class="btn btn-primary btn-sm" style="margin-bottom: 20px;">Save Changes</button>
+    </div>
+}
+
+<script type="text/javascript">
+    $(function () {
+        $('.well').matchHeight();
+    });
+    function checkAccess(pagecode) {
+        $("#well-" + pagecode).find("input[type=checkbox]").each(function () {
+            //alert($(this).attr("id"));
+            var checked = $("#chk-all-" + pagecode).prop("checked");
+            $(this).prop("checked", checked);
+            if (checked) {
+                $("#well-" + pagecode).attr("style", "background-color:lightskyblue");
+            }
+            else {
+                $("#well-" + pagecode).removeAttr("style");
+            }
+        });
+    }
+</script>
+
+

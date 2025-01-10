@@ -1,0 +1,177 @@
+﻿@model EnrichcousBackOffice.Models.SurveyMeeting
+@{ 
+    var cMem = EnrichcousBackOffice.AppLB.Authority.GetCurrentMember();
+}
+<style>
+    .rate {
+        float: left;
+        height: 46px;
+        padding: 0;
+        margin-top: -5px;
+    }
+
+        .rate:not(:checked) > input {
+            position: absolute;
+            top: -9999px;
+        }
+
+        .rate:not(:checked) > label {
+            float: right;
+            width: 1em;
+            overflow: hidden;
+            white-space: nowrap;
+            cursor: pointer;
+            font-size: 30px;
+            color: #ccc;
+        }
+
+            .rate:not(:checked) > label:before {
+                content: '★ ';
+            }
+
+        .rate > input:checked ~ label {
+            color: #ffc700;
+        }
+
+        .rate:not(:checked) > label:hover,
+        .rate:not(:checked) > label:hover ~ label {
+            color: #deb217;
+        }
+
+        .rate > input:checked + label:hover,
+        .rate > input:checked + label:hover ~ label,
+        .rate > input:checked ~ label:hover,
+        .rate > input:checked ~ label:hover ~ label,
+        .rate > label:hover ~ input:checked ~ label {
+            color: #c59b08;
+        }
+
+    .title-survey:before {
+        content: '';
+        position: absolute;
+        width: 60px;
+        height: 2px;
+        background: gray;
+        left: 50%;
+        bottom: 4px;
+        transform: translateX(-50%);
+    }
+</style>
+<div class="modal fade" id="surveyModal">
+    <div class="modal-dialog" style="width:640px">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                Survey Feedback
+            </div>
+            <div class="modal-body">
+
+
+                <form class="px-2" method="post" action="/home/sendSurvey" id="surveyform">
+                    <h5 class="text-center title-survey" style="padding-bottom: 15px; font-size: 16px;position: relative"><strong>@Model.SurveyName</strong></h5>
+                    <input type="hidden" name="Action" id="CommandSurvey" />
+                    <input type="hidden" value="@cMem.MemberNumber" name="MemberNumber" />
+                    <input type="hidden" value="@Model.Id" name="MeetingSurveyId" />
+                    @Html.AntiForgeryToken()
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="control-label">Rate :</label>
+                                <div class="clearfix"></div>
+                                <div class="rate">
+                                    <input type="radio" id="Satisfaction5" name="Rate" value="5">
+                                    <label for="Satisfaction5" data-toggle="tooltip" title="5 star">5 star</label>
+                                    <input type="radio" id="Satisfaction4" name="Rate" value="4">
+                                    <label for="Satisfaction4" data-toggle="tooltip" title="4 stars">4 stars</label>
+                                    <input type="radio" id="Satisfaction3" name="Rate" value="3">
+                                    <label for="Satisfaction3" data-toggle="tooltip" title="3 stars">3 stars</label>
+                                    <input type="radio" id="Satisfaction2" name="Rate" value="2">
+                                    <label for="Satisfaction2" data-toggle="tooltip" title="2 stars">2 stars</label>
+                                    <input type="radio" id="Satisfaction1" name="Rate" value="1">
+                                    <label for="Satisfaction1" data-toggle="tooltip" title="1 stars">1 stars</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-12">
+                            <label class="form-label" for="Note">@Model.Question :</label>
+                            <textarea class="form-control" name="Note" rows="4"></textarea>
+
+                        </div>
+                    </div>
+
+                    <div class="modal-footer" style="padding: 15px 0px">
+                        @*<button type="submit" id="skipSurvey" data-command="skip" class="btn btn-danger pull-left survey-button">Skip</button>*@
+                        <button type="submit" id="submitSurvey" data-command="send" class="btn btn-primary survey-button"><i class="fa fa-paper-plane-o" aria-hidden="true"></i> Send</button>
+
+                    </div>
+
+                </form>
+            </div>
+
+        </div>
+
+
+    </div>
+</div>
+
+<div class="modal fade" id="surveythanks">
+    <div class="modal-dialog">
+       
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" style="font-size:2em" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <span>Thank You</span>
+             
+            </div>
+            <div class="modal-body">
+
+                <p>Thank you for survey !</p>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-cancel" data-dismiss="modal" aria-label="Close">Close</button>
+            </div>
+        </div>
+
+
+    </div>
+</div>
+
+<script>
+    $('[data-toggle="tooltip"]').tooltip();
+    $(".survey-button").click(function () {
+        $("#CommandSurvey").val($(this).attr('data-command'));
+    })
+    // this is the id of the form
+    $("#surveyform").submit(function (e) {
+        e.preventDefault();
+        overlayOn();
+        var form = $('#surveyform');
+        var actionUrl = form.attr('action');
+        $.ajax({
+            type: "POST",
+            url: actionUrl,
+            data: form.serialize(), // serializes the form's elements.
+            success: function (data) {
+                if (data.status)
+                {
+                    $("#surveyModal").modal('hide');
+                    if ($("#CommandSurvey").val() != 'skip') {
+                        $("#surveythanks").modal('show');
+                    }
+           
+                }
+            },
+            complete: function () {
+                overlayOff();
+            }
+        });
+
+    });
+
+
+</script>

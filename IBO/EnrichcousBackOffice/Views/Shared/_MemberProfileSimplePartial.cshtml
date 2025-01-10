@@ -1,0 +1,118 @@
+﻿@model EnrichcousBackOffice.Models.P_Member
+
+@{
+    string BelongToPartners = ViewBag.BelongToPartners as string;
+}
+
+@*@if (Model == null)
+    {
+        <div class="alert alert-warning alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <span><i class="icon fa fa-warning"></i>Member not found!</span>
+        </div>
+        return;
+    }*@
+<div style="text-align: center; margin-bottom: 20px">
+    @if (string.IsNullOrEmpty(Model.Picture))
+    {
+        <img src="/Upload/Img/@(Model.Gender ?? "Male").png" class="img-circle" alt="No image" width="100" height="100">
+    }
+    else
+    {
+        <img src="@Model.Picture" class="img-circle" alt="@Model.FullName" width="100" height="100">
+    }
+</div>
+<div class="form-group row">
+    <label class="col-sm-4 col-form-label">#</label>
+    <div class="col-sm-6" style="color:orangered;font-weight:bold">
+        @Model.MemberNumber
+    </div>
+</div>
+<div class="form-group row">
+    <label class="col-sm-4 col-form-label">Full name</label>
+    <div class="col-sm-6">
+        @Model.FullName
+    </div>
+</div>
+<div class="form-group row">
+    <label class="col-sm-4 col-form-label">Personal email</label>
+    <div class="col-sm-6">
+        @Model.PersonalEmail
+    </div>
+</div>
+<div class="form-group row">
+    <label class="col-sm-4 col-form-label">Phone</label>
+    <div class="col-sm-6">
+        @Model.CellPhone
+    </div>
+</div>
+<div class="form-group row">
+    <label class="col-sm-4 col-form-label">Address</label>
+    <div class="col-sm-6">
+        @Model.Address @Model.City @Model.State @Model.ZipCode @Model.Country
+    </div>
+</div>
+<div class="form-group row">
+    <label class="col-sm-4 col-form-label">Profile Defined Color</label>
+    <div class="col-sm-6">
+        <input type="color" value="@(string.IsNullOrEmpty(Model.ProfileDefinedColor) ? "#ffffff" : Model.ProfileDefinedColor)" disabled />
+    </div>
+</div>
+<div class="form-group row">
+    <label class="col-sm-4 col-form-label">Role</label>
+    <div class="col-sm-6">
+        @(Model.RoleName?.Replace(" ", "").Replace(",", ", "))
+    </div>
+</div>
+<div class="form-group row">
+    <label class="col-sm-4 col-form-label">Department</label>
+    <div class="col-sm-6">
+        @Model.DepartmentName
+    </div>
+</div>
+<div class="form-group row">
+    <label class="col-sm-4 col-form-label">Belong to partner</label>
+    <div class="col-sm-6">
+        @Html.Raw(BelongToPartners.Replace(", ", "<br/>"))
+    </div>
+</div>
+<div class="form-group row">
+    <label class="col-sm-4 col-form-label">Member type</label>
+    <div class="col-sm-6">
+        @Model.MemberTypeName
+    </div>
+</div>
+<div class="form-group row">
+    <label class="col-sm-4 col-form-label">Referal by</label>
+    <div class="col-sm-6">
+        @Model.ReferedByName
+    </div>
+</div>
+<div class="form-group row">
+    <label class="col-sm-4 col-form-label">Join date</label>
+    <div class="col-sm-6">
+        <span id="localtime-@Model.Id">
+            <script>convertLocalTime("@Model.Id", "@Model.JoinDate", "MMMddyyyy")</script>
+        </span>
+    </div>
+</div>
+<div class="form-group row">
+    <label class="col-sm-4 col-form-label">Status</label>
+    <div class="col-sm-6">
+        @if (Model.Active == true)
+        {
+            <label class="label label-success">Active</label>
+        }
+        else
+        {
+            <label class="label label-default">Deactive</label>
+        }
+    </div>
+</div>
+
+<style>
+    img {
+        box-shadow: rgba(0, 0, 0, 0.16) 0px 10px 36px 0px, rgba(0, 0, 0, 0.06) 0px 0px 0px 1px;
+        padding: 2px
+    }
+</style>

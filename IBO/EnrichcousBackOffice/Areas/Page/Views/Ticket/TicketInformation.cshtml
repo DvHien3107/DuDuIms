@@ -1,0 +1,628 @@
+﻿@model EnrichcousBackOffice.Models.T_SupportTicket
+@using EnrichcousBackOffice.Models
+
+@{
+    Layout = "~/Areas/Page/Views/Shared/_TicketLayout.cshtml";
+    ViewBag.Title = "Create Ticket | IMS System";
+    var Page = ViewBag.Page as string;
+    string PageDeployment = "DeploymentTicket";
+    string PageSupportTicket = "SupportTicket";
+    string PageDevelopmentsTicket = "DevelopmentsTicket";
+    T_Project_Stage stage = ViewBag.stage ?? new T_Project_Stage();
+}
+
+
+@Html.Action("TicketProgress", new { step = EnrichcousBackOffice.Areas.Page.Models.Customize.Ticket.TicketProgressStep.TicketInformation })
+<div class="page-body">
+
+
+    <section class="content">
+        @*<form role="form" action="/ticket/saveticket" method="post" enctype="multipart/form-data" class="form-horizontal">*@
+
+        @using (Ajax.BeginForm("SaveTicketInformation", "Ticket", null,
+        new AjaxOptions
+        {
+            HttpMethod = "POST",
+            OnBegin = "OnBegin",
+            OnSuccess = "updateTicketSuccess",
+            Url = "/quick-ticket/SaveTicketInformation/"
+
+        }, new { enctype = "multipart/form-data", @class = "", @id = "form0" }))
+        {
+            <input type="hidden" name="hdTicketId" value="@Model.Id" />
+
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="box  box-custom">
+                        <div class="box-header with-border">
+                            <h3 class="box-title">Ticket content</h3>
+                        </div>
+
+                        <div class="box-body">
+
+                            <div class="form-group">
+                                <label>Ticket Name: <span style="color:red">*</span></label>
+                                <input type="text" name="name" class="form-control" required value="@Model.Name" />
+                            </div>
+
+                            <div class="form-group">
+                                <label>Description:</label>
+                                <textarea name="comment" id="comment">@Html.Raw(Model.Description)</textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Attachment:</label>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-sm-10">
+                                    @Html.Partial("~/Views/Shared/_UploadMoreFilesPartial.cshtml", new List<UploadMoreFile>(), new ViewDataDictionary() { { "upload", true } })
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+
+                    @Html.Partial("_TicketInfoPartial", Model)
+
+                </div>
+            </div>
+
+
+            <div class="box">
+                <div class="box-body">
+                    <a href="/quick-ticket/selecttype" class="btn btn-previous btn-custom">Previous</a>
+                    <button type="submit" class="btn btn-next btn-custom">Next</button>
+                </div>
+            </div>
+
+
+        }
+        @*</form>*@
+    </section>
+
+
+</div>
+
+
+@section scripts{
+
+    <!--Thu vien de chay _TagsPopupPartial-->
+    <script src="~/Content/Admin/plugins/iCheck/icheck.min.js"></script>
+    <script src="/Content/Admin/bower_components/moment/moment.js"></script>
+    <script src="~/Content/Admin/bower_components/bootstrap-colorpicker/dist/js/bootstrap-colorpicker.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"></script>
+    <script src="~/Scripts/noty-cfg.js"></script>
+    <script src="~/Content/Admin/bower_components/ckeditor2/ckeditor.js"></script>
+    <script src="/content/admin/bower_components/select2/dist/js/select2.full.min.js"></script>
+    <!--Ajaxform-->
+    <script src="/Scripts/jquery.form.min.js"></script>
+
+    <!--Asp ajax form & task-->
+    <script src="/Scripts/jquery.unobtrusive-ajax.min.js"></script>
+    <script type="text/javascript">
+        $("#estimate-complete-time-from").datetimepicker({
+            sideBySide: true
+        });
+        $("#estimate-complete-time-to").datetimepicker({
+            sideBySide: true
+        });
+
+        $("#GMT_display").html("(" + moment().format("Z") + ")")
+        $("#GMT").val(moment().format("Z"));
+        //if (currentEstimatedCompletionTimeFrom != '') {
+        //    $("#estimate-complete-time-from").val(moment.utc(currentEstimatedCompletionTimeFrom).local().format("MM/DD/YYYY HH:mm A")).trigger('change');
+        //}
+        //if (currentEstimatedCompletionTimeTo != '') {
+        //    $("#estimate-complete-time-to").val(moment.utc(currentEstimatedCompletionTimeTo).local().format("MM/DD/YYYY HH:mm A")).trigger('change');
+        //}
+        //$("#estimate-complete-time-from").val(moment().format("MM/DD/YYYY HH:mm A")).trigger('change');
+        //$("#estimate-complete-time-to").val(moment().add('days', 1).format("MM/DD/YYYY HH:mm A")).trigger('change');
+        $("#estimate-complete-time-from").on('dp.change', function () {
+            $("#estimate-complete-time-to").val(moment.utc($("#estimate-complete-time-from").val()).add('days', 1).format("MM/DD/YYYY HH:mm A"));
+            addValidateEstimateCompletionTime();
+        })
+        $("#estimate-complete-time-to").on('dp.change', function () {
+            addValidateEstimateCompletionTime();
+        })
+        addValidateEstimateCompletionTime();
+        function addValidateEstimateCompletionTime() {
+            if ($("#estimate-complete-time-from").val() != '' || $("#estimate-complete-time-to").val() != '') {
+                $("#estimate-complete-time-from").attr("required", "required");
+                $("#estimate-complete-time-to").attr("required", "required");
+            }
+            else {
+
+                $("#estimate-complete-time-from").removeAttr("required", "required");
+                $("#estimate-complete-time-to").removeAttr("required", "required");
+            }
+        }
+        function overlayOn() {
+            $("div#wait_overlay").show().css("opacity", 0.3);
+            $("div#wait_overlay_loading").show();
+        }
+        function overlayOff() {
+            $("div#wait_overlay").hide().css("opacity", 0);
+            $("div#wait_overlay_loading").hide();
+        }
+        $("#form0").validate();
+        $(function () {
+
+
+            $(".datepicker").datepicker({
+                dateFormat: "mm/dd/yy",
+                changeMonth: true,
+                changeYear: true,
+                yearRange: '-10:+10'
+            });
+        })
+
+
+
+        function OnBegin() {
+            //console.log("ticket:onbegin sumit");
+            // noti mentions
+
+            event.preventDefault();
+            $("#btTicketSubmit").attr("disabled", true);
+            $("#btTicketSubmit").html("Saving...");
+            overlayOn();
+        }
+
+        /**
+         * sau khi create/update ticket thanh cong
+         * */
+        function updateTicketSuccess(result) {
+            //     console.log("ticket:submit alway");
+            overlayOff();
+            //alert(result[0]);
+
+            if (result[0] == false) {
+                //alert("failure");
+                var optionsErr = $.parseJSON('{"text":"Opp !save failure.' + result[1] + '","layout":"topRight","type":"warning"}');
+                noty(optionsErr);
+
+                $("#btTicketSubmit").removeAttr("disabled");
+
+                return;
+            }
+            else {
+                window.location.href = "/quick-ticket/Complete";
+            }
+        }
+
+    </script>
+
+    <script>
+        function convertLocalTime(id, datetime, format, fff) {
+            document.getElementById('localtime-' + id).innerHTML = convert_local_time(datetime, format, fff);
+        }
+        function convert_local_time(datetime, format, fff) {
+            var result = "";
+            if (datetime == null || datetime.toString().trim() == "")
+                return result;
+            var localTime = new Date(datetime + "Z");
+            if (localTime == "Invalid Date") {
+                datetime = datetime.toString().replace(/-/g, " ");
+                var localTime = new Date(datetime + " GMT");
+                if (localTime == "Invalid Date") {
+                    //alert(datetime + " is Invalid");
+                    return '';
+                }
+            }
+            //localTime = new Date(Date.UTC(localTime.getFullYear(), localTime.getMonth(), localTime.getDate(), localTime.getHours(), localTime.getMinutes(), localTime.getSeconds()));
+            if (datetime.length != 0) {
+                let options = null;
+                let locales = null;
+                switch (format) {
+                    case "yyyy-mm-dd":
+                        locales = 'en-CA';
+                        options = { year: "numeric", month: "2-digit", day: "2-digit" };
+                        break;
+                    case "MMMddyyyy":
+                        locales = 'en-US';
+                        options = { dateStyle: 'medium' };
+                        break;
+                    case "logs":
+                        locales = 'en-CA';
+                        options = { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false };
+                        break;
+                    default:
+                        locales = 'en-US';
+                        //firefox: khong the set hour khi đã set dateStyle, minute cũng tương tự
+                        options = { dateStyle: 'medium', timeStyle: 'short'/*, hour: "2-digit"*//*, minute: "2-digit"*/ };
+                }
+
+
+                localTime = localTime.toLocaleString(locales, options);
+                result = (localTime != "Invalid Date") ? localTime + (fff ? "." + fff.padStart(3, '0') : "") : "";
+            }
+            //console.log(result);
+            return result;
+
+        }
+    </script>
+
+
+    <script type="text/javascript">
+    $(function () {
+        $("#merchant").select2();
+        $('.select2[multiple]').select2({
+            //closeOnSelect: false
+        });
+        //xac dinh "new salon form" duoc goi tu dau.
+        //=> xac dinh ham duoc goi sau khi submit thanh cong.
+        $("#newsalon_form").val("ticket");
+        $('[data-toggle="tooltip"]').tooltip();
+
+        $("#stage_status form").on("submit", function () { overlayOn(); })
+        $("#stage_status form").ajaxForm(function (data) {
+            if (data[0]) {
+                success(data[1]);
+                var e = $("#status option[value=" + data[2].Id + "]");
+                if (e.length == 0) {
+                    //let opt = new Option(data[2].Name, data[2].Id, false, true).attr("data-stg_ver", data[2].StageId + "|" + data[2].ProjectVersionId);
+                    $("#status").append($('<option />')
+                        .val(data[2].Id)
+                        .text(data[2].Name)
+                        .attr({ "data-stg_ver": data[2].StageId + "|" + data[2].ProjectVersionId, "selected": true }));
+
+                } else {
+                    e.html(data[2].Name);
+                }
+                $("#status option[value=" + data[2].Id + "]").data("order", data[2].Order);
+                $("#stage_status").modal("hide");
+            } else {
+                error(data[1]);
+            }
+            overlayOff();
+        })
+
+        // mentions
+        var usersMentions = [];
+
+        $(function () {
+
+            CKEDITOR.replace('comment', {
+                extraPlugins: 'mentions',
+                mentions: [
+                    {
+                        feed: dataFeed,
+                        itemTemplate: '<li data-id="{MemberNumber}">' +
+                            '<img class="photo" src="{Avatar}" />' +
+                            '<strong class="username">#{MemberNumber}</strong>' +
+                            '<span class="fullname">{FullName}</span>' +
+                            '</li>',
+                        outputTemplate: '<a href="#Mentions_{MemberNumber}">@('@'){FullName}</a><span>&nbsp;</span>',
+                        minChars: 0
+                    },
+
+                ],
+
+
+            });
+
+            function dataFeed(opts, callback) {
+                var matchProperty = 'FullName',
+                    data = usersMentions.filter(function (item) {
+                        return item[matchProperty].toLowerCase().includes(opts.query.toLowerCase());
+                    });
+
+                data = data.sort(function (a, b) {
+                    return a[matchProperty].localeCompare(b[matchProperty], undefined, { sensitivity: 'accent' });
+                });
+                callback(data);
+            }
+        })
+
+        $("#department").on("change", function () {
+            $("#stages").trigger("change");
+        })
+        $("#Other_Department").on("change", function () {
+            $("#stages").trigger("change");
+        })
+   
+        function formatMember(member) {
+            if (!member.id) {
+                return member.text;
+            }
+            var avatar = $(member.element).attr("avatar");
+            if (member.id !== 'all') {
+                var $member = $(
+                    '<span><img class="avatar-select-2" src="' + avatar + '" class="img-flag" /> ' + member.text + '</span>'
+                );
+                return $member;
+            }
+            else {
+                return member.text;
+            }
+        };
+
+        $("#tag_member").select2({
+            templateResult: formatMember
+        })
+
+       
+        $("#Project_select").on("change", function () {
+            loadTicketType();
+            loadTicketStatus();
+            $('#stages').val("");
+            var show_ops = $("#project_versions option[data-prj=" + $(this).val() + "]").removeAttr("hidden").removeAttr("disabled");
+            $("#project_versions option").not(show_ops).attr("hidden", true).attr("disabled", true);
+            $('#project_versions').val($("#project_versions option:not([disabled]):first").attr("value")).trigger("change");
+
+            //show_ops = $("#stages option[data-prj=" + $(this).val() + "]").each(function () {
+            //    if ($(this).attr("data-ver").split(',').includes($('#project_versions').val())) {
+            //        $(this).removeAttr("hidden").removeAttr("disabled").removeClass("optInvisible");
+            //        return this;
+            //    }
+            //});
+            //$("#stages option").not(show_ops).attr("hidden", true).attr("disabled", true).addClass("optInvisible");
+
+            $("#undo_project_btn").show();
+            //$('#stages').attr("required", true);
+            //versions_load();
+            //$('#stages').val($("#stages option:not([disabled]):first").attr("value")).trigger("change");
+
+        });
+        $('#project_versions').on("change", function () {
+            versions_load()
+        });
+
+      
+
+
+
+
+    });
+
+        function versions_load() {
+            var el = $('#project_versions');
+           
+            $.ajax({
+                method: "POST",
+                url: "/Ticket_New/LoadSubVersion",
+                data: { 'VersionId': el.val() },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    $("#available_versions,#fixed_versions").html('');
+                    $.each(data, function (i, item) {
+                        $("#available_versions,#fixed_versions").append($('<option>', {
+                            value: item.Id,
+                            text: item.Name,
+                        }));
+                    });
+                    $("#available_versions,#fixed_versions").trigger('change.select2');
+
+                })
+                .fail(function () {
+
+                })
+                .always(function () {
+
+                });
+        }
+    function resultState(data, container) {
+        if (data.element) {
+            $(container).addClass($(data.element).attr("class"));
+        }
+        return data.text;
+    }
+
+    function update_merchant(_id, _update, code) {
+        $("#loading_merchant").show();
+        if (_id || code) {
+            //    alert(_id + "|" + _update);
+            $.ajax({
+                method: "POST",
+                url: "/merchantman/GetMerchantInfo",
+                data: { id: _id, update: _update, cuscode: code },
+                dataType: "html"
+            })
+                .done(function (data) {
+                    $("#merchant_popup").html(data);
+                    $("#modal-merchant").modal('show');
+                })
+                .fail(function () {
+                    $("#modal-merchant").modal('hide');
+                })
+                .always(function () {
+                    $("#loading_merchant").hide();
+                });
+        } else {
+            warning("Select a merchant to view!");
+        }
+    }
+    function change_assigned_share(el, e) {
+        if ($(el).val().length > 0) {
+            var selected = $(el).val().filter(item => item !== "auto");
+            if (e.params.data.id=="") {
+                $(el).val("");
+            } else {
+                $(el).val(selected.filter(item => item !== ""));
+            }
+        } else {
+            $(el).val("auto");
+        }
+        $(el).trigger('change.select2');
+    }
+
+
+
+
+
+    function loadTicketStatus() {
+        $("#loading_status").show();
+        var StatusSelectedId = "@Model.StatusId";
+        $.ajax({
+            method: "POST",
+            url: "/Ticket_New/LoadTicketStatus",
+            data: {
+                projectId: $("#Project_select").val(),
+            },
+            dataType: "json"
+        })
+            .done(function (data) {
+                $('select[name="StatusId"]').empty();
+                $.each(data, function (i, item) {
+                    $('select[name="StatusId"]').append($('<option>', {
+                        value: item.Id,
+                        text: item.Name
+                    }));
+                });
+                if (StatusSelectedId !== "" && $('select[name="type"] option[value=' + StatusSelectedId + ']').length) {
+                    $('select[name="StatusId"]').val(StatusSelectedId);
+                }
+
+            })
+            .fail(function () {
+                alert("Oops! load type failure");
+            })
+            .always(function () {
+                $("#loading_status").hide();
+            });
+    }
+
+    function loadTicketType() {
+        $('#loading_type').show();
+        var typeSelectedId = "@Model.TypeId";
+        $.ajax({
+            method: "POST",
+            url: "/Ticket_New/LoadTicketType",
+            data: {
+                projectId: $("#Project_select").val(),
+            },
+            dataType: "json"
+        })
+            .done(function (data) {
+                $('select[name="type"]').empty();
+                $.each(data, function (i, item) {
+                    $('select[name="type"]').append($('<option>', {
+                        value: item.Value,
+                        text: item.Text
+                    }));
+                });
+                if (typeSelectedId!==""&&$('select[name="type"] option[value=' + typeSelectedId + ']').length) {
+                    $('select[name="type"]').val(typeSelectedId);
+                }
+
+            })
+            .fail(function () {
+                alert("Oops! load type failure");
+            })
+            .always(function () {
+                $("#loading_type").hide();
+            });
+    }
+    let firstLoad = true;
+    $('#merchant').on("select2:open", function (e) {
+        if (firstLoad) {
+            load_merchants();
+        }
+    });
+    function load_merchants() {
+        $('#loading_merchant').show();
+
+        $.ajax({
+            type: 'Get',
+            url: '/quick-ticket/GetMerchant',
+
+            success: function (response) {
+                        let listMerchant = response;
+                        if ($('#merchant').val() != '' && $('#merchant').val() != null) {
+                    listMerchant = response.filter(item => item.CustomerCode != $('#merchant').val());
+                }
+                $.each(listMerchant, function (i, item) {
+                    //$('#merchant').append($('<option>', {
+                    //    partner: item.PartnerCode,
+                    //    value: item.CustomerCode,
+                    //    text: item.BusinessName + ' - ' + (item.BusinessAddressStreet || "") + ', ' + (item.BusinessCity || "") + ', ' + (item.BusinessState || "") + (item.BusinessZipCode || "") + ', ' + (item.BusinessCountry || "")
+                    //}))
+
+                    $('#merchant').append(`<option data-partner="${(item.PartnerCode ||"Simply")}" value="${item.CustomerCode}">${item.BusinessName + ' - ' + (item.BusinessAddressStreet || "") + ', ' + (item.BusinessCity || "") + ', ' + (item.BusinessState || "") + (item.BusinessZipCode || "") + ', ' + (item.BusinessCountry || "")}</option>`)
+                })
+                firstLoad = false;
+                $('#merchant').select2().select2('open');
+                $('#loading_merchant').hide();
+            },
+            error: function () {
+                alert("Oops! Something went wrong. Merchants loading failure");
+                $('#loading_merchant').hide();
+            }
+        });
+    }
+    $('#merchant').on("change", function (e) {
+        let Page = $("#Page").val();
+        if (Page == '@PageDeployment' || Page == '@PageSupportTicket') {
+            let CustomerCodeSelected = $("#merchant").val();
+            if (CustomerCodeSelected !== '') {
+                let PartnerCode = $("option[value='" + CustomerCodeSelected + "']", '#merchant').attr("data-partner");
+
+                let DepartmentSpecific = $("option[data-partner='" + PartnerCode + "']", '#department');
+                if (DepartmentSpecific.length) {
+                    $("#department").val(DepartmentSpecific.attr('value')).trigger("change");
+                }
+                else {
+                    let DepartmentAll = $("option[data-partner='All']", '#department');
+                    if (DepartmentAll.length) {
+                        $("#department").val(DepartmentAll.attr('value')).trigger("change");
+                    }
+                    else {
+                        $("#department").val("").trigger("change");
+                    }
+                }
+
+
+            }
+        }
+    });
+
+    </script>
+
+    <script>
+        $(document).ready(function () {
+            initLabelSelect2();
+        });
+        function initLabelSelect2() {
+            $('#form-label').select2(
+                {
+                    templateResult: formatState,
+                    templateSelection: function (data, colorLabel) {
+                        var color = $(data.element).attr("data-color");
+                        $(colorLabel).attr('style', 'background-color: ' + color + ' !important');
+                        return data.text;
+                    },
+                }
+            );
+        }
+        function formatState(state) {
+            if (!state.id) { return state.text; }
+            var color = $(state.element).attr("data-color");
+            let $state = $(
+                '<span style="display:flex; "> <div class="color-label" style="background:' + color + '" ></div> ' + state.text + '</span>'
+            );
+            return $state;
+        }
+        $("#priority").change(function () {
+            var priority = $(this).val();
+            if (priority != '') {
+                var deadlineofdays = $("#priority option[value=" + priority + "]").attr("data-deadlineofdays");
+                if (deadlineofdays != '') {
+                    $('#Deadline').val(moment().add(parseInt(deadlineofdays), 'days').format("YYYY-MM-DD"))
+                }
+                else {
+                    $('#Deadline').val('')
+                }
+            }
+            else {
+                $('#Deadline').val('')
+            }
+            noty({ "text": "Deadline has been changed", "layout": "topRight", "type": "success" });
+        })
+    </script>
+}
+

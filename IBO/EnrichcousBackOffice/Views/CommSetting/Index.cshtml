@@ -1,0 +1,131 @@
+﻿
+<section class="content-header">
+    <h1>
+        Commission & Bonus Setting
+        <small>Commission setting for MLM & Bonus Awards</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Dashboard</a></li>
+        <li class="active">Commission & Bonus setting</li>
+    </ol>
+</section>
+
+
+
+<section class="content">
+    <div class="row">
+        @if (TempData["e"] != null)
+        {
+            <div class="alert alert-warning alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+            </div>
+        }
+        else if (TempData["s"] != null)
+        {
+            <div class="alert alert-success alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+            </div>
+        }
+        <div class="col-md-12">
+            <div class="nav-tabs-custom">
+                <ul class="nav nav-tabs">
+                    <li @if (Request["t"] != "b"&&Request["t"] != "commmlm") { @Html.Raw(@"class=""active""") }><a href="#commemp" data-toggle="tab">Commission setting for Employee</a></li>
+                    <li @if (Request["t"] == "commmlm") { @Html.Raw(@"class=""active""") }><a href="#commmlm" data-toggle="tab">Commission setting for MLM</a></li>
+                    <li @if (Request["t"] == "b") { @Html.Raw(@"class=""active""") }><a href="#bonus" data-toggle="tab">Bonus Awards for Members</a></li>
+                </ul>
+                <div class="tab-content">
+                    <div class="@if(Request["t"] != "b"&&Request["t"] != "commmlm"){@Html.Raw(@"active")} tab-pane" id="commemp">
+                        @Html.Partial("_CommEmployeePartial")
+                    </div>
+                    <div class="@if(Request["t"] == "commmlm" ){@Html.Raw(@"active")} tab-pane" id="commmlm">
+                        @Html.Partial("_CommLevelPartial")
+                    </div>
+                    <div class="@if(Request["t"] == "b" ){@Html.Raw(@"active")} tab-pane" id="bonus">
+                        @Html.Partial("_BonusAwardPartial")
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+
+@section style{
+    <!--icheck-->
+    <link rel="stylesheet" href="/content/admin/plugins/iCheck/all.css" />
+    <!-- datepicker jquery -->
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+}
+
+@section script
+{
+    <!--icheck-->
+    <script src="/content/admin/plugins/iCheck/icheck.min.js"></script>
+
+
+    <script type="text/javascript">
+        $('input[type="checkbox"].flat-red, input[type="radio"].flat-red').iCheck({
+            checkboxClass: 'icheckbox_flat-blue',
+            radioClass: 'iradio_flat-blue'
+        })
+
+        //datepicker
+        $('.datepicker').datepicker({
+            changeMonth: true,
+            changeYear: true,
+            yearRange: '-10:+50'
+        });
+
+
+        /**
+         * thay doi effective date
+         * */
+        function ChangeEffectiveDate() {
+            // alert("change");
+
+            var selectedDate = $("#effectiveDateSelect").val();
+            if (selectedDate == "new") {
+                //them moi effective date
+                $("#Opt_EffectiveDate").val();
+                $("#Opt_EffectiveDate").show(300);
+                $("#tbodycomm").find("input").each(function () {
+                    $(this).val(0);
+                });
+
+
+            }
+            else if (selectedDate == "NULL") {
+                $("#Opt_EffectiveDate").val();
+                $("#Opt_EffectiveDate").hide(300);
+            }
+            else {
+                $("#Opt_EffectiveDate").hide(300);
+
+                //alert(selectedDate);
+                //load lai thong tin
+                $.ajax({
+                    url: "/commsetting/changeeffectivedate/",
+                    data: {
+                        'effDate': selectedDate
+                    },
+                    dataType: "html",
+                    type: "POST"
+                }).done(function (data) {
+                    $("#comm").html(data);
+                })
+                    .fail(function (jqXHR, code, status) {
+                        alert("Oops! Something went wrong. Please try again later.");
+                    });
+            }
+
+        }
+
+
+    </script>
+
+
+}
+

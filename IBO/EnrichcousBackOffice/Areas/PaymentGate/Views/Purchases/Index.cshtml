@@ -1,0 +1,345 @@
+﻿@using EnrichcousBackOffice.Areas.PaymentGate.ModelsView.DTO
+@using EnrichcousBackOffice.Models
+@{
+    List<License_Product> addons = ViewBag.Addons ?? new List<License_Product>();
+    List<O_Product_Model> devices = ViewBag.Devices ?? new List<O_Product_Model>();
+    var authFlag = ViewBag.Auth ?? false;
+    InvoiceRequest history = ViewBag.History ?? new InvoiceRequest();
+    List<InvoiceRequestDetail> historyDetail = history.Invoices ?? new List<InvoiceRequestDetail>();
+    var lastOrder = ViewBag.LastOrder;
+    var isAgent = string.IsNullOrEmpty(ViewBag.AgentKey ?? "") == false;
+}
+
+@section content_page_style {
+    <link rel="stylesheet" href="~/Areas/PaymentGate/Content/page/purchases.css" />
+    <style type="text/css">
+        .btn:focus {
+            box-shadow: none;
+        }
+
+        .selected-action-btn {
+            background-color: #fff;
+            border-color: #ccc;
+            width: 61px;
+            transition: width .1s;
+        }
+
+            .selected-action-btn:hover {
+                color: #fff;
+                background-color: #28a745;
+                border-color: #28a745;
+            }
+
+            .selected-action-btn.selected {
+                color: #fff;
+                background-color: #28a745;
+                border-color: #28a745;
+                width: 45px;
+            }
+
+                .selected-action-btn.selected:hover {
+                    color: #fff;
+                    background-color: #bd2130;
+                    border-color: #b21f2d;
+                    width: 80px;
+                    overflow-y: hidden;
+                }
+    </style>
+}
+
+@section content_page_script{
+    <script src="~/Scripts/jquery.form.min.js"></script>
+    <script>
+    function login() {
+        $("#addon_confirm").modal("hide");
+        $("#login").modal("show");
+    }
+    $(document).ready(() => {
+        $(".selected-action").on("change", (event)=>{
+            const parent = $(event.target).parents("tr");
+            const rowKey = parent.data("row-key");
+            const checked = $(event.target).is(":checked");
+            if (checked === false) {
+                $("table.selected-items tbody tr").filterByData('row-key', rowKey).remove();
+                calculatorGrandTotal();
+                return;
+            }
+            const name = parent.find(".item-name").text();
+            const price = parent.data("price");
+            const type = $(event.target).data("type");
+
+            let item = $($("#select-item-template").html());
+            item.find(".item-name").text(name);
+            item.data("row-key", rowKey);
+            item.data("price", price);
+            item.data("subtotal", price);
+            item.data("type", type);
+            item.find("input[name='Type']").val(type)
+            item.find("input[name='Code']").val(rowKey)
+            item.find("input[name='Price']").val(price)
+            item.find("input[name='SubTotal']").val(price)
+            item.find(".select-quantity.value").on("change", ()=>{
+                calculatorGrandTotal();
+            });
+            increaseQuantity(item);
+            decreaseQuantity(item);
+            removeHandle(item);
+            $("table.selected-items tbody").append(item);
+            calculatorGrandTotal();
+        });
+        $(".selected-action-btn").on("click", function () {
+            var cb = $(this).closest(".item").find(".selected-action").trigger("click");
+            if (cb.is(":checked")) {
+                $(this).html('<i class=\'fa fa-check\' style=\'margin-top: -3px; font-size: 1.3em\'></i>').css("width","45px");
+                $(this).hover(function () {
+                    $(this).html("Unselect");
+                }, function () {
+                        $(this).html('<i class=\'fa fa-check\' style=\'margin-top: -3px; font-size: 1.3em\'></i>').css("width","").addClass("selected");
+                })
+            } else {
+                $(this).html('Select').removeClass("selected").css("width", "");
+                $(this).unbind('mouseenter mouseleave');
+            }
+
+        })
+        function addItem() {
+
+        }
+        function increaseQuantity(target){
+            $(target).find(".select-quantity.plus").on("click", ()=>{
+                let val = parseInt($(target).find(".select-quantity.value").val(), 10) + 1;
+                $(target).find(".select-quantity.value").val(val).trigger("change");
+            });
+        }
+        function decreaseQuantity(target){
+            $(target).find(".select-quantity.minus").on("click", ()=>{
+                let val = parseInt($(target).find(".select-quantity.value").val(), 10) - 1;
+                $(target).find(".select-quantity.value").val(val < 0 ? 0 : val).trigger("change");
+            });
+        }
+        function removeHandle(target){
+            $(target).find("button.select-remove").on("click", ()=>{
+                const rowKey = $(target).data("row-key");
+                $(".content-left table tr").filterByData('row-key', rowKey).find(".selected-action").trigger("click");
+                calculatorGrandTotal();
+            });
+        }
+        function calculatorGrandTotal() {
+            let grandTotal = 0;
+            $("table.selected-items tbody tr").each((index, entry)=>{
+                const count = parseInt($(entry).find(".select-quantity.value").val());
+                const price = parseInt($(entry).data("price"), 10);
+                const subTotal = count*price;
+                grandTotal += subTotal;
+                $(entry).find("input[name='SubTotal']").val(subTotal);
+                $("span.grand-total").text(`${grandTotal}.00 $`);
+                $('input[name="grand-total"]').val(grandTotal);
+            });
+            $("span.grand-total").text(` ${grandTotal}.00 $`);
+            $('input[name="grand-total"]').val(grandTotal);
+            $(".confirm-pay").parent("div").hide();
+            if($("table.selected-items tbody tr").length) {
+                $(".confirm-pay").parent("div").show();
+            }
+        }
+
+        // Create invoice
+        let hadAuth = '@authFlag'.toLowerCase() === "true";
+        $(".confirm-pay").on( "click",()=>{
+            if (hadAuth === false) {
+                $("#login").modal("show");
+                return;
+            }
+            @if (string.IsNullOrEmpty(lastOrder))
+            {<text>
+                saveInvoice("");
+            </text>}
+            else {<text>
+                // confirmSave('@lastOrder');
+                saveInvoice('@lastOrder');
+            </text>}
+        });
+
+        // Login
+        $(".payment-login").on( "click", ()=>{
+            $(".payment-login img").show();
+            $.ajax({
+                method: "POST",
+                url: "/PaymentGate/Purchases/Login",
+                data: {"email": $("#login_form input[name='email']").val(), "password": $("#login_form input[name='password']").val()},
+                dataType: "json"
+            })
+            .done(function (data) {
+                $("#login").modal("hide");
+                hadAuth = true;
+                if (data === null || data === "") {
+                    saveInvoice("");
+                } else {
+                    // confirmSave(data);
+                    saveInvoice(data);
+                }
+            })
+            .fail(function (err) {
+                $("#login div.alert-dismissible").hide();
+                $("span.msg-login").text("");
+                if(err.responseText.startsWith("Please login first") || err.status === 403) {
+                    $("#login div.alert-dismissible").show();
+                    $("span.msg-login").text(err.responseJSON);
+                } else {
+                    noty({ "text": "Sorry, An error has occurred! Please try again later!", "layout": "topRight", "type": "error" });
+                }
+            })
+            .always(function () {
+                $(".payment-login img").hide();
+            });
+        });
+        @foreach (InvoiceRequestDetail invoice in historyDetail)
+        {<text>
+            $(".content-left tr").filterByData('row-key', '@invoice.Code').find("input[type='checkbox']").prop("checked", true).trigger("change");
+            $(".select-item-row").filterByData('row-key', '@invoice.Code').find(".select-quantity.value").val(@invoice.Quantity).trigger("change");
+        </text>}
+    });
+
+    function saveInvoice(lastOrder = "") {
+        // let img = lastOrder === "" ? "img.confirm" : "img.update";
+        $("div.confirm-pay-group").find('img').show();
+        $("body").css({"pointer-events" : "none"});
+        let postData = $("form[name='selected-items']").serializeObject();
+        $.ajax({
+            method: "POST",
+            url: "/PaymentGate/Purchases/NewInvoice",
+            data: {
+                "Invoices": postData,
+                "GrandTotal" : $('input[name="grand-total"]').val(),
+                "LastOrder" : lastOrder,
+                "AgentKey" : '@ViewBag.AgentKey'
+             },
+            dataType: "json"
+        })
+        .done(function (data) {
+            window.location.href = "/PaymentGate/Pay/?key=" + data;
+        })
+        .fail(function (err) {
+            $("#login div.alert-dismissible").hide();
+            $("span.msg-login").text("");
+            if(err.responseText.startsWith("Please login first") || err.status === 403) {
+                $("#login").modal("show");
+            } else {
+                noty({ "text": "Sorry, An error has occurred! Please try again later!", "layout": "topRight", "type": "error" });
+            }
+        })
+        .always(function () {
+            $("body").css({"pointer-events" : "auto"});
+            $("div.confirm-pay-group").find("img").hide();
+        });
+    }
+    </script>
+}
+
+@section content_header {
+    <div class="col-md-12" style="padding:0;">
+
+    </div>
+}
+@section content_left {
+    <div class="col-md-8 content-left">
+        <div style="float:left; font-weight:bold; padding-top:10px"><b>Choose your items . . .</b></div><br /><hr />
+        <div class="custom-scroll" style="height: 75vh; overflow-x: auto;padding: 0;">
+            <div class="card">
+                <div class="card-header"><h4 class="card-title">LICENSE - ADDON</h4></div>
+                <div class="card-body" style="display: block;">
+                    <table class="table table-bordered table-hover table-striped">
+                        <tbody>
+                            @foreach (var pr in addons)
+                            {
+                                <tr class="item" data-row-key="@pr.Code" data-price="@pr.Price">
+                                    <td>
+                                        <b class="item-name">@pr.Name</b>
+                                    </td>
+                                    <td class="item-price">
+                                        @Html.Raw(pr.Price != null ? pr.Price + " $" : "N/A")
+                                    </td>
+                                    <td style="width: 110px; text-align: center;">
+                                        <button class="btn btn-default selected-action-btn btn-sm" style="height: 32px">Select</button>
+                                        <input data-type="addon" class="selected-action" type="checkbox" name="selected_addon" style="height:20px; width:20px; display: none" />
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header"><h4 class="card-title">HARDWARE - ITEMS</h4></div>
+                <div class="card-body" style="display: block;">
+                    <table class="table table-bordered table-hover table-striped">
+                        <tbody>
+                            @foreach (var pr in devices)
+                            {
+                                <tr class="item" data-row-key="@pr.ModelCode" data-price="@pr.Price">
+                                    <td>
+                                        <img src="@pr.Picture" onerror="this.onerror=null;this.src='/Upload/Img/no_image.jpg'" />
+                                        <div style="width: auto; padding-left: 85px">
+                                            <b class="item-name">@pr.ProductName - @pr.ModelName</b><br />
+                                            <b class="pkg-item"><i>Color</i>: @pr.Color</b><br />
+                                        </div>
+                                    </td>
+                                    <td class="item-price">
+                                        @Html.Raw(pr.Price != null ? "$" + pr.Price : "N/A")
+                                    </td>
+                                    <td style="width: 110px; text-align: center;">
+
+                                        <button class="btn btn-default selected-action-btn btn-sm" style="height: 32px;">Select</button>
+                                        <input data-type="device" class="selected-action" type="checkbox" name="selected_addon" style="height:20px; width:20px;display:none" />
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section content_right {
+    <script id="select-item-template" type="text/html">
+        <tr class="item-row select-item-row" data-row-key="" data-type="" data-price="">
+            <td class="select-name">
+                <input type="hidden" name="Type" />
+                <input type="hidden" name="Code" />
+                <input type="hidden" name="Price" />
+                <input type="hidden" name="SubTotal" />
+                <b class="item-name"></b>
+            </td>
+            <td class="select-quantity" style="vertical-align: middle">
+                <div class="input-group select-quantity value-group">
+                    <div style="cursor:pointer" class="select-quantity minus"><i class="fa fa-minus"></i></div>
+                    <input min="0" oninput="this.value = Math.abs(this.value)" type="number" class="form-control select-quantity value" value="1" name="Quantity" style="height: 22px;padding: 0;text-align: center; margin: 0 4px;" />
+                    <div style="cursor:pointer" class="select-quantity plus"><i class="fa fa-plus"></i></div>
+                </div>
+            </td>
+            <td>
+                <button class="btn btn-sm btn-danger select-remove">X</button>
+            </td>
+        </tr>
+    </script>
+    <div class="col-md-4 content-right custom-scroll" style="max-height: 70vh; overflow-x: auto;padding:0 15px;">
+        <div style="float:left; padding-top:10px"><b>Your selected . . .</b></div><br /><hr />
+        <div style="float:right; font-weight:bold; padding-top:10px">@*<i class="fa fa-shopping-cart "></i> *@<span class="grand-total">0.00 $</span></div>
+        <input type="hidden" name="grand-total" />
+        <form name="selected-items" method="post" action="/PaymentGate/Purchases/NewInvoice" enctype="multipart/form-data">
+            <table class="table selected-items">
+                <tbody></tbody>
+            </table>
+        </form>
+    </div>
+    <div class="col-md-4 confirm-pay-group" style="margin: 10px auto; text-align: center; float: right; display: none; color: white">
+        <button class="btn btn-info btn-md confirm-pay">
+            Confirm @if (isAgent == false)
+            {<text>& Pay</text>}
+            <img style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" class="confirm" />
+        </button>
+    </div>
+}

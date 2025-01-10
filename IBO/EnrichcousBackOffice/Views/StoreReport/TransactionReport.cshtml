@@ -1,0 +1,588 @@
+﻿@using EnrichcousBackOffice.Models
+@using EnrichcousBackOffice.Utils.IEnums
+@using EnrichcousBackOffice.AppLB
+@using Inner.Libs.Helpful;
+@{
+    ViewBag.Title = "Transaction Report";
+    var host = $"{HttpContext.Current.Request.Url.Scheme}://{HttpContext.Current.Request.Url.Authority}";
+
+    var Partners = ViewBag.Partners as List<C_Partner>;
+
+    var Services = ViewBag.Services as List<License_Product> ?? new List<License_Product>() { };
+    var Hardware = ViewBag.Hardware as List<O_Product_Model> ?? new List<O_Product_Model>() { };
+    var gr_Services = Services.GroupBy(c => c.Type).Select(c => new
+    {
+        Type = c.Key,
+        Service = c.ToList()
+    }).OrderByDescending(c => c.Type == "license").ThenBy(c => c.Type == "other").ToList();
+}
+
+<link href="~/Content/Admin/bower_components/bootstrap-daterangepicker/daterangepicker.css" rel="stylesheet" />
+<style>
+    .ico-help {
+        display: inline-block;
+        transform: translateY(1px);
+        color: var(--main-color-1);
+        font-size: 1em;
+        padding-left: 1px;
+    }
+
+    .total-div {
+        display: inline-block;
+        border: 1px dotted green;
+        padding: 5px 10px;
+        margin-right: 3px;
+    }
+
+    .vertical-middle {
+        vertical-align: middle !important;
+    }
+    /* .select2-selection__choice {
+        float: none !important;
+        display: inline-block !important;
+    }*/
+
+</style>
+<section class="content-header">
+    <h1>
+        Transaction Report
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li>Merchant</li>
+        <li>Transaction Report</li>
+    </ol>
+</section>
+
+<section class="content">
+    @if (TempData["e"] != null)
+    {
+        <div class="alert alert-warning alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+        </div>
+    }
+    else if (TempData["s"] != null)
+    {
+        <div class="alert alert-success alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+        </div>
+    }
+    <div class="row">
+        <div class="col-md-12">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Transaction Report</h3>
+                </div>
+                <div class="box-body">
+                    <div class="row" style="padding:0 10px 20px 10px">
+                        <div id="search_select_group">
+                            <form id="search_form" action="#">
+                                <div class="row">
+                                    <div class="col-md-4 col-md-6 col-sm-6">
+                                        <div class="form-group">
+                                            <div class="input-group">
+                                                <div class="input-group-addon">
+                                                    Date
+                                                    <div class="ico-help" title="The to date for the search."><i class="fa fa-question-circle"></i></div>
+                                                </div>
+                                                <input type="text" class="form-control search-input" id="searchDate" />
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <div class="input-group" style="width:100%">
+                                                <div class="input-group-addon">
+                                                    Subscription Type
+                                                </div>
+                                                <select class="form-control search-input select2" id="SubscriptionTypes" style="width:100%" data-placeholder="All" name="SubscriptionTypes" multiple>
+                                                    <option value="license">License</option>
+                                                    <option value="addon">Addon</option>
+                                                    <option value="giftcard">GiftCard</option>
+                                                    <option value="other">Other</option>
+                                                    <option value="setupfee">Setup Fee</option>
+                                                    <option value="interactionfee">Interaction Fee</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <div class="input-group" style="width:100%">
+                                                <div class="input-group-addon">
+                                                    Subscription
+                                                </div>
+                                                <select class="form-control search-input select2" style="width:100%" data-placeholder="All" name="Services" multiple>
+                                                    @foreach (var grp in gr_Services)
+                                                    {
+                                                        if (grp.Type == LicenseType.LICENSE.Text())
+                                                        {
+                                                            <optgroup label="Licenses"></optgroup>
+                                                        }
+                                                        else if (grp.Type == LicenseType.ADD_ON.Text())
+                                                        {
+                                                            <optgroup label="Add-on"></optgroup>
+                                                        }
+                                                        else if (grp.Type == LicenseType.GiftCard.Text())
+                                                        {
+                                                            <optgroup label="Giftcard"></optgroup>
+                                                        }
+                                                        else if (grp.Type == LicenseType.VirtualHardware_Other.Text())
+                                                        {
+                                                            <optgroup label="Other services"></optgroup>
+                                                        }
+                                                        foreach (var item in grp.Service)
+                                                        {
+                                                            <option data-group="@grp.Type" value="@item.Code">@item.Name</option>
+                                                        }
+                                                    }
+                                                </select>
+                                            </div>
+                                        </div> 
+                                        
+                                        <div class="form-group">
+                                            <div class="input-group" style="width:100%">
+                                                <div class="input-group-addon">
+                                                    Hardware
+                                                </div>
+                                                <select class="form-control search-input select2" style="width:100%" data-placeholder="All" name="Hardware" multiple>
+                                                    @foreach (var item in Hardware)
+                                                    {
+                                                        <option value="@item.ModelCode">@item.ModelName</option>
+                                                    }
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 col-md-6 col-sm-6 form-group">
+                                        <div class="form-group">
+                                            <div class="input-group">
+                                                <div class="input-group-addon">
+                                                    Payment Method
+                                                    <div class="ico-help" title="Search by payment type"><i class="fa fa-question-circle"></i></div>
+                                                </div>
+                                                <select class="form-control search-input select2" name="PaymentMethods" style="width: 100%" multiple>
+                                                    <option value="CreditCard">Credit Card</option>
+                                                    <option value="ACH">ACH</option>
+                                                    <option value="FOC">FOC</option>
+                                                    <option value="Free">Free</option>
+                                                    <option value="Other">Other</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <div class="input-group">
+                                                <div class="input-group-addon">
+                                                    Partner
+                                                    <div class="ico-help" title="Search by partner"><i class="fa fa-question-circle"></i></div>
+                                                </div>
+                                                <select class="form-control search-input select2" name="Partners" multiple="multiple" data-placeholder="All" style="width: 100%">
+                                                    <option value="Mango" @(TempData["Partner"]?.ToString() == "mango" ? "selected" : "")>@ViewBag.ProductName</option>
+                                                    @foreach (var item in Partners.OrderBy(c => c.Code))
+                                                    {
+                                                        <option value="@item.Code" @(TempData["Partner"]?.ToString() == item.Code.ToString() ? "selected" : "")>#@item.Code - @item.Name</option>
+                                                    }
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <div class="input-group">
+                                                <div class="input-group-addon">
+                                                    Search
+                                                    <div class="ico-help" title="Search by invoice id, salon name, salon email, salon phone,mxmerchant id ."><i class="fa fa-question-circle"></i></div>
+                                                </div>
+                                                <input type="text" name="SearchText" class="form-control search-input" placeholder="Invoice ID | Salon Info | Transaction ID" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row text-center">
+                                    <button class="btn btn-primary btn-flat" type="button" id="SearchButton" name="SearchButton"><i class="fa fa-search"></i> Search</button>
+                                </div>
+
+                            </form>
+
+                            <img id="search_loading" style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                        </div>
+                    </div>
+                    <hr />
+
+                    <div>
+                        <div class="total-wrapper" style="text-align:right;font-size:19px;font-weight:bold;">
+                            <button onclick="exportExcel()" id="exportExcelBtn" class="btn btn-sm btn-success" style="float:left"><i class="fa fa-file-excel-o" aria-hidden="true"></i> Export Excel <img class="loading" src="/Content/ajax-loaders/ajax-loader-1.gif" style="display:none"></button>
+                            <div class="total-div" style="display:inline-block;"><span>Income: </span><span style="display:inline-block;min-width:70px;text-align:left;" id="income">$0.00</span></div>
+                            <div class="total-div" style="display:inline-block;"><span>Total: </span><span style="display:inline-block;min-width:70px;text-align:left;" id="total-amount">$0.00</span></div>
+                            <div class="total-div" style="display:inline-block;"><span>Num. Of Transaction: </span><span style="display:inline-block;min-width:20px;text-align:left;" id="total-record"> 0</span></div>
+
+                        </div>
+                        <table class="table table-bordered table-hover data-transaction" style="width:100%">
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<div class="modal fade" id="Invoice" role="dialog" style="display: none;">
+    <div class="modal-dialog modal-content" style="min-width:900px">
+        <div class="modal-header">
+            <div class="modal-title pull-left"><h3 style="margin:0">View Invoice</h3></div>
+            <button type="button" class="btn btn-sm btn-warning" style="float:left; margin-left:20px" onclick="document.getElementById('invoice-view').contentWindow.print()"><i class="fa fa-print"></i> Print</button>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">×</span>
+            </button>
+        </div>
+        <div class="modal-body" style="padding:1px;height: 77vh;">
+            <iframe width="100%" height="100%" style="border: none;" id="invoice-view" data-src="@host/order/ImportInvoiceToPDF?_code=%code%&amp;flag=Invoice"></iframe>
+        </div>
+    </div>
+</div>
+<script src="~/Content/Admin/bower_components/bootstrap-daterangepicker/daterangepicker.js"></script>
+<link href="~/Content/Selectize/css/selectize.default.css" rel="stylesheet" />
+<script src="~/Content/Selectize/js/standalone/selectize.min.js"></script>
+<script src="//cdn.rawgit.com/ashl1/datatables-rowsgroup/v1.0.0/dataTables.rowsGroup.js"></script>
+@section script{
+    <script>
+        //// set global ajax send
+        const d = new Date();
+        let diff = d.getTimezoneOffset();
+        $.ajaxSetup({
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader("TimezoneOffset", diff);
+            }
+        });
+        $('#searchDate').daterangepicker(
+            {
+                "showDropdowns": true,
+                "minYear": 1950,
+                "maxYear": 2050,
+                "autoApply": true,
+                //"alwaysShowCalendars": true,
+                "ranges": {
+                    'Today': [moment(), moment()],
+                    'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                    'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+                    //'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+                    'This Month': [moment().startOf('month'), moment().endOf('month')],
+                    'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')],
+                    'Nearest 3 months': [moment().subtract(3, 'month').startOf('month'), moment()],
+                    'This Year': [moment().startOf('year'), moment().endOf('year')],
+                    'Last Year': [moment().subtract(1, 'year').startOf('year'), moment().subtract(1, 'year').endOf('year')]
+                },
+                "locale": {
+                    "customRangeLabel": "Custom Date",
+                    "format": "MMM D, YYYY",
+                },
+                "startDate": moment().startOf('month'),
+                "endDate": moment().endOf('month'),
+            },
+        )
+
+        $(function () {
+            $('.select2').select2({
+                minimumResultsForSearch: -1,
+                width: 'element'
+            });
+            $('[name="Partner"]').select2({
+                width: 'element'
+            });
+        })
+
+        var t = $(".data-transaction").DataTable({
+            "language": {
+                "processing": '<img src="/Content/ajax-loaders/loading2.gif" width="60px" />',
+                "paginate": {
+                    "first": '<i class="fa fa-angle-double-left" aria-hidden="true"></i>',
+                    "last": '<i class="fa fa-angle-double-right" aria-hidden="true"></i>',
+                    "next": '<i class="fa fa-angle-right" aria-hidden="true"></i>',
+                    "previous": '<i class="fa fa-angle-left" aria-hidden="true"></i>'
+                },
+            },
+            'paging': true,
+            "pageLength": 10,
+            "serverSide": true, // for process server side
+            "processing": true, // for show progress bar
+            'lengthChange': true,
+            'searching': false,
+            //'ordering': false,
+            'stateSave': false,
+            'info': false,
+            "scrollX": true,
+            'autoWidth': true,
+            'ordering': true,
+            'order': [],
+            "ajax": {
+                "url": "/StoreReport/GetListTransaction",
+                "type": "POST",
+                "datatype": "json",
+                data: function (data) {
+                    data.SearchText = $("[name='SearchText']").val();
+                    data.Status = $("[name='Status']").val();
+                    data.Services = $("[name='Services']").val();
+                    data.PaymentMethods = $("[name='PaymentMethods']").val();
+                    data.SubscriptionTypes = $("[name='SubscriptionTypes']").val();
+                    data.Hardware = $("[name='Hardware']").val();
+                    data.Partners = $("[name='Partners']").val();
+                    data.FromDate = $("#searchDate").data('daterangepicker').startDate.format('YYYY-MM-DD HH:mm');
+                    data.ToDate = $("#searchDate").data('daterangepicker').endDate.format('YYYY-MM-DD HH:mm');
+                    return data;
+                },
+                'dataSrc': function (data) {
+                    $('#total-record').html(data.recordsTotal);
+                    $('#total-amount').html(data.totalAmount);
+                    $('#income').html(data.incom);
+                    return data.data;
+                }
+
+            },
+            "fnRowCallback": function (nRow, aData, iDisplayIndex) {
+                $(nRow).addClass('row_transaction').hover(function () {
+                    $(this).find(".btn_edit_amount").show();
+                }, function () {
+                    $(this).find(".btn_edit_amount").hide();
+                });
+                return nRow;
+            },
+            rowsGroup: [0, 1, 2, 3],
+            "columns": [
+                {
+                    title: "Transaction Date",
+                    name: 'PaymentDate',
+                    data: 'PaymentDateUtcRaw',
+                    className: "vertical-middle",
+                    //width: "80px"
+                },
+                {
+                    title: "Salon Name",
+                    name: 'StoreCode',
+                    data: 'StoreCode',
+                    render: function (data, type, row, meta) {
+                        let html = '';
+                        html += `<a target="_blank" href="/merchantman/detail/${row['CustomerId']}"><strong class="text-info">${row['StoreName'] || ''} (#${row['StoreCode']})</strong></a>`;
+                        if (row['PartnerCode']) {
+                            html += ` <span class="label label-default">#${row['PartnerCode']}<span>`;
+                        }
+                        return html;
+                    },
+                    className: "vertical-middle",
+                    orderable: false,
+                },
+                {
+                    title: "Invoice",
+                    name: 'OrderCode',
+                    data: 'OrderCode',
+                    render: function (data, type, row, meta) {
+                        var html = '';
+                        html += '<a class="label label-default" onclick="show_invoice(\'' + row['OrderCode'] + '\')"><b>#' + row['OrderCode'] + '</b></a>';
+                        return html;
+                    },
+                    className: "vertical-middle",
+                    orderable: false,
+                    //width: "80px"
+                },
+                {
+                    title: "Discount For Invoice",
+                    name: 'OrderDiscountAmount',
+                    data: 'OrderDiscountAmount',
+                    render: function (data, type, row, meta) {
+                        let html = ``;
+                        if (row['OrderDiscountPercent']) {
+                            html += ` <span>- ${row['OrderDiscountPercent']}%</span>`;
+                        }
+                        else if (row['OrderDiscountAmount']) {
+                            html += ` <span>- $${row['OrderDiscountAmount']}</span>`;
+                        }
+                        return html;
+                    },
+                    className: "vertical-middle",
+                    orderable: false,
+                    //width: "80px"
+                },
+                {
+                    title: "Subscription Name",
+                    name: 'ProductName',
+                    data: 'ProductName',
+                    render: function (data, type, row, meta) {
+                        let html = '';
+                        html += `<strong>${row['ProductName'] || ''}</strong> `;
+                        html += `<i>x${row['Quantity'] ?? 1}</i> `;
+                        if (row["Type"] == 'license') {
+                            html += `<span class="">${row["Type"]}</span>`;
+                        }
+                        else if (row["Type"] == 'addon') {
+                            html += `<span class="">${row["Type"]}</span>`;
+                        }
+                        else {
+                            html += `<span class="">${row["Type"]}</span>`;
+                        }
+                        return html
+                    },
+                    className: "vertical-middle",
+                    orderable: false,
+                },
+                {
+                    title: "Price",
+                    name: 'Price',
+                    data: 'Price',
+                    render: function (data, type, row, meta) {
+                        var html = ``;
+                        html += `$${row['Price'] || '0'}`;
+
+                        return html;
+                    },
+                    className: "vertical-middle",
+                    orderable: false,
+                },
+                {
+                    title: "Discount",
+                    name: 'Discount',
+                    data: 'Discount',
+                    render: function (data, type, row, meta) {
+                        let html = ``;
+                        if (row['DiscountPercent']) {
+                            html += ` <span>- ${row['DiscountPercent']}%</span>`;
+                        }
+                        else if (row['Discount']) {
+                            html += ` <span>- $${row['Discount']}</span>`;
+                        }
+                        return html;
+                    },
+                    className: "vertical-middle",
+                    orderable: false,
+                },
+                {
+                    title: "Total Price",
+                    name: 'SubscriptionAmount',
+                    data: 'SubscriptionAmount',
+                    render: function (data, type, row, meta) {
+                        let price = row['SubscriptionAmount'];
+                        return `<b>$${price}</b>`;
+                    },
+                    className: "vertical-middle",
+                    orderable: false,
+                },
+                {
+                    title: "Payment Method",
+                    name: 'PaymentMethod',
+                    data: 'PaymentMethod',
+                    render: function (data, type, row, meta) {
+                        if (row['PaymentMethod'] == "CreditCard") {
+                            return `<span class="label label-success">Credit Card</span>`;
+                        }
+                        else if (row['PaymentMethod'] == "ACH") {
+                            return `<span class="label label-warning">${row['PaymentMethod'] || ''}</span>`;
+                        }
+                        else {
+                            return `<span class="label label-primary">${row['PaymentMethod'] || ''}</span>`;
+                        }
+                    },
+                    className: "vertical-middle",
+                    orderable: false,
+                }
+            ]
+        });
+
+        $('.search-input').change(function () {
+            $(".data-transaction").DataTable().ajax.reload();
+        })
+
+        const groupBy = (items, key) => items.reduce(
+            (result, item) => ({
+                ...result,
+                [item[key]]: [
+                    ...(result[item[key]] || []),
+                    item,
+                ],
+            }),
+            {},
+        );
+        function capitalizeFirstLetter(string) {
+            return string.charAt(0).toUpperCase() + string.slice(1);
+        }
+
+        $('#SubscriptionTypes').change(function () {
+            $.ajax({
+                url: '/storereport/GetServiceByType',
+                type: 'POST',
+                dataType: 'json',
+                data: { "Types": $("[name='SubscriptionTypes']").val() },
+                success: function (data) {
+                    $('[name=Services').html('');
+                    var serviceGroupby = groupBy(data, "Type");
+                    // console.log(groupBy(data, "Type"));
+                    for (var key in serviceGroupby) {
+                        if (serviceGroupby.hasOwnProperty(key)) {
+                            $('[name=Services]').append($('<optgroup>', {
+                                label: capitalizeFirstLetter(key),
+                            }));
+                            let array = serviceGroupby[key];
+                            $.each(array, function (i, item) {
+                                $('[name=Services]').append($('<option>', {
+                                    value: item.Code,
+                                    text: item.Name,
+                                }));
+                            });
+                        }
+                    }
+                    $('[name=Services').trigger("change.select2");
+                    $(".data-transaction").DataTable().ajax.reload();
+                },
+                error: function (data) {
+
+                },
+                complete: function () {
+
+                }
+            });
+        })
+
+
+        $('#SearchButton').click(function () {
+            $(".data-transaction").DataTable().ajax.reload();
+        })
+
+        function show_invoice(code) {
+            let src = $("#invoice-view").data("src").replace("%code%", code);
+            $("#invoice-view").attr("src", src);
+            $('#Invoice').modal('show');
+        }
+        $(document).ready(function () {
+            $('.ico-help').tooltip();
+        });
+
+
+        function exportExcel() {
+            $("#exportExcelBtn").attr("disabled", true);
+            $("#exportExcelBtn").find(".loading").show();
+            $.ajax({
+                url: '/StoreReport/ExportTransaction',
+                type: 'POST',
+                dataType: 'Json',
+                data: {
+                    SearchText: $("[name='SearchText']").val(),
+                    Status: $("[name='Status']").val(),
+                    Services: $("[name='Services']").val(),
+                    PaymentMethods: $("[name='PaymentMethods']").val(),
+                    SubscriptionTypes: $("[name='SubscriptionTypes']").val(),
+                    Partners: $("[name='Partners']").val(),
+                    FromDate: $("#searchDate").data('daterangepicker').startDate.format('YYYY-MM-DD HH:mm'),
+                    ToDate: $("#searchDate").data('daterangepicker').endDate.format('YYYY-MM-DD HH:mm'),
+                },
+                success: function (data) {
+                    if (data.status == true) {
+                        window.location.href = "/Ticket_New/DownloadExcelFile?path=" + data.path;
+                    }
+                },
+                error: function (res) {
+                    console.log(res);
+                },
+                complete: function (data) {
+                    $("#exportExcelBtn").attr("disabled", false);
+                    $("#exportExcelBtn").find(".loading").hide();
+                }
+            });
+        }
+    </script>
+}

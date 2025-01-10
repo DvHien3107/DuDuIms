@@ -1,0 +1,220 @@
+﻿@model List<EnrichcousBackOffice.Models.Calendar_Event>
+@using EnrichcousBackOffice.Utils
+@{
+    string FormatDateRemain(DateTime dt)
+    {
+        string time = dt > DateTime.UtcNow ? "later" : "ago";
+        TimeSpan ts = dt > DateTime.UtcNow ? dt - DateTime.UtcNow : DateTime.UtcNow - dt;
+
+        if (ts.Days == 0 && ts.Hours == 0 && ts.Minutes == 0)
+        {
+            return "a few seconds " + time;
+        }
+        else if (ts.Days == 0 && ts.Hours == 0)
+        {
+            return ts.Minutes + " minutes " + time;
+        }
+        else if (ts.Days == 0)
+        {
+            return ts.Hours + " hours " + ts.Minutes + " minutes " + time;
+        }
+        else if (ts.Days > 365)
+        {
+            return Math.Round((decimal)(ts.Days / 365), 0, MidpointRounding.ToEven).ToString() + " years " + time;
+        }
+        else if (ts.Days > 30)
+        {
+            return Math.Round((decimal)(ts.Days / 30), 0, MidpointRounding.ToEven).ToString() + " months " + time;
+        }
+        return ts.Days + " days " + time;// +ts.Hours + " hours " + ts.Minutes + " minutes ago";
+    }
+    var EventActive = Model.OrderByDescending(x=>x.CreateAt).FirstOrDefault();
+    var DemoSheduler = ViewBag.DemoScheduler as EnrichcousBackOffice.Models.C_DemoScheduler;
+}
+<tr class="tr-detail tr-detail-@ViewBag.DemoSchedulerId" style="background-color: #b7b6b6">
+    <td colspan="10" class="td-detail" style="padding:10px 20px;">
+        <div class="nav-tabs-custom col-md-8  tabs div-detail-@ViewBag.DemoSchedulerId" style="display: none;margin: auto; float: none; padding: 10px;">
+            <div class="tab-content" style="border: 0px 1px 1px 1px solid #ddd;overflow: auto;max-height: 500px">
+                <style>
+                    .calendar-edit-1 {
+                        float: right;
+                        margin-right: 25px;
+                        margin-top: 3px;
+                    }
+
+                    .calendar-edit-2 {
+                        position: absolute;
+                        right: 20px;
+                        top: 22px;
+                    }
+
+                    .none-after::after, .none-after::before {
+                        content: "" !important;
+                    }
+                </style>
+                @*@if (Model.Count > 0)
+        {
+
+            <a class="btn btn-sm btn-success btn-edit-log calendar-edit-1" onclick="ViewCalendarPopup('@EventActive.DemoSchedulerId', '@EventActive.MemberNumber', '@AppFunc.ParseTimeToUtc(EventActive.StartEvent).ToString("yyyy-MM-dd")')" title="" data-toggle="tooltip" style="padding: 2px 7px; color: white;" data-original-title="Click to Edit">
+                <i class="fa fa-calendar" aria-hidden="true"></i><span>&nbsp;Calendar <img class="loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none"></span>
+            </a>
+        }
+        else
+        {
+            <a class="btn btn-sm btn-success btn-edit-log calendar-edit-2" onclick="ViewCalendarPopup('@ViewBag.DemoSchedulerId')" title="" data-toggle="tooltip" style="padding: 2px 7px; color: white;" data-original-title="Click to Edit">
+                <i class="fa fa-calendar" aria-hidden="true"></i><span>&nbsp;Calendar <img class="loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none"></span>
+            </a>
+
+        }*@
+
+
+                @if (Model.Count() > 0)
+                {
+                    <a class="btn btn-sm btn-success btn-edit-log calendar-edit-1" onclick="ViewCalendarPopup('@EventActive.DemoSchedulerId', '@EventActive.MemberNumber', '@EventActive.StartEvent.Substring(0,10)')" title="" data-toggle="tooltip" style="padding: 2px 7px; color: white;" data-original-title="Click to Edit">
+                        <i class="fa fa-calendar" aria-hidden="true"></i><span>&nbsp;Calendar <img class="loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none"></span>
+                    </a>
+                    <ul class="timeline timeline-inverse" style="margin-top:5rem;">
+                        @*@{
+                    string LastDaysinMonth = "";
+                }*@
+                        @foreach (var itemd in Model.OrderByDescending(x => x.CreateAt))
+                        {
+                            string y = (itemd.LastUpdateAt ?? itemd.CreateAt.Value).ToString("yyyy");
+                            string m = (itemd.LastUpdateAt ?? itemd.CreateAt.Value).ToString("MM");
+
+                            <!-- timeline time label -->
+                            //if (y + m != LastDaysinMonth)
+                            //{
+                            //    LastDaysinMonth = y + m;
+                            <text>
+
+                            </text>
+                            @*}*@
+                            string dateago = FormatDateRemain(itemd.LastUpdateAt ?? itemd.CreateAt.Value);
+                            <!-- timeline item -->
+                            <li class="list-item-log">
+                                <i class="fa fa-calendar-o bg-yellow"></i>
+                                <div class="timeline-item">
+                                    <div class="timeline-header">
+
+                                        <table style="width:100%">
+                                            <tr>
+                                                <td>
+                                                    <h5 class="title-log" style="margin:0">
+                                                        @Html.Raw(@itemd.Name)
+                                                    </h5>
+                                                </td>
+                                                <td style="text-align:right">
+                                                    @*<span style="color: #999;font-size:12px"><i class="fa fa-clock-o"></i>&nbsp;@dateago</span>*@
+
+                                                    @if (AppFunc.ParseTimeToUtc(itemd.StartEvent) <= DateTime.UtcNow && itemd.Done != 1)
+                                                    {
+                                                        <text>
+                                                            &nbsp; &nbsp; <img src="~/Content/Img/warning.gif" data-toggle="tooltip" title="Missed an appointment" style="width: 18px" alt="Not completed..." />
+                                                        </text>
+
+                                                    }
+                                                    else if (AppFunc.ParseTimeToUtc(itemd.StartEvent) >= DateTime.UtcNow)
+                                                    {
+                                                        <text>
+                                                            &nbsp; &nbsp;<img src="~/Content/Img/ringing-bell.gif" data-toggle="tooltip" title="The appointment is coming" style="width: 23px;" alt="Coming soon..." />
+                                                        </text>
+                                                    }
+                                                    &nbsp;&nbsp;
+                                                    <span class="btn-xs" style="padding:3px 5px;margin-right:10px;">
+                                                        <i class="fa  fa-user-o"></i> @itemd.MemberName
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        </table>
+
+                                    </div>
+                                    <div class="timeline-body timeline-@itemd.Id" style="max-width:100%; overflow-x:auto">
+                                        <div class="noi-dung-log">
+                                            @Html.Raw(itemd.Description?.Replace("\n", "<br/>"))
+                                        </div>
+                                        <br />
+                                        <div class="ref">
+                                            <span style="font-weight:500;font-style:italic;">Ref : <span>@itemd.REF</span></span>
+                                        </div>
+                                    </div>
+                                    <div class="timeline-footer">
+                                        <div style="display:flex">
+
+
+
+                                            <span style="display: block;margin-left: auto;color: #666;font-size:13px">
+                                                <span>@dateago @*@string.Format("{0:r}", itemd.CreateAt)*@</span>
+                                                - by: <i>@(string.IsNullOrEmpty(itemd.LastUpdateBy)?itemd.CreateBy:itemd.LastUpdateBy)</i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                        }
+                        <!-- END timeline item -->
+                        <li>
+                            <i class="fa fa-clock-o bg-gray"></i>
+                        </li>
+                    </ul>
+                }
+                else
+                {
+                    <a class="btn btn-sm btn-success btn-edit-log calendar-edit-2" onclick="ViewCalendarPopup('@ViewBag.DemoSchedulerId')" title="" data-toggle="tooltip" style="padding: 2px 7px; color: white;" data-original-title="Click to Edit">
+                        <i class="fa fa-calendar" aria-hidden="true"></i><span>&nbsp;Calendar <img class="loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none"></span>
+                    </a>
+                    <div class="alert alert-warning" style="margin-top:4rem;">
+                        <span><i class="icon fa fa-warning"></i> No appointment is set.</span>
+                    </div>
+                }
+
+            </div>
+
+        </div>
+        <div class="col-md-8" style="margin: auto;float: none;padding: 10px 0 10px 0;text-align: right;display: flex;flex-wrap: wrap;">
+            <div class="dropdown dropdown-action" style="display:inline-block;background:transparent;margin-right:5px;">
+                <button class="btn  @(ViewBag.Status==null?"btn-primary":ViewBag.Status==0?"btn-danger":"btn-success") dropdown-toggle" role="button" aria-haspopup="true" type="button" data-toggle="dropdown">
+                 
+                     @(ViewBag.Status==null?"Demo Scheduler":ViewBag.Status==0?"Cancel":"Completed")
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu" style="margin:0px;width: 134px;min-width: unset;">
+                    <li class="@(ViewBag.Status==null?"hide":"")">
+                        <button  type="button" onclick="updateStatus('@DemoSheduler.Id',null)" class="btn btn-primary" style="color:white;"> DemoScheduler </button>
+                    </li>
+                    <li class="@(ViewBag.Status==1?"hide":"")">
+                        <button type="button" onclick="updateStatus('@DemoSheduler.Id',1)" class="btn btn-success" style="color:white;"> Completed </button>
+                    </li>
+                    <li class="@(ViewBag.Status==0?"hide":"")">
+                        <button type="button" onclick="updateStatus('@DemoSheduler.Id',0)" class="btn btn-danger" style="color:white;"> Cancel </button>
+                    </li>
+                </ul>
+            </div>
+
+            <button type="button" onclick="ViewCalendarPopup('@ViewBag.DemoSchedulerId')" class="btn btn-warning" style="color:white"><i class="fa fa-user" aria-hidden="true"></i> @(Model.Count>0? "Re-Assign": "Assign To Anyone")</button>
+            <div class="dropdown dropdown-action" style="display:inline-block;margin-top:1px;background:transparent;margin-left:auto !important;margin-right:5px;">
+                <button class="btn bg-olive dropdown-toggle" role="button" aria-haspopup="true" type="button" data-toggle="dropdown">
+                    <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
+                    Action
+                    <span class="caret"></span>
+                    <img class="loading" src="/Content/ajax-loaders/ajax-loader-1.gif" style="display:none">
+                </button>
+                <ul class="dropdown-menu">
+                    <li>
+                        <button type="button" onclick="setUpdate(this,'@ViewBag.DemoSchedulerId')" class="btn btn-primary" style="color:white"><i class="fa fa-pencil" aria-hidden="true"></i> Update </button>
+                    </li>
+                    <li>
+                        <button type="button" onclick="setDelete('@ViewBag.DemoSchedulerId')" class="btn btn-danger" style="color:white"><i class="fa fa-trash-o" aria-hidden="true"></i> Delete </button>
+                    </li>
+                </ul>
+            </div>
+            <button type="button" onclick="showDetail('@ViewBag.DemoSchedulerId',false)" class="btn btn-default">Close</button>
+        </div>
+        <script>
+            $(".entry-time").html(function (index, value) {
+                return moment(value).format("MMM DD YYYY, h:mm:ss A");
+            });
+        </script>
+    </td>
+</tr>
+

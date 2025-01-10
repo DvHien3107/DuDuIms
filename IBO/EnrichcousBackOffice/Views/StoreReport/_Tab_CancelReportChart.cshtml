@@ -1,0 +1,218 @@
+﻿@using EnrichcousBackOffice.Models
+@using EnrichcousBackOffice.AppLB
+@{
+    var cMem = Authority.GetCurrentMember();
+    var Partners = ViewBag.Partners as List<C_Partner> ?? new List<C_Partner>() { };
+    var host = $"{HttpContext.Current.Request.Url.Scheme}://{HttpContext.Current.Request.Url.Authority}";
+}
+
+<style>
+    .input-group-addon {
+        background-color: #d9edf7 !important;
+        color: black;
+    }
+</style>
+
+<div class="row">
+    <!--<div class="col-md-4 col-sm-6 form-group">
+        <div class="input-group" style="width:100%">
+            <div class="input-group-addon">
+                Cancel days
+            </div>
+            <select class="form-control" name="s_canceldays" id="s_canceldays" onchange="$('#cancel-table').DataTable().ajax.reload()">
+                <option value="0">All</option>
+                <option value="14">About 15 days</option>
+                <option value="60">About 60 days</option>
+                <option value="61">After 60 days</option>
+            </select>
+        </div>-->
+    <!-- /.input group -->
+    <!--</div>-->
+    @if (string.IsNullOrEmpty(cMem.BelongToPartner))
+    {
+        <div class="col-md-4 col-sm-6 form-group">
+            <div class="input-group" style="width:100%">
+                <div class="input-group-addon">
+                    Partner/Company
+                </div>
+                <select class="form-control" name="s_partner" id="s_partner" onchange="LoadDataChart()">
+                    <option value="">All</option>
+                    <option value="mango">@ViewBag.ProductName</option>
+                    @foreach (var item in Partners.OrderBy(c => c.Code))
+                    {
+                        <option value="@item.Code">#@item.Code - @item.Name</option>
+                    }
+                </select>
+            </div>
+            <!-- /.input group -->
+        </div>
+    }
+    <!--<div class="col-md-4 col-sm-6 form-group">
+        <div class="input-group" style="width:100%">
+            <div class="input-group-addon">
+                Refund status
+            </div>
+            <select class="form-control" name="s_refund_status" id="s_refund_status" onchange="$('#cancel-table').DataTable().ajax.reload()">
+                <option value="" style="font-weight:bolder">All</option>
+                <option value="1" style="color: green;font-weight:bolder">Refunded</option>
+                <option value="0" style="color: darkred; font-weight: bolder">Not yet refund</option>
+            </select>
+        </div>-->
+    <!-- /.input group -->
+    <!--</div>-->
+    <div class="col-md-4 col-sm-6 form-group">
+        <div class="input-group" style="width:100%">
+            <div class="input-group-addon">
+                Time
+            </div>
+            <select class="form-control" id="s_time" name="s_time" onchange="LoadDataChart()">
+                <option value="current-month">This month</option>
+                <option value="last-month">Last month</option>
+                <option value="nearest-3-months">Nearest 3 months</option>
+                <option value="current-year">This year</option>
+                <option value="last-year">Last year</option>
+            </select>
+        </div>
+        <!-- /.input group -->
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-sm-12" style="margin-bottom: 2rem; margin-top: 2rem">
+        <canvas id="chart-report" height="500"></canvas>
+    </div>
+</div>
+<script>
+    var ctx1 = document.getElementById("chart-report").getContext('2d');
+    var chart1 = new Chart(ctx1, {
+        type: 'bar',
+        data: {
+            datasets: [
+                {
+                    label: "Had refund",
+                    backgroundColor: '#4bc0c0',
+                    borderColor: '#4bc0c0',
+                    borderWidth: 1,
+                    stack: 'Stack 0',
+                    yAxisID: 'Grandtotal'
+                },
+                {
+                    label: "Not yet refund",
+                    backgroundColor: '#fdb45c',
+                    borderColor: '#fdb45c',
+                    borderWidth: 1,
+                    stack: 'Stack 0',
+                    yAxisID: 'Grandtotal'
+                },
+                //{
+                //    label: "Refund total",
+                //    backgroundColor: '#4bc0c0',
+                //    borderColor: '#4bc0c0',
+                //    borderWidth: 1,
+                //    stack: 'Stack 1',
+                //    yAxisID: 'Grandtotal'
+                //},
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            tooltips: {
+                callbacks: {
+                    label: function (tooltipItem, data) {
+                        //if (tooltipItem.datasetIndex === 0) {
+                        //    return tooltipItem.yLabel;
+                        //}
+                        //else {
+                        //    return "$" + Number(tooltipItem.yLabel).toFixed(2).replace(/./g, function (c, i, a) {
+                        //        return i > 0 && c !== "." && (a.length - i) % 3 === 0 ? "," + c : c;
+                        //    });
+                        //}
+                        //console.log(data);
+                        //return "$" + Number(tooltipItem.yLabel).toFixed(2).replace(/./g, function (c, i, a) {
+                        //    return i > 0 && c !== "." && (a.length - i) % 3 === 0 ? "," + c : c;
+                        //});
+
+                        var corporation = data.datasets[tooltipItem.datasetIndex].label;
+                        var valor = data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index];
+                        var total = 0;
+                        for (var i = 0; i < data.datasets.length; i++)
+                            total += data.datasets[i].data[tooltipItem.index];
+                        return ["$" + valor.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,') + " / $" + total.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,')];
+
+                    }
+                }
+            },
+            title: {
+                display: true,
+                position: 'bottom',
+                text: ''
+            },
+            scales: {
+                yAxes:
+                    [{
+                        id: 'Grandtotal',
+                        type: 'linear',
+                        position: 'left',
+                        gridLines: {
+                            display: false,
+                        },
+                        scaleLabel:
+                        {
+                            display: true,
+                            labelString: '$ (USD)'
+                        },
+                        ticks:
+                        {
+                            beginAtZero: true,
+                            callback: function (value, index, values) {
+                                return '$' + value.toFixed(2);
+                            }
+                        }
+                    }],
+                x: {
+                    stacked: true,
+                },
+                y: {
+                    stacked: true
+                }
+            },
+            plugins: {
+                labels: {
+                    render: function () {
+                        return '';
+                    }
+                },
+
+            }
+        },
+    });
+    function LoadDataChart() {
+        overlayOn();
+        $.ajax({
+            url: '/storereport/GetCancelChart',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                //'s_canceldays' : $("[name='s_canceldays']").val(),
+                //'s_refund_status' : $("[name='s_refund_status']").val(),
+                's_partner': $("[name='s_partner']").val(),
+                's_time': $("[name='s_time']").val()
+            },
+            success: function (data) {
+                //chart1.data.datasets[0].data = data.total;
+                chart1.data.datasets[0].data = data.refund;
+                chart1.data.datasets[1].data = data.notyet;
+                chart1.options.title.text = data.title;
+                chart1.data.labels = data.label;
+                chart1.update();
+                overlayOff();
+            },
+            error: function (data) {
+                console.log(data.message);
+                overlayOff();
+            },
+        })
+    }
+    LoadDataChart();
+</script>

@@ -1,0 +1,2847 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.CustomizeModel.Store_Services_Product_view>
+@using EnrichcousBackOffice.Services
+@using EnrichcousBackOffice.Utils
+@using EnrichcousBackOffice.Utils.IEnums
+@using Inner.Libs.Helpful
+@using EnrichcousBackOffice.AppLB
+@using EnrichcousBackOffice.Models
+@using EnrichcousBackOffice.Models.CustomizeModel
+@{
+    WebDataModel db = new WebDataModel();
+    var actives = Model.Where(m => m.Store.Active == 1 || m.Store.Active == -3).OrderByDescending(m => m.Store.Type == "license")
+                        .ThenBy(m => m.Store.RenewDate < DateTime.Now).ThenByDescending(m => m.Store.RenewDate).ThenByDescending(m => m.Store.LastUpdateAt).ToList();
+
+    //actives = Model.ToList();
+    //var statusRemove = LicenseStatus.REMOVED.Code<int>();
+    //var statusCancel = InvoiceStatus.Canceled.ToString();
+    //var licenses = Model.Where(c => c.Product?.Type == "license" && c.Store.Active != statusRemove && c.Order?.Status != statusCancel).OrderByDescending(c => c.Store.Active).ToList();
+    //var addons = Model.Where(c => c.Product?.Type == "addon" && c.Store.Active != statusRemove && c.Order?.Status != statusCancel).OrderByDescending(c => c.Store.Active).ToList();
+    //var giftcards = Model.Where(c => c.Product?.Type == "giftcard" && c.Store.Active != statusRemove && c.Order?.Status != statusCancel).OrderByDescending(c => c.Store.Active).ToList();
+    //var otherservices = Model.Where(c => c.Product?.Type == "other" && c.Store.Active != statusRemove && c.Order?.Status != statusCancel).OrderByDescending(c => c.Store.Active).ToList();
+
+    var serviceNotActive = Model.Where(x => x.Order?.Status == "Canceled" || (x.Store.Active != 1 && x.Store.Active != -1) || (x.Store.RenewDate != null && x.Store.RenewDate < DateTime.UtcNow.Date)).ToList();
+    var serviceActive = Model.Where(x => x.Order?.Status != "Canceled" && (x.Store.Active == 1 || x.Store.Active == -1) && (x.Store.RenewDate == null || (x.Store.RenewDate != null && x.Store.RenewDate >= DateTime.UtcNow.Date))).ToList();
+
+    var licenses = serviceActive.Where(c => c.Product?.Type == "license").OrderByDescending(c => c.Store.Active).ToList();
+    var addons = serviceActive.Where(c => c.Product?.Type == "addon").OrderByDescending(c => c.Store.Active).ToList();
+    var giftcards = serviceActive.Where(c => c.Product?.Type == "giftcard" && !db.O_Orders.Where(o => o.Status == "Paid_Wait" || o.Status == "Closed").Any(o => o.OrdersCode == c.Store.LastRenewOrderCode)).OrderByDescending(c => c.Store.Active).ToList();
+    var otherservices = serviceActive.Where(c => c.Product?.Type == "other").OrderByDescending(c => c.Store.Active).ToList();
+
+    string customerCode = ViewBag.customerCode;
+    C_Customer customer = ViewBag.Customer as C_Customer;
+    var numberGiftcard = db.C_CustomerGiftcard.Where(c => c.CustomerCode == customerCode).Count();
+    //var deactives = Model.Where(m => m.Store.Active == 0).OrderByDescending(m => m.Store.EffectiveDate).ToList();
+    //deactives = new List<EnrichcousBackOffice.Models.CustomizeModel.Store_Services_Product_view>();
+    //var waitings = Model.Where(m => m.Store.Active == -1 && db.License_Product.Any(lp => lp.Code == m.Store.ProductCode && lp.Active == true)).OrderByDescending(m => m.Store.EffectiveDate).ToList();
+    //waitings = new List<EnrichcousBackOffice.Models.CustomizeModel.Store_Services_Product_view>();
+    bool control_allow = ViewBag.control_allow ?? false;
+    var posver2 = ViewBag.PosVersion2;
+    var typeCus = ViewBag.typeCus;
+    var hasCard = db.C_CustomerCard.Where(c => c.CustomerCode == customerCode && c.IsDefault == true && c.Active == true).ToList().Count > 0 ||
+                    db.C_PartnerCard.Where(c => c.PartnerCode == customer.PartnerCode && c.IsDefault == true && c.Active == true).ToList().Count > 0 ||
+                    (!string.IsNullOrEmpty(customer.DepositBankName) && !string.IsNullOrEmpty(customer.DepositRoutingNumber) && !string.IsNullOrEmpty(customer.DepositAccountNumber));
+
+    var creditCard = db.C_CustomerCard.Where(c => c.CustomerCode == customerCode && c.IsDefault == true && c.Active == true).Select(c => c.CardType + c.CardNumber).FirstOrDefault() ??
+                    db.C_PartnerCard.Where(c => c.PartnerCode == customer.PartnerCode && c.IsDefault == true && c.Active == true).Select(c => c.CardType + c.CardNumber).FirstOrDefault();
+
+    Dictionary<string, bool> p = ViewBag.p;
+}
+<link href="~/Content/switch.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.css">
+<style type="text/css">
+    div.bound-license {
+        width: 100%;
+        height: auto;
+        max-height: 270px;
+        border: 1px dashed;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+        div.bound-license table {
+            margin-bottom: 0;
+        }
+
+    .discount-label {
+        cursor: pointer;
+    }
+
+        .discount-label:hover {
+            background: #9d9d9d;
+        }
+
+    .discount .discount-radio b {
+        display: block;
+        padding: 0 10px;
+        opacity: .3;
+        line-height: 32px;
+        width: 100%;
+        cursor: pointer;
+    }
+
+    .discount .discount-radio input[type=radio]:checked + b {
+        background-color: #17a2b8;
+        border-color: #17a2b8;
+        color: #fff;
+        opacity: 1;
+    }
+
+    .discount .discount-radio {
+        display: inline-block;
+        width: 32px;
+    }
+
+    .discount .discount-value {
+        background-color: #fff;
+        border-color: #ddd;
+        padding: 0px 10px;
+        text-align: right;
+    }
+
+
+    .discount .discount-type {
+        background-color: #fff;
+        border-color: #ddd;
+    }
+</style>
+
+<h3>
+    Current Plan
+    <span class="pull-right">
+        @if (actives.Any(m => m.Store.Type == "license") && ViewBag.IsTrial == true)
+        {
+            <a id="btn-hardreset" class="btn btn-primary" onclick="Renewtrial()" style="margin-right:5px"><i class="fa fa-refresh"></i> Renew Trial Account<img src="/Content/ajax-loaders/ajax-loader-1.gif" style="display: none;"></a>
+        }
+        @if (posver2 == true)
+        {
+            if (p.Any(k => k.Key.Equals("customer_hardreset")) == true && p["customer_hardreset"] == true)
+            {
+                <a id="btn-hardreset" class="btn btn-default hide" onclick="hardResetPOS()" style="margin-right:5px"><i class="fa fa-trash-o"></i> Hard Reset<img src="/Content/ajax-loaders/ajax-loader-1.gif" style="display: none;"></a>
+            }
+            if (p.Any(k => k.Key.Equals("customer_softreset")) == true && p["customer_softreset"] == true)
+            {
+                <a id="btn-softreset" class="btn btn-default hide" onclick="softResetPOS()" style="margin-right:5px"><i class="fa fa-refresh"></i> Soft Reset<img src="/Content/ajax-loaders/ajax-loader-1.gif" style="display: none;"></a>
+            }
+        }
+
+        @if (ViewBag.IsTrial != true)
+        {
+            <a class="btn btn-warning" onclick="show_popup_product()" style="margin-right:5px"><i class="fa fa-exchange"></i> Change Plan <img src="/Content/ajax-loaders/ajax-loader-1.gif" style="display: none;"></a>
+            <a class="btn btn-success" onclick="show_popup_addon()"><i class="fa fa-plus"></i> Addon & Services <img id="img_load_addon_popup" src="/Content/ajax-loaders/ajax-loader-1.gif" style="display: none;"></a>
+        }
+        else
+        {
+            <a class="btn btn-warning" onclick="show_popup_active_product()" style="margin-right:5px"><i class="fa fa-check-square-o"></i> Account activation <img src="/Content/ajax-loaders/ajax-loader-1.gif" style="display: none;"></a>
+            <a class="btn btn-default" href="/order/save?select_cus_code=@ViewBag.customerCode" style="margin-right:5px"><i class="fa fa-plus"></i> New invoice <img src="/Content/ajax-loaders/ajax-loader-1.gif" style="display: none;"></a>
+        }
+
+    </span>
+</h3>
+<h4>
+    @(!string.IsNullOrEmpty(ViewBag.storeid) ? "Store Id : #" + ViewBag.storeid : "")
+    <a class="label label-success" onclick="ResendMailActiveStore()" style="margin-right:5px">
+        <i class="fa fa-send" style="margin-right: 10px;"></i>Resend notify email login account to salon<img src="/Content/ajax-loaders/ajax-loader-1.gif" style="display: none;">
+    </a>
+</h4>
+<table class="table table-bordered table-striped store-license-active">
+    <thead style="background-color: #AAD3EA">
+        <tr>
+            <th class="col-md-3">Name</th>
+            @*<th style="width: 85px;">Type</th>*@
+            <th>Service date</th>
+            <th style="width: 85px;">Status</th>
+            <th style="width: 150px;">Recurring Payment</th>
+            <th>Renew</th>
+            <th>Last updated</th>
+
+            @if (control_allow)
+            {
+                <th style="width: 150px;">Action</th>
+            }
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model != null && Model.Count() > 0)
+        {
+            <tr><th colspan="8"><h4 style="margin: 5px"><i>License</i></h4></th></tr>
+            var lics = licenses.OrderByDescending(c => c.Store.Active).ThenByDescending(c => c.Store.EffectiveDate).ToList();
+            foreach (var item in lics)
+            {
+                if (item.Subscription?.ApplyPaidDate != true && (item.Order?.Status == "Open" || item.Order?.Status == "Canceled"))
+                {
+                    item.Store.EffectiveDate = DateTime.UtcNow.Date;
+                    var license_qty = (item.Subscription.SubscriptionQuantity ?? 1) * (item.Subscription.Quantity ?? 1);
+                    if (item.Subscription.PeriodRecurring == "Yearly") { item.Store.RenewDate = item.Store.EffectiveDate.Value.AddYears(license_qty); }
+                    else if (item.Subscription.PeriodRecurring == "Weekly") { item.Store.RenewDate = item.Store.EffectiveDate.Value.AddDays(license_qty * 7); }
+                    else { item.Store.RenewDate = item.Store.EffectiveDate.Value.AddMonths(license_qty); }
+                }
+
+                <tr class="@(item.Store.Id == lics.First()?.Store.Id || item.Store.Active != 0 ? "" : ("more-subscription-for-" + lics.First()?.Store.Id))" style="@(item.Store.Id == lics.First()?.Store.Id || item.Store.Active != 0 ? "" : "display:none")">
+                    <td>
+                        <strong>@item.Product.Name</strong>
+                        @if (item.Store.Id == lics.First()?.Store.Id && lics.Where(c => c.Store.Active == 0).Count() > 0 && !(lics.Where(c => c.Store.Active == 0).Count() == 1 && lics.First()?.Store.Active == 0))
+                        {
+                            <span href="#" class="btn btn-link pull-right" id="btn-show-@(lics.First()?.Store.Id)"
+                                  onclick="$('.more-subscription-for-@(lics.First()?.Store.Id)').slideDown('slow'); $('#btn-show-@(lics.First()?.Store.Id)').hide(); $('#btn-hide-@(lics.First()?.Store.Id)').show();">show more</span>
+                            <span href="#" class="btn btn-link pull-right" id="btn-hide-@(lics.First()?.Store.Id)" style="display: none"
+                                  onclick="$('.more-subscription-for-@(lics.First()?.Store.Id)').hide(); $('#btn-show-@(lics.First()?.Store.Id)').show(); $('#btn-hide-@(lics.First()?.Store.Id)').hide();">show less</span>
+                        }
+                        @if (item.Product.isAddon != true)
+                        {
+                            if (item.Store.StoreApply == Store_Apply_Status.Trial.ToString())
+                            {
+                                <label class="label label-default">Trial</label>
+                            }
+                            else if (item.Store.StoreApply == Store_Apply_Status.Promotional.ToString())
+                            {
+                                <label class="label label-info">Promo</label>
+                            }
+                            else
+                            {
+                                <label class="label label-primary">Regular</label>
+                            }
+                        }
+                        @if (item.Store.Quantity > 1 && item.Subscription.Period == "MONTHLY")
+                        {
+                            <i style="margin-left: 15px">x @item.Store.Quantity</i>
+                        }
+                        <br />
+                        @if (item.Product.Type == "license")
+                        {
+                            <text>
+                                <i> Subscription product </i>
+                            </text>
+                        }
+                        @if (item.Product.Type == "addon")
+                        {
+                            <text>
+                                <i> Addon product </i>
+                            </text>
+                        }
+                        @if (item.Product.Type == "other")
+                        {
+                            <text>
+                                <i>Other services</i>
+                            </text>
+                        }
+                        @if (item.Store.ApplyDiscountAsRecurring == true)
+                        {
+                            <br />
+                            if (item.Subscription.DiscountPercent > 0)
+                            {
+                                <span class="badge discount-label" onclick="update_discount('@item.Store.Id', '@item.Product.Name', '%', @item.Subscription.DiscountPercent )"
+                                      data-toggle="tooltip" data-placement="bottom" title="We do offer discount on packages as recurring @item.Subscription.DiscountPercent%">
+                                    Discount as recuring: @item.Subscription.DiscountPercent %
+                                </span>
+                            }
+                            else if (item.Subscription.Discount > 0)
+                            {
+                                <span class="badge discount-label" onclick="update_discount('@item.Store.Id', '@item.Product.Name', '$', @item.Subscription.Discount )"
+                                      data-toggle="tooltip" data-placement="bottom" title="We do offer discount on packages as recurring $@item.Subscription.Discount">
+                                    Discount as recuring: $ @item.Subscription.Discount
+                                </span>
+                            }
+                        }
+                    </td>
+
+                    @*<td>@(string.IsNullOrEmpty(item.Store.Period) ? "onetime" : item.Store.Period.ToLower())</td>*@
+                    <td>
+                        <span>
+                            @item.Store.EffectiveDate.Value.ToString("MMM dd, yyyy")
+                        </span>
+                        @if (item.Store.RenewDate != null && item.Store.Active != LicenseStatus.DE_ACTIVE.Code<int>() && item.Product.SubscriptionDuration != "ONETIME")
+                        {
+                            <i> - </i>
+                            <span>
+                                @item.Store.RenewDate.Value.ToString("MMM dd, yyyy")
+                            </span>
+                            if (DateTime.Now.Date > item.Store.RenewDate.Value && item.Store.Active == LicenseStatus.ACTIVE.Code<int>())
+                            {
+                                <label class="label animate-flicker" style="background-color:red"> Expired</label>
+                            }
+                            else if (DateTime.Now.Date.AddDays(10) > item.Store.RenewDate.Value && item.Store.Active == LicenseStatus.ACTIVE.Code<int>())
+                            {
+                                <label class="label animate-flicker" style="background-color:#ff3e00"> Nearly expired</label>
+                            }
+                        }
+                        @if (!string.IsNullOrEmpty(item.Store.OrderCode) && item.Store.Active == LicenseStatus.WAITING.Code<int>() ||
+                            (item.Order?.Status != InvoiceStatus.Paid_Wait.ToString() && item.Order?.Status != InvoiceStatus.Closed.ToString()))
+                        {
+                            if (!(typeCus == MerchantType.STORE_IN_HOUSE.Code<string>()))
+                            {
+                                <br />
+                                <a href="/order/estimatesdetail/?code=@item.Store.OrderCode&url_back=/merchantman/detail/?code=@item.Store.CustomerCode">#@item.Store.OrderCode</a>
+
+                                var label = "danger";
+                                var status = Ext.EnumParse<InvoiceStatus>(item.Order?.Status);
+                                switch (status)
+                                {
+                                    case InvoiceStatus.Open: label = "default"; break;
+                                    case InvoiceStatus.Paid_Wait: label = "warning"; break;
+                                    case InvoiceStatus.Closed: label = "success"; break;
+                                    case InvoiceStatus.PaymentLater: label = item.Order.DueDate > DateTime.UtcNow ? "primary" : "danger"; break;
+                                }
+
+                                <span class="label order-status label-@(label)" @(status == InvoiceStatus.Paid_Wait ? "data-html=\"true\" data-toggle=\"tooltip\" data-original-title=\"" + item.Order.PaymentMethod + "<br/>" + item.Order.PaymentNote + "\" style=\"cursor: pointer\"" : "")>@(status.Code<string>())</span>
+                            }
+                        }
+                        @if (!string.IsNullOrEmpty(item.Store.LastRenewOrderCode) && item.Store.Period == "MONTHLY")
+                        {
+                            var lastOrder = db.O_Orders.FirstOrDefault(c => c.OrdersCode == item.Store.LastRenewOrderCode);
+                            if (lastOrder.Status == InvoiceStatus.PaymentLater.ToString())
+                            {
+                                <br />
+                                <a href="/order/estimatesdetail/?code=@item.Store.LastRenewOrderCode&url_back=/merchantman/detail/?code=@item.Store.CustomerCode">#@item.Store.OrderCode</a>
+                                <label class="label label-warning">Due date payment to @lastOrder.DueDate.Value.ToString("MMM dd, yyyy")</label>
+                            }
+                        }
+                        <br />
+                        @if (string.IsNullOrEmpty(item.Store.Period))
+                        {
+                            <label class="label label-default">Onetimes</label>
+                        }
+                        else
+                        {
+                            if (string.IsNullOrEmpty(item.Store.PeriodRecurring))
+                            {
+                                <label class="label label-default">Monthly</label>
+                            }
+                            else
+                            {
+                                <label class="label label-default">@item.Store.PeriodRecurring</label>
+                            }
+                        }
+                        @if (item.Order?.Status == InvoiceStatus.PaymentLater.ToString() && item.Store.Active == 1)
+                        {
+                            <br />
+                            if (item.Order.DueDate.Value.Date < DateTime.UtcNow)
+                            {
+                                <label class="label label-danger">Payment Later - @item.Order.DueDate.Value.ToString("MMM dd, yyyy")</label>
+                            }
+                            else
+                            {
+                                <label class="label label-primary">Payment Later - @item.Order.DueDate.Value.ToString("MMM dd, yyyy")</label>
+                            }
+                        }
+                    </td>
+                    <td>
+
+                        @if (item.Store.Active == LicenseStatus.RESET.Code<int>())
+                        {
+                            <label class='label label-info'>Reset</label>
+                        }
+                        else if (item.Store.Active == LicenseStatus.WAITING.Code<int>())
+                        {
+                            <label class='label label-warning'>Waiting</label>
+
+                        }
+                        else if (item.Store.Active == LicenseStatus.REMOVED.Code<int>())
+                        {
+                            <label class='label label-default'>Removed</label>
+                        }
+                        else if (item.Store.Active == LicenseStatus.DE_ACTIVE.Code<int>())
+                        {
+                            <label class='label label-default'>Deactive</label>
+                        }
+                        else if (item.Store.RenewDate != null && DateTime.Now.Date > item.Store.RenewDate.Value)
+                        {
+                            <label class='label label-danger'>Expired</label>
+                        }
+                        else
+                        {
+                            <label class='label label-success'>Active</label>
+                        }
+                    </td>
+                    <td align="center">
+                        @if (!string.IsNullOrEmpty(item.Store.Period) && item.Store.Period == "MONTHLY" && customer.Type != "STORE_IN_HOUSE"
+                            && item.Store.StoreApply != Store_Apply_Status.Trial.ToString())
+                        {
+                            if (control_allow)
+                            {
+                                <input type="checkbox" class="AutoRenew_check" data-sto_id="@item.Store.Id" @(item.Store.AutoRenew == true ? "checked" : "") @(item.Store.Active == LicenseStatus.DE_ACTIVE.Code<int>() ? "disabled" : "") />
+
+                                if (item.Store.AutoRenew == true)
+                                {
+                                    <br />
+                                    <label class="label label-default">
+                                        <span class="recurring-card"></span>
+                                    </label>
+                                    @*var card = db.C_CustomerCard.FirstOrDefault(c => c.MxMerchant_Id == item.Store.MxMerchant_cardAccountId && item.Store.MxMerchant_cardAccountId > 0) ?? new C_CustomerCard();
+                                        var pcard = db.C_PartnerCard.FirstOrDefault(c => c.MxMerchant_Id == item.Store.MxMerchant_cardAccountId && item.Store.MxMerchant_cardAccountId > 0) ?? new C_PartnerCard();
+                                        if (string.IsNullOrEmpty(ViewBag.RecurringCard))
+                                        {
+                                            <br />
+                                            <label class="label label-default">
+                                                <span>@ViewBag.RecurringCard</span>
+                                            </label>
+                                        }
+                                        else if (item.Store.RecurringType != "ACH" && (card != null || pcard != null))
+                                        {
+                                            <br />
+                                            <label class="label label-default">
+                                                <span>@(card.CardType ?? pcard.CardType)@(card.CardNumber ?? pcard.CardNumber ?? "N/A")</span>
+                                            </label>
+                                        }
+                                        else if (item.Store.RecurringType == "ACH")
+                                        {
+                                            <br />
+                                            <label class="label label-primary">
+                                                <span>@(customer.DepositBankName)-@(customer.DepositAccountNumber)</span>
+                                            </label>
+                                        }
+                                        else if (hasCard != true)
+                                        {
+                                            <br />
+                                            <label class="label animate-flicker" style="background-color:red;">
+                                                <span data-toggle="tooltip" data-placement="bottom" title="This payment schedule has not been confirmed because the system has not recorded the merchant's card payment">Not yet card or turn off</span>
+                                            </label>
+                                        }*@
+                                }
+                            }
+                            else if (item.Store.AutoRenew == true)
+                            {
+                                <span class="label label-primary">Yes</span>
+                            }
+                            else
+                            {
+                                <span class="label label-warning">No</span>
+                            }
+                        }
+                    </td>
+                    <td>
+                        @if ((item.Store.Active == LicenseStatus.ACTIVE.Code<int>() || item.Store.Active == LicenseStatus.RESET.Code<int>()) &&
+                            (item.Store.RenewDate.HasValue == true && DateTime.Now.Date >= item.Store.RenewDate.Value.AddDays(-15)) && customer.Type != "STORE_IN_HOUSE")
+                        {
+                            if (item.Store.Period?.Equals("onetime", StringComparison.OrdinalIgnoreCase) == false && item.Store.hasRenewInvoiceIncomplete != true)
+                            {
+                                <a class="btn btn-warning " style="padding: 3px 10px" onclick="renew('@item.Store.Id')">
+                                    Renew <img id="img_load_@item.Store.Id" style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                                </a>
+                            }
+                            else if (item.Store.hasRenewInvoiceIncomplete == true)
+                            {
+                                if (string.IsNullOrEmpty(item.Store.LastRenewOrderCode))
+                                {
+                                    <span>Renew at <b>@item.Store.LastRenewAt</b></span><br />
+                                    <span>by <b>@item.Store.LastRenewBy</b></span><br />
+                                    <span>Status: <b style="color:#e08e0b">Waiting</b></span>
+                                }
+                                else
+                                {
+                                    <span>Invoice: <a href="/order/estimatesdetail?code=@item.Store.LastRenewOrderCode"><b>#@item.Store.LastRenewOrderCode</b></a></span><br />
+                                    <span>
+                                        Renew at <b>
+                                            <span>
+                                                @item.Store.LastRenewAt.Value.UtcToIMSDateTime().ToString("MMM dd, yyyy hh:mm tt")
+                                            </span>
+                                        </b>
+                                    </span><br />
+                                    @*<span>Renew at <b>@item.Store.LastRenewAt</b></span><br />*@
+                                    <span>by <b>@item.Store.LastRenewBy</b></span><br />
+                                    <span>Status: <b style="color:#e08e0b">Waiting</b></span>
+                                }
+                            }
+                        }
+                    </td>
+                    <td class="latest-update">
+                        <span>
+                            @item.Store.LastUpdateAt.Value.UtcToIMSDateTime().ToString("MMM dd, yyyy hh:mm tt")
+                        </span>
+                        @if (!string.IsNullOrEmpty(item.Store.LastUpdateBy))
+                        {
+                            <br /><i>-By @item.Store.LastUpdateBy</i>
+                        }
+                    </td>
+                    @if (control_allow)
+                    {
+                        <td>
+                            @if (item.Store.RenewDate == null ||
+                                DateTime.UtcNow.UtcToIMSDateTime().Date <= item.Store.RenewDate.Value &&
+                                item.Store.Active != LicenseStatus.DE_ACTIVE.Code<int>())
+                            {
+                                <div class="btn-group">
+                                    @if (item.Store.Active == LicenseStatus.ACTIVE.Code<int>())
+                                    {
+                                        <button type="button" class="btn btn-info dropdown-toggle btn-sm" data-toggle="dropdown" aria-expanded="false">
+                                            ACTION <span class="caret"></span><span class="sr-only"></span>
+                                            <img style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                                        </button>
+                                        <ul class="dropdown-menu" role="menu">
+                                            <li>
+                                                <button type="button" class="btn btn-success btn-sm" onclick="reActiveStore($(this), 'same-active')" data-license-id="@item.Store.Id">
+                                                    @(item.Store.Type=="license"? "REACTIVE THIS LICENSE" : "REACTIVE")    <img style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                                                </button>
+                                            </li>
+                                            <li>
+                                                <button type="button" class="btn btn-danger btn-sm" onclick="deActiveStore($(this))" data-license-id="@item.Store.Id">
+                                                    @(item.Store.Type=="license"? "DEACTIVE THIS LICENSE" : "DEACTIVE")  <img style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                                                </button>
+                                            </li>
+                                        </ul>
+
+                                        if (item.Store.EffectiveDate > DateTime.UtcNow.UtcToIMSDateTime())
+                                        {
+                                            <a class="btn btn-warning active-store" onclick="immediateActive($(this))" data-license-id="@item.Store.Id" style="margin: 10px 0">
+                                                Immediate Active <img style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                                            </a>
+                                        }
+                                    }
+                                    else if (typeCus == MerchantType.STORE_IN_HOUSE.Code<string>() ||
+                                        item.Order?.Status == InvoiceStatus.Closed.ToString() ||
+                                        item.Order?.Status == InvoiceStatus.Paid_Wait.ToString() ||
+                                        item.Order?.Status == InvoiceStatus.PaymentLater.ToString())
+                                    {
+                                        <a class="btn btn-success active-store" onclick="activeStore($(this),true)" data-license-id="@item.Store.Id">
+                                            Active <img style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                                        </a>
+                                        if (item.Store.EffectiveDate > DateTime.UtcNow)
+                                        {
+                                            <a class="btn btn-warning active-store" onclick="immediateActive($(this))" data-license-id="@item.Store.Id" style="margin: 10px 0">
+                                                Immediate Active <img style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                                            </a>
+                                        }
+                                    }
+                                </div>
+                            }
+                            else if (item.Store.RenewDate != null && DateTime.Now.Date > item.Store.RenewDate.Value && item.Store.Active != LicenseStatus.DE_ACTIVE.Code<int>() && item.Store.Active == LicenseStatus.ACTIVE.Code<int>())
+                            {
+                                <button type="button" class="btn btn-danger btn-sm" onclick="deActiveStore($(this))" data-license-id="@item.Store.Id">
+                                    @(item.Store.Type=="license"? "DEACTIVE THIS LICENSE" : "DEACTIVE")   <img style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                                </button>
+                            }
+                        </td>
+                    }
+                    else
+                    {
+                        <td></td>
+                    }
+                </tr>
+            }
+            <tr><th colspan="8"><h4 style="margin: 5px"><i>Addon</i></h4></th></tr>
+            foreach (var grps in addons.GroupBy(c => c.Product.Code).Select(c => c.ToList()).ToList())
+            {
+                var grp = grps.OrderByDescending(c => c.Store.EffectiveDate).ThenByDescending(c => c.Store.Active == 1).ThenByDescending(c => c.Store.Active == -1).ToList();
+                var first = true;
+                foreach (var item in grp)
+                {
+                    if (item.Subscription.ApplyPaidDate != true && (item.Order?.Status == "Open" || item.Order?.Status == "Canceled") && item.Subscription.Period == "MONTHLY")
+                    {
+                        item.Store.EffectiveDate = DateTime.UtcNow.Date;
+                        var license_qty = (item.Subscription.SubscriptionQuantity ?? 1) * (item.Subscription.Quantity ?? 1);
+                        if (item.Subscription.PeriodRecurring == "Yearly") { item.Store.RenewDate = item.Store.EffectiveDate.Value.AddYears(license_qty); }
+                        else if (item.Subscription.PeriodRecurring == "Weekly") { item.Store.RenewDate = item.Store.EffectiveDate.Value.AddDays(license_qty * 7); }
+                        else { item.Store.RenewDate = item.Store.EffectiveDate.Value.AddMonths(license_qty); }
+                    }
+
+                    <tr class="@(first ? "" : ("more-subscription-for-" + item.Product.Code.Replace(" ", "")))" style="@(first ? "" : "display:none")">
+                        <td>
+                            <strong>
+                                @item.Product.Name
+                                @if (item.Store.Quantity > 1 && item.Subscription.Period == "MONTHLY")
+                                {
+                                    <i style="margin-left: 15px">x @item.Store.Quantity</i>
+                                }
+                            </strong>
+                            @if (first && grp.Count > 1)
+                            {
+                                <span href="#" class="btn btn-link pull-right" id="btn-show-@item.Product.Code.Replace(" ", "")"
+                                      onclick="$('.more-subscription-for-@(item.Product.Code.Replace(" ", ""))').slideDown('slow'); $('#btn-show-@item.Product.Code.Replace(" ", "")').hide(); $('#btn-hide-@item.Product.Code.Replace(" ", "")').show();">show more</span>
+                                <span href="#" class="btn btn-link pull-right" id="btn-hide-@item.Product.Code.Replace(" ", "")" style="display: none"
+                                      onclick="$('.more-subscription-for-@(item.Product.Code.Replace(" ", ""))').hide(); $('#btn-show-@item.Product.Code.Replace(" ", "")').show(); $('#btn-hide-@item.Product.Code.Replace(" ", "")').hide();">show less</span>
+                            }
+                            @if (item.Product.isAddon != true)
+                            {
+                                if (item.Store.StoreApply == Store_Apply_Status.Trial.ToString())
+                                {
+                                    <label class="label label-default">Trial</label>
+                                }
+                                else if (item.Store.StoreApply == Store_Apply_Status.Promotional.ToString())
+                                {
+                                    <label class="label label-info">Promo</label>
+                                }
+                                else
+                                {
+                                    <label class="label label-primary">Regular</label>
+                                }
+                            }
+
+                            <br />
+                            @if (item.Product.Type == "license")
+                            {
+                                <text>
+                                    <i> Subscription product </i>
+                                </text>
+                            }
+                            @if (item.Product.Type == "addon")
+                            {
+                                <text>
+                                    <i> Addon product </i>
+                                </text>
+                            }
+                            @if (item.Product.Type == "other")
+                            {
+                                <text>
+                                    <i>Other services</i>
+                                </text>
+                            }
+
+                            @if (item.Store.ApplyDiscountAsRecurring == true)
+                            {
+                                <br />
+                                if (item.Subscription.DiscountPercent > 0)
+                                {
+                                    <span class="badge discount-label" onclick="update_discount('@item.Store.Id', '@item.Product.Name', '%', @item.Subscription.DiscountPercent )"
+                                          data-toggle="tooltip" data-placement="bottom" title="We do offer discount on packages as recurring @item.Subscription.DiscountPercent%">
+                                        Discount as recuring: @item.Subscription.DiscountPercent %
+                                    </span>
+                                }
+                                else if (item.Subscription.Discount > 0)
+                                {
+                                    <span class="badge discount-label" onclick="update_discount('@item.Store.Id', '@item.Product.Name', '$', @item.Subscription.Discount )"
+                                          data-toggle="tooltip" data-placement="bottom" title="We do offer discount on packages as recurring $@item.Subscription.Discount">
+                                        Discount as recuring: $ @item.Subscription.Discount
+                                    </span>
+                                }
+                            }
+                        </td>
+
+                        @*<td>@(string.IsNullOrEmpty(item.Store.Period) ? "onetime" : item.Store.Period.ToLower())</td>*@
+                        <td>
+                            <span>
+                                @item.Store.EffectiveDate.Value.ToString("MMM dd, yyyy")
+                            </span>
+                            @if (item.Store.RenewDate != null && item.Product.SubscriptionDuration != "ONETIME")
+                            {
+                                <i> - </i>
+                                <span>
+                                    @item.Store.RenewDate.Value.ToString("MMM dd, yyyy")
+                                </span>
+                                if (DateTime.Now.Date > item.Store.RenewDate.Value && item.Store.Active == LicenseStatus.ACTIVE.Code<int>())
+                                {
+                                    <label class="label animate-flicker" style="background-color:red"> Expired</label>
+                                }
+                                else if (DateTime.Now.Date.AddDays(10) > item.Store.RenewDate.Value && item.Store.Active == LicenseStatus.ACTIVE.Code<int>())
+                                {
+                                    <label class="label animate-flicker" style="background-color:#ff3e00"> Nearly expired</label>
+                                }
+                            }
+                            @if (!string.IsNullOrEmpty(item.Store.OrderCode) && item.Store.Active == LicenseStatus.WAITING.Code<int>())
+                            {
+                                <br />
+                                <a href="/order/estimatesdetail/?code=@item.Store.OrderCode&url_back=/merchantman/detail/?code=@item.Store.CustomerCode">#@item.Store.OrderCode</a>
+
+                                var label = "danger";
+                                var status = Ext.EnumParse<InvoiceStatus>(item.Order?.Status);
+                                switch (status)
+                                {
+                                    case InvoiceStatus.Open: label = "default"; break;
+                                    case InvoiceStatus.Paid_Wait: label = "warning"; break;
+                                    case InvoiceStatus.Closed: label = "success"; break;
+                                    case InvoiceStatus.PaymentLater: label = item.Order.DueDate > DateTime.UtcNow ? "primary" : "danger"; break;
+                                }
+
+                                <span class="label order-status label-@(label)" @(status == InvoiceStatus.Paid_Wait ? "data-html=\"true\" data-toggle=\"tooltip\" data-original-title=\"" + item.Order.PaymentMethod + "<br/>" + item.Order.PaymentNote + "\" style=\"cursor: pointer\"" : "")>@(status.Code<string>())</span>
+                            }
+                            @if (!string.IsNullOrEmpty(item.Store.LastRenewOrderCode) && item.Store.Period == "MONTHLY")
+                            {
+                                var lastOrder = db.O_Orders.FirstOrDefault(c => c.OrdersCode == item.Store.LastRenewOrderCode);
+                                if (lastOrder.Status == InvoiceStatus.PaymentLater.ToString())
+                                {
+                                    <br />
+                                    <a href="/order/estimatesdetail/?code=@item.Store.LastRenewOrderCode&url_back=/merchantman/detail/?code=@item.Store.CustomerCode">#@item.Store.OrderCode</a>
+                                    <label class="label label-warning">Due date payment to @lastOrder.DueDate.Value.ToString("MMM dd, yyyy")</label>
+                                }
+                            }
+                            <br />
+                            @if (string.IsNullOrEmpty(item.Store.Period) || item.Store.Period == "ONETIME")
+                            {
+                                <label class="label label-default">Onetime</label>
+                            }
+                            else
+                            {
+                                if (string.IsNullOrEmpty(item.Store.PeriodRecurring))
+                                {
+                                    <label class="label label-default">Monthly</label>
+                                }
+                                else
+                                {
+                                    <label class="label label-default">@item.Store.PeriodRecurring</label>
+                                }
+                            }
+                            @if (item.Order?.Status == InvoiceStatus.PaymentLater.ToString() && item.Store.Active == 1 && item.Order.DueDate.HasValue)
+                            {
+                                <br />
+                                if (item.Order.DueDate.Value.Date < DateTime.UtcNow)
+                                {
+                                    <label class="label label-danger">Payment Later - @item.Order.DueDate.Value.ToString("MMM dd, yyyy")</label>
+                                }
+                                else
+                                {
+                                    <label class="label label-primary">Payment Later - @item.Order.DueDate.Value.ToString("MMM dd, yyyy")</label>
+                                }
+                            }
+                        </td>
+                        <td>
+                            @if (item.Store.RenewDate != null && DateTime.Now.Date > item.Store.RenewDate.Value && item.Store.Active != LicenseStatus.ACTIVE.Code<int>())
+                            {
+                                <label class='label label-danger'>Expired</label>
+                            }
+                            else if (item.Store.Active == LicenseStatus.RESET.Code<int>())
+                            {
+                                <label class='label label-info'>Reset</label>
+                            }
+                            else if (item.Store.Active == LicenseStatus.WAITING.Code<int>())
+                            {
+                                <label class='label label-warning'>Waiting</label>
+                            }
+                            else if (item.Store.Active == LicenseStatus.REMOVED.Code<int>())
+                            {
+                                <label class='label label-default'>Removed</label>
+                            }
+                            else if (item.Store.Active == LicenseStatus.DE_ACTIVE.Code<int>())
+                            {
+                                <label class='label label-default'>Deactive</label>
+                            }
+                            else
+                            {
+                                <label class='label label-success'>Active</label>
+                            }
+                        </td>
+                        <td align="center">
+                            @if (!string.IsNullOrEmpty(item.Store.Period) && item.Store.Period == "MONTHLY" && item.Store.StoreApply != Store_Apply_Status.Trial.ToString() && customer.Type != "STORE_IN_HOUSE")
+                            {
+                                if (control_allow)
+                                {
+                                    <input type="checkbox" class="AutoRenew_check" data-sto_id="@item.Store.Id" @(item.Store.AutoRenew == true ? "checked" : "") @(item.Store.Active == LicenseStatus.DE_ACTIVE.Code<int>() ? "disabled" : "") />
+
+                                    if (item.Store.AutoRenew == true)
+                                    {
+                                        <br />
+                                        <label class="label label-default">
+                                            <span class="recurring-card"></span>
+                                        </label>
+                                    }
+                                }
+                                else if (item.Store.AutoRenew == true)
+                                {
+                                    <span class="label label-primary">Yes</span>
+                                }
+                                else
+                                {
+                                    <span class="label label-warning">No</span>
+                                }
+                            }
+                        </td>
+                        <td>
+                            @if ((item.Store.Active == LicenseStatus.ACTIVE.Code<int>() || item.Store.Active == LicenseStatus.RESET.Code<int>()) &&
+                                (item.Store.RenewDate.HasValue == true && DateTime.Now.Date >= item.Store.RenewDate.Value.AddDays(-15)) && customer.Type != "STORE_IN_HOUSE")
+                            {
+                                if (item.Store.Period?.Equals("onetime", StringComparison.OrdinalIgnoreCase) == false && item.Store.hasRenewInvoiceIncomplete != true)
+                                {
+                                    <a class="btn btn-warning " style="padding: 3px 10px" onclick="renew('@item.Store.Id')">
+                                        Renew <img id="img_load_@item.Store.Id" style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                                    </a>
+                                }
+                                else if (item.Store.hasRenewInvoiceIncomplete == true)
+                                {
+                                    <span>Invoice: <a href="/order/estimatesdetail?code=@item.Store.LastRenewOrderCode"><b>#@item.Store.LastRenewOrderCode</b></a></span><br />
+                                    <span>
+                                        Renew at <b>
+                                            <span>
+                                                @item.Store.LastRenewAt.Value.UtcToIMSDateTime().ToString("MMM dd, yyyy hh:mm tt")
+                                            </span>
+                                        </b>
+                                    </span><br />
+                                    <span>by <b>@item.Store.LastRenewBy</b></span><br />
+                                    <span>Status: <b style="color:#e08e0b">Waiting</b></span>
+                                }
+                            }
+                        </td>
+                        <td class="latest-update">
+                            <span>
+                                @item.Store.LastUpdateAt.Value.UtcToIMSDateTime().ToString("MMM dd, yyyy hh:mm tt")
+                            </span>
+                            @if (!string.IsNullOrEmpty(item.Store.LastUpdateBy))
+                            {
+                                <br /><i>-By @item.Store.LastUpdateBy</i>
+                            }
+                        </td>
+                        @if (control_allow)
+                        {
+                            <td>
+                                @if (item.Store.RenewDate.HasValue && item.Store.RenewDate.Value < DateTime.Now.Date && item.Store.Active < 1 || item.Store.Active == 0)
+                                { }
+                                else if (item.Store.RenewDate == null || DateTime.Now.Date <= item.Store.RenewDate.Value && item.Store.Active != LicenseStatus.DE_ACTIVE.Code<int>())
+                                {
+                                    <div class="btn-group">
+                                        @if (item.Store.Active == LicenseStatus.ACTIVE.Code<int>())
+                                        {
+
+                                            <button type="button" class="btn btn-info dropdown-toggle btn-sm" data-toggle="dropdown" aria-expanded="false">
+                                                ACTION <span class="caret"></span><span class="sr-only"></span>
+                                                <img style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                                            </button>
+                                            <ul class="dropdown-menu" role="menu">
+                                                <li>
+                                                    <button type="button" class="btn btn-danger btn-sm" onclick="deActiveStore($(this))" data-license-id="@item.Store.Id">
+                                                        @(item.Store.Type=="license"? "DEACTIVE THIS LICENSE" : "DEACTIVE")   <img style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                                                    </button>
+                                                </li>
+                                            </ul>
+
+                                            if (item.Store.EffectiveDate > DateTime.UtcNow)
+                                            {
+                                                <a class="btn btn-warning active-store" onclick="immediateActive($(this))" data-license-id="@item.Store.Id" style="margin: 10px 0">
+                                                    Immediate Active <img style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                                                </a>
+                                            }
+                                        }
+                                        else if (typeCus == MerchantType.STORE_IN_HOUSE.Code<string>() ||
+                                            item.Order?.Status == InvoiceStatus.Closed.ToString() ||
+                                            item.Order?.Status == InvoiceStatus.Paid_Wait.ToString() ||
+                                            item.Order?.Status == InvoiceStatus.PaymentLater.ToString())
+                                        {
+                                            <a class="btn btn-success active-store" onclick="activeStore($(this),true)" data-license-id="@item.Store.Id">
+                                                Active <img style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                                            </a>
+
+                                            if (item.Store.EffectiveDate > DateTime.UtcNow)
+                                            {
+                                                <a class="btn btn-warning active-store" onclick="immediateActive($(this))" data-license-id="@item.Store.Id" style="margin: 10px 0">
+                                                    Immediate Active <img style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                                                </a>
+                                            }
+                                        }
+
+                                    </div>
+                                }
+                                else if (item.Store.RenewDate != null && DateTime.Now.Date > item.Store.RenewDate.Value && item.Store.Active != LicenseStatus.DE_ACTIVE.Code<int>() && item.Store.Active == LicenseStatus.ACTIVE.Code<int>())
+                                {
+                                    <button type="button" class="btn btn-danger btn-sm" onclick="deActiveStore($(this))" data-license-id="@item.Store.Id">
+                                        @(item.Store.Type=="license"? "DEACTIVE THIS LICENSE" : "DEACTIVE")   <img style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                                    </button>
+                                }
+                            </td>
+                        }
+                        else
+                        {
+                            <td></td>
+                        }
+                    </tr>
+                    first = false;
+                }
+            }
+            <tr><th colspan="8" style="border-right: 0px"><h4 style="margin: 5px"><i>Gift cards</i></h4></th></tr>
+            foreach (var grps in giftcards.GroupBy(c => c.Product.Code).Select(c => c.ToList()).ToList())
+            {
+                var grp = grps.OrderByDescending(c => c.Store.EffectiveDate).ToList();
+                var first = true;
+                foreach (var item in grp)
+                {
+                    <tr class="@(first ? "" : ("more-subscription-for-" + item.Product.Code.Replace(" ", "")))" style="@(first ? "" : "display:none")">
+                        <td>
+                            <strong>@item.Product.Name</strong>
+                            @if (first && grp.Count > 1)
+                            {
+                                <span href="#" class="btn btn-link pull-right" id="btn-show-@item.Product.Code.Replace(" ", "")"
+                                      onclick="$('.more-subscription-for-@(item.Product.Code.Replace(" ", ""))').slideDown('slow'); $('#btn-show-@item.Product.Code.Replace(" ", "")').hide(); $('#btn-hide-@item.Product.Code.Replace(" ", "")').show();">show more</span>
+                                <span href="#" class="btn btn-link pull-right" id="btn-hide-@item.Product.Code" style="display: none"
+                                      onclick="$('.more-subscription-for-@(item.Product.Code.Replace(" ", ""))').hide(); $('#btn-show-@item.Product.Code.Replace(" ", "")').show(); $('#btn-hide-@item.Product.Code.Replace(" ", "")').hide();">show less</span>
+                            }
+                            @if (item.Product.isAddon != true)
+                            {
+                                if (item.Store.StoreApply == Store_Apply_Status.Trial.ToString())
+                                {
+                                    <label class="label label-default">Trial</label>
+                                }
+                                else if (item.Store.StoreApply == Store_Apply_Status.Promotional.ToString())
+                                {
+                                    <label class="label label-info">Promo</label>
+                                }
+                                else
+                                {
+                                    <label class="label label-primary">Regular</label>
+                                }
+                            }
+
+                            <br />
+                            @if (item.Product.Type == "license")
+                            {
+                                <text>
+                                    <i> Subscription product </i>
+                                </text>
+                            }
+                            @if (item.Product.Type == "addon")
+                            {
+                                <text>
+                                    <i> Addon product </i>
+                                </text>
+                            }
+                            @if (item.Product.Type == "other")
+                            {
+                                <text>
+                                    <i>Other services</i>
+                                </text>
+                            }
+
+                            @if (item.Store.ApplyDiscountAsRecurring == true)
+                            {
+                                <br />
+                                if (item.Subscription.DiscountPercent > 0)
+                                {
+                                    <span class="badge discount-label" onclick="update_discount('@item.Store.Id', '@item.Product.Name', '%', @item.Subscription.DiscountPercent )"
+                                          data-toggle="tooltip" data-placement="bottom" title="We do offer discount on packages as recurring @item.Subscription.DiscountPercent%">
+                                        Discount as recuring: @item.Subscription.DiscountPercent %
+                                    </span>
+                                }
+                                else if (item.Subscription.Discount > 0)
+                                {
+                                    <span class="badge discount-label" onclick="update_discount('@item.Store.Id', '@item.Product.Name', '$', @item.Subscription.Discount )"
+                                          data-toggle="tooltip" data-placement="bottom" title="We do offer discount on packages as recurring $@item.Subscription.Discount">
+                                        Discount as recuring: $ @item.Subscription.Discount
+                                    </span>
+                                }
+                            }
+                        </td>
+
+                        @*<td>@(string.IsNullOrEmpty(item.Store.Period) ? "onetime" : item.Store.Period.ToLower())</td>*@
+                        <td>
+                            <span>
+                                @item.Store.EffectiveDate.Value.ToString("MMM dd, yyyy")
+                            </span>
+                            @if (item.Store.RenewDate != null && item.Product.SubscriptionDuration != "ONETIME")
+                            {
+                                <i> - </i>
+                                <span>
+                                    @item.Store.RenewDate.Value.ToString("MMM dd, yyyy")
+                                </span>
+                                if (DateTime.Now.Date > item.Store.RenewDate.Value && item.Store.Active == LicenseStatus.ACTIVE.Code<int>())
+                                {
+                                    <label class="label animate-flicker" style="background-color:red"> Expired</label>
+                                }
+                                else if (DateTime.Now.Date.AddDays(10) > item.Store.RenewDate.Value && item.Store.Active == LicenseStatus.ACTIVE.Code<int>())
+                                {
+                                    <label class="label animate-flicker" style="background-color:#ff3e00"> Nearly expired</label>
+                                }
+                            }
+                            @if (!string.IsNullOrEmpty(item.Store.OrderCode) && item.Store.Active == LicenseStatus.WAITING.Code<int>())
+                            {
+                                <br />
+                                <a href="/order/estimatesdetail/?code=@item.Store.OrderCode&url_back=/merchantman/detail/?code=@item.Store.CustomerCode">#@item.Store.OrderCode</a>
+
+                                var label = "danger";
+                                var status = Ext.EnumParse<InvoiceStatus>(item.Order?.Status);
+                                switch (status)
+                                {
+                                    case InvoiceStatus.Open: label = "default"; break;
+                                    case InvoiceStatus.Paid_Wait: label = "warning"; break;
+                                    case InvoiceStatus.Closed: label = "success"; break;
+                                    case InvoiceStatus.PaymentLater: label = item.Order.DueDate > DateTime.UtcNow ? "primary" : "danger"; break;
+                                }
+
+                                <span class="label order-status label-@(label)" @(status == InvoiceStatus.Paid_Wait ? "data-html=\"true\" data-toggle=\"tooltip\" data-original-title=\"" + item.Order.PaymentMethod + "<br/>" + item.Order.PaymentNote + "\" style=\"cursor: pointer\"" : "")>@(status.Code<string>())</span>
+                            }
+                            <br />
+                            @if (string.IsNullOrEmpty(item.Store.Period) || item.Store.Period == "ONETIME")
+                            {
+                                <label class="label label-default">Onetime</label>
+                            }
+                            else
+                            {
+                                if (string.IsNullOrEmpty(item.Store.PeriodRecurring))
+                                {
+                                    <label class="label label-default">Monthly</label>
+                                }
+                                else
+                                {
+                                    <label class="label label-default">@item.Store.PeriodRecurring</label>
+                                }
+                            }@if (item.Order?.Status == InvoiceStatus.PaymentLater.ToString() && item.Store.Active == 1)
+                            {
+                                <br />
+                                if (item.Order.DueDate.Value.Date < DateTime.UtcNow)
+                                {
+                                    <label class="label label-danger">Payment Later - @item.Order.DueDate.Value.ToString("MMM dd, yyyy")</label>
+                                }
+                                else
+                                {
+                                    <label class="label label-primary">Payment Later - @item.Order.DueDate.Value.ToString("MMM dd, yyyy")</label>
+                                }
+                            }
+                        </td>
+                        <td>
+
+                            @if (item.Store.Active == LicenseStatus.RESET.Code<int>())
+                            {
+                                <label class='label label-info'>Reset</label>
+                            }
+                            else if (item.Store.Active == LicenseStatus.WAITING.Code<int>())
+                            {
+                                <label class='label label-warning'>Waiting</label>
+                            }
+                            else if (item.Store.Active == LicenseStatus.REMOVED.Code<int>())
+                            {
+                                <label class='label label-default'>Removed</label>
+                            }
+                            else if (item.Store.Active == LicenseStatus.DE_ACTIVE.Code<int>())
+                            {
+                                <label class='label label-default'>Deactive</label>
+                            }
+                            else if (item.Store.RenewDate != null && DateTime.Now.Date > item.Store.RenewDate.Value)
+                            {
+                                <label class='label label-danger'>Expired</label>
+                            }
+                            else
+                            {
+                                <label class='label label-success'>History</label>
+                            }
+                        </td>
+
+                        <td align="center">
+                            @if (!string.IsNullOrEmpty(item.Store.Period) && item.Store.Period == "MONTHLY" && item.Store.StoreApply != Store_Apply_Status.Trial.ToString())
+                            {
+                                if (control_allow)
+                                {
+                                    <input type="checkbox" class="AutoRenew_check" data-sto_id="@item.Store.Id" @(item.Store.AutoRenew == true ? "checked" : "") @(item.Store.Active == LicenseStatus.DE_ACTIVE.Code<int>() ? "disabled" : "") />
+
+                                    if (item.Store.AutoRenew == true)
+                                    {
+
+                                        <br />
+                                        <label class="label label-default">
+                                            <span class="recurring-card"></span>
+                                        </label>
+                                        @*var card = db.C_CustomerCard.FirstOrDefault(c => c.MxMerchant_Id == item.Store.MxMerchant_cardAccountId && item.Store.MxMerchant_cardAccountId > 0);
+                                            var pcard = db.C_PartnerCard.FirstOrDefault(c => c.MxMerchant_Id == item.Store.MxMerchant_cardAccountId && item.Store.MxMerchant_cardAccountId > 0);
+                                            if (item.Store.RecurringType != "ACH" && (card != null || pcard != null))
+                                            {
+                                                <br />
+                                                <label class="label label-default">
+                                                    <span>@(card.CardType ?? pcard.CardType)@(card.CardNumber ?? pcard.CardNumber ?? "N/A")</span>
+                                                </label>
+                                            }
+                                            else if (item.Store.RecurringType == "ACH")
+                                            {
+                                                <br />
+                                                <label class="label label-primary">
+                                                    <span>@(customer.DepositBankName)-@(customer.DepositAccountNumber)</span>
+                                                </label>
+                                            }
+                                            else if ((hasCard != true || !(item.Store.MxMerchant_cardAccountId > 0)))
+                                            {
+                                                <br />
+                                                <label class="label animate-flicker" style="background-color:red;">
+                                                    <span data-toggle="tooltip" data-placement="bottom" title="This payment schedule has not been confirmed because the system has not recorded the merchant's card payment">Not yet card or turn off</span>
+                                                </label>
+                                            }*@
+                                    }
+                                }
+                                else if (item.Store.AutoRenew == true)
+                                {
+                                    <span class="label label-primary">Yes</span>
+                                }
+                                else
+                                {
+                                    <span class="label label-warning">No</span>
+                                }
+                            }
+                        </td>
+                        <td>
+                            @*@if ((item.Store.Active == LicenseStatus.ACTIVE.Code<int>() || item.Store.Active == LicenseStatus.RESET.Code<int>()))
+                                {
+                                    if (item.Store.hasRenewInvoiceIncomplete != true)
+                                    {
+                                    }
+                                    else if (item.Store.hasRenewInvoiceIncomplete == true)
+                                    {
+                                        <span>Invoice: <a href="/order/estimatesdetail?code=@item.Store.LastRenewOrderCode"><b>#@item.Store.LastRenewOrderCode</b></a></span><br />
+                                        <span>Renew at <b>@item.Store.LastRenewAt</b></span><br />
+                                        <span>by <b>@item.Store.LastRenewBy</b></span><br />
+                                        <span>Status: <b style="color:#e08e0b">Waiting</b></span>
+                                    }
+                                }*@
+                        </td>
+                        <td class="latest-update">
+                            <span>
+                                @item.Store.LastUpdateAt.Value.UtcToIMSDateTime().ToString("MMM dd, yyyy hh:mm tt")
+                            </span>
+                            @if (!string.IsNullOrEmpty(item.Store.LastUpdateBy))
+                            {
+                                <br /><i>-By @item.Store.LastUpdateBy</i>
+                            }
+                        </td>
+                        @if (control_allow)
+                        {
+                            <td>
+                                @if (item.Store.RenewDate != null || item.Store.Active != LicenseStatus.RESET.Code<int>())
+                                {
+                                    <div class="btn-group">
+                                        @if (item.Store.Active == LicenseStatus.ACTIVE.Code<int>())
+                                        {
+                                            var savedDataGiftcard = db.C_CustomerGiftcard.Where(c => c.StoreServiceId == item.Store.Id);
+                                            if (savedDataGiftcard.Count() > 0)
+                                            {
+                                                <a class="btn btn-link" onclick="ExportGiftcard('@item.Store.Id')" style="padding-left:0">
+                                                    <i class="fa fa-file-excel-o"></i> Export to excel <img id="img_load_addon_popup" src="/Content/ajax-loaders/ajax-loader-1.gif" style="display: none;">
+                                                </a>
+                                            }
+
+                                            <a class="btn btn-default" style="padding: 3px 10px;" onclick="activeStoreGiftcard($(this),'@item.Product.Name', false)" data-license-id="@item.Store.Id">
+                                                Re-order <img id="img_load_@item.Store.Id" style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                                            </a>
+                                        }
+                                        else if (typeCus == MerchantType.STORE_IN_HOUSE.Code<string>() ||
+                                            item.Order?.Status == InvoiceStatus.Closed.ToString() ||
+                                            item.Order?.Status == InvoiceStatus.Paid_Wait.ToString() ||
+                                            item.Order?.Status == InvoiceStatus.PaymentLater.ToString())
+                                        {
+                                            <a class="btn btn-success active-store" onclick="activeStoreGiftcard($(this),'@item.Product.Name', true)" data-license-id="@item.Store.Id">
+                                                Get Code <img style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                                            </a>
+                                        }
+                                    </div>
+                                }
+                            </td>
+                        }
+                        else
+                        {
+                            <td></td>
+                        }
+                    </tr>
+                    first = false;
+                }
+
+            }
+            <tr><th colspan="8"><h4 style="margin: 5px"><i>Other services</i></h4></th></tr>
+            foreach (var grps in otherservices.GroupBy(c => c.Product.Code).Select(c => c.ToList()).ToList())
+            {
+                var grp = grps.OrderByDescending(c => c.Store.EffectiveDate).ToList();
+                var first = true;
+                foreach (var item in grp)
+                {
+                    <tr class="@(first ? "" : ("more-subscription-for-" + item.Product.Code.Replace(" ", "")))" style="@(first ? "" : "display:none")">
+                        <td>
+                            <strong>@item.Product.Name</strong>
+                            @if (first && grp.Count > 1)
+                            {
+                                <span href="#" class="btn btn-link pull-right" id="btn-show-@item.Product.Code.Replace(" ", "")"
+                                      onclick="$('.more-subscription-for-@(item.Product.Code.Replace(" ", ""))').slideDown('slow'); $('#btn-show-@item.Product.Code.Replace(" ", "")').hide(); $('#btn-hide-@item.Product.Code.Replace(" ", "")').show();">show more</span>
+                                <span href="#" class="btn btn-link pull-right" id="btn-hide-@item.Product.Code.Replace(" ", "")" style="display: none"
+                                      onclick="$('.more-subscription-for-@(item.Product.Code.Replace(" ", ""))').hide(); $('#btn-show-@item.Product.Code.Replace(" ", "")').show(); $('#btn-hide-@item.Product.Code.Replace(" ", "")').hide();">show less</span>
+                            }
+                            @if (item.Product.isAddon != true)
+                            {
+                                if (item.Store.StoreApply == Store_Apply_Status.Trial.ToString())
+                                {
+                                    <label class="label label-default">Trial</label>
+                                }
+                                else if (item.Store.StoreApply == Store_Apply_Status.Promotional.ToString())
+                                {
+                                    <label class="label label-info">Promo</label>
+                                }
+                                else
+                                {
+                                    <label class="label label-primary">Regular</label>
+                                }
+                            }
+
+                            <br />
+                            @if (item.Product.Type == "license")
+                            {
+                                <text>
+                                    <i> Subscription product </i>
+                                </text>
+                            }
+                            @if (item.Product.Type == "addon")
+                            {
+                                <text>
+                                    <i> Addon product </i>
+                                </text>
+                            }
+                            @if (item.Product.Type == "other")
+                            {
+                                <text>
+                                    <i>Other services</i>
+                                </text>
+                            }
+
+                            @if (item.Store.ApplyDiscountAsRecurring == true)
+                            {
+                                <br />
+                                if (item.Subscription.DiscountPercent > 0)
+                                {
+                                    <span class="badge discount-label" onclick="update_discount('@item.Store.Id', '@item.Product.Name', '%', @item.Subscription.DiscountPercent )"
+                                          data-toggle="tooltip" data-placement="bottom" title="We do offer discount on packages as recurring @item.Subscription.DiscountPercent%">
+                                        Discount as recuring: @item.Subscription.DiscountPercent %
+                                    </span>
+                                }
+                                else if (item.Subscription.Discount > 0)
+                                {
+                                    <span class="badge discount-label" onclick="update_discount('@item.Store.Id', '@item.Product.Name', '$', @item.Subscription.Discount )"
+                                          data-toggle="tooltip" data-placement="bottom" title="We do offer discount on packages as recurring $@item.Subscription.Discount">
+                                        Discount as recuring: $ @item.Subscription.Discount
+                                    </span>
+                                }
+                            }
+                        </td>
+
+                        @*<td>@(string.IsNullOrEmpty(item.Store.Period) ? "onetime" : item.Store.Period.ToLower())</td>*@
+                        <td>
+                            <span>
+                                @item.Store.EffectiveDate.Value.ToString("MMM dd, yyyy")
+                            </span>
+                            @if (item.Store.RenewDate != null && item.Product.SubscriptionDuration != "ONETIME")
+                            {
+                                <i> - </i>
+                                <span>
+                                    @item.Store.RenewDate.Value.ToString("MMM dd, yyyy")
+                                </span>
+                                if (DateTime.Now.Date > item.Store.RenewDate.Value && item.Store.Active == LicenseStatus.ACTIVE.Code<int>())
+                                {
+                                    <label class="label animate-flicker" style="background-color:red"> Expired</label>
+                                }
+                                else if (DateTime.Now.Date.AddDays(10) > item.Store.RenewDate.Value && item.Store.Active == LicenseStatus.ACTIVE.Code<int>())
+                                {
+                                    <label class="label animate-flicker" style="background-color:#ff3e00"> Nearly expired</label>
+                                }
+                            }
+                            else
+                            {
+                            }
+                            @if (item.Order?.Status != InvoiceStatus.Paid_Wait.ToString() && item.Order?.Status != InvoiceStatus.Closed.ToString() && item.Order != null)
+                            {
+                                <br />
+                                <a href="/order/estimatesdetail/?code=@item.Store.OrderCode&url_back=/merchantman/detail/?code=@item.Store.CustomerCode">#@item.Store.OrderCode</a>
+
+                                var label = "danger";
+                                var status = Ext.EnumParse<InvoiceStatus>(item.Order?.Status);
+                                switch (status)
+                                {
+                                    case InvoiceStatus.Open: label = "default"; break;
+                                    case InvoiceStatus.Paid_Wait: label = "warning"; break;
+                                    case InvoiceStatus.Closed: label = "success"; break;
+                                    case InvoiceStatus.PaymentLater: label = item.Order.DueDate > DateTime.UtcNow ? "primary" : "danger"; break;
+                                }
+
+                                <span class="label order-status label-@(label)" @(status == InvoiceStatus.Paid_Wait ? "data-html=\"true\" data-toggle=\"tooltip\" data-original-title=\"" + item.Order.PaymentMethod + "<br/>" + item.Order.PaymentNote + "\" style=\"cursor: pointer\"" : "")>@(status.Code<string>())</span>
+                            }
+                            <br />
+                            @if (string.IsNullOrEmpty(item.Store.Period) || item.Store.Period == "ONETIME")
+                            {
+                                <label class="label label-default">Onetime</label>
+                            }
+                            else
+                            {
+                                if (string.IsNullOrEmpty(item.Store.PeriodRecurring))
+                                {
+                                    <label class="label label-default">Monthly</label>
+                                }
+                                else
+                                {
+                                    <label class="label label-default">@item.Store.PeriodRecurring</label>
+                                }
+                            }
+                            @if (item.Order?.Status == InvoiceStatus.PaymentLater.ToString() && item.Store.Active == 1)
+                            {
+                                <br />
+                                if (item.Order.DueDate.Value.Date < DateTime.UtcNow)
+                                {
+                                    <label class="label label-danger">Payment Later - @item.Order.DueDate.Value.ToString("MMM dd, yyyy")</label>
+                                }
+                                else
+                                {
+                                    <label class="label label-primary">Payment Later - @item.Order.DueDate.Value.ToString("MMM dd, yyyy")</label>
+                                }
+                            }
+                        </td>
+                        <td>
+                            @if (item.Order?.Status == InvoiceStatus.Open.ToString())
+                            {
+                                <label class='label label-warning'>Waiting</label>
+                            }
+                            else if (item.Order?.Status == InvoiceStatus.Canceled.ToString())
+                            {
+                                <label class='label label-danger'>Cancel</label>
+                            }
+                            else
+                            {
+                                <label class='label label-success'>History</label>
+                            }
+                            @*@if (item.Store.Active == LicenseStatus.RESET.Code<int>())
+                                {
+                                    <label class='label label-info'>Reset</label>
+                                }
+                                else if (item.Store.Active == LicenseStatus.WAITING.Code<int>())
+                                {
+                                    <label class='label label-warning'>Waiting</label>
+
+                                }
+                                else if (item.Store.Active == LicenseStatus.REMOVED.Code<int>())
+                                {
+                                    <label class='label label-default'>Removed</label>
+                                }
+                                else if (item.Store.Active == LicenseStatus.DE_ACTIVE.Code<int>())
+                                {
+                                    <label class='label label-default'>Deactive</label>
+                                }
+                                else if (item.Store.RenewDate != null && DateTime.Now.Date > item.Store.RenewDate.Value)
+                                {
+                                    <label class='label label-danger'>Expired</label>
+                                }
+                                else
+                                {
+                                    <label class='label label-success'>Active</label>
+                                }*@
+                        </td>
+
+                        <td align="center">
+                            @if (!string.IsNullOrEmpty(item.Store.Period) && item.Store.Period == "MONTHLY" && item.Store.StoreApply != Store_Apply_Status.Trial.ToString() && customer.Type != "STORE_IN_HOUSE")
+                            {
+                                if (control_allow)
+                                {
+                                    <input type="checkbox" class="AutoRenew_check" data-sto_id="@item.Store.Id" @(item.Store.AutoRenew == true ? "checked" : "") @(item.Store.Active == LicenseStatus.DE_ACTIVE.Code<int>() ? "disabled" : "") />
+
+                                    if (item.Store.AutoRenew == true)
+                                    {
+                                        <br />
+                                        <label class="label label-default">
+                                            <span class="recurring-card"></span>
+                                        </label>
+                                        @*var card = db.C_CustomerCard.FirstOrDefault(c => c.MxMerchant_Id == item.Store.MxMerchant_cardAccountId && item.Store.MxMerchant_cardAccountId > 0);
+                                            var pcard = db.C_PartnerCard.FirstOrDefault(c => c.MxMerchant_Id == item.Store.MxMerchant_cardAccountId && item.Store.MxMerchant_cardAccountId > 0);
+                                            if (item.Store.RecurringType != "ACH" && (card != null || pcard != null))
+                                            {
+                                                <br />
+                                                <label class="label label-default">
+                                                    <span>@(card.CardType ?? pcard.CardType)@(card.CardNumber ?? pcard.CardNumber ?? "N/A")</span>
+                                                </label>
+                                            }
+                                            else if (item.Store.RecurringType == "ACH")
+                                            {
+                                                <br />
+                                                <label class="label label-primary">
+                                                    <span>@(customer.DepositBankName)-@(customer.DepositAccountNumber)</span>
+                                                </label>
+                                            }
+                                            else if ((hasCard != true || !(item.Store.MxMerchant_cardAccountId > 0)))
+                                            {
+                                                <br />
+                                                <label class="label animate-flicker" style="background-color:red;">
+                                                    <span data-toggle="tooltip" data-placement="bottom" title="This payment schedule has not been confirmed because the system has not recorded the merchant's card payment">Not yet card or turn off</span>
+                                                </label>
+                                            }*@
+                                    }
+                                }
+                                else if (item.Store.AutoRenew == true)
+                                {
+                                    <span class="label label-primary">Yes</span>
+                                }
+                                else
+                                {
+                                    <span class="label label-warning">No</span>
+                                }
+                            }
+                        </td>
+                        <td>
+                            @if ((item.Order?.Status != InvoiceStatus.Open.ToString() && item.Order?.Status != InvoiceStatus.Canceled.ToString()) &&
+                                (item.Store.RenewDate.HasValue == true && DateTime.Now.Date >= item.Store.RenewDate.Value.AddDays(-15)) && customer.Type != "STORE_IN_HOUSE")
+                            {
+                                if (item.Store.Period?.Equals("onetime", StringComparison.OrdinalIgnoreCase) == false && item.Store.hasRenewInvoiceIncomplete != true && first)
+                                {
+                                    <a class="btn btn-warning " style="padding: 3px 10px" onclick="renew('@item.Store.Id')">
+                                        Renew <img id="img_load_@item.Store.Id" style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                                    </a>
+                                }
+                                else if (item.Store.hasRenewInvoiceIncomplete == true)
+                                {
+                                    <span>Invoice: <a href="/order/estimatesdetail?code=@item.Store.LastRenewOrderCode"><b>#@item.Store.LastRenewOrderCode</b></a></span><br />
+                                    <span>Renew at <b>@item.Store.LastRenewAt</b></span><br />
+                                    <span>by <b>@item.Store.LastRenewBy</b></span><br />
+                                    <span>Status: <b style="color:#e08e0b">Waiting</b></span>
+                                }
+                            }
+                        </td>
+                        <td class="latest-update">
+                            <span>
+                                @item.Store.LastUpdateAt.Value.UtcToIMSDateTime().ToString("MMM dd, yyyy hh:mm tt")
+                            </span>
+                            @if (!string.IsNullOrEmpty(item.Store.LastUpdateBy))
+                            {
+                                <br /><i>-By @item.Store.LastUpdateBy</i>
+                            }
+                        </td>
+                        <td>
+                            @*@if (item.Store.Active == LicenseStatus.ACTIVE.Code<int>())
+                                { }
+                                else if (typeCus == MerchantType.STORE_IN_HOUSE.Code<string>() ||
+                                                item.Order.Status == InvoiceStatus.Closed.ToString() ||
+                                                item.Order.Status == InvoiceStatus.Paid_Wait.ToString() ||
+                                                item.Order.Status == InvoiceStatus.PaymentLater.ToString())
+                                {
+                                    <a class="btn btn-success active-store" onclick="activeStoreGiftcard($(this),'@item.Product.Name', true)" data-license-id="@item.Store.Id">
+                                        Active <img style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                                    </a>
+                                }*@
+                        </td>
+                        @*@if (control_allow)
+                            {
+                                <td>
+                                    @if (item.Store.RenewDate != null || item.Store.Active != LicenseStatus.RESET.Code<int>())
+                                    {
+                                        <div class="btn-group">
+                                            @if (item.Store.Active == LicenseStatus.ACTIVE.Code<int>())
+                                            {
+
+                                                <button type="button" class="btn btn-info dropdown-toggle btn-sm" data-toggle="dropdown" aria-expanded="false">
+                                                    ACTION <span class="caret"></span><span class="sr-only"></span>
+                                                    <img style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                                                </button>
+                                                <ul class="dropdown-menu" role="menu">
+                                                    <li>
+                                                        <button type="button" class="btn btn-danger btn-sm" onclick="deActiveStore($(this))" data-license-id="@item.Store.Id">
+                                                            DEACTIVE POS <img style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                                                        </button>
+                                                    </li>
+                                                </ul>
+
+                                            }
+                                            else if (typeCus == MerchantType.STORE_IN_HOUSE.Code<string>() ||
+                                                item.Order.Status == InvoiceStatus.Closed.ToString() ||
+                                                item.Order.Status == InvoiceStatus.Paid_Wait.ToString() ||
+                                                item.Order.Status == InvoiceStatus.PaymentLater.ToString())
+                                            {
+                                                <a class="btn btn-success active-store" onclick="activeStore($(this),true)" data-license-id="@item.Store.Id">
+                                                    Active <img style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                                                </a>
+                                            }
+                                        </div>
+                                    }
+                                </td>
+                            }*@
+                    </tr>
+                    first = false;
+                }
+            }
+        }
+        else
+        {
+            if (AppFunc.CanAccess("customer_view_merchantaccount"))
+            {
+                <tr><td colspan="8" style="text-align:center">(This merchant does not have any current plan)</td></tr>
+            }
+            else
+            {
+                <tr><td colspan="7" style="text-align:center">(This merchant does not have any current plan)</td></tr>
+            }
+        }
+    </tbody>
+</table>
+
+@*@if (recurringPlanning.Count() > 0)
+    {
+        <table class="table table-bordered table-striped store-license-active">
+            <thead style="background-color: #AAD3EA">
+                <tr>
+                    <th>#</th>
+                    <th>Activated License</th>
+                    <th>Recurring</th>
+                    <th>Recurring Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var plan in recurringPlanning)
+                {
+                    <tr>
+                        <td>#@plan.planning.Id</td>
+                        <td>
+                            <b>@plan.license.Name</b><br />
+                            Quantity: <b>@plan.planning.SubscriptionQuantity</b><br />
+                            Price: @(plan.planning.Price?.ToString("$#,##0.#0"))<br />
+                            @if (plan.planning.ApplyDiscountAsRecurring == true)
+                            {
+                                if (plan.planning.DiscountPercent > 0)
+                                {
+                                    <span>Discount: @(plan.planning.DiscountPercent)%</span>
+                                }
+                                else if (plan.planning.Discount > 0)
+                                {
+                                    <span>Discount: @(plan.planning.Discount?.ToString("$#,##0.#0"))</span>
+                                }
+                            }
+                        </td>
+                        <td>
+                            Recurring date: <b>@(plan.planning.RecurringDate?.ToString("MMM dd, yyyy"))</b><br />
+                            Recurring price: <b>@(plan.planning.TotalRecurringPrice?.ToString("$#,##0.#0"))</b><br />
+                            Recuring by: @(plan.planning.RecurringType ?? "None")
+                        </td>
+                        <td>
+                            @if (plan.planning.Status == 1)
+                            {
+                                <span class="label label-success">Active</span>
+                            }
+                            else
+                            {
+                                <span class="label label-warning">Inactive</span>
+                            }
+                        </td>
+                        <td>
+                            <div class="btn_group">
+                                <button type="button" class="btn btn-warning btn-sm pull-right btn-edit" onclick="popupPlanning('${row['planning'].Id}')"><i class="fa fa-pencil-square-o" aria-hidden="true"></i> Edit</button>
+                                <button type="button" class="btn btn-info btn-sm pull-right" onclick="popupHistories('${row['planning'].Id}')" style="margin-right:5px"><i class="fa fa-history" aria-hidden="true"></i> Histories</button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }*@
+
+
+<div class="panel-group">
+    <div class="panel panel-primary">
+        <div class="panel-heading" id="active-panel" onclick="togglePanel(this)" style="cursor:pointer;padding: 5px 10px;">
+            <span style="font-size:18px;">History Services</span>
+            <a href="#" class="icon" style="color:white;float:right;"><i class="fa fa-plus" aria-hidden="true"></i></a>
+        </div>
+        <div class="panel-body" style="display: none">
+            @if (serviceNotActive.Count() > 0)
+            {
+                <table id="tb_products" style="width: 100%;border-collapse: collapse;margin-top:0px;" class="table table-bordered table-striped">
+                    <thead style="background-color: #AAD3EA">
+                        <tr>
+                            <th class="col-md-3">Name</th>
+                            <th>Service date</th>
+                            <th style="width: 85px;">Status</th>
+                            <th style="width: 150px;">Recurring Payment</th>
+                            <th>Renew</th>
+                            <th>Last updated</th>
+                            @*<th></th>*@
+
+                            @if (control_allow)
+                            {
+                                <th style="width: 150px;">Action</th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var grps in serviceNotActive.GroupBy(c => c.Product.Code).Select(c => c.ToList()).ToList())
+                        {
+                            var grp = grps.OrderByDescending(c => c.Store.EffectiveDate).ToList();
+                            var first = true;
+                            foreach (var item in grp)
+                            {
+                                <tr class="@(first ? "" : ("more-subscription-for-" + item.Product.Code.Replace(" ", "")))" style="@(first ? "" : "display:none")">
+                                    <td>
+                                        <strong>@item.Product.Name</strong>
+                                        @if (first && grp.Count > 1)
+                                        {
+                                            <span href="#" class="btn btn-link pull-right" id="btn-show-@item.Product.Code.Replace(" ", "")"
+                                                  onclick="$('.more-subscription-for-@(item.Product.Code.Replace(" ", ""))').slideDown('slow'); $('#btn-show-@item.Product.Code.Replace(" ", "")').hide(); $('#btn-hide-@item.Product.Code.Replace(" ", "")').show();">show more</span>
+                                            <span href="#" class="btn btn-link pull-right" id="btn-hide-@item.Product.Code.Replace(" ", "")" style="display: none"
+                                                  onclick="$('.more-subscription-for-@(item.Product.Code.Replace(" ", ""))').hide(); $('#btn-show-@item.Product.Code.Replace(" ", "")').show(); $('#btn-hide-@item.Product.Code.Replace(" ", "")').hide();">show less</span>
+                                        }
+                                        @if (item.Product.isAddon != true)
+                                        {
+                                            if (item.Store.StoreApply == Store_Apply_Status.Trial.ToString())
+                                            {
+                                                <label class="label label-default">Trial</label>
+                                            }
+                                            else if (item.Store.StoreApply == Store_Apply_Status.Promotional.ToString())
+                                            {
+                                                <label class="label label-info">Promo</label>
+                                            }
+                                            else
+                                            {
+                                                <label class="label label-primary">Regular</label>
+                                            }
+                                        }
+                                        @if (item.Store.Quantity > 1 && item.Subscription.Period == "MONTHLY")
+                                        {
+                                            <i style="margin-left: 15px">x @item.Store.Quantity</i>
+                                        }
+
+                                        <br />
+                                        @if (item.Product.Type == "license")
+                                        {
+                                            <text>
+                                                <i> Subscription product </i>
+                                            </text>
+                                        }
+                                        @if (item.Product.Type == "addon")
+                                        {
+                                            <text>
+                                                <i> Addon product </i>
+                                            </text>
+                                        }
+                                        @if (item.Product.Type == "other")
+                                        {
+                                            <text>
+                                                <i>Other services</i>
+                                            </text>
+                                        }
+
+                                        @if (item.Store.ApplyDiscountAsRecurring == true)
+                                        {
+                                            <br />
+                                            if (item.Subscription.DiscountPercent > 0)
+                                            {
+                                                <span class="badge discount-label" onclick="update_discount('@item.Store.Id', '@item.Product.Name', '%', @item.Subscription.DiscountPercent )"
+                                                      data-toggle="tooltip" data-placement="bottom" title="We do offer discount on packages as recurring @item.Subscription.DiscountPercent%">
+                                                    Discount as recuring: @item.Subscription.DiscountPercent %
+                                                </span>
+                                            }
+                                            else if (item.Subscription.Discount > 0)
+                                            {
+                                                <span class="badge discount-label" onclick="update_discount('@item.Store.Id', '@item.Product.Name', '$', @item.Subscription.Discount )"
+                                                      data-toggle="tooltip" data-placement="bottom" title="We do offer discount on packages as recurring $@item.Subscription.Discount">
+                                                    Discount as recuring: $ @item.Subscription.Discount
+                                                </span>
+                                            }
+                                        }
+                                    </td>
+
+                                    @*<td>@(string.IsNullOrEmpty(item.Store.Period) ? "onetime" : item.Store.Period.ToLower())</td>*@
+                                    <td>
+                                        <span>
+                                            @item.Store.EffectiveDate.Value.ToString("MMM dd, yyyy")
+                                        </span>
+                                        @if (item.Store.RenewDate != null && item.Product.SubscriptionDuration != "ONETIME")
+                                        {
+                                            <i> - </i>
+                                            <span id="localtime-RenewDate-@item.Store.Id">
+                                                <script>convertLocalTime("RenewDate-" + "@item.Store.Id", "@item.Store.RenewDate", "MMMddyyyy")</script>
+                                            </span>
+
+                                            if (DateTime.Now.Date > item.Store.RenewDate.Value && item.Store.Active == LicenseStatus.ACTIVE.Code<int>())
+                                            {
+                                                <label class="label animate-flicker" style="background-color:red"> Expired</label>
+                                            }
+                                            else if (DateTime.Now.Date.AddDays(10) > item.Store.RenewDate.Value && item.Store.Active == LicenseStatus.ACTIVE.Code<int>())
+                                            {
+                                                <label class="label animate-flicker" style="background-color:#ff3e00"> Nearly expired</label>
+                                            }
+                                        }
+
+                                        @if (item.Order?.Status != InvoiceStatus.Paid_Wait.ToString() && item.Order?.Status != InvoiceStatus.Closed.ToString() && item.Order != null)
+                                        {
+                                            <br />
+                                            <a href="/order/estimatesdetail/?code=@item.Store.OrderCode&url_back=/merchantman/detail/?code=@item.Store.CustomerCode">#@item.Store.OrderCode</a>
+
+                                            var label = "danger";
+                                            var status = Ext.EnumParse<InvoiceStatus>(item.Order?.Status);
+                                            switch (status)
+                                            {
+                                                case InvoiceStatus.Open: label = "default"; break;
+                                                case InvoiceStatus.Paid_Wait: label = "warning"; break;
+                                                case InvoiceStatus.Closed: label = "success"; break;
+                                                case InvoiceStatus.PaymentLater: label = item.Order.DueDate > DateTime.UtcNow ? "primary" : "danger"; break;
+                                            }
+
+                                            <span class="label order-status label-@(label)" @(status == InvoiceStatus.Paid_Wait ? "data-html=\"true\" data-toggle=\"tooltip\" data-original-title=\"" + item.Order.PaymentMethod + "<br/>" + item.Order.PaymentNote + "\" style=\"cursor: pointer\"" : "")>@(status.Code<string>())</span>
+                                        }
+                                        <br />
+                                        @if (string.IsNullOrEmpty(item.Store.Period) || item.Store.Period == "ONETIME")
+                                        {
+                                            <label class="label label-default">Onetime</label>
+                                        }
+                                        else
+                                        {
+                                            if (string.IsNullOrEmpty(item.Store.PeriodRecurring))
+                                            {
+                                                <label class="label label-default">Monthly</label>
+                                            }
+                                            else
+                                            {
+                                                <label class="label label-default">@item.Store.PeriodRecurring</label>
+                                            }
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (item.Store.RenewDate != null && DateTime.Now.Date > item.Store.RenewDate.Value && item.Store.Active != LicenseStatus.ACTIVE.Code<int>())
+                                        {
+                                            <label class='label label-danger'>Expired</label>
+                                        }
+                                        else if (item.Store.Active == LicenseStatus.RESET.Code<int>())
+                                        {
+                                            <label class='label label-info'>Reset</label>
+                                        }
+                                        else if (item.Store.Active == LicenseStatus.WAITING.Code<int>())
+                                        {
+                                            <label class='label label-warning'>Waiting</label>
+                                        }
+                                        else if (item.Store.Active == LicenseStatus.REMOVED.Code<int>())
+                                        {
+                                            <label class='label label-default'>Removed</label>
+                                        }
+                                        else if (item.Store.Active == LicenseStatus.DE_ACTIVE.Code<int>())
+                                        {
+                                            <label class='label label-default'>Deactive</label>
+                                        }
+                                        else
+                                        {
+                                            <label class='label label-success'>Active</label>
+                                        }
+                                    </td>
+                                    <td align="center">
+                                        @if (!string.IsNullOrEmpty(item.Store.Period) &&
+                                            item.Store.Period == "MONTHLY" &&
+                                            item.Store.StoreApply != Store_Apply_Status.Trial.ToString() &&
+                                            customer.Type != "STORE_IN_HOUSE" &&
+                                            item.Store.Active == LicenseStatus.ACTIVE.Code<int>())
+                                        {
+                                            if (control_allow)
+                                            {
+                                                <input type="checkbox" class="AutoRenew_check" data-sto_id="@item.Store.Id" @(item.Store.AutoRenew == true ? "checked" : "") @(item.Store.Active == LicenseStatus.DE_ACTIVE.Code<int>() ? "disabled" : "") />
+
+                                                if (item.Store.AutoRenew == true)
+                                                {
+                                                    <br />
+                                                    <label class="label label-default">
+                                                        <span class="recurring-card"></span>
+                                                    </label>
+                                                    @*var card = db.C_CustomerCard.FirstOrDefault(c => c.MxMerchant_Id == item.Store.MxMerchant_cardAccountId && item.Store.MxMerchant_cardAccountId > 0) ?? new C_CustomerCard { };
+                                                        var pcard = db.C_PartnerCard.FirstOrDefault(c => c.MxMerchant_Id == item.Store.MxMerchant_cardAccountId && item.Store.MxMerchant_cardAccountId > 0) ?? new C_PartnerCard { };
+                                                        if (item.Store.RecurringType != "ACH" && (card.Id != null || pcard.Id != null))
+                                                        {
+                                                            <br />
+                                                            <label class="label label-default">
+                                                                <span>@(card.CardType ?? pcard.CardType)@(card.CardNumber ?? pcard.CardNumber ?? "N/A")</span>
+                                                            </label>
+                                                        }
+                                                        else if (item.Store.RecurringType == "ACH")
+                                                        {
+                                                            <br />
+                                                            <label class="label label-primary">
+                                                                <span>@(customer.DepositBankName)-@(customer.DepositAccountNumber)</span>
+                                                            </label>
+                                                        }
+                                                        else if ((hasCard != true || !(item.Store.MxMerchant_cardAccountId > 0)))
+                                                        {
+                                                            <br />
+                                                            <label class="label animate-flicker" style="background-color:red;">
+                                                                <span data-toggle="tooltip" data-placement="bottom" title="This payment schedule has not been confirmed because the system has not recorded the merchant's card payment">Not yet card or turn off</span>
+                                                            </label>
+                                                        }*@
+                                                }
+                                            }
+                                            else if (item.Store.AutoRenew == true)
+                                            {
+                                                <span class="label label-primary">Yes</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="label label-warning">No</span>
+                                            }
+                                        }
+                                    </td>
+                                    <td>
+                                        @if ((item.Store.Active == LicenseStatus.ACTIVE.Code<int>() || item.Store.Active == LicenseStatus.RESET.Code<int>()) &&
+                                            (item.Store.RenewDate.HasValue == true && DateTime.Now.Date >= item.Store.RenewDate.Value.AddDays(-15)) &&
+                                            customer.Type != "STORE_IN_HOUSE" &&
+                                            item.Store.Active == LicenseStatus.ACTIVE.Code<int>())
+                                        {
+                                            if (item.Store.Period?.Equals("onetime", StringComparison.OrdinalIgnoreCase) == false && item.Store.hasRenewInvoiceIncomplete != true && first)
+                                            {
+                                                <a class="btn btn-warning " style="padding: 3px 10px" onclick="renew('@item.Store.Id')">
+                                                    Renew <img id="img_load_@item.Store.Id" style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                                                </a>
+                                            }
+                                            else if (item.Store.hasRenewInvoiceIncomplete == true)
+                                            {
+                                                <span>Invoice: <a href="/order/estimatesdetail?code=@item.Store.LastRenewOrderCode"><b>#@item.Store.LastRenewOrderCode</b></a></span><br />
+                                                <span>Renew at <b>@item.Store.LastRenewAt</b></span><br />
+                                                <span>by <b>@item.Store.LastRenewBy</b></span><br />
+                                                <span>Status: <b style="color:#e08e0b">Waiting</b></span>
+                                            }
+                                        }
+                                    </td>
+                                    <td class="latest-update">
+                                        <span id="localtime-LastUpdateAt-@item.Store.Id">
+                                            <script>convertLocalTime("LastUpdateAt-" + "@item.Store.Id", "@item.Store.LastUpdateAt")</script>
+                                        </span>
+                                        @if (!string.IsNullOrEmpty(item.Store.LastUpdateBy))
+                                        {
+                                            <br /><i>-By @item.Store.LastUpdateBy</i>
+                                        }
+                                    </td>
+
+                                    @if (control_allow)
+                                    {
+                                        <td>
+                                            @if (item.Store.RenewDate == null || DateTime.Now.Date <= item.Store.RenewDate.Value && item.Store.Active != LicenseStatus.DE_ACTIVE.Code<int>())
+                                            {
+                                                <div class="btn-group">
+                                                    @if (item.Store.Active == LicenseStatus.ACTIVE.Code<int>())
+                                                    {
+
+                                                        <button type="button" class="btn btn-info dropdown-toggle btn-sm" data-toggle="dropdown" aria-expanded="false">
+                                                            ACTION <span class="caret"></span><span class="sr-only"></span>
+                                                            <img style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                                                        </button>
+                                                        <ul class="dropdown-menu" role="menu">
+                                                            <li>
+                                                                <button type="button" class="btn btn-success btn-sm" onclick="reActiveStore($(this), 'same-active')" data-license-id="@item.Store.Id">
+                                                                    @(item.Store.Type=="license"? "REACTIVE THIS LICENSE" : "REACTIVE")    <img style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                                                                </button>
+                                                            </li>
+                                                            <li>
+                                                                <button type="button" class="btn btn-danger btn-sm" onclick="deActiveStore($(this))" data-license-id="@item.Store.Id">
+                                                                    @(item.Store.Type=="license"? "DEACTIVE THIS LICENSE" : "DEACTIVE")  <img style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                                                                </button>
+                                                            </li>
+                                                        </ul>
+
+                                                    }
+                                                    else if (typeCus == MerchantType.STORE_IN_HOUSE.Code<string>() ||
+                                                        item.Order?.Status == InvoiceStatus.Closed.ToString() ||
+                                                        item.Order?.Status == InvoiceStatus.Paid_Wait.ToString() ||
+                                                        item.Order?.Status == InvoiceStatus.PaymentLater.ToString())
+                                                    {
+                                                        <a class="btn btn-success active-store" onclick="activeStore($(this),true)" data-license-id="@item.Store.Id">
+                                                            Active <img style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                                                        </a>
+                                                    }
+                                                </div>
+                                            }
+                                            else if (item.Store.RenewDate.HasValue && DateTime.Now.Date > item.Store.RenewDate.Value && item.Store.Active == LicenseStatus.ACTIVE.Code<int>())
+                                            {
+                                                <button type="button" class="btn btn-danger btn-sm" onclick="deActiveStore($(this))" data-license-id="@item.Store.Id">
+                                                    DEACTIVE <img style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                                                </button>
+                                            }
+                                        </td>
+                                    }
+                                    else
+                                    {
+                                        <td></td>
+                                    }
+                                </tr>
+                                first = false;
+                            }
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div style="width:100%;text-align:center;">No Services</div>
+            }
+            <button type="button" style="float:right;" onclick="$('#active-panel').trigger('click');" class="btn btn-sm btn-default">Close</button>
+        </div>
+    </div>
+
+</div>
+
+<div class="modal fade" id="update_discount_modal" role="dialog" aria-hidden="true" onsubmit="overlayOn()">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <form method="post" action="/order/updatediscountsubscription" id="update_discount_form">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">Update discount subsciption</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="control-label">Package name: </label><span id="package_name_value"></span>
+                    </div>
+                    <input type="hidden" value="" name="storeservice_id" id="storeservice_id" />
+                    <div class="form-group">
+                        <label class="control-label">We do offer discount on packages as recurring</label>
+                        <div class="input-group discount" style="margin:-2px">
+                            <input type="number" step="0.01" min="0" class="form-control discount-value hide_arrow" id="discount_value" name="discount_value"
+                                   value="" data-toggle="tooltip" title="Discount" />
+                            <div class="input-group-addon discount-type" style="padding:0">
+                                <label class="discount-radio" style="margin:0">
+                                    <input type="radio" name="discount_type" value="amount" style="display:none" />
+                                    <b data-toggle="tooltip" title="Amount">$</b>
+                                </label>
+                            </div>
+                            <div class="input-group-addon discount-type" style="padding:0">
+                                <label class="discount-radio" style="margin:0">
+                                    <input type="radio" name="discount_type" value="rate" style="display:none" />
+                                    <b class="fa fa-percent" data-toggle="tooltip" title="Percent"></b>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight:unset;margin-top:10px" data-toggle="tooltip" data-placement="bottom" title="Turn on/off discount">
+                            <b>Discount activation</b>
+                            <input type="checkbox" id="discount_status" name="discount_status" value="true" class="flat-red" checked>
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style type="text/css">
+    .dropdown-menu {
+        min-width: -moz-available;
+        /*min-width: -webkit-fill-available;*/
+        padding: 0;
+        margin: 0;
+    }
+
+        .dropdown-menu button {
+            width: 100%;
+        }
+
+    table.store-license-active th,
+    table.store-license-deactive th,
+    table.store-license-waiting th {
+        vertical-align: middle !important;
+    }
+
+    table.store-license-active tr td,
+    table.store-license-deactive tr td,
+    table.store-license-waiting tr td {
+        vertical-align: middle;
+    }
+</style>
+
+<div class="modal fade" id="select_effective_date" role="dialog">
+    <div class="modal-dialog modal-lg" style="max-width:400px">
+        <div class="modal-content">
+            <form onsubmit="submit_effective_date(event)">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">Select Effective date</h4>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="id" />
+                    <input class="form-control datepicker" name="effective_date" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary" onclick="">Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="store-profile-dialog" role="dialog" data-keyboard="false" data-backdrop="static">
+    <div class="modal-dialog modal-content modal-lg">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal"><i class="fa fa-close"></i></button>
+            <h4 class="modal-title">Product information</h4>
+        </div>
+        <div class="modal-body">
+        </div>
+    </div>
+</div>
+
+<style type="text/css">
+    #store-profile-dialog .modal-header {
+        color: #fff;
+        background-color: var(--main-color-1);
+    }
+
+    #store-profile-dialog .modal-body {
+        padding: 0;
+    }
+
+    #store-profile-dialog .box-header {
+        display: none;
+    }
+
+    #store-profile-dialog table,
+    #store-profile-dialog .box-primary {
+        border: none !important;
+    }
+
+    .ui-datepicker.ui-widget.ui-widget-content {
+        z-index: 9999 !important;
+    }
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.js"></script>
+<script type="text/javascript">
+    var productType = '';
+    var NumberOfPeriod = 0;
+    var PeriodRecurring = '';
+    var dataLicense = null;
+    $(function () {
+        getRecurringCard();
+
+        $('#discount_status').iCheck({
+            checkboxClass: 'icheckbox_minimal-blue'
+        })
+        $("[name=effective_date],.datepicker").datepicker({
+            dateFormat: "mm/dd/yy",
+            changeMonth: true,
+            changeYear: true,
+            yearRange: '-100:+100'
+        });
+        $('input[name="PriceType"]').iCheck({
+            checkboxClass: 'icheckbox_minimal-blue'
+        });
+        $(".AutoRenew_check").iCheck({
+            checkboxClass: 'icheckbox_flat-blue'
+        });
+        $(".AutoRenew_check").on("ifClicked", function () {
+            var el = $(this);
+            var Autorenew = !el.is(":checked");
+            var confirmtxt = "Do you want to changes status auto recurring for this subscription?";
+            @*if ("@hasCard" != "True" && Autorenew) {
+                confirmtxt = "This merchant does not exist any payment cards in the system, Invoices will not be able to automatically pay according to the schedule. A new invoice will be generated with a pending payment status for you when scheduled.\nMake sure you want to do this?";
+            }*@
+            if (!Autorenew) {
+                if (confirm(confirmtxt)) {
+                    var sto_id = el.data("sto_id");
+                    overlayOn();
+                    $.ajax({
+                        method: "POST",
+                        url: "/merchantman/ChangeSubscriptionRenew",
+                        data: { sto_id, Autorenew },
+                    }).done(function (data) {
+                        if (data[0]) {
+                            success(data[2]);
+                            ChangeTab('services');
+                        } else {
+                            el.iCheck(!Autorenew ? "check" : "uncheck");
+                            warning(data[2]);
+                        }
+
+                    }).fail(function () {
+
+                    }).always(function () {
+                        overlayOff();
+                    });
+                }
+                else {
+                    setTimeout(function () {
+                        el.iCheck(Autorenew == false ? "check" : 'uncheck');
+                    }, 0);
+                }
+            }
+
+            else if (Autorenew) {
+
+                payment.loadLstCard('@customerCode', function (dataReturn) {
+
+                    console.log(dataReturn)
+                    const paymentProfiles = dataReturn.paymentProfiles;
+                    var content = `<div class="form-group" id="lstCreditCard">`
+                    paymentProfiles.forEach(async (profile) => {
+                        const card = profile.payment.item
+                        content += `<div class="radio">
+                                    <label><input type="radio" name="recurring_type" value="Creditcard" checked><b>${card.cardType} - ${card.cardNumber}</b></label>
+                                </div>`;
+                    });
+                    content += `</div>`;
+                    $.confirm({
+                        title: `<span style="font-size:16px;"><i class="fa fa-cogs" aria-hidden="true"></i> Recurring by</b></span>`,
+                        content: content,
+                        buttons: {
+                            formSubmit: {
+                                text: 'Save',
+                                btnClass: 'btn-blue',
+                                action: function () {
+                                    var type = $("input[name='recurring_type']:checked").val();
+                                    var sto_id = el.data("sto_id");
+                                    $.ajax({
+                                        method: "POST",
+                                        url: "/merchantman/ChangeSubscriptionRenew",
+                                        data: { sto_id, Autorenew, type },
+                                    }).done(function (data) {
+                                        if (data[0]) {
+                                            success(data[2]);
+                                            ChangeTab('services');
+                                        } else {
+                                            el.iCheck(!Autorenew ? "check" : "uncheck");
+                                            warning(data[2]);
+                                        }
+
+                                    }).fail(function () {
+
+                                    }).always(function () {
+                                        overlayOff();
+                                    });
+                                }
+                            },
+                            cancel: function () {
+                                el.iCheck(Autorenew == false ? "check" : 'uncheck');
+                            },
+                        },
+                        onContentReady: function () {
+                            // bind to events
+                            var jc = this;
+                            this.$content.find('form').on('submit', function (e) {
+                                // if the user submits the form by pressing enter in the field.
+                                e.preventDefault();
+                                jc.$$formSubmit.trigger('click'); // reference the button and click it
+                            });
+                        }
+                    });
+                }, function () {
+                    confirm("This merchant does not exist any payment cards in the system")
+                })
+
+
+            }
+        })
+
+        $("#update_discount_form").ajaxForm(function (data) {
+            if (data[0]) {
+                var mess = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"success"}');
+                noty(mess);
+                $('#update_discount_modal').modal('hide');
+                $('.modal-backdrop').remove();
+                $("#update_discount_form").trigger('reset');
+                ChangeTab('services');
+            } else {
+                var mess = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"error"}');
+                noty(mess);
+            }
+            overlayOff();
+        });
+    });
+    $(".on_row").on('click', function (event) {
+        event.stopPropagation();
+    })
+
+    function immediateActive(el) {
+        var content = `Are you sure you want to immediate active this license?`;
+        $.confirm({
+            title: `<span style="font-size:16px;"><i class="fa fa-hand-o-right" aria-hidden="true"></i> Immediate active</b></span>`,
+            content: content,
+            buttons: {
+                formSubmit: {
+                    text: 'Active',
+                    btnClass: 'btn-blue',
+                    action: function () {
+                        overlayOn();
+                        let licenseId = $(el).data("license-id");
+                        $.ajax({
+                            method: "POST",
+                            url: "/merchantman/StoreActivationImmediate",
+                            data: {
+                                licenseId: licenseId,
+                                active: true,
+                                stage: 'active'
+                            },
+                        }).done(function (data) {
+                            success(data);
+                            ChangeTab('services');
+                        }).fail(function () {
+                            error(err.responseJSON[0]);
+
+                        }).always(function () {
+                            overlayOff();
+                        });
+                    }
+                },
+                cancel: function () {
+
+                },
+            },
+            onContentReady: function () {
+                // bind to events
+                var jc = this;
+                this.$content.find('form').on('submit', function (e) {
+                    // if the user submits the form by pressing enter in the field.
+                    e.preventDefault();
+                    jc.$$formSubmit.trigger('click'); // reference the button and click it
+                });
+            }
+        });
+    }
+
+    function activeStore(el) {
+        overlayOn();
+        let licenseId = $(el).data("license-id");
+        $(el).parent().find("img").show();
+        $.ajax({
+            method: "POST",
+            url: "/merchantman/MangoPOSInfo",
+            data: { licenseId: licenseId, stage: "active" },
+        }).done(function (data) {
+            $("#store-profile-dialog .modal-body").html(data);
+            $("#store-profile-dialog").modal("show");
+        }).fail(function (data) {
+            error(data.responseText);
+        }).always(function () {
+            overlayOff();
+            $(el).parent().find("img").hide();
+        });
+    }
+
+    function activeStoreGiftcard(el, licenseName, active) {
+        var tooltip = active ? "Are you want to active " + licenseName + "?" : "Are you want to re-order " + licenseName + "?"
+        if (confirm(tooltip)) {
+            overlayOn();
+            let licenseId = $(el).data("license-id");
+            $.ajax({
+                method: "POST",
+                url: "/merchantman/StoreActivation",
+                data: {
+                    licenseId: licenseId,
+                    active : true,
+                    stage: 'active',
+                },
+            }).done(function (data) {
+                success("Giftcard has been ordered to Mango POS");
+                ChangeTab('services');
+                //$("#store-profile-dialog").modal("hide");
+                //$("#_body > div.modal-backdrop.fade.in").remove()
+                //$("#_body").removeClass( "modal-open" )
+            }).fail(function (err) {
+                error(err.responseJSON[0]);
+                //if (err.responseJSON[1] == true) {
+                //    $("#ims_version").prop("disabled", true);
+                //}
+            }).always(function () {
+                //$(".store-active").find("img").hide();
+                overlayOff();
+            });
+        }
+    }
+
+    function reActiveStore(el, action)
+    {
+        overlayOn();
+        let licenseId = $(el).data("license-id");
+        //$(el).parent().find("img").show();
+        //$(".btn-group > button.dropdown-toggle > img").show();
+
+        $.ajax({
+            method: "POST",
+            url: "/merchantman/MangoPOSInfo",
+            data: { licenseId: licenseId, stage: action },
+        }).done(function (data) {
+            $("#store-profile-dialog .modal-body").html(data);
+            $("#store-profile-dialog").modal("show");
+        }).fail(function (data) {
+            error(data.responseText);
+        }).always(function () {
+            $(el).parent().find("img").hide();
+            overlayOff();
+            $(".btn-group > button.dropdown-toggle > img").hide();
+        })
+    }
+
+    async function deActiveStore(el, action) {
+        let licenseId = $(el).data("license-id");
+        overlayOn();
+        var msg = "Do you want to Deactive this plan?";
+        await $.ajax({
+            method: "POST",
+            url: "/merchantman/CheckRemainingSMS",
+            data: { licenseId: licenseId },
+        }).done(function (data) {
+            if (data[0] && data[1]) msg = "After deactivate total remaining SMS less than 0, so total SMS will be set to 0.\nDo you want to Deactivate this plan?";
+        }).always(function () {
+            overlayOff();
+        });
+        if (confirm(msg) === false) {
+            return
+        }
+        overlayOn();
+        //$(el).parent().find("img").show();
+        await $.ajax({
+            method: "POST",
+            url: "/merchantman/StoreActivation",
+            data: { licenseId: licenseId, active: action, stage: "deActive" },
+        }).done(function (data) {
+            success(data);
+            ChangeTab('services');
+        }).fail(function (data) {
+            error(data.responseJSON[0]);
+        }).always(function () {
+            //$(el).parent().find("img").hide();
+            overlayOff();
+        });
+    }
+
+    function getRecurringCard() {
+        $.ajax({
+            method: "GET",
+            url: "/merchantman/getrecurringcard?customerCode=@customerCode",
+            dataType: "html"
+        })
+            .done(function (data) {
+                $(".recurring-card").html(data);
+            })
+            .fail(function () {
+                $(".recurring-card").html("error");
+            })
+            .always(function () {
+            });
+
+    }
+
+    function renew(id, effect_date = null) {
+        if (effect_date != null || confirm("Do you want to Renew this plan?")) {
+            $("#img_load_" + id).show();
+            $.ajax({
+                method: "POST",
+                url: "/Order/renew",
+                data: { id, effect_date },
+                dataType: "json"
+            })
+            .done(function (data) {
+                if (data[0]) {
+                    noty({ "text": "Renew completed", "layout": "top", "type": "success" });
+                    ChangeTab();
+                    getRemainingDate();
+                }
+                else {
+                    if (data[1]) {
+                        noty({ "text": data[2], "layout": "top", "type": "warning" });
+                        $("input[name=id]").val(id);
+                        $("input[name=effective_date]").datepicker("setDate", new Date());
+                        $("#select_effective_date").modal("show");
+
+                    } else {
+                        noty({ "text": data[2], "layout": "top", "type": "error" });
+                    }
+                }
+            })
+            .fail(function () {
+                alert("renew ajax fail");
+            }).always(function () {
+                $("#img_load_" + id).hide();
+            });
+        }
+    }
+
+    function reorder(id, effect_date = null) {
+        if (effect_date != null || confirm("Do you want to Re-oder this Giftcard?")) {
+            $("#img_load_" + id).show();
+            $.ajax({
+                method: "POST",
+                url: "/Order/renew",
+                data: { id, effect_date },
+                dataType: "json"
+            })
+            .done(function (data) {
+                if (data[0]) {
+                    noty({ "text": "Renew completed", "layout": "top", "type": "success" });
+                    ChangeTab();
+                }
+                else {
+                    if (data[1]) {
+                        noty({ "text": data[2], "layout": "top", "type": "warning" });
+                        $("input[name=id]").val(id);
+                        $("input[name=effective_date]").datepicker("setDate", new Date());
+                        $("#select_effective_date").modal("show");
+
+                    } else {
+                        noty({ "text": data[2], "layout": "top", "type": "error" });
+                    }
+                }
+            })
+            .fail(function () {
+                alert("renew ajax fail");
+            }).always(function () {
+                $("#img_load_" + id).hide();
+            });
+        }
+    }
+    function submit_effective_date(e) {
+        e.preventDefault();
+        $("#select_effective_date").modal("hide");
+        var id = $("input[name=id]").val();
+        var effect_date = $("input[name=effective_date]").val();
+        renew(id, effect_date);
+    }
+    //addon
+    function show_popup_addon() {
+        overlayOn();
+        $("#img_load_addon_popup").show();
+        $.ajax({
+            method: "POST",
+            url: "/merchantman/LoadPartialAddonPopup",
+            dataType: "html"
+        })
+        .done(function (data) {
+            $("#add_addon_popup").find(".modal-body").html(data);
+            $("#add_addon_popup").modal("show");
+            $(".sumary_wrapper").hide();
+            $("#add_addon_popup").find(".modal-title").html("Select Add-on & orther services");
+            $("#Duration").hide().find("input").prop("disabled", "");
+        })
+        .fail(function () {
+            alert("renew ajax fail");
+        }).always(function () {
+            $("#img_load_addon_popup").hide();
+            overlayOff();
+        });
+    }
+    var expriresdate;
+    function show_license(prd_id) {
+        $("#img_load_addon_" + prd_id).css("visibility", "visible");
+        $(".load_summary").show();
+        //$("#Duration").toggle(show_duration);
+        $("#add_addon_popup").find("#month_qty").val(1);
+        $("#ApplyDate").prop('checked', false);
+        $('.date_picker').fadeOut();
+        $.ajax({
+            method: "POST",
+            url: "/Order/getPrdLicenseItemList",
+            data: { prd_id },
+            dataType: "html"
+        })
+            .done(function (data) {
+                $("#prdata_" + prd_id).html(data);
+                $("#pr_" + prd_id).find('input').prop("checked", true);
+                $(".license_contain").not($("#pr_" + prd_id).next("tr")).hide();
+                $("#pr_" + prd_id).next("tr").show(300);
+            })
+            .fail(function () {
+                alert("load_addon_table failure");
+            })
+            .always(function () {
+                $("#img_load_addon_" + prd_id).css("visibility", "hidden");
+            });
+
+        $.ajax({
+            method: "POST",
+            url: "/MerchantMan/HandleSummaryLicenseSelected",
+            data: {"LicenseId" : prd_id,"CustomerCode":'@ViewBag.CustomerCode' },
+            dataType: "json"
+        })
+            .done(function (data) {
+                if ($('.tr-expires-date').length > 0) {
+                    expriresdate = $(".tr-expires-date").detach();
+                }
+                if (data.License.SubscriptionDuration == "MONTHLY") {
+                    //expriresdate.appendTo(".tr-effective-date");
+                    $(".tr-effective-date").after(expriresdate);
+                }
+                if (data.ApplyTrial) {
+                    $(".PriceType.trial").show();
+                    $(".PriceType.trial").find('span').html('&nbsp; Trial (' + data.License.Trial_Months + (data.License.Trial_Months === 1 ? ' month' : ' months') + ')');
+                    $(".PriceType.trial").find('input').attr("data-month", data.License.Trial_Months);
+                }
+                else {
+                    $(".PriceType.trial").hide();
+                    $(".PriceType.trial").find('input').attr("data-month", 0);
+                }
+                if (data.ApplyPromotional) {
+                    $(".PriceType.promo").show();
+                    $(".PriceType.promo").find('span').html('&nbsp; Promotion Price (' + data.License.Promotion_Apply_Months + (data.License.Promotion_Apply_Months === 1 ? ' month' : ' months') + ')');
+                    $(".PriceType.promo").find('input').attr("data-month", data.License.Promotion_Apply_Months);
+                }
+                else {
+                    $(".PriceType.promo").hide();
+                    $(".PriceType.promo").find('input').attr("data-month", 0);
+                }
+                $(".PriceType.real").show();
+                //$(".PriceType.real").find('input').iCheck("check");
+                if (data.License.SubscriptionDuration === "MONTHLY") {
+                    if (data.License.PeriodRecurring == 'Yearly') {
+                        $(".PriceType.real").find('span').html('&nbsp; Regular Price (' + data.License.NumberOfPeriod + (data.License.NumberOfPeriod === 1 ? ' year' : ' years') + ')');
+                        $(".PriceType.real").find('input').attr("data-month", data.License.NumberOfPeriod)
+                    }
+                    else if (data.License.PeriodRecurring == 'Weekly') {
+                        $(".PriceType.real").find('span').html('&nbsp; Regular Price (' + data.License.NumberOfPeriod + (data.License.NumberOfPeriod === 1 ? ' week' : ' weeks') + ')');
+                        $(".PriceType.real").find('input').attr("data-month", data.License.NumberOfPeriod)
+                    }
+                    else {
+                        $(".PriceType.real").find('span').html('&nbsp; Regular Price (' + data.License.NumberOfPeriod + (data.License.NumberOfPeriod === 1 ? ' month' : ' months') + ')');
+                        $(".PriceType.real").find('input').attr("data-month", data.License.NumberOfPeriod)
+                    }
+                }
+                else {
+                    $(".PriceType.real").find('span').html('&nbsp; Regular Price (Onetime)');
+                    $(".PriceType.real").find('input').attr("data-month", 1)
+                }
+                //$("#total_payment_amount").val(data.License.Price.toFixed(2));
+                $("#name_license").html(data.License.Name);
+                $('input[name="PriceType"]').prop('checked', false);
+                $('#ip_quantity').val(1);
+                $(".PriceType.trial").find('input').attr("data-price", 0);
+                productType = data.License.Type;
+                NumberOfPeriod = data.License.NumberOfPeriod;
+                PeriodRecurring = data.License.PeriodRecurring;
+                dataLicense = data.License;
+                $(".PriceType.promo").find('input').attr("data-price", data.License.Promotion_Price);
+
+                $(".PriceType.real").find('input').attr("data-price", data.License.Price)
+                $('input[name="PriceType"][value="Real"]').prop('checked', true);
+                $('input[name="PriceType"]').iCheck('update');
+                $('input[name="PriceType"]').trigger('ifChanged');
+                $(".sumary_wrapper").show();
+            })
+            .fail(function () {
+                alert("load summary failure");
+            })
+            .always(function () {
+                $(".load_summary").hide();
+            });
+    }
+    function add_addon() {
+        overlayOn();
+        var cus_code = $("#CusCode").val();
+        var addon_id = $('input[name="selected_prd"]:checked').val();
+        if (!addon_id) {
+            warning("Please choose one !");
+            return;
+        }
+        var effect_date = $("#effect_date").val();
+        var end_date = $("#Expiry_date").val();
+        var month_qty = $("#month_qty").val();
+        var paymentNow = $("#payment-now").is(":checked");
+        var paymentMethod = $("#PaymentMethod").val();
+        var paymentNote = $("#PaymentNote").val();
+        var bankName = $("#BankName").val();
+        var cardNumber = $("#CardNumber").val();
+        var quantity = $("#ip_quantity").val();
+        var StoreApply;
+        var pricetypeArray = [];
+        var customdate = $('#ApplyDate').is(':checked');
+        $('input[name="PriceType"]:checked').each(function () {
+            pricetypeArray.push($(this).val());
+        });
+        if (pricetypeArray.length == 0) {
+            warning("Please choose one price type !");
+            return;
+        }
+        StoreApply = pricetypeArray.join(',');
+        $("#img_load_addon_submit").show();
+        $.ajax({
+            method: "POST",
+            url: "/Order/add_addon",
+            data: { addon_id, cus_code, effect_date, end_date, month_qty, paymentNow, paymentMethod, paymentNote, bankName, cardNumber, StoreApply, quantity, customdate },
+            dataType: "json"
+        })
+        .done(function (data) {
+            if (data[0]) {
+                noty({ "text": data[1], "layout": "top", "type": "success" });
+                if (data[2] != null && data[2] != undefined && data[2] != "")
+                    $("#WordDetermine-store").html("- " + data[2]);
+                $("#add_addon_popup").modal("hide");
+                ChangeTab();
+            }
+            else {
+                noty({ "text": data[1], "layout": "top", "type": "error" });
+            }
+
+        })
+        .fail(function () {
+            alert("load_addon_table failure");
+        })
+        .always(function () {
+            $("#img_load_addon_submit").hide();
+            overlayOff();
+        });
+    }
+    $(document).ready(function () {
+        $('input[name="PriceType"]').off('ifChanged').on('ifChanged', function (e) {
+            if ($('input[name="PriceType"]:checked').length == 0)
+            {
+                return false;
+            };
+            var totalAmount = 0;
+            var month = 0;
+            $('input[name="PriceType"]:checked').each(function () {
+                totalAmount += (($(this).val() == "Real" ? $('#ip_quantity').val() : 1) * parseInt($(this).attr("data-price")));
+                month += parseInt($(this).attr("data-month"));
+            });
+            $('#month_qty').val(month);
+            $('input[name="effect_addon_date"]').trigger('change');
+            $('#total_payment_amount').val("$" + numberSeparator(totalAmount.toFixed(2)));
+            updateExpiryDate();
+        })
+        $('#ip_quantity').off('change').on('change', function (e) {
+            var totalAmount = 0;
+            var month = 0;
+            $('input[name="PriceType"]:checked').each(function () {
+                totalAmount += (($(this).val() == "Real" ? $('#ip_quantity').val() : 1) * parseInt($(this).attr("data-price")));
+                month += parseInt($(this).attr("data-month"));
+            });
+            $('#month_qty').val(month);
+            $('input[name="effect_addon_date"]').trigger('change');
+            $('#total_payment_amount').val("$" + numberSeparator(totalAmount.toFixed(2)));
+            updateExpiryDate();
+        })
+
+        $('input[name="PriceType"]').off('ifUnchecked').on('ifUnchecked', function () {
+            if ($('input[name="PriceType"]:checked').length == 0)
+            {
+                $(this).prop('checked', true);
+                setTimeout(function () {
+                    $('input[name="PriceType"]').iCheck('update');
+                }, 50);
+                alert('There must be a price type selected !')
+            };
+        });
+
+        $('input[name="effect_addon_date"]').off('change').on('change', function (e) {
+            //updateExpiryDate();
+            var totalNumber = 0;
+            var from = $(this).val().split("/");
+            var f = new Date(from[2], from[0] - 1, from[1]);
+            var totalNumber = NumberOfPeriod;
+            if (PeriodRecurring == 'Yearly') f.setFullYear(f.getFullYear() + totalNumber);
+            else if (PeriodRecurring == 'Weekly') f.setDate(f.getDate() + totalNumber * 7);
+            else f.setMonth(f.getMonth() + totalNumber);
+            $('input[name="Expiry_date"]').val($.datepicker.formatDate('mm/dd/yy', f));
+        })
+    })
+
+    function updateExpiryDate() {
+        var from = $('input[name="effect_addon_date"]').val().split("/");
+        var f = new Date(from[2], from[0] - 1, from[1]);
+        $('input[name="PriceType"]:checked').each(function () {
+            if ($(this).val() == 'Promotional') {
+                f.setMonth(f.getMonth() + dataLicense.Promotion_Apply_Months);
+            }
+            else if ($(this).val() == 'Trial') {
+                f.setMonth(f.getMonth() + dataLicense.Trial_Months);
+            }
+            else {
+                if (PeriodRecurring == 'Yearly') f.setFullYear(f.getFullYear() + dataLicense.NumberOfPeriod * $('#ip_quantity').val());
+                else if (PeriodRecurring == 'Weekly') f.setDate(f.getDate() + dataLicense.NumberOfPeriod * 7 * $('#ip_quantity').val());
+                else f.setMonth(f.getMonth() + dataLicense.NumberOfPeriod * $('#ip_quantity').val());
+            }
+        });
+        $('input[name="Expiry_date"]').val($.datepicker.formatDate('mm/dd/yy', f));
+    }
+
+    var commaCounter = 10;
+
+    function numberSeparator(Number) {
+        Number += '';
+
+        for (var i = 0; i < commaCounter; i++) {
+            Number = Number.replace(',', '');
+        }
+
+        x = Number.split('.');
+        y = x[0];
+        z = x.length > 1 ? '.' + x[1] : '';
+        var rgx = /(\d+)(\d{3})/;
+
+        while (rgx.test(y)) {
+            y = y.replace(rgx, '$1' + ',' + '$2');
+        }
+        commaCounter++;
+        return y + z;
+    }
+
+    function change_plan() {
+        var cus_code = $("#CusCode").val();
+        var product_id = $('input[name="selected_prd"]:checked').val();
+        var effect_date = $("#effect_date").val();
+        $("#img_load_addon_submit").show();
+        $.ajax({
+            method: "POST",
+            url: "/Order/add_addon",
+            data: { addon_id, cus_code, effect_date },
+            dataType: "json"
+        })
+        .done(function (data) {
+            if (data[0]) {
+                noty({ "text": "Add add-on completed", "layout": "top", "type": "success" });
+                $("#add_addon_popup").modal("hide");
+                ChangeTab();
+            }
+            else {
+                noty({ "text": data[1], "layout": "top", "type": "error" });
+            }
+
+        })
+        .fail(function () {
+            alert("load_addon_table failure");
+        })
+        .always(function () {
+            $("#img_load_addon_submit").hide();
+        });
+    }
+    function show_popup_product() {
+        overlayOn();
+        $("#img_load_product_popup").show();
+        var cus_code = $("#CusCode").val();
+        $.ajax({
+            method: "POST",
+            url: "/merchantman/LoadPartialProductPopup",
+            data: { cus_code },
+            dataType: "html"
+        })
+        .done(function (data) {
+            $("#add_addon_popup").find(".modal-body").html(data);
+            $("#add_addon_popup").modal("show");
+            $(".sumary_wrapper").hide();
+            $("#add_addon_popup").find("#month_qty").val(1);
+            $("#add_addon_popup").find(".modal-title").html("Change product");
+            $("#Duration").show().find("input").removeProp("disabled");
+        })
+        .fail(function () {
+            alert("show_popup_product ajax fail");
+        }).always(function () {
+            overlayOff();
+            $("#img_load_product_popup").hide();
+        });
+    }
+
+    function show_popup_active_product() {
+        overlayOn();
+        $("#img_load_product_popup").show();
+        var cus_code = $("#CusCode").val();
+        $.ajax({
+            method: "POST",
+            url: "/merchantman/LoadPartialActiveProductPopup",
+            data: { cus_code },
+            dataType: "html"
+        })
+            .done(function (data) {
+                $("#add_addon_popup").find(".modal-body").html(data);
+                $("#add_addon_popup").modal("show");
+                $("#add_addon_popup").find(".modal-title").html("Change product");
+            })
+            .fail(function () {
+                alert("show_popup_product ajax fail");
+            }).always(function () {
+                overlayOff();
+                $("#img_load_product_popup").hide();
+            });
+    }
+
+    function ResendMailActiveStore(el) {
+        if (confirm("Do you want to Resend Email login Info for this store?") === false) {
+            return
+        }
+        $(el).parent().find("img").show();
+        $.ajax({
+            method: "POST",
+            url: "/merchantman/ResendMailActiveStore",
+            data: { customerCode: '@ViewBag.customerCode'},
+        }).done(function (data) {
+            success(data);
+        }).fail(function (data) {
+            error(data.responseText);
+        }).always(function () {
+            $(el).parent().find("img").hide();
+        });
+    }
+
+    function hardResetPOS() {
+        if (confirm("Delete all customer data and re-create a completely new POS system.\nAre you sure you want to do this?")) {
+            $('#btn-hardreset').find($('img')).show();
+            var StoreCode = '@(ViewBag.storeid)';
+            $.ajax({
+                url: "/MerchantMan/HardReset",
+                dataType: "html",
+                method: "GET",
+                data: { StoreCode }
+            })
+                .done(function (data) {
+                    $('#btn-hardreset').find($('img')).hide();
+                    var result = JSON.parse(data);
+                    if (result[0]) {
+                        noty({ "text": result[1], "layout": "top", "type": "success" });
+                    }
+                    else {
+                        noty({ "text": result[1], "layout": "top", "type": "error" });
+                    }
+                })
+                .fail(function (data) {
+                    $('#btn-' + mode).find($('img')).hide();
+                    noty({ "text": data.responseText, "layout": "top", "type": "error" });
+                })
+                .always(function () {
+                });
+        }
+    }
+
+    function softResetPOS() {
+        if (confirm("Delete all customer data but keep the original system settings.\nAre you sure you want to do this?")) {
+            $('#btn-softreset').find($('img')).show();
+            var StoreCode = '@(ViewBag.storeid)';
+            $.ajax({
+                url: "/MerchantMan/SoftReset",
+                dataType: "html",
+                method: "GET",
+                data: { StoreCode }
+            })
+                .done(function (data) {
+                    $('#btn-softreset').find($('img')).hide();
+                    var result = JSON.parse(data);
+                    if (result[0]) {
+                        noty({ "text": result[1], "layout": "top", "type": "success" });
+                    }
+                    else {
+                        noty({ "text": result[1], "layout": "top", "type": "error" });
+                    }
+                })
+                .fail(function (data) {
+                    $('#btn-' + mode).find($('img')).hide();
+                    noty({ "text": data.responseText, "layout": "top", "type": "error" });
+                })
+                .always(function () {
+                });
+        }
+    }
+    function Renewtrial() {
+        if (confirm("Are you sure you want to Renew licence for this merchant?")) {
+            overlayOn();
+            var StoreCode = '@(ViewBag.storeid)';
+            $.ajax({
+                url: "/MerchantMan/RenewTrial",
+                dataType: "json",
+                method: "POST",
+                data: { StoreCode }
+            })
+                .done(function (data) {
+
+                    if (data[0]) {
+                        success(data[1]);
+                        $("#remaining_day").css("background-color", "#00CC00").html(`Remaining days: ${data[2]} day${data[2] > 1 ? "s" : ""}`);
+                        ChangeTab("services");
+                    }
+                    else {
+                        error(data[1]);
+                    }
+                })
+                .fail(function () {
+                    alert("Renewtrial fail");
+                })
+                .always(function () {
+                    overlayOff();
+                });
+        }
+    }
+
+
+    function ExportGiftcard(key) {
+        if (confirm("Export giftcard list to Excel?")) {
+            window.location.href = "/MerchantMan/ExportGiftcardToExcel?Key=" + key;
+        }
+    }
+
+    function update_discount(ID, Name, Type, Value) {
+        $('#package_name_value').html(' ' + Name);
+        $('#discount_value').val(Value);
+        $('#storeservice_id').val(ID);
+        if (Type == '%')
+            $('input[name=discount_type][value=rate]').prop('checked', true);
+        else
+            $('input[name=discount_type][value=amount]').prop('checked', true);
+        $('#update_discount_modal').modal();
+    }
+               
+    function togglePanel(el) {
+        var panelbody = $(el).parent().children('.panel-body');
+        var btnicon = $(el).children('.icon');
+        if ($(panelbody).is(':visible')) {
+            $(panelbody).slideUp();
+            $(btnicon).html('<i class="fa fa-plus" aria-hidden="true"></i>');
+        }
+        else {
+            $(panelbody).slideDown();
+            $(btnicon).html('<i class="fa fa-minus" aria-hidden="true"></i>');
+        }
+    }
+</script>
+
+<script src="~/Scripts/Payment/AuthorizeNet/Payment.js"></script>

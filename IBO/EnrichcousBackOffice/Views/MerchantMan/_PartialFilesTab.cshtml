@@ -1,0 +1,180 @@
+﻿﻿@model IEnumerable<FilesAttachmentModel>
+@using EnrichcousBackOffice.Models
+@using EnrichcousBackOffice.AppLB
+@using EnrichcousBackOffice.Models.CustomizeModel.Merchant
+@{
+    //var db = new WebDataModel();
+    List<UploadMoreFile> list_upfile = ViewBag.FileList;
+    var MerchantId = ViewBag.MerchantID;
+}
+
+
+<div class="col-md-12">
+    <div class="box box-primary box-solid" id="upload_box" style="border-radius:unset">
+        <div class="box-header with-border">
+            <h4 class="box-title">Uploaded attachments</h4>
+            <div class="pull-right box-tools">
+            </div>
+        </div>
+        <div class="box-body">
+            <div class="col-md-2"></div>
+            <div id="UploadFilesPartial" class="col-md-8">
+                @Html.Partial("_UploadFilesPartial", list_upfile, new ViewDataDictionary { { "TableId", MerchantId }, { "TableName", "C_Customer" } })
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="col-md-12">
+    <div class="box box-primary box-solid" style="border-radius:unset">
+        <div class="box-header with-border">
+            <h4 class="box-title">More attachments</h4>
+            <div class="pull-right box-tools">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div style="margin:10px">
+                    <table id="dtTable_files" class="table table-striped table-hover table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Attachment name</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                var tk = item.Ticket;
+                                if (item.TicketUploadFiles != null)
+                                {
+                                    foreach (var file in item.TicketUploadFiles)
+                                    {
+                                        <tr>
+                                            <td>
+                                                Ticket
+                                                <a target="_blank" href="/ticket_new/detail/@tk.Id?urlback=/merchantman/detail/@(tk.CustomerCode)?tab=files">
+                                                    #@CommonFunc.view_TicketId(tk.Id)
+                                                </a><br /> @tk.Name
+                                            </td>
+                                            <td>
+                                                @file.FileName.Split('\\').LastOrDefault()
+                                                <a style="padding-left:30px" href="@Url.Action("downloadfile", "upload", new { id = file.UploadId })" data-toggle="tooltip" title="Download">
+                                                    <i>Download</i>
+                                                </a>/
+                                                <a href="@file.FileName" target="_blank" data-toggle="tooltip" title="View file">
+                                                    <i>View</i>
+                                                </a>
+                                            </td>
+                                            <td>
+                                                <span id="localtime-@tk.Id">
+                                                    <script>convertLocalTime("@tk.Id", "@tk.CreateAt", "MMMddyyyy")</script>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+
+                                if (item.FilesFeedback != null)
+                                {
+                                    foreach (var file in item.FilesFeedback)
+                                    {
+                                        var fb = item.Feedback.Where(x => x.Id == file.TableId).FirstOrDefault();
+                                        <tr>
+                                            <td>
+                                                Ticket
+                                                <a target="_blank" href="/ticket_new/detail/@tk.Id?urlback=/merchantman/detail/@(tk.CustomerCode)?tab=files">
+                                                    #@CommonFunc.view_TicketId(tk.Id)
+                                                </a><br /> @tk.Name
+                                            </td>
+                                            <td>
+                                                @file.FileName.Split('\\').LastOrDefault()
+                                                <a style="padding-left:30px" href="@Url.Action("downloadfile", "upload", new { id = file.UploadId })" data-toggle="tooltip" title="Download">
+                                                    <i>Download</i>
+                                                </a>/
+                                                <a href="@file.FileName" target="_blank" data-toggle="tooltip" title="View file">
+                                                    <i>View</i>
+                                                </a>
+                                            </td>
+                                            <td>
+                                                <span id="localtime-@file.UploadId">
+                                                    <script>convertLocalTime("@file.UploadId", "@fb.CreateAt", "MMMddyyyy")</script>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+
+                                if (item.FilesRelatedUploads != null && item.T_FilesRelated!=null)
+                                {
+                                    foreach (var file in item.FilesRelatedUploads)
+                                    {
+                                        var fileRelated = item.T_FilesRelated.Where(x => x.Id == file.TableId).FirstOrDefault();
+                                        <tr>
+                                            <td>
+                                                Ticket
+                                                <a target="_blank" href="/ticket_new/detail/@tk.Id?urlback=/merchantman/detail/@(tk.CustomerCode)?tab=files">
+                                                    #@CommonFunc.view_TicketId(tk.Id)
+                                                </a><br /> @tk.Name
+                                            </td>
+                                            <td>
+                                                @file.FileName.Split('\\').LastOrDefault()
+                                                <a style="padding-left:30px" href="@Url.Action("downloadfile", "upload", new { id = file.UploadId })" data-toggle="tooltip" title="Download">
+                                                    <i>Download</i>
+                                                </a>/
+                                                <a href="@file.FileName" target="_blank" data-toggle="tooltip" title="View file">
+                                                    <i>View</i>
+                                                </a>
+                                            </td>
+                                            <td>
+                                                <span id="localtime-@file.UploadId">
+                                                    <script>convertLocalTime("@file.UploadId", "@fileRelated.CreatedAt", "MMMddyyyy")</script>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div style="clear:both"></div>
+
+    </div>
+</div>
+<script src="~/Scripts/upload_and_review.js"></script>
+<script type="text/javascript">
+    $(function () {
+        $("#dtTable_files").DataTable();
+    });
+    function download_file(file) {
+        $.ajax({
+            method: "POST",
+            url: "/upload/DownloadFile",
+            data: { file },
+            dataType: "file"
+        })
+    }
+    function reload_uploadfile() {
+
+        $.ajax({
+            method: "POST",
+            url: "/MerchantMan/ReLoadFile",
+            data: { "id": "@MerchantId" },
+            dataType: "html"
+        })
+            .done(function (data) {
+                $('#UploadFilesPartial').html(data);
+            })
+            .fail(function () {
+            })
+            .always(function () {
+            });
+    }
+</script>
+

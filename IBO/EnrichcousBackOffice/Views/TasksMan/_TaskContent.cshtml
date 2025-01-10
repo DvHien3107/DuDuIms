@@ -1,0 +1,427 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.Ts_Task>
+@using EnrichcousBackOffice.Models
+
+@{
+    ViewBag.Title = "Index";
+    WebDataModel db = new WebDataModel();
+    const string NotificationPage = "NotificationPage";
+    const string TaskPage = "TaskPage";
+    var Page = ViewBag.Page as string;
+}
+<div class="box-body">
+    <div class="box-tools">
+        <div class="" style="padding-bottom:15px;">
+            <a href="javascript:void(0)" data-tab="open" class="btn btn-app select-tab btn-info active" style="margin-left:0px">
+                <span class="badge bg-aqua"><span class="fill_count"></span><span id="numberOpenFilter"></span><span id="numberOpen"></span></span>
+                <i class="fa fa-eye"></i> Open
+            </a>
+            <a href="javascript:void(0)" data-tab="completed" class="btn btn-app select-tab btn-info">
+                <span class="badge bg-blue "><span class="fill_count"></span><span id="numberCompletedFilter"></span><span id="numberCompleted"></span></span>
+                <i class="fa  fa-check"></i> Completed
+            </a>
+            <button type="button" class="btn btn-primary pull-right" onclick="update_task('true' ,'0', 'true')">
+                <i class="fa fa-plus"></i> New Task
+            </button>
+        </div>
+        <div id="filter" style="width:100%; padding:0 20px 20px 0">
+            <form id="search_form">
+                <div class="row form-inline filter-group">
+                    <!--<div class="col-md-3 col-sm-6 form-group" style="margin-bottom:5px;">
+                        <div class="input-group" style="width:100%">
+                            <div class="input-group-addon">
+                                From Date
+                                <div class="ico-help" title="" data-original-title="The from date for the search."><i class="fa fa-question-circle"></i></div>
+                            </div>
+                            <input type="text" name="FromDate" class="form-control search-input datepicker" value="" readonly="">
+                        </div>-->
+                    <!-- /.input group -->
+                    <!--</div>-->
+                    <div class="col-md-4 col-sm-6 form-group">
+                        <div class="input-group" style="width:100%">
+                            <div class="input-group-addon">
+                                <i class="fa fa-calendar"></i> Date
+                            </div>
+                            @*<input type="text" name="fdate" style="max-width:125px" class="form-control datepicker" value="@Model.FromDate">*@
+                            <input type="text" class="form-control search-input" id="date_search" />
+                        </div>
+                    </div>
+                    <!--<div class="col-md-3 col-sm-6 form-group" style="margin-bottom:5px;">
+                        <div class="input-group" style="width:100%">
+                            <div class="input-group-addon">
+                                To Date
+                                <div class="ico-help" title="" data-original-title="The to date for the search."><i class="fa fa-question-circle"></i></div>
+                            </div>
+                            <input type="text" name="ToDate" class="form-control search-input datepicker" value="" readonly="">
+                        </div>-->
+                    <!-- /.input group -->
+                    <!--</div>-->
+
+
+
+
+                    <div class="col-md-3 col-sm-6 form-group" style="margin-bottom:5px;">
+                        <div class="input-group" style="width:100%">
+                            <div class="input-group-addon" style="width:70px;">
+                                Assigned To
+                                <div class="ico-help" title="" data-original-title="Search by member"><i class="fa fa-question-circle"></i></div>
+                            </div>
+                            <select class="form-control search-input select2" name="AssignedTo" style="width: 100%">
+                                <option value="">All</option>
+                                @foreach (var member in ViewBag.ListMember as List<EnrichcousBackOffice.Models.CustomizeModel.MemberSelect_View>)
+                                {
+                                    <option value="@member.MemberNumber">@member.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <!-- /.input group -->
+                    </div>
+                    <div class="col-md-3 col-sm-6 form-group" style="margin-bottom:5px;">
+                        <div class="input-group" style="width:100%">
+                            <div class="input-group-addon" style="width:70px;">
+                                Search By
+                                <div class="ico-help" title="" data-original-title="Search by task name,ticket Id"><i class="fa fa-question-circle"></i></div>
+                            </div>
+                            <input type="text" class="form-control search-input" placeholder="Task Name | Ticket Id" name="SearchText" />
+                        </div>
+                        <!-- /.input group -->
+                    </div>
+
+
+
+                    <div class="col-md-2 col-sm-4 form-group">
+                        <button type="button" class="btn btn-primary btn-flat" id="search_submit" name="search_submit">
+                            <i class="fa fa-search"></i>
+                            Search
+                            <img id="search_loading" src="/Content/ajax-loaders/ajax-loader-1.gif" style="display:none">
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="clearfix"></div>
+
+    <div>
+        <table id="taskTable" class="table table-bordered table-hover table-responsive table-striped" data-order='[[ 0, "desc" ]]'>
+            <thead>
+                <tr>
+                    <th style="white-space:nowrap;">Open Date</th>
+                    <th>Name</th>
+                    <th>Assigned</th>
+                    <th>Deadline</th>
+                    <th>Last Update</th>
+                    <th style="width:100px;"></th>
+                    <th></th>
+                </tr>
+            </thead>
+
+        </table>
+    </div>
+</div>
+
+
+<script src="~/Content/Admin/bower_components/bootstrap-daterangepicker/daterangepicker.js"></script>
+<script>
+    $('#date_search').daterangepicker(
+        {
+            "showDropdowns": true,
+            "minYear": 1950,
+            "maxYear": 2050,
+            "autoApply": true,
+            //"alwaysShowCalendars": true,
+            "ranges": {
+                //'Today': [moment(), moment()],
+                //'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                //'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+                //'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+                'This Month': [moment().startOf('month'), moment().endOf('month')],
+                'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')],
+                'Nearest 3 months': [moment().subtract(3, 'month').startOf('month'), moment()],
+                'This Year': [moment().startOf('year'), moment().endOf('year')],
+                'Last Year': [moment().subtract(1, 'year').startOf('year'), moment().subtract(1, 'year').endOf('year')]
+            },
+            "locale": {
+                "customRangeLabel": "Custom Date",
+                "format": "MMM D, YYYY",
+            },
+            "startDate": moment().subtract(3, 'month').startOf('month'),
+            "endDate": moment(),
+        },
+    )
+</script>
+<script type="text/javascript">
+    $(".datepicker").datepicker({
+        changeMonth: true,
+        changeYear: true,
+        yearRange: '1950:2050'
+    });
+    function getTabActiveLocalStorage() {
+        var activeTab = localStorage.getItem('task-tab_active');
+        if (activeTab !== null) {
+            $(".select-tab").removeClass("active");
+            $(`.select-tab[data-tab='${activeTab}']`).addClass("active")
+        }
+    }
+    getTabActiveLocalStorage();
+    $(document).ready(function () {
+
+        $(".select-tab").on('click', function () {
+            $(".select-tab").removeClass("active");
+            $(this).addClass("active");
+            localStorage.setItem('task-tab_active', $(this).attr("data-tab"));
+            $("#taskTable").DataTable().ajax.reload();
+        })
+    });
+    $('input[type="checkbox"].minimal').iCheck({
+        checkboxClass: 'icheckbox_minimal-blue',
+        radioClass: 'iradio_minimal-blue'
+    });
+
+    $(".js-select2").select2({
+        closeOnSelect: false,
+        placeholder: "select please",
+        allowHtml: true,
+        allowClear: true,
+        tags: true
+    });
+    $(".search-input").change(function () {
+        $("#taskTable").DataTable().ajax.reload();
+
+    })
+    $("#search_submit").click(function () {
+        $("#taskTable").DataTable().ajax.reload();
+    })
+    function deleteTask(Id) {
+        if (confirm("are you sure delete this task ?")) {
+            $.ajax({
+                url: '/tasksman/delete',
+                type: 'post',
+                dataType: 'Json',
+                data: { Id },
+                success: function (data) {
+                    if (data.status) {
+                        var success = $.parseJSON('{"text":"' + data.message + '", "layout":"topRight", "type":"success"}');
+                        noty(success);
+                        $("#taskTable").DataTable().ajax.reload();
+                    }
+                    else {
+                        var error = $.parseJSON('{"text":"' + data.message + '", "layout":"topRight", "type":"error"}');
+                        noty(error);
+                    }
+
+                },
+                error: function (res) {
+                    var error = $.parseJSON('{"text":"' + res.message + '", "layout":"topRight", "type":"error"}');
+                    noty(error);
+                }
+            });
+        }
+    }
+    var t = $("#taskTable").DataTable({
+        "language": {
+            "processing": '<svg class="circular" viewBox="25 25 50 50"><circle class="path" cx="50" cy="50" r="20" fill="none" stroke-width="2" stroke-miterlimit="10"></circle></svg>',
+            "emptyTable": "No task to display",
+            "paginate": {
+                "first": '<i class="fa fa-angle-double-left" aria-hidden="true"></i>',
+                "last": '<i class="fa fa-angle-double-right" aria-hidden="true"></i>',
+                "next": '<i class="fa fa-angle-right" aria-hidden="true"></i>',
+                "previous": '<i class="fa fa-angle-left" aria-hidden="true"></i>'
+            },
+        },
+        // "lengthMenu": [10, 25, 50, 75, 100],
+        "pageLength": 10,
+        "serverSide": true, // for process server side
+        "processing": true, // for show progress bar
+
+        'searching': false,
+        "orderable": true,
+        //'ordering': false,
+        'stateSave': true,
+        'info': false,
+        'autoWidth': true,
+        //"order": [[2, "desc"]],
+        "ajax": {
+            "url": "/TasksMan/LoadTask",
+            "type": "get",
+            "datatype": "json",
+            'data': function (data) {
+                data.Tab = $('.select-tab.active').attr("data-tab");
+                data.FromDate = $("#date_search").data('daterangepicker').startDate.format('YYYY-MM-DD HH:mm');
+                data.ToDate = $("#date_search").data('daterangepicker').endDate.format('YYYY-MM-DD HH:mm');
+                data.AssignedTo = $('[name="AssignedTo"]').val();
+                data.SearchText = $('[name="SearchText"]').val();
+                return data;
+            },
+            "complete": function (json) {
+                $('[data-toggle="tooltip"]').tooltip();
+            },
+            'dataSrc': function (data) {
+                $('#numberOpen').html(data.totalOpen);
+                $('#numberCompleted').html(data.totalComplete);
+                if ($('.select-tab.active').attr("data-tab") == "open") {
+                    $('#numberOpenFilter').html(data.recordsTotal + "/");
+                    $('#numberCompletedFilter').html("");
+                }
+                else {
+                    $('#numberCompletedFilter').html(data.recordsTotal + "/");
+                    $('#numberOpenFilter').html("");
+                }
+                return data.data;
+            }
+        },
+
+        "columns": [
+
+            {
+                "name": "OpenDate",
+                'data': "OpenDate",
+                "render": function (data, type, row) {
+                    return moment(data).format('ll');
+                },
+                "orderable": true,
+            },
+            {
+                "name": "Name",
+                'data': "Name",
+                "render": function (data, type, row) {
+                    let html = '';
+                    html += `<a href="javascript:void(0)" data-toggle="tooltip" title="click to view your task" onclick="update_task('false', '${row['Id']}', 'true')"><b>${data}</b></a>`;
+
+                    if (row["ReminderWeeklyAt"]) {
+                        html += "<br/>";
+                        html += '<span class="text text-warning font-italic">'
+                        html += 'Reminder: Weekly at '
+                        if (row["ReminderWeeklyAt"] == 1) {
+                            html += 'Monday'
+                        }
+                        else if (row["ReminderWeeklyAt"] == 2) {
+                            html += "Tuesday"
+                        }
+                        else if (row["ReminderWeeklyAt"] == 3) {
+                            html += "Wednesday"
+                        }
+                        else if (row["ReminderWeeklyAt"] == 4) {
+                            html += "Thursday"
+                        }
+                        else if (row["ReminderWeeklyAt"] == 5) {
+                            html += "Friday"
+                        }
+                        html += '</span>'
+                    }
+                    else if (row["ReminderMonthlyAt"]) {
+                        html += "<br/>";
+                        html += `<span>Reminder: Monthly at ${row["ReminderMonthlyAt"] < 4 ? "Day " + row["ReminderMonthlyAt"] : row["ReminderMonthlyAt"] + "th"}</span>`
+                    }
+                    if (row["TicketId"]) {
+                        html += "<br/>";
+                        html += `<span>Ticket: </span><a target="_blank" href="/Ticket_New/detail/${row['TicketId']}">${row['TicketName']}</a>`;
+                    }
+                    return html;
+                },
+                "orderable": true,
+            },
+            {
+                "name": "AssignedToMemberName",
+                'data': "AssignedToMemberName",
+                "render": function (data, type, row) {
+                    let html = '';
+                    if (data) {
+                        let memberNames = data.split(',')
+                        for (i = 0; i < memberNames.length; i++) {
+                            html += `<span style='padding:5px; margin:5px' class='label label-primary'>${memberNames[i]}</span>`;
+                        }
+                    }
+                    return html;
+                },
+                "orderable": true,
+            },
+            {
+                "name": "DueDate",
+                'data': "DueDate",
+                "render": function (data, type, row) {
+                    let deadline = '';
+                    if (data) {
+                        var _dl = moment(row['DueDate']).diff(moment(), "days", true);
+                        if (row['Complete'] && moment(row['CompletedDate']) < moment(row['DueDate'])) {
+                            deadline = `<span class='label mt-1 wrap label-default'>${moment(row['DueDate']).utc().format('MMM DD, YYYY')} - Good job</span>`;
+                        } else if (_dl < 0) {
+                            deadline = `<span class='label mt-1  wrap label-danger'>${moment(row['DueDate']).utc().format('MMM DD, YYYY')} - Expired</span>`;
+
+                        } else if (_dl < 1) {
+                            deadline = `<span class='label mt-1  wrap animate-flicker'  style="background-color: red">${Math.ceil(_dl)} day</span>`
+                        }
+                        else if (_dl <= 3) {
+                            deadline = `<span class='label mt-1  wrap animate-flicker'  style="background-color: orange">${Math.ceil(_dl)} day</span>`
+                        } else {
+                            deadline = `<span class='label mt-1 wrap label-info'> ${moment(row['DueDate']).utc().format('MMM DD, YYYY')}</span>`;
+                        }
+                    }
+                    return deadline;
+                },
+                "className": '',
+                "orderable": true,
+            },
+
+            {
+                "name": "UpdateBy",
+                'data': "UpdateBy",
+                "render": function (data, type, row) {
+                    let html = '';
+                    if (data) {
+                        var LastUpdate = data.split('|')[0];
+                        html += LastUpdate.split('-')[0];
+                        html += "<br/>"
+                        html += LastUpdate.split('-')[1];
+                    }
+
+                    return html;
+                },
+                "orderable": true,
+            },
+            {
+                "name": "Complete",
+                "render": function (data, type, row) {
+                    let html = '';
+                    let percentComplete = 0;
+                    if (row["Complete"] == true) {
+                        percentComplete = 100;
+                    }
+                    else {
+                        percentComplete = Math.floor(row['SubtaskComplete'] * 100 / row['TotalSubtask'])
+                    }
+                    html += `  <span class="pull-left"><i class="fa fa-check-square"  style="color:${percentComplete == 100 ? "#26b373" : "#00c0ef"}"></i> ${row['SubtaskComplete']}/${row["TotalSubtask"]}</span>
+                                <span class="pull-right" style="color:${percentComplete == 100 ? "#26b373" : "#00c0ef"}"><b>${percentComplete}%</b></span>
+                                <div class="clearfix"></div>
+                                <div class="progress progress-xs">
+                                    <div class="progress-bar ${percentComplete == 100 ? "progress-bar-success " : "progress-bar-info "} progress-bar-striped" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: ${percentComplete}%">
+                                    </div>
+                                </div>`
+
+                    return html;
+                },
+                "orderable": false,
+            },
+            {
+                "name": "Action",
+                "class": "text-center",
+                "render": function (data, type, row) {
+                    return `<div class="btn-group">
+                                <div class="dots-menu btn-group">
+                                    <div class="dropdown-dot" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></div>
+                                    <ul class="dropdown-menu dropdown-menu-right">
+                                            <li class=""><a href="javascript:void(0)" style="margin-right:5px;" onclick="update_task('false', '${row['Id']}', 'true')"><i class="fa fa-pencil"></i>Update</a></li>
+                                            <li class=""><a href="javascript:void(0)" style="margin-right:5px;" onclick="deleteTask(${row['Id']})"><i class="fa fa-trash"></i>Delete</a></li>
+                                    </ul>
+                                </div>
+                            </div>`;
+                },
+                "orderable": false,
+            },
+        ]
+
+    });
+                    //iCheck for checkbox and radio inputs
+
+
+</script>
+

@@ -1,0 +1,1862 @@
+﻿@model EnrichcousBackOffice.Models.O_Orders
+@using EnrichcousBackOffice.Models;
+@using EnrichcousBackOffice.Models.CustomizeModel;
+@using EnrichcousBackOffice.Controllers;
+@using EnrichcousBackOffice.AppLB;
+
+@{
+    WebDataModel db = new WebDataModel();
+    var total_money_order = ViewBag.TotalMoneyOrder as TotalMoneyOrder;
+    List<Device_Service_ModelCustomize> list_device_service = ViewBag.ListDeviceService ?? new List<Device_Service_ModelCustomize>();
+
+    var list_device = list_device_service.Where(x => x.Type == "device" && x.BundleId == null).ToList();
+    var list_bundle_device = list_device_service.Where(x => x.Type == "device" && x.BundleId != null).ToList();
+    var subscriptions = list_device_service.Where(x => x.Type == "license" || x.Type == "addon" || x.Type == "giftcard" || x.Type == "other").ToList();
+    //bool isHardwareInvoice = ViewBag.isHardwareInvoice ?? false;
+
+    var CompanyProductName = db.SystemConfigurations.FirstOrDefault().ProductName;
+    var Partners = ViewBag.BelongtoPartner as List<C_Partner> ?? new List<C_Partner>();
+    List<Product_Model_view> list_model_device = ViewBag.ListModel ?? new List<Product_Model_view>();
+    //List<Order_Subcription> list_store_product = ViewBag.ListStoreProduct ?? new List<Order_Subcription>();
+    List<Bundle_view> bundles = ViewBag.bundles ?? new List<Bundle_view>();
+    string cusIdSelected = ViewBag.selectCus as string;
+    var par = db.C_Partner.FirstOrDefault(c => c.Code == Model.PartnerCode);
+    var cus = new C_Customer();
+    if (Model.Id > 0)
+    {
+        cus = db.C_Customer.Where(c => c.CustomerCode == Model.CustomerCode).FirstOrDefault();
+    }
+    var access = ViewBag.p as Dictionary<string, bool>;
+    var version = System.Configuration.ConfigurationManager.AppSettings["IMSVersion"];
+    var cMem = Authority.GetCurrentMember();
+}
+
+@section style
+{
+    <link rel="stylesheet" href="~/Content/Admin/bower_components/bootstrap-touchspin/jquery.bootstrap-touchspin.min.css" />
+}
+
+<section class="content-header">
+    <h1>
+        @ViewBag.Title
+        <small>Invoice</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Dashboard</a></li>
+        <li><a href="javascript:window.location = document.referrer;"><i class="fa fa-files-o"></i> Invoice</a></li>
+        <li class="active">@ViewBag.Title</li>
+    </ol>
+</section>
+<div id="dialog" style="display:none;">
+    <p>Do you want to start a new estimate or edit existing ?</p>
+</div>
+<!-- Main content -->
+<section class="content">
+    <div class="row">
+
+        @if (TempData["e"] != null)
+        {
+            <div class="alert alert-warning alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+            </div>
+        }
+        else if (TempData["s"] != null)
+        {
+            <div class="alert alert-success alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+            </div>
+        }
+        <div class="col-md-12">
+            <input type="hidden" name="hd_url_back" value="@ViewBag.Url_back" />
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">@ViewBag.Title #@(Model.OrdersCode)</h3>
+                    <div class="pull-right box-tools">
+                        <a class="btn btn-sm btn-default" onclick="overlayOn()" href="javascript:window.location = document.referrer;"><i class="fa fa-arrow-left"></i> Go back</a>
+                        @*<button type="button" class="btn btn-sm btn-info btn_preview_es"><i class="fa fa-gg"></i> Preview</button>*@
+                    </div>
+                </div>
+                <!-- /.box-header -->
+                <div class="box-body">
+                    <form role="form" id="order-form" action="/order/saveorder" method="post">
+                        <div class="col-md-12">
+                            <div class="panel panel-primary">
+                                <div class="panel-body">
+                                    <div class="col-md-12" style="padding:0px">
+                                        <input type="hidden" name="Id" value="@Model.Id" />
+                                        <input type="hidden" name="order_code" value="@Model.OrdersCode" />
+                                        <input type="hidden" id="exist_estimate" />
+                                        <div id="div_merchant">
+                                            <div class="form-group">
+                                                <label class="control-label text-primary">Merchant: <span style="color:red">*</span></label>
+                                                <input type="hidden" id="merchant_id_hd" name="CustomerCode" value="@cus.CustomerCode" />
+
+                                                <div class="panel panel-default" style="border-radius:unset">
+                                                    <div class="panel-body">
+                                                        <div>
+                                                            <div class="input-group pull-left" style="width:70%">
+                                                                <input type="text" class="form-control" name="merchant_search" placeholder="Search for merchant name/owner name" />
+                                                                <div class="input-group-addon" style="cursor: pointer;background-color:var(--main-color-1);color:white;" onclick="search_merchant()">
+                                                                    <i class="fa fa-search"></i> Search
+                                                                    <img id="search_loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                                                                </div>
+                                                                @*<div class="input-group-addon" style="cursor: pointer; background-color: orange;color:white;" onclick="search_merchant('all')">
+                                                                        <i class="fa fa-arrow-down"></i> Show All
+                                                                        <img id="searchall_loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                                                                    </div>*@
+                                                            </div>
+                                                            <div class="pull-right">
+                                                                <button type="button" class="btn btn-sm btn-primary btn-flat" onclick="$('#newsalon_form').val('order'),openPopupNewMerchant()">
+                                                                    <i class="fa fa-plus"></i> New Lead
+                                                                    <img id="new_merchant_loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                        <div class="clearfix"></div><br />
+                                                        <!--merchant duoc chon-->
+                                                        <div class="row" style="background-clip: border-box;border: 1px solid rgba(0,0,0,0.085);border-radius: 1rem;-webkit-box-shadow: 0 1px 5px 0 rgb(0 0 0 / 30%);box-shadow: 0 1px 5px 0 rgb(0 0 0 / 30%);padding: 1rem;margin: 0px; @(Model.Id <= 0 && cus.Id == 0?"display:none":"")" id="div_merchant_info" }>
+                                                            <div class="col-md-6" style="border-right:1px dotted #d0d0d0;">
+                                                                <label class="control-label" style="display:block;width:100%;text-align:center">Merchant Info: <a href="#" onclick="update_merchant(0, true,$('#merchant_id_hd').val())">&nbsp;<u> Edit</u></a></label>
+                                                                <div>
+                                                                    <table class="table table-bordered">
+                                                                        <tr>
+                                                                            <th style="min-width:120px">Merchant name:</th>
+                                                                            <td><span id="m_name">@(cus.BusinessName)</span></td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <th style="min-width:120px">Address:</th>
+                                                                            <td>
+                                                                                <span id="m_address">
+                                                                                    @(cus?.SalonAddress1), @(cus?.SalonCity), @(cus?.SalonState)@(cus?.SalonZipcode), @(cus?.BusinessCountry)
+                                                                                </span>
+                                                                            </td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <th style="min-width:120px">Contact name:</th>
+                                                                            <td><span id="c_name">@(string.IsNullOrEmpty(cus.OwnerName) ? cus.ContactName : cus.OwnerName)</span></td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <th style="min-width:120px">Cell phone:</th>
+                                                                            <td><span id="c_phone">@(string.IsNullOrEmpty(cus.OwnerMobile) ? cus.BusinessPhone : cus.OwnerMobile)</span></td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <th style="min-width:120px">Salon Email:</th>
+                                                                            <td><span id="c_email">@(cus?.Email)</span></td>
+                                                                        </tr>
+                                                                    </table>
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="col-md-6" id="render-license-is-active">
+                                                                @if (Model.Id > 0)
+                                                                {
+                                                                    @Html.Action("GetLicenseIsActive", new { CustomerCode = Model.CustomerCode });
+                                                                }
+                                                            </div>
+
+                                                        </div>
+
+                                                        <!--list merhcant duoc filter-->
+                                                        <div id="div_list_merchant" style="display:none">
+                                                            <div style="max-height:250px; border:1px dotted red; margin-top:5px; overflow:auto">
+                                                                <table class="table table-bordered table-striped">
+                                                                    <thead>
+                                                                        <tr style="border-bottom:2px solid grey">
+                                                                            <th>#</th>
+                                                                            <th>Merchant Name</th>
+                                                                            <th>Contact infomation</th>
+                                                                            <th style="width:30px">Action</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody id="list_merchant">
+                                                                        <!--Add content form javascrip-->
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+                                                        </div>
+                                                        <!---->
+
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12" style="padding:0">
+                                            <div class="panel panel-default">
+                                                <div class="row" style="padding:20px">
+                                                    <div class="col-md-4">
+                                                        <label>Sales Person</label>
+                                                        <select id="SalesMemberNumber" class="form-control select2" name="SalesMemberNumber" @*onchange="loadListPartnerBySalePerson()"*@ style="width:100%; margin-bottom:5px">
+                                                            <option value="">---N/A---</option>
+                                                            @foreach (var item in ViewBag.ListMember as List<P_Member>)
+                                                            {
+                                                                <option @if (Model.SalesMemberNumber == item.MemberNumber) { @Html.Raw("selected") } value="@item.MemberNumber">@(item.FullName + " #" + item.MemberNumber)</option>
+                                                            }
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label>Belong to Partner <img id="loading_partners" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" /></label>
+                                                        <select id="PartnerCode" class="form-control select2" name="PartnerCode" style="width:100%; margin-bottom:5px">
+                                                            @if (cMem.SiteId == 1)
+                                                            {
+                                                                <option value="" siteId="1">@CompanyProductName</option>
+                                                            }
+                                                            @foreach (var item in Partners)
+                                                            {
+                                                                <option value="@item.Code" siteId="@item.SiteId" priceType="@item.PriceType" licenseKey="@item.KeyLicense" @(item.SiteId == cus.SiteId ? "selected" : "")>#@item.Code - @item.Name</option>
+                                                            }
+                                                        </select>
+                                                    </div>
+
+                                                    <div class="col-md-4">
+                                                        <label>Invoice Date <span style="color:red">*</span></label>
+                                                        <input style="margin-bottom:5px" class="form-control datepicker" name="InvoiceDate" value="@(Model?.InvoiceDate.HasValue==true ? Model?.InvoiceDate.Value.ToString("MM/dd/yyyy"): DateTime.UtcNow.ToString("MM/dd/yyyy"))" required />
+
+                                                    </div>
+                                                    @*<div class="col-md-4">
+                                                            <label>Due Date</label>
+                                                            <input style="margin-bottom:5px" class="form-control datepicker" name="DueDate" value="@(Model?.DueDate.HasValue==true ? Model?.DueDate.Value.ToString("MM/dd/yyyy"):DateTime.UtcNow.Date.AddMonths(1).ToString("MM/dd/yyyy"))" />
+
+                                                        </div>*@
+
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="clearfix"></div>
+                                        <div id="div_device">
+                                            <div class="form-group">
+                                                <div class="panel panel-default" style="border-radius:10px;background-color: #eee;margin:0; overflow:hidden">
+                                                    <h3 class="text-primary header_btn_toggle header_btn_toggle_hardware" onclick="$('#hardware_box').slideToggle(300), $('#div_device').toggleClass('active')" style="margin:0;padding-left:20px;">HARDWARE <i style="color: gray; font-size: .7em; padding: 5px 20px; float: right" class="fa fa-chevron-down"></i></h3>
+                                                    <img id="select_pos_dv_loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                                                    <div class="panel-body" id="hardware_box" style="background-color: #fff;display:none;">
+                                                        <div class="col-md-12" style="padding:0">
+                                                            <label>
+                                                                SHIPPING ADDRESS
+                                                            </label>
+                                                            <div class="pull-right">
+                                                                <input type="checkbox" value="1" @*@if (string.IsNullOrWhiteSpace(Model.ShippingAddress?.Split('|')[0]) == true) { @Html.Raw("checked") }*@ id="same_address" />
+                                                                <label for="same_address" style="transform:translateY(-2px)">Same of salon Address</label>
+                                                            </div>
+                                                            <div class="col-md-12" id="shipping_address" style="padding: 8px 10px" onclick="$('#shipping_address input').removeAttr('readonly'); $('#same_address').prop('checked', false)">
+                                                                <div class="col-md-4" style="padding:0">
+                                                                    <input type="text" class="form-control" name="sh_street" value="@(Model.ShippingAddress?.Split('|')[0])" @if (Model.Id > 0) { @Html.Raw("readonly") } placeholder="Street" autocomplete="off" />
+                                                                </div>
+
+                                                                <div class="col-md-2" style="padding:0">
+                                                                    <input type="text" class="form-control" name="sh_city" value="@(Model.ShippingAddress?.Split('|')[1])" @if (Model.Id > 0) { @Html.Raw("readonly") } placeholder="City/Town" autocomplete="off" />
+                                                                </div>
+                                                                <div class="col-md-2" style="padding:0">
+                                                                    <input type="text" class="form-control" id="sh_state" name="sh_state" value="@(Model.ShippingAddress?.Split('|')[2])" @if (Model.Id > 0) { @Html.Raw("readonly") } placeholder="State/Province" autocomplete="off" />
+                                                                </div>
+
+                                                                <div class="col-md-2" style="padding:0">
+                                                                    <input type="text" class="form-control" name="sh_zip" value="@(Model.ShippingAddress?.Split('|')[3])" @if (Model.Id > 0) { @Html.Raw("readonly") } placeholder="ZIP code" autocomplete="off" />
+                                                                </div>
+                                                                <div class="col-md-2" style="padding:0">
+                                                                    <input type="text" class="form-control" id="sh_country" name="sh_country" value="@(Model.Id > 0 ? Model.ShippingAddress?.Split('|')[4] : "United States")" @if (Model.Id > 0) { @Html.Raw("readonly") } placeholder="Country" autocomplete="off" />
+                                                                </div>
+                                                            </div>
+
+                                                        </div>
+                                                        <div class="col-md-12" style="padding: 10px 0">
+                                                            <div class="row">
+                                                                <div class="col-md-12">
+                                                                    <div class="nav-tabs-custom" style="border:1px solid #eee">
+                                                                        <ul class="nav nav-tabs">
+                                                                            <li class="active" style="width: 50%;margin:0px; text-align:center"><a data-toggle="tab" href="#tab_hardware"><b>DEVICE/HARDWARE</b></a></li>
+                                                                            <li style="width: 50%;margin:0px; text-align:center"><a data-toggle="tab" href="#tab_package"><b>PACKAGE</b></a></li>
+                                                                        </ul>
+                                                                        <div class="tab-content" style="padding:0; transition: height 2s; height:100%">
+                                                                            <div id="tab_hardware" class="tab-pane in active" style="padding-top:10px">
+                                                                                <div class="card" style="padding: 10px;">
+                                                                                    <div class="card-body" style="display: block;">
+                                                                                        <select id="product_select" class="form-control" style="width:300px; margin-bottom: -30px">
+                                                                                            <option value="">All Products</option>
+                                                                                            @foreach (var item in ViewBag.ListPOS as List<O_Product>)
+                                                                                            {
+                                                                                                <option value="@item.Code">@item.Name</option>
+                                                                                            }
+                                                                                        </select>
+                                                                                        <table class="table  table-bordered table-striped table_hardware" style="margin-bottom:0; width:100%">
+                                                                                            <thead>
+                                                                                                <tr style="width:100%">
+                                                                                                    <th>Model</th>
+                                                                                                    <th>Price</th>
+                                                                                                    <th></th>
+                                                                                                </tr>
+                                                                                            </thead>
+                                                                                            <tbody id="list_model_device">
+                                                                                                @foreach (var pr in list_model_device)
+                                                                                                {
+                                                                                                    <tr class="item @pr.model.ProductCode">
+                                                                                                        @{var model_selected = list_device_service.Where(d => d.BundleId == null && d.ModelCode == pr.model.ModelCode).FirstOrDefault(); }
+                                                                                                        <td>
+                                                                                                            <div class="row">
+                                                                                                                <img src="@(pr.model.Picture ?? "/Content/Img/noimage.png")" style="width: 100px; height: 80px; float: left; border: 1px outset #eee;" onerror="this.onerror=null;this.src='/Content/Img/noimage.png'" />
+                                                                                                                <div style="width: auto; padding-left: 110px">
+                                                                                                                    <b class="item-name">@pr.model.ProductName - @pr.model.ModelName</b><br />
+                                                                                                                    <b class="pkg-item"><i>Color:</i> @pr.model.Color</b><br />
+                                                                                                                    <b><i>Remaining:</i> @pr.remaining</b><br /> @if (pr.remaining == 0)
+                                                                                                                    {<label class="label label-warning animate-flicker"> Out of stock</label>}
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                        </td>
+                                                                                                        <td class="item-price">
+                                                                                                            @if (pr.model.SalePrice != null && pr.model.SalePrice > 0)
+                                                                                                            {
+                                                                                                                <span class="old-price" style="text-decoration:line-through;color:#9e9e9e;">@string.Format("${0:#,0.00}", pr.model.Price)</span>
+                                                                                                                <br />
+                                                                                                                <span class="price">@string.Format("${0:#,0.00}", pr.model.SalePrice)</span>
+                                                                                                            }
+                                                                                                            else
+                                                                                                            {
+                                                                                                                @Html.Raw(pr.model.Price != null ? string.Format("${0:#,0.00}", pr.model.Price) : "N/A")
+                                                                                                            }
+                                                                                                        </td>
+                                                                                                        <td class="column-select-wrapper" style="width:350px">
+                                                                                                            <div class="col-sm-3 select-wrapper">
+                                                                                                                <button id="select_@pr.model.ModelCode" type="button" class="btn btn-default selected-action-btn select_device-btn btn-sm @(model_selected!=null?"selected":"")" style="height: 32px;">
+                                                                                                                    <span class="select"><i class="fa fa-plus" aria-hidden="true"></i> Add</span>
+
+                                                                                                                    <span class="delete"><i class="fa fa-times" aria-hidden="true"></i> Cancel</span>
+                                                                                                                </button>
+                                                                                                                <input class="device_check" type="checkbox" value="@pr.model.ModelCode" style="height:20px; width:20px; display:none" data-modelname="@pr.model.ModelName" data-remaining="@pr.remaining" @(model_selected != null ? "checked" : "") />
+                                                                                                            </div>
+                                                                                                            <div class="col-sm-9 on_rows quantity-wrapper">
+                                                                                                                <div class="hover-quantity @(model_selected!=null?"show-quantity":"") update-quantity_@pr.model.ModelCode" style="display:none;">
+                                                                                                                    <input type="text" style="width:40px;text-align:center;border: 1px solid #ccc;" min="1" step="1" data-modelcode="@pr.model.ModelCode" class="qty_hardware qty_hardware_@pr.model.ModelCode" value="@(model_selected != null ? model_selected.Quantity:0)" />
+                                                                                                                    <button type="button" class="btn btn-sm btn-success btn-confirm-quantity  btn-@pr.model.ModelCode" data-type="device" style="display:none;" data-modelcode="@pr.model.ModelCode"><i class="fa fa-check" aria-hidden="true"></i></button>
+                                                                                                                    <button type="button" class="btn btn-sm btn-danger btn-cancel-quantity  btn-@pr.model.ModelCode" data-type="device" style="display:none;" data-quantity="@(model_selected != null ? model_selected.Quantity:0)" data-modelcode="@pr.model.ModelCode"><i class="fa fa-times" aria-hidden="true"></i></button>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                        </td>
+                                                                                                    </tr>
+                                                                                                }
+                                                                                            </tbody>
+                                                                                        </table>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+
+                                                                            <div id="tab_package" class="tab-pane" style="padding-top:10px">
+                                                                                <div class="card scrollbar scroll-style-1" style="height:544px;overflow-y:auto; padding: 10px;">
+                                                                                    <div class="card-body" style="display: block;">
+                                                                                        <table class="table table-bordered table-striped" style="vertical-align: middle; margin-bottom:0 ">
+                                                                                            <tbody id="list_bundle">
+                                                                                                @foreach (var pr in bundles)
+                                                                                                {
+                                                                                                    <tr class="item">
+                                                                                                        @{var package_selected = list_device_service.FirstOrDefault(d => d.BundleId == pr.Bundle.Id); }
+                                                                                                        <td>
+                                                                                                            <div class="row">
+
+                                                                                                                <img style="width: 100px; height: 80px; float: left; border: 1px outset #eee;" src='/Content/Img/noimage.png' />
+
+                                                                                                                <div style="width: auto; padding-left: 110px">
+                                                                                                                    <b class="text-primary">@pr.Bundle.Name</b><br />
+                                                                                                                    @foreach (var d in pr.Detail)
+                                                                                                                    {
+                                                                                                                        <span class="pkg-item"><b>@d.BundleDevice.Quantity</b> x <i class="text-green">@d.Model.ProductName - @d.BundleDevice.ModelName </i>(@d.Model.Color) </span><br />
+                                                                                                                    }
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                        </td>
+                                                                                                        <td class="item-price">
+                                                                                                            @Html.Raw(pr.Bundle.Price != null ? string.Format("${0:#,0.00}", pr.Bundle.Price) : "N/A")
+                                                                                                        </td>
+                                                                                                        <td class="column-select-wrapper" style="width:350px">
+                                                                                                            <div class="col-md-3 select-wrapper">
+                                                                                                                <button id="select_@pr.Bundle.Id" type="button" class="btn btn-default selected-action-btn select_bundle-btn btn-sm @(package_selected!=null ? "selected" : "")" style="height: 32px;">
+                                                                                                                    <span class="select"><i class="fa fa-plus" aria-hidden="true"></i> Add</span>
+
+                                                                                                                    <span class="delete"><i class="fa fa-trash" aria-hidden="true"></i> Delete</span>
+
+                                                                                                                </button>
+                                                                                                                <input class="bundle_check" type="checkbox" value="@pr.Bundle.Id" style="height:20px; width:20px;display:none" @(package_selected != null ? "checked" : "") />
+                                                                                                            </div>
+                                                                                                            <div class="on_rows col-md-9 quantity-wrapper">
+                                                                                                                <div class="hover-quantity @(package_selected!=null?"show-quantity":"") update-quantity_@pr.Bundle.Id" style="display:none">
+                                                                                                                    <input type="text" style="width:40px;text-align:center;border: 1px solid #ccc;" min="0" step="1" data-modelcode="@pr.Bundle.Id" class="qty_hardware qty_hardware_@pr.Bundle.Id" value="@(package_selected != null ? package_selected.Quantity:0)" />
+                                                                                                                    <button type="button" class="btn btn-sm btn-success btn-confirm-quantity  btn-@pr.Bundle.Id" style="display:none;" data-type="bundle" data-modelcode="@pr.Bundle.Id"><i class="fa fa-check" aria-hidden="true"></i></button>
+                                                                                                                    <button type="button" class="btn btn-sm btn-danger btn-cancel-quantity  btn-@pr.Bundle.Id" style="display:none;" data-type="bundle" data-quantity="@(package_selected != null ? package_selected.Quantity:0)" data-modelcode="@pr.Bundle.Id"><i class="fa fa-times" aria-hidden="true"></i></button>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                        </td>
+                                                                                                    </tr>
+                                                                                                }
+                                                                                            </tbody>
+                                                                                        </table>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div style="text-align:center;display:block;">
+                                                                                <button type="button" class="btn btn-default" onclick="$('#hardware_box').slideToggle(300), $('#div_device').toggleClass('active')" style="margin:5px 0px;">Close</button>
+                                                                            </div>
+
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <!--<div id="div_POS_Device_Hardware" style="display:none">-->
+                                                        <!--Append _POSDeviceHardwarePartial-->
+                                                        <!--</div>
+
+                                                        <div id="div_bundle_select" style="display:none">-->
+                                                        <!--Append _AddDeviceBundlePartial-->
+                                                        <!--</div>-->
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="clearfix" bis_skin_checked="1"></div>
+                                        <div id="div_product" bis_skin_checked="1">
+                                            <div class="form-group" bis_skin_checked="1">
+                                                <div class="panel panel-default" style="border-radius:10px;background-color: #eee;margin:0; overflow:hidden">
+                                                    <h3 class="text-primary header_btn_toggle" onclick="$('#subscriptions_box').slideToggle(300), $('#div_product').toggleClass('active')" style="margin:0;padding-left:20px;"> @(!string.IsNullOrEmpty(Model.OrdersCode)? "UPDATE SUBSCRIPTION" : "ADD SUBSCRIPTION") <i style="color: gray; font-size: .7em; padding: 5px 20px; float: right" class="fa fa-chevron-down"></i></h3>
+                                                    <div id="subscriptions_box" class="col-md-12" style="background-color: #fff; display:none; padding: 10px 0">
+                                                        <table id="tb_license" style="width: 100%;border-collapse: collapse;" class="table table-bordered striped3">
+                                                            <thead style="background-color: #aad3ea">
+                                                                <tr>
+                                                                    <th style="width: 70%">License</th>
+                                                                    <th>Price</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody id="subscriptions_tbody">
+                                                                @foreach (var pr in db.License_Product.Where(p => p.Type == "license" && p.Active == true && p.IsDelete != true && string.IsNullOrEmpty(p.Code_POSSystem)).OrderBy(c => c.Name).ToList())
+                                                                {
+
+                                                                    <tr id="pr_@pr.Id" onclick="$(this).find('.check').change()" style="cursor:pointer" license-key="@pr.Name.Replace(" ", "")" siteId="@pr.SiteId"
+                                                                        class="hover item align-middle license-show-@(pr.SiteId) @(pr.PartnerPrice == null && pr.MembershipPrice == null ? "allow-partner-select" : "") license-item">
+                                                                        <td style="width: 70%">
+                                                                            <div style="display:inline-flex;">
+                                                                                <input name="selected_prd" type="radio" class="check" value="@pr.Id" data-renew="@(subscriptions.FirstOrDefault(x => x.SubscriptionId == pr.Id)?.AutoRenew == true ? 1:0)" style="display:none" @(subscriptions.Where(x => x.SubscriptionId == pr.Id).Count() > 0 ? "checked" : "") />
+                                                                                <a style="color: gray; margin: 0px 10px; padding: 0px;" class="icon_span_uncheck btn fa fa-2x fa-square-o"></a>
+                                                                                <a style="color: royalblue; margin: 0px 10px; padding: 0px;" class="icon_span_check btn fa fa-2x fa-check-square-o"></a>
+                                                                            </div>
+                                                                            <div style="display:inline-block;">
+                                                                                <b style="color: green" id="product_name_@pr.Id" class="prod_name">@pr.Name</b>
+                                                                                <br />
+                                                                                @(pr.SubscriptionDuration =="MONTHLY"? Html.Raw("<label class='label label-primary'>" + (pr.PeriodRecurring ?? "Monthly") + "</label>") : Html.Raw("<label class='label label-warning'>Onetime</label>"))
+                                                                                @{
+                                                                                    var detailSub = db.Order_Subcription.FirstOrDefault(c => c.OrderCode == Model.OrdersCode && !string.IsNullOrEmpty(Model.OrdersCode) && c.ProductId == pr.Id && c.SubscriptionType != "setupfee" && c.SubscriptionType != "interactionfee");
+                                                                                }
+                                                                                <input type="hidden" value="@(detailSub?.PriceType)" id="pricetype_hidden_@pr.Id" />
+                                                                                <input type="hidden" value="@((detailSub?.AutoRenew ?? false).ToString())" id="autorenew_hidden_@pr.Id" />
+                                                                                <input type="hidden" value="@((detailSub?.ApplyPaidDate ?? false).ToString())" id="applydate_hidden_@pr.Id" />
+                                                                            </div>
+                                                                            <img class="loading_gif" style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                                                                        </td>
+                                                                        <td class="pr_price">
+                                                                            <span class="origin-price" style="font-weight:bold">
+                                                                                @(pr.Price != null ? string.Format("${0:#,0.00}", pr.Price): "N/A") / @(pr.NumberOfPeriod == 1 ? "" : pr.NumberOfPeriod?.ToString()) @(pr.SubscriptionDuration != "MONTHLY" ? "times" : (string.IsNullOrEmpty(pr.PeriodRecurring) ? "month" : pr.PeriodRecurring.ToLower().Replace("ly", "")) + (pr.NumberOfPeriod == 1 ? "" : "s"))
+                                                                            </span>
+                                                                            <span class="partner-price" style="font-weight:bold;display:none">
+                                                                                @(pr.PartnerPrice != null ? string.Format("${0:#,0.00}", pr.PartnerPrice): "$0") / @(pr.NumberOfPeriod == 1 ? "" : pr.NumberOfPeriod?.ToString()) @(pr.SubscriptionDuration != "MONTHLY" ? "times" : (string.IsNullOrEmpty(pr.PeriodRecurring) ? "month" : pr.PeriodRecurring.ToLower().Replace("ly", "")) + (pr.NumberOfPeriod == 1 ? "" : "s"))
+                                                                            </span>
+                                                                            <span class="membership-price" style="font-weight:bold;display:none">
+                                                                                @(pr.MembershipPrice != null ? string.Format("${0:#,0.00}", pr.MembershipPrice): "$0") / @(pr.NumberOfPeriod == 1 ? "" : pr.NumberOfPeriod?.ToString()) @(pr.SubscriptionDuration != "MONTHLY" ? "times" : (string.IsNullOrEmpty(pr.PeriodRecurring) ? "month" : pr.PeriodRecurring.ToLower().Replace("ly", "")) + (pr.NumberOfPeriod == 1 ? "" : "s"))
+                                                                            </span>
+
+                                                                            <input id="period_amount_@pr.Id" name="period_amount_@pr.Id" type="hidden" value="1" />
+                                                                            <input id="subscription_type_@pr.Id" name="subscription_type_@pr.Id" type="hidden" value="@pr.Type" />
+                                                                        </td>
+
+                                                                        @*<input id="period_amount_@pr.Id" name="period_amount_@pr.Id" type="hidden" value="1" />*@
+                                                                        @*<div id="duration_@pr.Id"></div>*@
+
+
+                                                                    </tr>
+
+
+                                                                    <tr style="display:none; background-color:#DDD">
+                                                                        <td id="prdata_@pr.Id" class="license-item-detail" colspan="2" style="padding:0px">
+                                                                        </td>
+                                                                        <td style="display: none">@pr.Name</td>
+                                                                    </tr>
+                                                                    @*}*@
+
+                                                                }
+                                                            </tbody>
+                                                        </table>
+                                                        <table id="tb_addon" style="width: 100%;border-collapse: collapse;" class="table table-bordered striped3">
+                                                            <thead style="background-color: #aad3ea">
+                                                                <tr>
+                                                                    <th style="width: 70%">Addon</th>
+                                                                    <th>Price</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                @foreach (var pr in db.License_Product.Where(p => p.Type == "addon" && p.Active == true && p.IsDelete != true).OrderBy(c => c.Name).ToList())
+                                                                {
+                                                                    <tr id="pr_@pr.Id" class="hover item align-middle @(pr.PartnerPrice == null && pr.MembershipPrice == null ? "allow-partner-select" : "")" onclick="$(this).find('.check').change()">
+                                                                        <td style="width: 70%">
+                                                                            <div style="display:inline-flex;">
+                                                                                <input name="selected_addon" type="checkbox" class="check" value="@pr.Id" data-renew="@(subscriptions.FirstOrDefault(x => x.SubscriptionId == pr.Id)?.AutoRenew == true ? 1:0)" style="display:none" @(subscriptions.Where(x => x.SubscriptionId == pr.Id).Count() > 0 ? "checked" : "") />
+                                                                                <a style="color: gray; margin: 0px 10px; padding: 0px;" class="icon_span_uncheck btn fa fa-2x fa-square-o"></a>
+                                                                                <a style="color: royalblue; margin: 0px 10px; padding: 0px;" class="icon_span_check btn fa fa-2x fa-check-square-o"></a>
+                                                                            </div>
+                                                                            <div style="display:inline-block;">
+                                                                                <b style="color: green" id="product_name_@pr.Id" class="prod_name">@pr.Name</b>
+                                                                                <br />
+                                                                                @(pr.SubscriptionDuration =="MONTHLY"? Html.Raw("<label class='label label-primary'>" + (pr.PeriodRecurring ?? "Monthly") + "</label>"): Html.Raw("<label class='label label-warning'>Onetime</label>"))
+                                                                                <img class="loading_gif" style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                                                                                @{
+                                                                                    var detailSub = db.Order_Subcription.FirstOrDefault(c => c.OrderCode == Model.OrdersCode && c.ProductId == pr.Id);
+                                                                                }
+                                                                                <input type="hidden" value="@(detailSub?.PriceType)" id="pricetype_hidden_@pr.Id" />
+                                                                                <input type="hidden" value="@((detailSub?.AutoRenew ?? false).ToString())" id="autorenew_hidden_@pr.Id" />
+                                                                                <input type="hidden" value="@((detailSub?.ApplyPaidDate ?? false).ToString())" id="applydate_hidden_@pr.Id" />
+                                                                            </div>
+
+                                                                        </td>
+                                                                        <td class="pr_price">
+                                                                            <span class="origin-price" style="font-weight:bold">
+                                                                                @(pr.Price != null ? string.Format("${0:#,0.00}", pr.Price): "N/A") / @(pr.NumberOfPeriod == 1 ? "" : pr.NumberOfPeriod?.ToString()) @(pr.SubscriptionDuration != "MONTHLY" ? "times" : (string.IsNullOrEmpty(pr.PeriodRecurring) ? "month" : pr.PeriodRecurring.ToLower().Replace("ly", "")) + (pr.NumberOfPeriod == 1 ? "" : "s"))
+                                                                            </span>
+                                                                            <span class="partner-price" style="font-weight:bold;display:none">
+                                                                                @(pr.PartnerPrice != null ? string.Format("${0:#,0.00}", pr.PartnerPrice): "$0") / @(pr.NumberOfPeriod == 1 ? "" : pr.NumberOfPeriod?.ToString()) @(pr.SubscriptionDuration != "MONTHLY" ? "times" : (string.IsNullOrEmpty(pr.PeriodRecurring) ? "month" : pr.PeriodRecurring.ToLower().Replace("ly", "")) + (pr.NumberOfPeriod == 1 ? "" : "s"))
+                                                                            </span>
+                                                                            <span class="membership-price" style="font-weight:bold;display:none">
+                                                                                @(pr.MembershipPrice != null ? string.Format("${0:#,0.00}", pr.MembershipPrice): "$0") / @(pr.NumberOfPeriod == 1 ? "" : pr.NumberOfPeriod?.ToString()) @(pr.SubscriptionDuration != "MONTHLY" ? "times" : (string.IsNullOrEmpty(pr.PeriodRecurring) ? "month" : pr.PeriodRecurring.ToLower().Replace("ly", "")) + (pr.NumberOfPeriod == 1 ? "" : "s"))
+                                                                            </span>
+                                                                            <input id="subscription_type_@pr.Id" name="subscription_type_@pr.Id" type="hidden" value="@pr.Type" />
+                                                                        </td>
+                                                                    </tr>
+                                                                    <tr style="border-bottom: 1px double; display:none;@(pr.SubscriptionDuration =="MONTHLY" ? "background-color:#DDD" : "")">
+                                                                        <td id="prdata_@pr.Id" colspan="2" style="padding:0px"></td>
+                                                                        <td style="display: none">@pr.Name</td>
+                                                                    </tr>
+                                                                }
+                                                            </tbody>
+                                                        </table>
+                                                        <table id="tb_giftcard" style="width: 100%;border-collapse: collapse;" class="table table-bordered striped3">
+                                                            <thead style="background-color: #aad3ea">
+                                                                <tr>
+                                                                    <th style="width: 70%">Gift Card</th>
+                                                                    <th>Price</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                @foreach (var pr in db.License_Product.Where(p => p.Type == "giftcard" && p.Active == true && p.IsDelete != true).OrderBy(c => c.Name).ToList())
+                                                                {
+                                                                    <tr id="pr_@pr.Id" class="hover item @(pr.PartnerPrice == null && pr.MembershipPrice == null ? "allow-partner-select" : "")" onclick="$(this).find('.check').change()">
+                                                                        <td style="width: 70%">
+                                                                            <div style="display:inline-flex;">
+                                                                                <input name="selected_addon" type="checkbox" class="check" value="@pr.Id" data-renew="@(subscriptions.FirstOrDefault(x => x.SubscriptionId == pr.Id)?.AutoRenew == true ? 1:0)" style="display:none" @(subscriptions.Where(x => x.SubscriptionId == pr.Id).Count() > 0 ? "checked" : "") />
+                                                                                <a style="color: gray; margin: 0px 10px; padding: 0px;" class="icon_span_uncheck btn fa fa-2x fa-square-o"></a>
+                                                                                <a style="color: royalblue; margin: 0px 10px; padding: 0px;" class="icon_span_check btn fa fa-2x fa-check-square-o"></a>
+                                                                            </div>
+                                                                            <div style="display:inline-block;">
+                                                                                <b style="color: green" id="product_name_@pr.Id" class="prod_name">@pr.Name</b>
+                                                                                <br />
+
+                                                                                @(pr.SubscriptionDuration =="MONTHLY"? Html.Raw("<label class='label label-primary'>" + (pr.PeriodRecurring ?? "Monthly") + "</label>") : Html.Raw("<label class='label label-warning'>Onetime</label>"))
+                                                                                @{
+                                                                                    var detailSub = db.Order_Subcription.FirstOrDefault(c => c.OrderCode == Model.OrdersCode && c.ProductId == pr.Id);
+                                                                                }
+                                                                                <input type="hidden" value="@(detailSub?.PriceType)" id="pricetype_hidden_@pr.Id" />
+                                                                                <input type="hidden" value="@((detailSub?.AutoRenew ?? false).ToString())" id="autorenew_hidden_@pr.Id" />
+                                                                                <input type="hidden" value="@((detailSub?.ApplyPaidDate ?? false).ToString())" id="applydate_hidden_@pr.Id" />
+                                                                            </div>
+                                                                            <img class="loading_gif" style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                                                                        </td>
+                                                                        <td class="pr_price">
+                                                                            <span class="origin-price" style="font-weight:bold">
+                                                                                @(pr.Price != null ? string.Format("${0:#,0.00}", pr.Price): "N/A") / @(pr.NumberOfPeriod == 1 ? "" : pr.NumberOfPeriod?.ToString()) @(pr.SubscriptionDuration != "MONTHLY" ? "times" : (string.IsNullOrEmpty(pr.PeriodRecurring) ? "month" : pr.PeriodRecurring.ToLower().Replace("ly", "")) + (pr.NumberOfPeriod == 1 ? "" : "s"))
+                                                                            </span>
+                                                                            <span class="partner-price" style="font-weight:bold;display:none">
+                                                                                @(pr.PartnerPrice != null ? string.Format("${0:#,0.00}", pr.PartnerPrice): "$0") / @(pr.NumberOfPeriod == 1 ? "" : pr.NumberOfPeriod?.ToString()) @(pr.SubscriptionDuration != "MONTHLY" ? "times" : (string.IsNullOrEmpty(pr.PeriodRecurring) ? "month" : pr.PeriodRecurring.ToLower().Replace("ly", "")) + (pr.NumberOfPeriod == 1 ? "" : "s"))
+                                                                            </span>
+                                                                            <span class="membership-price" style="font-weight:bold;display:none">
+                                                                                @(pr.MembershipPrice != null ? string.Format("${0:#,0.00}", pr.MembershipPrice): "$0") / @(pr.NumberOfPeriod == 1 ? "" : pr.NumberOfPeriod?.ToString()) @(pr.SubscriptionDuration != "MONTHLY" ? "times" : (string.IsNullOrEmpty(pr.PeriodRecurring) ? "month" : pr.PeriodRecurring.ToLower().Replace("ly", "")) + (pr.NumberOfPeriod == 1 ? "" : "s"))
+                                                                            </span>
+                                                                            <input id="subscription_type_@pr.Id" name="subscription_type_@pr.Id" type="hidden" value="@pr.Type" />
+                                                                        </td>
+                                                                    </tr>
+                                                                    <tr style="border-bottom: 1px double; display:none;@(pr.SubscriptionDuration =="MONTHLY" ? "background-color:#DDD" : "")">
+                                                                        <td id="prdata_@pr.Id" colspan="4" style="padding:0px"></td>
+                                                                        <td style="display: none">@pr.Name</td>
+                                                                    </tr>
+                                                                }
+                                                            </tbody>
+                                                        </table>
+                                                        <table id="tb_othersub" style="width: 100%;border-collapse: collapse;" class="table table-bordered striped3">
+                                                            <thead style="background-color: #aad3ea">
+                                                                <tr>
+                                                                    <th style="width: 70%">Other Services</th>
+                                                                    <th>Price</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                @foreach (var pr in db.License_Product.Where(p => p.Type == "other" && p.Active == true && p.IsDelete != true).OrderBy(c => c.Name).ToList())
+                                                                {
+                                                                    <tr id="pr_@pr.Id" class="hover item @(pr.PartnerPrice == null && pr.MembershipPrice == null ? "allow-partner-select" : "")" onclick="$(this).find('.check').change()">
+                                                                        <td style="width: 70%">
+                                                                            <div style="display:inline-flex;">
+                                                                                <input name="selected_addon" type="checkbox" class="check" value="@pr.Id" data-renew="@(subscriptions.FirstOrDefault(x => x.SubscriptionId == pr.Id)?.AutoRenew == true ? 1:0)" style="display:none" @(subscriptions.Where(x => x.SubscriptionId == pr.Id).Count() > 0 ? "checked" : "") />
+                                                                                <a style="color: gray; margin: 0px 10px; padding: 0px;" class="icon_span_uncheck btn fa fa-2x fa-square-o"></a>
+                                                                                <a style="color: royalblue; margin: 0px 10px; padding: 0px;" class="icon_span_check btn fa fa-2x fa-check-square-o"></a>
+                                                                            </div>
+                                                                            <div style="display:inline-block;">
+                                                                                <b style="color: green" id="product_name_@pr.Id" class="prod_name">@pr.Name</b>
+                                                                                <br />
+
+                                                                                @(pr.SubscriptionDuration =="MONTHLY"? Html.Raw("<label class='label label-primary'>" + (pr.PeriodRecurring ?? "Monthly") + "</label>") : Html.Raw("<label class='label label-warning'>Onetime</label>"))
+                                                                                @{
+                                                                                    var detailSub = db.Order_Subcription.FirstOrDefault(c => c.OrderCode == Model.OrdersCode && c.ProductId == pr.Id);
+                                                                                }
+                                                                                <input type="hidden" value="@(detailSub?.PriceType)" id="pricetype_hidden_@pr.Id" />
+                                                                                <input type="hidden" value="@((detailSub?.AutoRenew ?? false).ToString())" id="autorenew_hidden_@pr.Id" />
+                                                                                <input type="hidden" value="@((detailSub?.ApplyPaidDate ?? false).ToString())" id="applydate_hidden_@pr.Id" />
+                                                                            </div>
+                                                                            <img class="loading_gif" style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                                                                        </td>
+                                                                        <td class="pr_price">
+                                                                            <span class="origin-price" style="font-weight:bold">
+                                                                                @(pr.Price != null ? string.Format("${0:#,0.00}", pr.Price): "N/A") / @(pr.NumberOfPeriod == 1 ? "" : pr.NumberOfPeriod?.ToString()) @(pr.SubscriptionDuration != "MONTHLY" ? "times" : (string.IsNullOrEmpty(pr.PeriodRecurring) ? "month" : pr.PeriodRecurring.ToLower().Replace("ly", "")) + (pr.NumberOfPeriod == 1 ? "" : "s"))
+                                                                            </span>
+                                                                            <span class="partner-price" style="font-weight:bold;display:none">
+                                                                                @(pr.PartnerPrice != null ? string.Format("${0:#,0.00}", pr.PartnerPrice): "$0") / @(pr.NumberOfPeriod == 1 ? "" : pr.NumberOfPeriod?.ToString()) @(pr.SubscriptionDuration != "MONTHLY" ? "times" : (string.IsNullOrEmpty(pr.PeriodRecurring) ? "month" : pr.PeriodRecurring.ToLower().Replace("ly", "")) + (pr.NumberOfPeriod == 1 ? "" : "s"))
+                                                                            </span>
+                                                                            <span class="membership-price" style="font-weight:bold;display:none">
+                                                                                @(pr.MembershipPrice != null ? string.Format("${0:#,0.00}", pr.MembershipPrice): "$0") / @(pr.NumberOfPeriod == 1 ? "" : pr.NumberOfPeriod?.ToString()) @(pr.SubscriptionDuration != "MONTHLY" ? "times" : (string.IsNullOrEmpty(pr.PeriodRecurring) ? "month" : pr.PeriodRecurring.ToLower().Replace("ly", "")) + (pr.NumberOfPeriod == 1 ? "" : "s"))
+                                                                            </span>
+                                                                            <input id="subscription_type_@pr.Id" name="subscription_type_@pr.Id" type="hidden" value="@pr.Type" />
+                                                                        </td>
+                                                                    </tr>
+                                                                    <tr style="border-bottom: 1px double; display:none;@(pr.SubscriptionDuration =="MONTHLY" ? "background-color:#DDD" : "")">
+                                                                        <td id="prdata_@pr.Id" colspan="4" style="padding:0px"></td>
+                                                                        <td style="display: none">@pr.Name</td>
+                                                                    </tr>
+                                                                }
+                                                            </tbody>
+                                                        </table>
+                                                        
+                                                        <div style="text-align:center;display:block">
+                                                            <button type="button" class="btn btn-default" onclick="$('#subscriptions_box').slideToggle(300), $('#div_product').toggleClass('active')" style="margin:5px 0;">Close</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+
+
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="clearfix"></div><br />
+
+                        <div class="col-md-12">
+                            <h3 class="text-primary">SUMMARY</h3>
+                            <div class="panel panel-default">
+                                <div class="panel-body">
+                                    <table class="table table-bordered table-striped" style="margin-bottom:0">
+                                        <thead>
+                                            <tr>
+                                                @if (access.Any(k => k.Key.Equals("orders_update_discount")) == true && access["orders_update_discount"] == true)
+                                                {
+                                                    <th width="2%">#</th>
+                                                    <th width="50%">PRODUCT</th>
+                                                    <th style="width:16%">QTY</th>
+                                                    <th style="width:16%">Discount</th>
+                                                    <th style="width:16%">TOTAL<img id="order_amount_loading" style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" /></th>
+                                                }
+                                                else
+                                                {
+                                                    <th width="2%">#</th>
+                                                    <th colspan="2" width="62%">PRODUCT</th>
+                                                    <th style="width:16%">QTY</th>
+                                                    <th style="width:16%">TOTAL<img id="order_amount_loading" style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" /></th>
+                                                }
+                                            </tr>
+                                        </thead>
+                                        <tbody id="list_product_order">
+                                            @Html.Partial("_selected_product_partial", list_device_service)
+                                        </tbody>
+                                        <tfoot style="border-top:2px solid lightgrey">
+                                            <tr>
+                                                <td colspan="3" rowspan="6">
+                                                    <div class="form-group">
+                                                        <br />
+                                                        <label class="control-label">NOTE:</label>
+                                                        <textarea name="desc" rows="8" wrap="soft" class="form-control">@Html.Raw(Model.Comment)</textarea>
+                                                    </div>
+
+                                                </td>
+                                                <td>
+                                                    <h5 class="pull-right" style="color:#258e4f"><b>SUB TOTAL:</b></h5>
+                                                </td>
+                                                <td>
+                                                    <h5 class="pull-left"><b><span id="sub_total" style="color:#258e4f">@(total_money_order?.SubTotal.ToString("$#,##0.#0"))</span></b></h5>
+                                                </td>
+                                            </tr>
+                                            @if (access.Any(k => k.Key.Equals("orders_update_discount")) == true && access["orders_update_discount"] == true)
+                                            {
+                                                <tr class="hide">
+                                                    <td>
+                                                        <h5 class="pull-right" style="color:#258e4f"><b>DISCOUNT:</b></h5>
+                                                    </td>
+                                                    @*<td>
+                                                            <div class="input-group">
+                                                                <div class="input-group-addon"><i class="fa fa-dollar"></i></div>
+                                                                <input type="number" step="0.01" class="form-control" name="dis_amount" onblur="change_money('dis_amount')" value="@(total_money_order?.DiscountAmount ?? 0)" />
+                                                            </div>
+                                                        </td>*@
+                                                    <td>
+                                                        <div class="input-group discount-group">
+                                                            @{
+                                                                var isAmount = true;
+                                                                var discountVal = total_money_order?.DiscountAmount;
+                                                                if (discountVal <= 0)
+                                                                {
+                                                                    discountVal = total_money_order.DiscountPercent;
+                                                                    isAmount = false;
+                                                                }
+                                                            }
+                                                            <input type="number" step="0.01" class="form-control disable-enter" name="discount-value"
+                                                                   onblur="change_money()"
+                                                                   value="@discountVal" style="text-align: right;" />
+                                                            <div class="input-group-addon">
+                                                                <input type="radio" id="discount-amount" name="discount" value="discount-amount" class="disable-enter"
+                                                                       style="display: none" @if (isAmount) { <text> checked="checked" </text> } />
+                                                                <label for="discount-amount" class="discount-amount @if(isAmount){ <text>active</text>}" style="margin: 0">
+                                                                    <i class="fa fa-dollar" data-toggle="tooltip" title="Amount"></i>
+                                                                </label>
+                                                            </div>
+                                                            <div class="input-group-addon">
+                                                                <input type="radio" id="discount-rate" name="discount" value="discount-rate" class="disable-enter"
+                                                                       style="display: none" @if (isAmount == false) { <text> checked="checked" </text> } />
+                                                                <label for="discount-rate" class="discount-rate @if(isAmount == false){ <text>active</text>}" style="margin: 0">
+                                                                    <i class="fa fa-percent" data-toggle="tooltip" title="Rate"></i>
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            }
+
+
+
+                                            <tr class="hide">
+                                                <td>
+                                                    <h5 class="pull-right" style="color:#258e4f"><b>TAX RATE:</b></h5>
+                                                </td>
+                                                <td>
+                                                    <div class="input-group">
+                                                        <input type="number" step="0.01" class="form-control disable-enter" name="tax_rate" onblur="change_money()" min="0" oninput="this.value = Math.abs(this.value)"
+                                                               value="@(total_money_order.TaxRate > 0 ? total_money_order.TaxRate : 0)" style="text-align: right;" />
+                                                        <div class="input-group-addon"><i class="fa fa-percent"></i></div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <h5 class="pull-right" style="color:#258e4f"><b>SHIPPING:</b></h5>
+                                                </td>
+                                                <td>
+                                                    <div class="input-group">
+                                                        <div class="input-group-addon"><i class="fa fa-dollar"></i></div>
+                                                        <input type="number" class="form-control disable-enter" name="shipping_fee" onblur="change_money()" min="0" oninput="this.value = Math.abs(this.value)"
+                                                               value="@(total_money_order?.ShippingFee ?? 0)" style="padding: 0;text-align: right;" />
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <h4 class="pull-right" style="color:red"><b>GRAND TOTAL:</b></h4>
+                                                </td>
+                                                <td>
+                                                    <h4><b><span id="grand_tottal" style="color:#258e4f">@(total_money_order?.GrandTotal.ToString("$#,##0.#0"))</span></b></h4>
+                                                </td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                    <div class="col-md-12" style="padding:0; @if (!(Model?.GrandTotal > 0)) { @Html.Raw("display:none") }" id="send_email_div">
+                                        <label class="pull-right" style=" margin: 5px 0;color:#258e4f">
+                                            Send Payment Email <input id="send_email" @if (!(Model?.GrandTotal > 0)) { @Html.Raw("disabled") } name="send_payment_email" value="true" type="checkbox" style="width:20px; height:20px;margin-left:5px; vertical-align: text-bottom;">
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="pull-left" id="send_email_div" style="display:none"></div>
+                            <div class="pull-right">
+                                @if (Model?.Id > 0)
+                                {
+                                    <input style="margin-left:10px" type="submit" class="btn btn-primary" onclick="return save_order()" value="Save">
+                                    <a style="margin-left:10px" class="btn btn-default" href="/order/estimatesdetail/@(Model.Id)?url_back=@(ViewBag.Url_back)">Cancel</a>
+                                }
+                                else
+                                {
+                                    @*<input style="margin-left:10px" type="submit" class="btn btn-primary" onclick="return save_order()" id="btn-create_estimate" value="Create Estimate">*@
+                                    <input style="margin-left:10px" type="submit" class="btn btn-primary" onclick="return save_order()" name="action" value="Create Invoice" />
+                                    <a style="margin-left:10px" class="btn btn-default" href="@(ViewBag.Url_back)">Cancel</a>
+                                }
+                            </div>
+
+                        </div>
+                    </form>
+
+                </div>
+                <!-- /.box-body -->
+            </div>
+            <!-- /.box -->
+        </div>
+    </div>
+</section>
+
+<div id="device_bundle_popup">
+    <!--Append _AddDeviceBundlePartial-->
+</div>
+
+<div class="modal fade" id="view_invoice" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Preview</h4>
+            </div>
+            <div class="modal-body">
+                <div class="scrollbar scroll-style-1" style="max-height:600px">
+                    <div id="invoice_partial_div" style="max-width:220mm; margin:auto; border:1px solid lightgrey">
+                        <!--Append _InvoiceDetailPartial-->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="merchant_popup"></div>
+<div id="_partial_lead">
+
+</div>
+
+<div class="modal" id="" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+
+        </div>
+    </div>
+</div>
+<link href="~/Content/css/bootstrap-select.min.css" rel="stylesheet" />
+@Html.Partial("_Partial_NewMerchant")
+<link href="~/Content/Scrollbar/style_Scrollbar.css" rel="stylesheet" />
+<link rel="stylesheet" href="~/content/admin/bower_components/datatables.net-bs/css/dataTables.bootstrap.min.css">
+<link href="~/Content/bootstrap-toggle/bootstrap-toggle.min.css" rel="stylesheet" />
+@section script{
+    @*<script src="~/Scripts/order_license_script.js"></script>*@
+    <script src="~/Scripts/jquery.unobtrusive-ajax.js"></script>
+    <script src="~/Scripts/order_man.js?ver=@version"></script>
+    <script src="~/Content/scripts/bootstrap-select.min.js"></script>
+    <script src="~/content/admin/bower_components/datatables.net/js/jquery.dataTables.min.js"></script>
+    <script src="~/content/admin/bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/Content/bootstrap-toggle/bootstrap-toggle.min.js"></script>
+    <script src="~/Content/Admin/bower_components/bootstrap-touchspin/jquery.bootstrap-touchspin.min.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            var table = $(".datatable").DataTable({
+                "sScrollY": "400px",
+                //"scrollCollapse": true,
+                'bPaginate': false,
+            });
+            $("#tb_license").DataTable({
+                'paging': false,
+                'searching': true,
+                'ordering': false,
+                'info': false,
+                "language": {
+                    "paginate": {
+                        "first": '<i class="fa fa-angle-double-left" aria-hidden="true"></i>',
+                        "last": '<i class="fa fa-angle-double-right" aria-hidden="true"></i>',
+                        "next": '<i class="fa fa-angle-right" aria-hidden="true"></i>',
+                        "previous": '<i class="fa fa-angle-left" aria-hidden="true"></i>'
+                    },
+                },
+            });
+            $("#tb_addon").DataTable({
+                'paging': false,
+                'searching': true,
+                'ordering': false,
+                'info': false,
+                "language": {
+                    "paginate": {
+                        "first": '<i class="fa fa-angle-double-left" aria-hidden="true"></i>',
+                        "last": '<i class="fa fa-angle-double-right" aria-hidden="true"></i>',
+                        "next": '<i class="fa fa-angle-right" aria-hidden="true"></i>',
+                        "previous": '<i class="fa fa-angle-left" aria-hidden="true"></i>'
+                    },
+                },
+            });
+            $("#tb_giftcard").DataTable({
+                'paging': false,
+                'searching': true,
+                'ordering': false,
+                'info': false,
+                "language": {
+                    "paginate": {
+                        "first": '<i class="fa fa-angle-double-left" aria-hidden="true"></i>',
+                        "last": '<i class="fa fa-angle-double-right" aria-hidden="true"></i>',
+                        "next": '<i class="fa fa-angle-right" aria-hidden="true"></i>',
+                        "previous": '<i class="fa fa-angle-left" aria-hidden="true"></i>'
+                    },
+                },
+            });
+            $("#tb_othersub").DataTable({
+                'paging': false,
+                'searching': true,
+                'ordering': false,
+                'info': false,
+                "language": {
+                    "paginate": {
+                        "first": '<i class="fa fa-angle-double-left" aria-hidden="true"></i>',
+                        "last": '<i class="fa fa-angle-double-right" aria-hidden="true"></i>',
+                        "next": '<i class="fa fa-angle-right" aria-hidden="true"></i>',
+                        "previous": '<i class="fa fa-angle-left" aria-hidden="true"></i>'
+                    },
+                },
+            });
+
+            var tableHardware = $(".table_hardware").DataTable({
+                "sScrollY": "400px",
+                //"scrollCollapse": true,
+                'bPaginate': false,
+            });
+            $('.header_btn_toggle_hardware').on("click", function () {
+                tableHardware.columns.adjust().draw();
+            })
+            $(".selectpicker").selectpicker();
+            $("#product_select").on("change", function () {
+                var pds = $(this).val();
+                if (!pds) {
+                    $("#list_model_device .item").show();
+                } else {
+                    $("#list_model_device .item").hide();
+                    $("#list_model_device .item." + pds).show();
+                    $("#list_model_device .item").has(".device_check:checked").show();
+                }
+            })
+            $("#list_model_device .item").on("click", function (e) {
+                if ($(e.target).closest(".on_rows").length == 0) {
+                    var cb = $(this).closest(".item").find(".device_check");
+                    var btn = $(this).closest(".item").find(".select_device-btn");
+                    if (!cb.is(":checked")) {
+                        cb.prop("checked", true);
+                        btn.addClass("selected");
+                        add_device(cb.val(), 1, cb.data("modelname"), cb.data("remaining"));
+                    }
+                    else if ($(e.target).closest(".select_device-btn").length > 0) {
+                            cb.prop("checked", false);
+                            btn.removeClass("selected");
+                            delete_device(cb.val());
+                        }
+                }
+            });
+
+            $("#list_bundle .item").on("click", function (e) {
+                if ($(e.target).closest(".on_rows").length == 0) {
+                    var cb = $(this).closest(".item").find(".bundle_check");
+                    var btn = $(this).closest(".item").find(".select_bundle-btn");
+                    if (!cb.is(":checked")) {
+                        cb.prop("checked", true);
+                        btn.addClass("selected");
+                        update_selected(cb.val(), "package", 1);
+
+                    } else
+                        if ($(e.target).closest(".select_bundle-btn").length > 0) {
+                            cb.prop("checked", false);
+                            btn.removeClass("selected");
+                            update_selected(cb.val(), "package", 0);
+                        }
+                }
+            });
+
+            $("#same_address").on("click", function () {
+                var cus = $("#merchant_id_hd").val();
+                if ($(this).is(":checked")) {
+                    $.ajax({
+                        method: "POST",
+                        url: "/device/GetSalonAddress",
+                        data: { cus },
+                        dataType: "json"
+                    })
+                        .done(function (data) {
+                            if (data[0] == true) {
+                                $('input[name="sh_street"]').val(data[1]);
+                                $('input[name="sh_city"]').val(data[2]);
+                                $('[name="sh_state"]').val(data[3]).trigger('change');
+                                $('input[name="sh_zip"]').val(data[4]);
+                                $('input[name="sh_country"]').val(data[5]);
+                                $('#shipping_address input').attr("readonly", true);
+                            }
+                            else {
+                                noty({ "text": "Please select a merchant!", "layout": "topRight", "type": "error" });
+                                $('#same_address').prop('checked', false);
+                            }
+                        })
+                        .fail(function () {
+                        })
+                        .always(function () {
+                        });
+
+                } else {
+                    $('#shipping_address input').removeAttr("readonly");
+                }
+            })
+
+            //Datepicker
+            $(".datepicker-jq").datepicker({
+                changeMonth: true,
+                changeYear: true,
+                yearRange: '1950:2050'
+            });
+
+            auto_complete_state_country();
+
+            //search enter
+            $("input[name='merchant_search']").keypress(function (event) {
+                if (event.keyCode == 13) {
+                    event.preventDefault();
+                    search_merchant();
+                }
+            });
+            $("#start_date").on("change", function () {
+                var date = $("#start_date").datepicker('getDate');
+                date.setMonth(date.getMonth() + 1);
+                $("#end_date").datepicker('setDate', date);
+            });
+
+            $('#dialog').dialog({
+                title: "This merchant already has a estimate!",
+                dialogClass: "no-close",
+                autoOpen: false,
+                modal: true,
+                width: 500,
+                position: { my: 'top', at: 'top+50' },
+                buttons: {
+                    "New estimate": function () {
+                        $(this).dialog("close");
+                    },
+                    "Edit existing": function () {
+                        document.location.href = "/order/save/" + $("#exist_estimate").val() + "?url_back=/order/estimates";
+                    }
+                }
+            });
+            $("[name=InvoiceDate]").on("change", function () {
+                var dt = $(this).datepicker('getDate');
+                console.log(dt);
+                dt.setMonth(dt.getMonth() + 1);
+                //$("[name=DueDate]").datepicker('setDate', dt);
+            })
+
+            @if (cus.Id > 0)
+            {
+                <text>
+            $("#same_address").trigger("click");
+                </text>
+            }
+
+            $("[name=discount-value],[name=tax_rate],[name=shipping_fee]").on("focus", function () {
+                if (parseInt($(this).val()) == 0) {
+                    $(this).val("");
+                }
+            });
+            $("[name=discount-value],[name=tax_rate],[name=shipping_fee]").on("focusout", function () {
+                if ($(this).val()=="") {
+                    $(this).val("0");
+                }
+            });
+            //on select/unselect subscription/addon
+            $(".check").toArray().forEach(function (_this) {
+                var checked = $(_this).is(":checked");
+                if (checked) {
+                    var id = $(_this).val();
+                    var autoRenew = $("#autorenew_hidden_" + id).val();
+                    var applyDate = $("#applydate_hidden_" + id).val();
+                    var priceType = $("#pricetype_hidden_" + id).val();
+                    update_selected(id, $("#subscription_type_" + id).val(), null, null, priceType, null, autoRenew, true, null, null, null, applyDate);
+                }
+            })
+
+            $(".check").on('change', function () {
+                $(this).prop("checked", !$(this).prop("checked"));
+                var id = $(this).val();
+                var checked = $(this).is(":checked");
+                if ($(this).attr("name").trim() == "selected_prd") {
+                    //$('#renewal').prop("checked","checked")
+                }
+                update_selected(id, $("#subscription_type_" + id).val(), checked ? 1 : 0);
+            })
+            $("#payment-now").change(function () {
+                $("#form-payment-infor").fadeToggle();
+                $("#payment-now").val($("#payment-now").is(":checked"));
+                if ($("#payment-now").is(":checked")) {
+                    $("#btn-create_estimate").hide();
+                }
+                else {
+                    $("#btn-create_estimate").show();
+                }
+            })
+            $("#hardware_box").hide();
+            $("#grand_tottal").bind('DOMSubtreeModified', function () {
+                var grandtotal = parseFloat($(this).text().replace('$', ''));
+                $('#send_email').prop('disabled', !(grandtotal > 0));
+                $('#send_email_div').toggle((grandtotal > 0));
+
+            });
+
+            //updatePartnerSelection();
+            $('#PartnerCode').on('change', function () {
+                updatePartnerSelection();
+            })
+
+            $(".license-item").toArray().forEach(function (c) {
+                $(c).show();
+                var siteId = $('#PartnerCode :selected').attr('siteId');
+                if ($(c).attr("siteId") != siteId) {
+                    $(c).hide();
+                }
+            });
+        });
+
+        function updatePartnerSelection() {
+            update_selected(null, 'all', null, null, null, null, null, true);
+            $('.license-item-detail').html('');
+            $(".check").prop("checked", false);
+            //$(".check").toArray().forEach(function (_this) {
+            //    var checked = $(_this).is(":checked");
+            //    if (checked) {
+            //        var id = $(_this).val();
+            //        var autoRenew = $("#autorenew_hidden_" + id).val();
+            //        var priceType = $("#pricetype_hidden_" + id).val();
+            //        update_selected(id, 'all', checked ? 1 : 0, null, priceType, null, autoRenew, true);
+            //    }
+            //})
+            var licenseKey = 'Mango';
+            if ($('#PartnerCode').val() != "" && $('#PartnerCode').val() != null) {
+                var priceType = $('#PartnerCode :selected').attr('priceType');
+                licenseKey = (priceType != 'membership' && priceType != 'partner') ? 'Mango' : $('#PartnerCode :selected').attr('licenseKey');
+                $(".allow-partner-select").hide();
+                $("#send_email_div").hide();
+                $("#send_email").val(false);
+                if (priceType == 'membership') {
+                    $(".partner-price").hide();
+                    $(".membership-price").show();
+                    $(".origin-price").hide();
+                }
+                else if (priceType == 'partner') {
+                    $(".partner-price").show();
+                    $(".membership-price").hide();
+                    $(".origin-price").hide();
+                }
+                else {
+                    $(".partner-price").hide();
+                    $(".membership-price").hide();
+                    $(".origin-price").show();
+                }
+            }
+            else {
+                $(".allow-partner-select").show();
+                $("#send_email_div").show();
+                $(".origin-price").show();
+                $(".partner-price").hide();
+                $(".membership-price").hide();
+            }
+            $(".license-item").toArray().forEach(function (c) {
+                $(c).show();
+                var siteId = $('#PartnerCode :selected').attr('siteId');
+                if ($(c).attr("siteId") != siteId) {
+                    $(c).hide();
+                }
+            });
+        }
+
+        function viewLicenseByPartner() {
+
+        }
+        function change_method() {
+            if ($("select[name=PaymentMethod]").val() != 'Cash') {
+                $('#form-bank-name').fadeIn();
+                $('#form-card-number').fadeIn();
+            }
+            else {
+                $('#form-bank-name').fadeOut();
+                $('#form-card-number').fadeOut();
+            }
+        }
+        /**
+         * Update lai 1 row trong table tong ket=>load lai partial
+         * @@param id
+         * @@param type
+         * @@param qty
+         * @@param discount
+         * @@param discount_type
+         */
+        function update_selected(id, type, qty, discount, priceType, discount_type, autoRenew, load_license = false, startDate = "", qtySub, enddate, applyDate) {
+            $("#order_amount_loading").show();
+            $("#wait_overlay_loading").show();
+            if (load_license == false && qty>0) {
+                load_license = ((type == "license" || type == "addon" || type == "other"));
+            }
+            if (type == "license" || type == "addon") {
+                $("#pr_" + id + " .loading_gif").show();
+            }
+            if ((type == "device" || type == "package") && qty > 0) {
+                $('.update-quantity_' + id).addClass("show-quantity");
+                $('.update-quantity_' + id).find('input').val(qty);
+                $('.update-quantity_' + id).find('.btn-cancel-quantity').attr("data-quantity", qty);
+                $('.update-quantity_' + id).find('.btn-cancel-quantity').hide();
+                $('.update-quantity_' + id).find('.btn-confirm-quantity').hide();
+            }
+            if ((type == "device" || type == "package") && qty == 0) {
+                $('.update-quantity_' + id).find('input').val(0);
+                $('.update-quantity_' + id).find('.btn-cancel-quantity').attr("data-quantity", qty);
+            }
+            if ((type == "device" || type == "package") && qty ===  0) {
+                $('.update-quantity_' + id).removeClass("show-quantity");
+            }
+
+            if (discount == null) discount = $('input[name="discount_' + id + '"]').closest('.item').find(".discount-value").val()?.replace(/[^\d.-]/g, '') || 0;
+            if (discount_type == null) discount_type = $('input[name="discount_' + id + '"]').closest('.item').find(".discount-radio input:checked").val();
+
+            //console.log(discount, discount_type)
+            //console.log($('input[name="discount_' + id + '"]').closest('.item').find(".discount-value").val()?.replace(/[^\d.-]/g, '') || 0)
+            //console.log($('input[name="discount_' + id + '"]').closest('.item').find(".discount-radio input:checked").val())
+
+            //if (type == "license") {
+            //    $("#subscriptions_tbody .item").next("tr").hide();
+            //    startDate = $('input[name="Effective_start_date_' + id + '"]').val();
+            //}
+            //var enddate = $('input[name=Expiry_date_' + id + ']').val();
+            autoRenew = autoRenew ?? $('input[name="Renewal_' + id + '"]').is(":checked");
+            applypaiddate = applyDate ?? $('input[name="ApplyDate_' + id + '"]').is(":checked");
+            var cusCode = $("#merchant_id_hd").val();
+            var orderCode = $("[name='order_code']").val();
+
+            var RecurringPrice = $('input[name="RecurringPrice_' + id + '"]').val();
+
+            //var autoRenew = $('#renewal:checked').length > 0;
+            var partnerCode = $("#PartnerCode").val();
+            $.ajax({
+                method: "POST",
+                url: "/order/Invoice_update_selected",
+                data: { id, type, qty, discount, discount_type, priceType, load_license, cusCode, orderCode, autoRenew, startDate, partnerCode, qtySub, enddate, applypaiddate, RecurringPrice },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    if (data[0]) {
+                        //cập nhật summary
+                        $("#sub_total").html(numberToMoney_USD(data[2].SubTotal));
+                        $("#grand_tottal").html(numberToMoney_USD(data[2].GrandTotal));
+                        if (discount != 0) {
+                            if ($('input[name="discount"]:checked').val() == "discount-amount") {
+                                $("input[name='discount-value']").val(data[2].DiscountAmount);
+                            } else {
+                                $("input[name='discount-value']").val(data[2].DiscountPercent);
+                            }
+                        }
+                        $("#list_product_order").html(data[1]);
+                        //load partial liscense detail
+                        if (type == "license" || type == "addon" || type == "all" || type == "other") {
+
+                            if (qty <= 0) {
+                                $("#prdata_" + id).html('');
+                                $("#prdata_" + id).closest("tr").hide();
+                            }
+                            else {
+                                if (load_license) {
+                                    if (type=="license") {
+                                        $('.detail_' + type).remove();
+                                    }
+                                    $("#prdata_" + id).html(data[3]);
+                                }
+
+                                $("#prdata_" + id).closest("tr").show();
+                            }
+                        }
+                        if (type == "license") {
+                            if (qty <= 0) {
+                                $("#renewal").prop("checked", false).attr("disabled", "disabled").closest(".form-control").css("background-color", "#ddd");
+                                $("#renewal_label").css("opacity", "0.8");
+                                $("#subscriprion_addnew_info").css('visibility', 'hiden');
+                            }
+                            else {
+                                $("#renewal").removeAttr("disabled").closest(".form-control").css("background-color", "").css("opacity", "1");
+                                $("#renewal_label").css("opacity", "1");
+                                $("#prdata_" + id).append($("#subscriprion_addnew_info"));
+                                $("#subscriprion_addnew_info").css('visibility', 'visible');
+                            }
+                        }
+
+                    } else {
+                        warning(data[1]);
+                    }
+                })
+                .fail(function () {
+                    alert("Oops! Something went wrong. Merchant update failure");
+                    $("#modal-merchant").modal('hide');
+                })
+                .always(function () {
+                    //$("#loading").hide();
+                    $("#order_amount_loading").hide();
+                    $("#pr_" + id + " .loading_gif").hide();
+                    $("#wait_overlay_loading").hide();
+                });
+        }
+
+        //cai ten noi len tat ca OK!
+        function auto_complete_state_country() {
+            $.ajax({
+                method: "POST",
+                url: "/Merchantman/LoadListState",
+                dataType: "json"
+            })
+                .done(function (data) {
+                    //alert(data[0] + "|" + data[1]);
+                    $("#sh_state").autocomplete({
+                        source: data[0],
+                        minLength: 0
+                    }).focus(function () {
+                        $(this).autocomplete('search', $(this).val())
+                    });
+
+                    $("#sh_country").autocomplete({
+                        source: data[1],
+                        minLength: 0
+                    }).focus(function () {
+                        $(this).autocomplete('search', $(this).val())
+                    });
+                })
+                .fail(function () {
+                    alert("Oops! Something went wrong");
+                })
+        }
+
+        function close_div_mango_service() {
+            if ($("#_btn_close_add_service").text() == " Close") {
+                $("#service_code").prop("disabled", false);
+            }
+            else {
+                var service_code = $("#service_code").val();
+                $("#service_code").prop("disabled", false);
+                $("#service_code option[value='" + service_code + "']").attr("disabled", true);//disabled option
+            }
+
+            $("#service_code").val("");
+            $("#div_mango_service").hide("alow");
+        }
+
+
+        //function submit_date() {
+
+        //    var id = $("#prd_date").val();
+
+
+
+        //    var duration = "<b>Effective Date: </b>" + $("#start_date").val()
+        //        + "<br/><b>Renew Date: </b>" + $("#end_date").val();
+        //    $("#start_date_" + id).val($("#start_date").val());
+        //    $("#start_enddate_" + id).val($("#enddate").val());
+        //    $("#renewal_" + id).val($("#renewal").is(":checked"));
+        //    $("#duration_" + id).html(duration);
+        //    $("#select_date").modal("hide");
+        //}
+
+        function check_completed_ticket(code,e) {
+            if ($(e).val() == "Completed") {
+                $.ajax({
+                method: "POST",
+                    url: "/Order/CheckCompletable",
+                    data: { code },
+                dataType: "json"
+            })
+                    .done(function (data) {
+                        if (!data[0]) {
+                            noty({ "text": data[1], "layout": "topRight", "type": "warning" });
+                            $(e).val(data[2]);
+                        }
+                })
+                .fail(function () {
+                    alert("Oops! Something went wrong");
+                })
+            }
+        }
+        @*@foreach(var s in list_store_product)
+        {
+            @Html.Raw("get_prd_license_item('"+s.Product_Code+"',"+((s.IsAddon!=true)?"true":"false")+",true);")
+        }*@
+        //function load_event() {
+        //    $(".on_row").on('click', function (event) {
+        //        event.stopPropagation();
+        //    });
+        //}
+
+      /**
+     * create/update merchant
+     * @@param _id CustomerId
+     * @@param _update true/false
+     * @@param code customerCode
+     *
+     */
+    function update_merchant(_id, _update, code) {
+        //    alert(_id + "|" + _update);
+        if (code === "" || code == null) {
+            return;
+        }
+        $.ajax({
+            method: "POST",
+            url: "/merchantman/GetMerchantInfo",
+            data: { id: _id, update: _update, cuscode: code },
+            dataType: "html"
+        })
+            .done(function (data) {
+                $("#merchant_popup").html(data);
+                $("#modal-merchant").modal('show');
+            })
+            .fail(function () {
+                alert("Oops! Something went wrong. Merchant update failure");
+                $("#modal-merchant").modal('hide');
+            })
+            .always(function () {
+                //$("#loading").hide();
+            });
+    }
+        /**
+    * sau khi save merchant complete
+    * @@param data merchant model object
+    */
+        function SaveComplete(data) {
+            if (data[0]) {
+                //console.log("add new merchant thanh cong - update merchant");
+                //console.log(result);
+                $("#modal-merchant").modal('hide');
+
+                var _merchant_address = (data[1].BusinessAddressStreet || "---") + ", " + (data[1].BusinessCity || "---") + ", " + (data[1].BusinessState || "---") + ", " + (data[1].BusinessZipCode || "---") + ", " + (data[1].BusinessCountry || "---");
+                $("#m_name").html(data[1].BusinessName);
+                $("#m_address").html(_merchant_address);
+                $("#c_email").html(data[1].BusinessEmail);
+
+                if (data[1].OwnerName == null || data[1].OwnerName == "") {
+                    $("#c_name").html(data[1].ContactName);
+                }
+                else {
+                    $("#c_name").html(data[1].OwnerName);
+                }
+
+                if (data[1].OwnerMobile == null || data[1].OwnerMobile == "") {
+                    $("#c_phone").html(data[1].BusinessPhone);
+                }
+                else {
+                    $("#c_phone").html(data[1].OwnerMobile);
+                }
+                //auto complete shipping address
+                $("input[name='sh_street']").val(data[1].BusinessAddressStreet);
+                $("input[name='sh_city']").val(data[1].BusinessCity);
+                $("[name='sh_state']").val(data[1].BusinessState).trigger('change');
+                $("input[name='sh_zip']").val(data[1].BusinessZipCode);
+                $("input[name='sh_country']").val(data[1].BusinessCountry);
+                var optionsErr = $.parseJSON('{"text":"Save successfull","layout":"topRight","type":"success"}');
+                noty(optionsErr);
+            }
+            else {
+                var optionsErr = $.parseJSON('{"text":"' + data[1] + '","layout":"top","type":"error"}');
+                noty(optionsErr);
+            }
+            return;
+        }
+        $(document).ready(() => {
+            $("input[name='discount']").on("change", () => {
+                let type = $("input[name='discount']:checked").val();
+                $(".discount-amount")[0].className = "discount-amount";
+                $(".discount-rate")[0].className = "discount-rate";
+                $(`.${type}`)[0].className = `${type} active`;
+                change_money();
+            });
+        });
+        $('.qty_hardware').TouchSpin({
+            buttondown_class: 'btn btn-default',
+            buttonup_class: 'btn btn-default',
+        });
+
+        function loadListPartnerBySalePerson() {
+            $('#loading_partners').show();
+            var SalePerson = $('#SalesMemberNumber').val();
+            $.ajax({
+                method: "get",
+                url: `/partner/loadlistpartnerbysaleperson?SalePerson=${SalePerson}`
+            }).done(function (data) {
+                if (data[0]) {
+                    $("#PartnerCode").empty();
+                    var newOption = new Option("@CompanyProductName", "", false, '@string.IsNullOrEmpty(Model.PartnerCode)' == 'True');
+                    $('#PartnerCode').append(newOption);
+                    data[1].forEach(function (par) {
+                        var newOption = new Option("#" + par.Code + " - " + par.Name, par.Code, false, par.Code == '@Model.PartnerCode');
+                        $(newOption).attr('priceType', par.PriceType);
+                        $(newOption).attr('licenseKey', par.KeyLicense);
+                        $('#PartnerCode').append(newOption);
+                    });
+                    $("#PartnerCode option[value='" + partnerSelected + "']").attr('selected', true);
+                    $("#PartnerCode").trigger('change');
+
+                }
+                else {
+                    var mess = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"error"}');
+                    noty(mess);
+                }
+            }).fail(function (data) {
+                var mess = $.parseJSON('{"text":"' + data.statusText + '", "layout":"topRight", "type":"error"}');
+                noty(mess);
+            }).always(function () {
+                $('#loading_partners').hide();
+            });
+        }
+        @if (!string.IsNullOrEmpty(cusIdSelected) && Model.Id==0)
+        {
+            <text>
+            select_merchant('@(cusIdSelected)')
+              </text>
+        }
+    </script>
+
+}
+<style type="text/css">
+    .header_btn_toggle:hover {
+        background-color: #e1e1e1;
+    }
+
+    #list_model_device tr.item:hover .hover-quantity, #list_bundle tr.item:hover .hover-quantity {
+        display: block !important;
+    }
+
+    #list_model_device tr.item .show-quantity, #list_bundle tr.item .show-quantity {
+        display: block !important;
+    }
+
+
+    .header_btn_toggle {
+        width: 100%;
+        padding: 10px 0;
+        border: 1px solid transparent;
+        cursor: pointer;
+        user-select: none;
+        margin: 10px 0;
+    }
+
+    .check:checked ~ .icon_span_uncheck {
+        display: none;
+    }
+
+    .check:not(:checked) ~ .icon_span_check {
+        display: none;
+    }
+
+    tr.hover:hover, tr.actived {
+        background-color: #ddd !important;
+    }
+
+    .switch {
+        width: 45px;
+    }
+
+    input:checked + .slider:before {
+        left: 30px;
+    }
+    /* Rounded sliders */
+
+    tr.actived:hover {
+        background-color: #d5d5d5 !important;
+    }
+
+    #tb_products.table-bordered {
+        border: 1px solid lightgray;
+        margin-top: 20px;
+    }
+
+        #tb_products.table-bordered > thead > tr > th {
+            border: 1px solid lightgray;
+        }
+
+        #tb_products.table-bordered > tbody > tr > td {
+            border: 1px solid lightgray;
+        }
+
+    .input-group {
+        display: inline-table;
+        vertical-align: middle;
+    }
+
+    .no-close .ui-dialog-titlebar-close {
+        display: none;
+    }
+    /*.table-striped > tbody > tr:nth-child(2n+1) > td, .table-striped > tbody > tr:nth-child(2n+1) > th {
+                                                                        background-color: #eee;
+                                                                    }*/
+    .discount-group {
+    }
+
+        .discount-group .input-group-addon {
+            padding: 0;
+        }
+
+            .discount-group .input-group-addon label {
+                margin: 0;
+                width: 35px;
+                height: 100%;
+                display: block;
+                opacity: 0.3;
+            }
+
+                .discount-group .input-group-addon label i {
+                    line-height: 32px;
+                    width: 100%;
+                    cursor: pointer;
+                }
+
+                .discount-group .input-group-addon label.active {
+                    color: #fff;
+                    background-color: #17a2b8;
+                    border-color: #17a2b8;
+                    opacity: 1;
+                }
+
+
+    .table-striped tbody tr:nth-of-type(odd) {
+        background-color: #f0f8ff;
+    }
+
+    .bootstrap-touchspin .input-group-addon, .bootstrap-touchspin .input-group-btn {
+        width: unset !important;
+    }
+
+    .table-striped tbody tr:nth-of-type(2n) {
+        background-color: #fff;
+    }
+
+    .table-bordered > tbody > tr > th, .table-bordered > tfoot > tr > th, .table-bordered > thead > tr > td, .table-bordered > tbody > tr > td, .table-bordered > tfoot > tr > td {
+        border: 1px solid rgb(222, 226, 230);
+    }
+
+    #tab_hardware table td {
+        vertical-align: middle;
+    }
+
+    #tab_package table td {
+        vertical-align: middle;
+    }
+
+    .selected-action-btn {
+        background-color: #fff;
+        border-color: #ccc;
+        width: 61px;
+        transition: width .1s;
+    }
+
+        .selected-action-btn .selected {
+            display: none;
+        }
+
+
+
+        .selected-action-btn:hover {
+            color: #fff;
+            background-color: #28a745;
+            border-color: #28a745;
+        }
+
+        .selected-action-btn.selected {
+            color: #fff;
+            background-color: #28a745;
+            border-color: #28a745;
+            width: 65px;
+        }
+
+        .selected-action-btn.selected {
+            color: #fff;
+            background-color: #bd2130;
+            border-color: #b21f2d;
+            width: 70px;
+            overflow-y: hidden;
+            overflow-x: hidden;
+        }
+
+        .selected-action-btn > .delete, .selected.selected-action-btn > .select {
+            display: none;
+        }
+
+    .selected.selected-action-btn > .delete {
+        display: block !important;
+    }
+
+
+
+    h3 .fa-chevron-down {
+        transition: transform .3s;
+    }
+
+    .active h3 .fa-chevron-down {
+        transform: rotate(180deg);
+    }
+
+    .item:hover {
+        background-color: #d5eafc !important;
+    }
+
+    b.item-name {
+        color: green;
+        font-size: 14px;
+    }
+
+    table td.item-price {
+        font-weight: bold;
+        width: 100px;
+        text-align: right;
+    }
+
+    .dropdown-toggle.selectpicker {
+        background-color: #fff;
+    }
+
+    .open > .dropdown-toggle.btn-default {
+        background-color: #fff;
+    }
+
+        .open > .dropdown-toggle.btn-default:hover {
+            background-color: #eee;
+        }
+
+        .open > .dropdown-toggle.btn-default:focus {
+            background-color: #eee;
+        }
+
+    .bootstrap-select .dropdown-toggle:focus {
+        outline: none !important;
+    }
+
+    .nav.nav-tabs > li:not(.active) {
+        border: 1px inset #eee;
+        background-color: #eee;
+    }
+
+        .nav.nav-tabs > li:not(.active):hover {
+            border: 1px solid #eee;
+            background-color: #fff;
+        }
+
+    .quantity-wrapper {
+        float: left;
+    }
+
+    .select-wrapper {
+        float: right;
+    }
+
+    @@media only screen and (max-width: 768px) {
+        .column-select-wrapper {
+            width: 150px !important;
+        }
+
+        .quantity-wrapper, .select-wrapper {
+            float: none;
+        }
+
+        .select-wrapper {
+            margin-bottom: 5px;
+        }
+    }
+
+    .row {
+        margin: 0px;
+    }
+</style>
+<script>
+    $(".qty_hardware").on('change', function () {
+        var modelcode = $(this).attr("data-modelcode");
+        $(".btn-" + modelcode).show();
+    })
+    $(".btn-confirm-quantity").on('click', function () {
+
+        var modelcode = $(this).attr("data-modelcode");
+        var type = $(this).attr("data-type");
+        if (type == "device") {
+            $("#qty_model_" + modelcode).val($(".qty_hardware_" + modelcode).val());
+            $("#qty_model_" + modelcode).trigger("change");
+            var cb = $(this).closest(".item").find(".device_check");
+            var btn = $(this).closest(".item").find(".select_device-btn");
+            //if (!cb.is(":checked")) {
+            cb.prop("checked", true);
+            btn.addClass("selected");
+            var result = add_device(cb.val(), $(".qty_hardware_" + modelcode).val(), cb.data("modelname"), cb.data("remaining"));
+            if (result === false) {
+                $(".btn-cancel-quantity.btn-" + modelcode).trigger('click');
+            }
+            //}
+            $(".btn-cancel-quantity.btn-" + modelcode).attr("data-quantity", $(".qty_hardware_" + modelcode).val());
+        }
+        else {
+            $("#qty_bundle_" + modelcode).val($(".qty_hardware_" + modelcode).val());
+            $("#qty_bundle_" + modelcode).trigger("change");
+            var cb = $(this).closest(".item").find(".bundle_check");
+            var btn = $(this).closest(".item").find(".select_bundle-btn");
+            if (!cb.is(":checked")) {
+                cb.prop("checked", true);
+                btn.addClass("selected");
+                update_selected(cb.val(), "package", $(".qty_hardware_" + modelcode).val());
+            }
+        }
+        $(".btn-" + modelcode).hide();
+    })
+    $(".btn-cancel-quantity").on('click', function () {
+        var modelcode = $(this).attr("data-modelcode");
+        var type = $(this).attr("data-type");
+        var oldquantity = $(this).attr("data-quantity");
+        $(".qty_hardware_" + modelcode).val(oldquantity);
+        $(".btn-" + modelcode).hide();
+    })
+
+    // popup create open popup merchant
+    function openPopupNewOrEditMerchant(SalesLeadId) {
+        overlayOn();
+        $.ajax({
+            method: "POST",
+            url: "/SaleLead/CreateOrUpdateSalesLeadPopup",
+            data: { "SalesLeadId": SalesLeadId, "Page": "Order" }
+        }).done(function (data) {
+            $("#_partial_lead").html(data);
+            $('#form-sales_lead').modal('show');
+            //var buttonname = $(element).attr('data-button');
+            //$('#form-btn-' + buttonname).show();
+            ProcessRequired();
+        })
+            .fail(function () {
+                alert("fail");
+            })
+            .always(function () {
+                overlayOff();
+            });
+    }
+    function ProcessRequired() {
+        $(".div-street label").append('<span style="color: red">*</span>');
+        $(".div-street input").attr("required", true);
+        $(".div-city label").append('<span style="color: red">*</span>');
+        $(".div-city input").attr("required", true);
+        $(".div-state label").append('<span style="color: red">*</span>');
+        $(".div-state select").attr("required", true);
+        $(".div-zipcode label").append('<span style="color: red">*</span>');
+        $(".div-zipcode input").attr("required", true);
+        $(".div-contactphone label").append('<span style="color: red">*</span>');
+        $(".div-contactphone input").attr("required", true);
+        $(".div-phonesalon label").append('<span style="color: red">*</span>');
+        $(".div-phonesalon input").attr("required", true);
+    }
+</script>

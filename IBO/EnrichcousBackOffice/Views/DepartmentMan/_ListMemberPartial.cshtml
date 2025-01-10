@@ -1,0 +1,148 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.CustomizeModel.StageVerMem_View>
+@foreach (var v in Model)
+{
+    <div class="list_mem custom-scroll version_@v.Version.Id" style="display:none; margin:20px 10px; border: 1px solid var(--main-color-1);padding:5px; background-color: #f5f5f5">
+        <b class="title-table-member">@v.Version.Name</b>
+        <table class="table table-bordered table-hover table-striped table-member-stage" id="table-@ViewBag.stageId-@v.Version.Id" style="margin-bottom:0px; margin-top:20px">
+            <thead>
+                <tr>
+                    <th style="width:10%">#</th>
+                    <th style="width: 35%">Member name</th>
+                    <th style="width:10%">Leader</th>
+                    <th>Email</th>
+                    <th style="width:75px;"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var m in v.ver_mems)
+                {
+                    <tr>
+                        <td>@m.member.MemberNumber</td>
+                        <td>@m.member.FullName</td>
+                        <td>
+                            <input class="btn btn-success set_lead @(@m.IsLeader==true?"setted":"")" name="@ViewBag.stageId-@v.Version.Id" data-stage="@ViewBag.stageId" data-version="@v.Version.Id" value="@m.member.MemberNumber" type="radio" data-toggle="tooltip" data-placement="top" title="Set Leader" @(m.IsLeader == true ? "checked" : "") />
+                        </td>
+                        <td>@m.member.PersonalEmail</td>
+                        <td style="width:75px;text-align:center;" onclick="unselect_member('@v.Version.Id','@ViewBag.stageId','@m.member.MemberNumber')">
+                            <button class="btn btn-sm btn-danger"><i class="fa fa-close"></i></button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+@if (Model.Count() == 0)
+{
+    <div class="list_mem custom-scroll" style="display:none;">
+        <div class="alert text-center" role="alert" style="margin:5px;color: #856404;background-color: #fff3cd;border-color: #ffeeba;">
+            <b>This stage has no members!</b>
+        </div>
+    </div>
+}
+<script type="text/javascript">
+     $('.set_lead').iCheck({
+        checkboxClass: 'icheckbox_flat-blue',
+        radioClass: 'icheckbox_flat-blue',
+    });
+    $(".set_lead").off();
+  
+    $(".set_lead").on("ifClicked", function () {
+        var el = $(this);
+        var stage_id = el.data("stage");
+        var version_id = el.data("version");
+        var member_number = el.val();
+        if (el.hasClass("setted")) {
+              overlayOn();
+        $.ajax({
+            method: "POST",
+            url: "/ProjectManagement/UnsetLeader",
+            data: { stage_id, version_id, member_number },
+            dataType: "json"
+        })
+            .done(function (data) {
+                if (data[0]) {
+                    success(data[1]);
+                    $(el).removeClass("setted");
+                    setTimeout(function () {
+                        $(el).iCheck("uncheck");
+                    }, 0);
+
+                }
+                else {
+                    error(data[1]);
+                }
+            })
+            .fail(function () {
+                alert("unset leader fail!");
+            })
+            .always(function () {
+                overlayOff();
+            });
+            return;
+        }
+
+        if (!stage_id) {
+            warning("stage id missing!");
+            return;
+        }
+        if (!member_number) {
+            warning("Member id missing!");
+            return;
+        }
+        overlayOn();
+        $.ajax({
+            method: "POST",
+            url: "/ProjectManagement/SetLeader",
+            data: { stage_id, version_id, member_number },
+            dataType: "json"
+        })
+            .done(function (data) {
+                if (data[0]) {
+                    success(data[1]);
+
+                    var table = $(`#table-${stage_id}-${version_id}`).DataTable();
+                    table.$('input[type=radio]').removeClass("setted");
+                    table.$("input[type=radio]").iCheck("uncheck");
+                 
+                
+                    el.addClass("setted");
+                    setTimeout(function () {
+                        $(el).iCheck("check");
+                    }, 0);
+                   
+                } else {
+                    error(data[1]);
+                  
+                    show_subs("@ViewBag.stageId", true);
+                    $('#stage_' + stage_id + " .setted").iCheck("check",);
+
+                }
+            })
+            .fail(function () {
+                alert("set leader fail!");
+            })
+            .always(function () {
+                overlayOff();
+            });
+    })
+    $(".table-member-stage").DataTable({
+        "language": {
+            "paginate": {
+                "first": '<i class="fa fa-angle-double-left" aria-hidden="true"></i>',
+                "last": '<i class="fa fa-angle-double-right" aria-hidden="true"></i>',
+                "next": '<i class="fa fa-angle-right" aria-hidden="true"></i>',
+                "previous": '<i class="fa fa-angle-left" aria-hidden="true"></i>'
+            },
+        },
+        'searching': true,
+        "pageLength": 10,
+        'paging': true,
+        'deferRender':true,
+        "ordering": false,
+        'destroy': true,
+        'lengthChange': false,
+        'info': false,
+    });
+
+</script>

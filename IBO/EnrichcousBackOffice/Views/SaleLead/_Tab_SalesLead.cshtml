@@ -1,0 +1,1149 @@
+﻿@using EnrichcousBackOffice.Models
+@{
+    List<EnrichcousBackOffice.Models.P_Member> members = ViewBag.ListMember;
+    List<EnrichcousBackOffice.Models.C_SalesLead_Status> type = ViewBag.status;
+    var ShowSalesPerson = ViewBag.ShowSalesPerson as bool?;
+    var ShowTeam = ViewBag.ShowTeam as bool?;
+    var access = EnrichcousBackOffice.AppLB.Authority.GetAccessAuthority();
+    var Team = ViewBag.Team as List<EnrichcousBackOffice.Models.P_Department>;
+    var cMem = EnrichcousBackOffice.AppLB.Authority.GetCurrentMember();
+}
+<link href="~/Content/DualListMulti/multi.min.css" rel="stylesheet" />
+<style>
+    tr > td, tr > th {
+        padding: 10px;
+        cursor: pointer;
+    }
+
+    tr.hover:hover {
+        background-color: #ddd !important;
+    }
+
+    tr.hover:nth-child(odd) {
+        background-color: #fff;
+    }
+
+    tr.hover:nth-child(even) {
+        background-color: #fff;
+    }
+
+    #active > .active {
+        border: outset 1px !important;
+        color: white;
+    }
+
+        #active > .active.true {
+            background-color: #00a65a;
+        }
+
+        #active > .active.false {
+            background-color: #dd4b39;
+        }
+
+    #active > :not(.active) {
+        border: inset 1px !important;
+    }
+
+    .list_appoi.ui-widget-content {
+        z-index: auto !important;
+    }
+
+    .datepicker:not(:disabled) {
+        background-color: #fff;
+    }
+
+    .select2-container.select2-container--default.select2-container--open {
+        z-index: 10000 !important;
+    }
+
+    .btn-edit-log {
+        opacity: 0;
+        transition: all .3s linear;
+    }
+
+    .list-item-log:hover .btn-edit-log {
+        opacity: 1;
+    }
+
+    .align-middle {
+        vertical-align: middle !important;
+    }
+
+    .dataTables_processing {
+        z-index: 1;
+        background: #ff000000;
+        border: none;
+        outline: 0;
+        box-shadow: none;
+    }
+
+    .dataTable td {
+        white-space: nowrap;
+    }
+
+    .icon {
+        transition: all .2s linear;
+    }
+
+    .dd-menu-show {
+        transform: rotate(90deg);
+    }
+
+    .appoint-note {
+        color: darkgoldenrod;
+    }
+
+    .lead_status li.disabled {
+        background-color: #eee;
+        cursor: not-allowed;
+    }
+
+        .lead_status li.disabled > a {
+            pointer-events: none;
+        }
+
+    .dropdown-toggle {
+        transition: all .1s linear;
+    }
+
+        .dropdown-toggle:focus, .dropdown-toggle:hover {
+            border: 1px solid #007bff !important;
+            opacity: 0.8 !important;
+            -webkit-box-shadow: 0 0 10px #979a9e;
+            box-shadow: 0 0 5px #979a9e;
+        }
+
+    .dropdown-button-action li a {
+        transition: all .1s linear;
+        font-size: 15px;
+    }
+
+        .dropdown-button-action li a:hover {
+            font-weight: 600;
+            color: #007bff !important;
+            background: #ecf0f5;
+        }
+
+    .short-description-appoiment {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        line-height: 25px;
+        -webkit-line-clamp: 2;
+        max-height: 45px;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+    }
+
+    .detail-sales-lead .btn {
+        margin: 1px !important;
+    }
+
+    #dataTable_state tr.selected {
+        background-color: #00a65a;
+        color: #fff;
+    }
+
+    .state-label span {
+        cursor: pointer;
+    }
+
+    .state-label i:hover {
+        color: whitesmoke;
+        cursor: pointer;
+    }
+
+    .no-select {
+        -webkit-touch-callout: none; /* iOS Safari */
+        -webkit-user-select: none; /* Safari */
+        -khtml-user-select: none; /* Konqueror HTML */
+        -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+        user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome and Opera */
+    }
+
+    .noi-dung-log, .title-log {
+        white-space: normal;
+    }
+</style>
+<section class="content">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="box box-default" style="border:1px solid #ddd">
+                <div class="box-header with-border" style="background: #f5f5f5">
+                    <h3 class="box-title"></h3>
+                    <div class="box-tools pull-right">
+                        <a class="btn btn-sm btn-info btn-header-lead" onclick="export_excel()" style="font-size:12px; margin-left:5px">
+                            <i class="fa fa-file-excel-o"></i> Export excel <img id="img_load_excel" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                        </a>
+                        @if ((access.Any(k => k.Key.Equals("sales_lead_add_lead")) == true && access["sales_lead_add_lead"] == true))
+                        {
+                            <a class="btn btn-sm btn-primary btn-header-lead" id="newlead" onclick="open_lead_popup('',this)" style="font-size:12px; margin-left:5px">
+                                <i class="fa fa-plus"></i> Add Lead <img id="img_load_newlead" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                            </a>
+                        }
+                    </div>
+                </div>
+                <!-- /.box-header -->
+                <div class="box-body salelead-list">
+                    <div class="row" style="margin:0px">
+                        <form id="search_form">
+                            <div class="row form-inline filter-group">
+
+                                <div class="col-md-3 col-sm-6 form-group" style="margin-bottom:5px">
+                                    <div class="input-group" style="width:100%">
+                                        <div class="input-group-addon">
+                                            From Date
+                                            <div class="ico-help" title="The from date for the search."><i class="fa fa-question-circle"></i></div>
+                                        </div>
+                                        <input type="text" id="fdate" name="fdate" class="form-control datepicker change-search" value="@ViewBag.From" readonly>
+                                    </div>
+                                    <!-- /.input group -->
+                                </div>
+
+                                <div class="col-md-3 col-sm-6 form-group" style="margin-bottom:5px">
+                                    <div class="input-group" style="width:100%">
+                                        <div class="input-group-addon">
+                                            To Date
+                                            <div class="ico-help" title="The to date for the search."><i class="fa fa-question-circle"></i></div>
+                                        </div>
+                                        <input type="text" id="tdate" name="tdate" class="form-control datepicker change-search" value="@ViewBag.To" readonly>
+                                    </div>
+                                    <!-- /.input group -->
+                                </div>
+
+                                @if (ShowTeam.GetValueOrDefault())
+                                {
+                                    <div class="col-md-3 col-sm-6 form-group" style="margin-bottom:5px">
+                                        <div class="input-group" style="width:100%">
+                                            <div class="input-group-addon">
+                                                Team
+                                                <div class="ico-help" title="Search by Team"><i class="fa fa-question-circle"></i></div>
+                                            </div>
+                                            <select class="form-control member-in-dept select2" id="Team" name="Team" style="width: 100%">
+                                                <option value="">All</option>
+                                                @foreach (var item in Team)
+                                                {
+                                                    <option value="@item.Id">@item.Name</option>
+                                                }
+                                            </select>
+                                        </div>
+                                        <!-- /.input group -->
+                                    </div>
+                                }
+
+
+                                @if (ShowTeam.GetValueOrDefault())
+                                {
+                                    <div class="col-md-3 col-sm-6 form-group" style="margin-bottom:5px">
+                                        <div class="input-group" style="width:100%">
+                                            <div class="input-group-addon">
+                                                Sales Person
+                                                <div class="ico-help" title="Search by Sales Person"><i class="fa fa-question-circle"></i></div>
+                                            </div>
+                                            <select class="form-control member-in-dept select2 change-search" id="Member" name="Member" style="width: 100%">
+                                                <option value="">All</option>
+                                                <option value="Unassigned">Unassigned</option>
+                                                @foreach (var item in members)
+                                                {
+                                                    <option value="@item.MemberNumber" @(ViewBag.S_Member == item.MemberNumber ? "selected" : "")>@item.FullName #@item.MemberNumber</option>
+                                                }
+                                            </select>
+                                        </div>
+                                        <!-- /.input group -->
+                                    </div>
+                                }
+
+                                <div class="col-md-3 col-sm-6 form-group" style="margin-bottom:5px">
+                                    <div class="input-group" style="width:100%">
+                                        <div class="input-group-addon">
+                                            Data From
+                                            <div class="ico-help" title="Search by Data From"><i class="fa fa-question-circle"></i></div>
+                                        </div>
+                                        <select class="form-control change-search" id="datafrom" name="datafrom">
+                                            <option value="" style="font-weight:bold">All</option>
+                                            <option value="ims">IMS</option>
+                                            <option value="mango-site">Mango Site</option>
+                                            <option value="external-data">External Data</option>
+                                        </select>
+                                    </div>
+                                    <!-- /.input group -->
+                                </div>
+
+
+                                <div class="col-md-3 col-sm-6 form-group" style="margin-bottom:5px">
+                                    <div class="input-group" style="width:100%">
+                                        <div class="input-group-addon">
+                                            Status
+                                            <div class="ico-help" title="Search by Status"><i class="fa fa-question-circle"></i></div>
+                                        </div>
+                                        <select class="form-control change-search" id="Status" name="Status">
+                                            <option value="" style="font-weight:bold">All</option>
+                                            @foreach (var s in ViewBag.InteractionStatus as List<SelectListItem>)
+                                            {
+                                                <option value="@s.Value" @(ViewBag.S_Status == s.Value ? "selected" : "")>@s.Text</option>
+                                            }
+                                        </select>
+                                    </div>
+                                    <!-- /.input group -->
+                                </div>
+
+                                <div class="col-md-3 col-sm-6 form-group" style="margin-bottom:5px">
+                                    <div class="input-group" style="width:100%">
+                                        <div class="input-group-addon">
+                                            State
+                                            <div class="ico-help" title="Search by State"><i class="fa fa-question-circle"></i></div>
+                                        </div>
+                                        <div class="form-control change-search text-center" id="State-div" name="State-div">
+                                            <span class="label state-label" data-value="@ViewBag.S_State" data-name="@(string.IsNullOrEmpty(ViewBag.S_State) ? "All" : ViewBag.S_State)" style="background-color:#21ab4a"><span onclick="showModalState()">@(string.IsNullOrEmpty(ViewBag.S_State) ? "All" : ViewBag.S_State) </span></span>
+                                        </div>
+                                    </div>
+                                    <!-- /.input group -->
+                                </div>
+
+                                <div class="col-md-3 col-sm-6 form-group" style="margin-bottom:5px">
+                                    <div class="input-group" style="width:100%">
+                                        <div class="input-group-addon">
+                                            Search By
+                                            <div class="ico-help" title="Search by Salon Name, Contact Name, Email, Phone ..."><i class="fa fa-question-circle"></i></div>
+                                        </div>
+                                        <input type="text" class="form-control change-search" id="SearchText" name="SearchText" placeholder="Name | Phone | Email ..." value="@ViewBag.S_SearchText" />
+                                    </div>
+                                    <!-- /.input group -->
+                                </div>
+                                @if (cMem.SiteId == 1)
+                                {
+                                    <div class="col-md-3 col-sm-6 form-group" style="margin-bottom:5px">
+                                        <div class="input-group" style="width:100%">
+                                            <div class="input-group-addon">
+                                                Partner
+                                                <div class="ico-help" title="Search by Partner"><i class="fa fa-question-circle"></i></div>
+                                            </div>
+                                            <select class="form-control change-search" id="SiteId" name="SiteId" style="width:100%">
+                                                @foreach (var s in ViewBag.S_SiteId as List<Site>)
+                                                {
+                                                    <option value="@s.Id" >@s.Name</option>
+                                                }
+                                            </select>
+                                        </div>
+                                        <!-- /.input group -->
+                                    </div>
+                                }
+
+                                <div class="col-md-5 col-sm-6 form-group" style="margin-bottom:5px">
+                                    <div class="input-group" style="width:100%">
+                                        <div class="input-group-addon">
+                                            Type
+                                            <div class="ico-help" title="Search by Type"><i class="fa fa-question-circle"></i></div>
+                                        </div>
+                                        <select class="form-control change-search select2" id="Type" name="Type" multiple style="width:100%">
+                                            @*<option value="" style="font-weight:bold">All</option>*@
+                                            @foreach (var s in type)
+                                            {
+                                                <option value="@s.Id" @(s.Id == 1 ? "selected" : "") style="color:@s.Color">@s.Name</option>
+                                            }
+                                        </select>
+                                    </div>
+                                    <!-- /.input group -->
+                                </div>
+
+                                <div class="col-md-3 col-sm-6 form-group" style="margin-bottom:5px">
+                                    <button type="button" class="btn btn-primary btn-flat" id="search_submit" name="search_submit">
+                                        <i class="fa fa-search"></i> Search
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    @*summary*@
+                    <div style="display: flex;flex-wrap:wrap; font-weight: 600; font-size: 17px; margin: 15px 0px;">
+                        <div style="margin-right: 30px;" id="total-record"></div>
+                        <div style="margin-right: 30px;color: #007bff" id="total-lead"></div>
+                        <div style="margin-right: 30px;color: #c69500" id="total-trial"></div>
+                        <div style="margin-right: 30px;color: #944ed4" id="total-slice"></div>
+                        <div style="margin-right: 30px;color: #c69500" id="total-merchant"></div>
+                    </div>
+                    <div id="List_SaleLead">
+                        <table id="dataTable" style="width: 100%;border-collapse: collapse;" class="table table-hover  table-bordered table-striped dataTable sale-lead">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th width="5%" style="text-align:center">State</th>
+                                    <th width="20%" style="max-width:300px">Last Update</th>
+                                    <th width="8%" style="text-align:center">Type</th>
+                                    <th width="8%" style="text-align:center">Source</th>
+                                    <th width="20%" style="text-align:center">Note</th>
+                                    <th width="13%" style="text-align:center">Status</th>
+                                    <th width="20px"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+
+                    </div>
+                </div>
+
+            </div>
+            <!-- /.box -->
+        </div>
+    </div>
+</section>
+@Html.Partial("_Partial_AppoimentPopup")
+@Html.Partial("_Partial_LogPopup")
+
+<div id="_partial_lead">
+</div>
+@*notification confirm not yet full information*@
+<div id="open-trial-action-confirmation" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="open-trial-action-confirmation-title">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="open-trial-action-confirmation-title">Are you sure ?</h4>
+            </div>
+            <div class="modal-body">
+                Are you sure you open the trial account for this account?
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="open-trial-action-confirmation-submit-button" class="btn btn-primary pull-right btn-yes">
+                    Yes
+                </button>
+                <span class="btn btn-default pull-right margin-r-5" data-dismiss="modal">Cancel</span>
+            </div>
+        </div>
+    </div>
+</div>
+<!--Xem chi tiet thong tin nhan vien-->
+<div class="modal fade" id="modal-default">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Member profile</h4>
+            </div>
+            <div class="modal-body">
+                <p id="loading"><img src="~/Content/ajax-loaders/ajax-loader-1.gif" /></p>
+                <div id="modal-content">
+                    <!--_MemberProfileSimplePartial Partial-->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+<!--Filter State-->
+<div class="modal fade" style="width:100%;visibility:hidden;display:block" id="state-search">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Filter State</h4>
+            </div>
+            <div class="modal-body">
+                <label class="no-select" id="Include-undefined" style="display:none;position:absolute; padding:5px 10px; border: 1px solid #ddd"><input type="checkbox" name="state_selected" data-name="Include undefined" class="selectState Other" id="Other" value="Other" style="transform: translate(-2px,2px);"> Include undefined</label>
+                <div id="modal-content">
+                    <table style="width:100%;" id="dataTable_state" class="table table-hover table-bordered table-striped">
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                <button type="button" onclick="submitSearchState()" class="btn btn-primary">Search</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+<style>
+    .select2-dropdown.increasezindex {
+        display: none;
+    }
+</style>
+
+<div class="loading" style="display:none;position: fixed;top: 50%;left: 50%;transform: translate(-50%, -50%);z-index:99999;"><img src="/Content/ajax-loaders/loading2.gif" width="60"></div>
+<script type="text/javascript">
+    // data table
+ 
+    if (firstLoad) {
+        let SearchText = getUrlParameter('searchtext');
+        if (SearchText) {
+            $("#SearchText").val(SearchText);
+            firstLoad = false;
+        }
+
+    }
+    var t = $(".dataTable").DataTable({
+        "language": {
+            "processing": '<img src="/Content/ajax-loaders/loading2.gif" width="60px" />',
+            "paginate": {
+                "first": '<i class="fa fa-angle-double-left" aria-hidden="true"></i>',
+                "last": '<i class="fa fa-angle-double-right" aria-hidden="true"></i>',
+                "next": '<i class="fa fa-angle-right" aria-hidden="true"></i>',
+                "previous": '<i class="fa fa-angle-left" aria-hidden="true"></i>'
+            },
+        },
+        //"columnDefs": [{
+        //    "targets": 'no-sort',
+        //    "orderable": false,
+        //}],
+        'paging': true,
+        "pageLength": 10,
+        "serverSide": true, // for process server side
+        "processing": true, // for show progress bar
+        'lengthChange': false,
+        'searching': false,
+        //'ordering': false,
+        'stateSave': false,
+        'info': false,
+        "scrollX": true,
+        'autoWidth': true,
+        "order": [[2, "desc"]],
+        "ajax": {
+            "url": "/SaleLead/SalesLead_LoadList",
+            "type": "POST",
+            "datatype": "json",
+            data: function (data) {
+                data.Fdate = $('#fdate').val();
+                data.Tdate = $('#tdate').val();
+                //data.Email = $('#Email').val();
+                //data.Name = $('#Name').val();
+                //data.Phone = $('#Phone').val();
+                data.SearchText = $('#SearchText').val();
+                data.SalesPerson = $('#Member').val();
+                data.Status = $('#Status').val();
+                data.Type = $('#Type').find(':selected').map(function () { return this.value; }).get().join(',');
+                data.DataFrom = $('#datafrom').val();
+                var states = [];
+                $(".state-label").each(function () {
+                    states.push($(this).attr("data-value"));
+                });
+                data.State = states.toString();
+                data.Team = $('#Team').val();
+                data.SiteId = $('#SiteId').val();
+                return data;
+            },
+            'dataSrc': function (data) {
+                $('#total-record').html('All Total: ' + data.recordsTotal);
+                $('#total-lead').html('Leads Total: ' + data.totalLead);
+                $('#total-trial').html('Trial Account Total: ' + data.totalTrial);
+                $('#total-slice').html('Total Slice Account: ' + data.totalSlice);
+                $('#total-merchant').html('Merchant Total: ' + data.totalMerchant);
+                return data.data;
+            }
+        },
+        'fnCreatedRow': function (nRow, aData, iDataIndex) {
+            $(nRow).css('background-color', aData.Color);
+            $(nRow).attr('id', 'tr_' + aData.SalesLeadId.toString());
+            $(nRow).attr('data-lead-item', aData.SalesLeadId.toString());
+            $(nRow).attr('class', "lead-info");
+        },
+
+        "columns": [
+            //{
+            //    "className": 'text-center align-middle',
+            //    "data": function () { return "" },
+            //    "width": '10',
+            //    "orderable": false
+            //},
+            {
+                "name": "BusinessName",
+                "render": function (data, type, row) {
+                    var html = '<span style="color:grey"><b class="text-success">' + row["CustomerName"] + '</b></span><br /><span style="color:grey">Contact: <b class="text-primary"> ' + row["ContactName"] + '</b> </span>';
+                    html += '<div style="display: flex;flex-wrap: wrap;">';
+                    if (row["AssignedSalesPerson"] != '') {
+                        html += '<span style="display:block;width:100%;"><i  class="fa fa-user bg-default"  style="color:#333 !important;width: 19px;text-align:center;padding: 3px 5px 3px 0px;font-size: 12px;border-radius: 50%;" aria-hidden="true"></i>  <b>' + row["AssignedSalesPerson"] + '</b></span><br/>';
+                    }
+                    else if (row["AssignedTeam"] != '') {
+                        html += '<span style="display:block;margin-top:5px;width:100%;"><i style="color:#333 !important ;width: 20px;text-align:center;padding: 3px 3px 3px 0px;font-size: 13px;border-radius: 50%;" class="fa fa-users bg-default" aria-hidden="true"></i>  <b>' + row["AssignedTeam"] + '</b></span><br/>';
+                    }
+
+                    var numberStar = row["PotentialRateScore"];
+                    for (var i = 0; i < numberStar; i++) {
+                        html += '<img src="/Content/Img/star-on.png" alt="star" />';
+                    }
+                    return html;
+                    html += '</div>';
+                    return html;
+                },
+                "className": 'align-middle',
+            },
+            {
+                "name": "State",
+                "data": "State",
+                "className": 'align-middle text-center',
+            },
+            //{
+            //    "name": "UpdateAt",
+            //    "render": function (data, type, row) {
+            //        var html = '';
+            //        //var html = '<span>' + moment(row["UpdateAt"]).format("MMM DD YYYY, h:mm:ss A") + '</span><br /><span> by : ' + row["UpdateBy"] + '</span>';
+            //       html += '<br/><span class="label bg-purple">' + moment(row["CreateAt"]).fromNow(); +'</span><br /><span>';
+            //        return html;
+            //    },
+            //    "className": 'align-middle',
+            //},
+            {
+                "name": "UpdateAt",
+                "render": function (data, type, row) {
+                    if (row["LastUpdateDesc"] !== '') {
+                        var TitleNote = row["LastUpdateDesc"];
+                        //var Description = row["LastLogDescription"];
+                        if (row["LastUpdateDesc"].length > 100) {
+                            TitleNote = row["LastUpdateDesc"].substring(0, 100) + "...";
+                        }
+                        return '<label>' + TitleNote + '</label><br /><i>' + row["UpdateAt"] + '</i>'
+                    }
+                    return "";
+                },
+                "className": 'wrap-text',
+            },
+            {
+                "name": "SL_Status",
+                "render": function (data, type, row) {
+                    var color = '#333';
+                    if (row["StatusName"] == 'Lead') {
+                        color = '#007bff';
+                    }
+                    else if (row["StatusName"] == 'Trial Account') {
+                        color = '#c69500';
+                    }
+                    else if (row["StatusName"] == 'Merchant') {
+                        color = '#28a745';
+                    }
+                    else if (row["StatusName"] == 'Slice Account') {
+                        color = '#944ed4';
+                    }
+
+                    if (row["StatusId"] == 1) {
+                        return '<span class="label" style="background-color:' + color + ';color:white;width:100px;border:none">' + row["StatusName"] + '</span><br/> <span style = "color: #999;font-size:12px" ></span>'
+                    }
+                    else {
+                        var html = '';
+                        if (row["RemainingDays"] == 'Expires') {
+                            html += '<span class="label" style="background-color:' + color + ';color:white;width:100px;border:none">' + row["StatusName"] + '</span><br/> <span style = "color: #EE0000;font-size:12px">';
+                        }
+                        else if (row["RemainingDays"] == 'waiting verify') {
+                            html += '<span class="label" style="background-color:' + color + ';color:white;width:100px;border:none">' + row["StatusName"] + '</span><br/> <span style = "color: #c69500;font-size:12px">';
+                        }
+                        else if ((row["RemainingDays"] == 'N/A')) {
+                            html += '<span class="label" style="background-color:' + color + ';color:white;width:100px;border:none">' + row["StatusName"] + '</span><br/> <span style = "color: #999;font-size:12px">';
+                        }
+                        else {
+                            html += '<span class="label" style="background-color:' + color + ';color:white;width:100px;border:none">' + row["StatusName"] + '</span><br/> <span style = "color: #28a745;font-size:12px">';
+                        }
+                        html += '<i class="fa fa-clock-o"></i>&nbsp;' + row["RemainingDays"];
+                        html += '</span></span>';
+                        return html;
+                    }
+                },
+                "className": 'text-center align-middle',
+            },
+            {
+                "name": "ReferralSource",
+                "data": "ReferralSource",
+                "className": 'wrap-text',
+            },
+            {
+                "name": "LastNote",
+                "render": function (data, type, row) {
+                    if (row["LastNoteDescription"] !== '') {
+                        var TitleNote = row["LastNoteDescription"];
+                        //var Description = row["LastLogDescription"];
+                        if (row["LastNoteDescription"].length > 100) {
+                            TitleNote = row["LastNoteDescription"].substring(0, 100) + "...";
+                        }
+                        return '<label>' + TitleNote + '</label><br /><i>' + row["LastNoteDateTime"] + '</i>'
+                    }
+                    return "";
+                },
+                "className": 'wrap-text',
+            },
+            {
+                "name": "StatusInteraction",
+                "render": function (data, type, row) {
+                    var html = '';
+                    if (row["StatusInteraction"] != "N/A" && row["StatusInteraction"] != "") {
+                        html += '<span class="label bg-olive" style="color: white;padding: 3px 5px;">' + row["StatusInteraction"] + '</span>'
+                    }
+                    if (row["StatusInteraction"] != "N/A" && row["StatusInteraction"] != "" && row["CallOfNumber"] != "") {
+                        html += ' - '
+                    }
+                    if (row["CallOfNumber"] != "") {
+                        html += '<span>' + row["CallOfNumber"] + ' called</span>';
+                    }
+                    return html;
+                },
+
+            },
+            {
+                "name": "Action",
+                "orderable": false,
+                "render": function () {
+                    var html = '<div class="btn-group" style="display:flex;">';
+                    html += '<button type="button" class="btn btn-info btn-sm dropdown-toggle btn-action">Detail</button>';
+                    html += '<button type="button" class="btn btn-info dropdown-toggle btn-action">';
+                    html += '<i class="icon fa fa-angle-right" aria-hidden="true" ></i >';
+                    html += '</button>';
+                    html += '</div>';
+                    return html;/*'<span class="btn btn-info btn-sm dropdown-toggle btn-action" style="padding: 3px 15px; outline: none;">Detail <i class="icon fa fa-angle-right" aria-hidden="true" ></i ></span >';*/
+                },
+                "className": 'align-middle',
+            },
+        ]
+
+    });
+    //function LoadStatusAutocomplete() {
+    //    $.ajax({
+    //        method: "Get",
+    //        url: "/SaleLead/LoadInteraction_Status",
+    //        dataType: "json"
+    //    })
+    //        .done(function (data) {
+    //            $("#Status").autocomplete({
+    //                source: data,
+    //                minLength: 0,
+    //                change: function () {
+    //                    $(".dataTable").DataTable().ajax.reload();
+    //                }
+    //            }).focus(function () {
+    //                $(this).autocomplete('search', $(this).val())
+    //            });;
+
+    //        })
+    //}
+    //LoadStatusAutocomplete();
+
+    $(t.table().container()).removeClass('form-inline');
+    // search keydown enter
+    $("#SearchText").keydown(function (event) {
+        if (event.keyCode === 13) {
+            $("#search_submit").click();
+            return false;
+        }
+    });
+    $('#search_submit').click(function () {
+        $(".sale-lead").DataTable().ajax.reload();
+    })
+
+    function showModalState() {
+        $('#state-search').css("visibility", "visible");
+        $('#state-search').modal("show");
+        $('#dataTable_state tbody tr').removeClass("selected");
+        $('.selectState[type=checkbox]').prop('checked', false);
+        $(".state-label").each(function () {
+            if ($(this).attr("data-name") != 'All') {
+                var codeState = $(this).attr("data-value");
+                var elementselected = $('.' + codeState);
+                elementselected.prop('checked', true);
+                elementselected.parent().parent().addClass("selected");
+            }
+        });
+    }
+    function removestate(el) {
+        $(el).parent().remove();
+        if (!$('.state-label').length) {
+            $('#State-div').append('<span class="label state-label" data-value="" data-name="All"  style="background-color:#21ab4a;margin-right:5px;"><span onclick="showModalState()">All </span></span>');
+        }
+        $(".sale-lead").DataTable().ajax.reload();
+    }
+
+    // submit search after select state
+    function submitSearchState() {
+        $('#State-div').html('');
+        if ($(".selectState[type=checkbox]:checked").length) {
+            $(".selectState[type=checkbox]:checked").each(function () {
+                var nameState = $(this).attr("data-name");
+                var codeState = $(this).val();
+                $('#State-div').append('<span class="label state-label" data-value="' + codeState + '" data-name="' + nameState + '"  style="background-color:#21ab4a;margin-right:5px;"><span onclick="showModalState()">' + nameState + ' </span><i onclick="removestate(this)" class="fa fa-times"></i></span>');
+            });
+        }
+        else {
+            $('#State-div').append('<span class="label state-label" data-value="" data-name="All"  style="background-color:#21ab4a;margin-right:5px;"><span onclick="showModalState()">All </span></span>');
+        }
+        $('#state-search').modal('hide');
+        $(".sale-lead").DataTable().ajax.reload();
+    }
+
+    var tableState = $("#dataTable_state").DataTable({
+        "language": {
+            "processing": '<img src="/Content/ajax-loaders/loading2.gif" width="60px" />',
+        },
+        "scrollY": "300px",
+        "scrollCollapse": true,
+        "paging": false,
+        //'paging': true,
+        //"pageLength": 10,
+        "serverSide": false, // for process server side
+        "processing": true, // for show progress bar
+        'lengthChange': false,
+        'searching': true,
+        //'ordering': false,
+        'stateSave': false,
+        'info': false,
+        'autoWidth': true,
+        "order": [],
+        "ajax": {
+            "url": "/SaleLead/LoadState_SalesLead",
+            "type": "POST",
+            "datatype": "json",
+            'dataSrc': function (data) {
+                if (data.showOtherState) {
+                    $('#Include-undefined').show();
+                }
+                return data.data;
+            }
+        },
+        "columns": [
+            {
+                "data": "Code",
+                "title": "Code",
+            },
+            {
+                "data": "Name",
+                "title": "Name",
+            },
+            {
+                "data": "Number",
+                "title": "Sales Lead Total",
+            },
+            {
+                "title": '<input id="mastercheckbox-state" type="checkbox"/>',
+                "orderable": false,
+                "render": function (data, type, row) {
+                    return '<input type="checkbox" onclick="on_state_selected(this)"  class="selectState ' + row["Code"] + '"  id="' + row["Code"] + '" data-name="' + row["Name"] + '" value="' + row["Code"] + '">';
+                },
+                "className": "text-center"
+            },
+        ],
+
+    });
+
+    // click row select input in row
+    $('#dataTable_state tbody').on('click', 'tr', function () {
+        $(this).toggleClass('selected');
+        var checkBoxes = $(this).find("input[type=checkbox]");
+        checkBoxes.prop("checked", !checkBoxes.prop("checked"));
+    });
+    //disale event click input
+    function on_state_selected(el) {
+        event.stopPropagation();
+        if (el.checked) {
+            $(el).closest("tr").addClass("selected");
+        }
+        else {
+            $(el).closest("tr").removeClass("selected");
+        }
+    }
+    // select all
+    $('#mastercheckbox-state').click(function () {
+        $('.selectState').prop('checked', $(this).is(':checked')).change();
+        if ($(this).is(':checked')) {
+            $('#dataTable_state tbody tr').addClass('selected');
+        }
+        else {
+            $('#dataTable_state tbody tr').removeClass('selected');
+        }
+    });
+
+    //search click button
+    $('.change-search').change(function () {
+        $(".sale-lead").DataTable().ajax.reload();
+    })
+
+    //update row
+    function UpdateRow(salesLeadId, showdetail = false) {
+        $.ajax({
+            method: "Post",
+            url: "/SaleLead/SalesLead_UpdateRowDataTable",
+            data: { salesLeadId },
+            dataType: "json"
+        }).done(function (data) {
+            var numberrow = t.row('#tr_' + salesLeadId).index()
+            t.row(numberrow).data(data.data);
+            if (showdetail) {
+                show_appoiment(salesLeadId, true);
+            }
+        })
+            .fail(function () {
+                alert("update row fail");
+            });
+
+    }
+
+
+    function change_group() {
+        var member = $("select[name=groups]").find("option:selected").data("member");
+        $("select[name=member]").find("option").each(function () {
+            if (member.indexOf($(this).attr("value")) == -1 && member != "" && $(this).attr("value") != "") {
+                $(this).hide();
+            } else {
+                $(this).show();
+            }
+        });
+        $("select[name=member]").find("option").first().prop("selected", true);
+    }
+
+    function show_appoiment(code, reload = false) {
+        $('.loading').show();
+        if ($("#appoiments_" + code).is(":visible") && reload == false) {
+            $("#tr_" + code).find('.icon').removeClass('dd-menu-show');
+            $("tr.appoiments").remove();
+            $('.loading').hide();
+        } else {
+            $('#List_SaleLead').find('.appoiments').remove();
+            $("#img_load_" + code).show();
+            $(".appoiments").not("#appoiments_" + code).hide().find(".list_appoi").slideUp(200);
+
+            //var from = $("#search_from_date_val").val();
+            //var to = $("#search_to_date_val").val();
+            $.ajax({
+                method: "POST",
+                url: "/salelead/getAppoimentsPartial",
+                data: { code/*, from, to*/ },
+                dataType: "html"
+            })
+                .done(function (data) {
+                    $("#tr_" + code).after(data);
+                    $("#appoiments_" + code).show().find(".list_appoi").slideDown(200);
+                })
+                .fail(function () {
+                    alert("show_appoiment fail");
+                })
+                .always(function () {
+                    $("#img_load_" + code).hide();
+                    $('.loading').hide();
+                    refresh_localTime();
+                });
+        }
+    }
+
+    //view popup sales lead
+    function open_lead_popup(SalesLeadId, element) {
+        $('.loading').show();
+        $("div#wait_overlay").show().css("opacity", 0.3);
+        var Type = $(element).attr('id');
+        $("#img_load_" + Type + (SalesLeadId)).show();
+        $.ajax({
+            method: "POST",
+            url: "/SaleLead/CreateOrUpdateSalesLeadPopup",
+            data: { "SalesLeadId": SalesLeadId }
+        })
+            .done(function (data) {
+                $("#_partial_lead").html(data);
+                $('#form-sales_lead').modal('show');
+                var buttonname = $(element).attr('data-button');
+                $('#form-btn-' + buttonname).show();
+               // ProcessRequired(buttonname);
+            })
+            .fail(function () {
+                alert("fail");
+            })
+            .always(function () {
+                $("#img_load_" + Type + (SalesLeadId)).hide();
+                $('.loading').hide();
+                $("div#wait_overlay").hide();
+            });
+    }
+
+    function ProcessRequired(command) {
+        if (command == "verify" || command == "create-trial" || command == "resend-email") {
+            $(".div-country label").append('<span style="color: red">*</span>');
+            $(".div-country input").attr("required", true);
+            $(".div-street label").append('<span style="color: red">*</span>');
+            $(".div-street input").attr("required", true);
+            $(".div-city label").append('<span style="color: red">*</span>');
+            $(".div-city input").attr("required", true);
+            $(".div-state label").append('<span style="color: red">*</span>');
+            $(".div-state select").attr("required", true);
+            $(".div-zipcode label").append('<span style="color: red">*</span>');
+            $(".div-zipcode input").attr("required", true);
+            //$(".div-contactname label").append('<span style="color: red">*</span>');
+            //$(".div-contactname input").attr("required", true);
+            $(".div-contactphone label").append('<span style="color: red">*</span>');
+            $(".div-contactphone input").attr("required", true);
+            //$(".div-salonname label").append('<span style="color: red">*</span>');
+            //$(".div-salonname input").attr("required", true);
+            $(".div-emailsalon label").append('<span style="color: red">*</span>');
+            $(".div-emailsalon input").attr("required", true);
+            $(".div-phonesalon label").append('<span style="color: red">*</span>');
+            $(".div-phonesalon input").attr("required", true);
+        }
+    }
+
+    function showSaleLead() {
+        $(".btn-header-lead").show();
+        $(".back-to-list").hide();
+        $("div .box-body.salelead-list").show();
+        $("div .box-body.salelead-report").hide();
+    }
+
+    function syncing_gohighlevel(e) {
+        //$('#img_loading_syncing_monday').show();
+        overlayOn();
+        $.ajax({
+            method: "GET",
+            url: "/SaleLead/SyncingSalesLeadFromMonday"
+        })
+            .done(function (data) {
+                if (data.status) {
+                    var Success = $.parseJSON('{"text":"' + data.message + '", "layout":"top", "type":"success"}');
+                    noty(Success);
+                }
+                else {
+                    var Error = $.parseJSON('{"text":"' + data.message + '", "layout":"top", "type":"error"}');
+                    noty(Error);
+                }
+            })
+            .fail(function () {
+                var Failed = $.parseJSON('{"text":"Sync saleslead from monday failed", "layout":"top", "type":"error"}');
+                noty(Failed);
+            })
+            .always(function () {
+                //$('#img_loading_syncing_monday').hide();
+                overlayOff();
+            });
+    }
+
+    // view detail member
+    function viewdetail(mn) {
+        $("#modal-default").modal('show');
+        $.ajax({
+            method: "POST",
+            url: "/account/GetMemberInfoSimple",
+            data: { "mn": mn },
+            dataType: "html"
+        })
+            .done(function (data) {
+                $("#modal-content").html(data);
+            })
+            .fail(function () {
+                alert("Oops! Something went wrong");
+                $("#modal-default").modal('hide');
+            })
+            .always(function () {
+                $("#loading").hide();
+            });
+    }
+
+    // show window verify
+    function verifyOpenWindow(url) {
+        var w = 900;
+        var h = 500;
+        var dualScreenLeft = window.screenLeft != undefined ? window.screenLeft : screen.left;
+        var dualScreenTop = window.screenTop != undefined ? window.screenTop : screen.top;
+
+        width = window.innerWidth ? window.innerWidth : document.documentElement.clientWidth ? document.documentElement.clientWidth : screen.width;
+        height = window.innerHeight ? window.innerHeight : document.documentElement.clientHeight ? document.documentElement.clientHeight : screen.height;
+
+        var left = ((width / 2) - (w / 2)) + dualScreenLeft;
+        var top = ((height / 2) - (h / 2)) + dualScreenTop;
+        var newWindow = window.open(url, 'Xác thực', 'scrollbars=yes, width=' + w + ', height=' + h + ', top=' + top + ', left=' + left);
+
+        // Puts focus on the newWindow
+        if (window.focus) {
+            newWindow.focus();
+        }
+        var timer = setInterval(function () {
+            if (newWindow.closed) {
+                clearInterval(timer);
+                $('#form-sales_lead').modal('hide');
+                $(".dataTable").DataTable().ajax.reload();
+            }
+        }, 500)
+    }
+    $('.select2').select2();
+
+    // get list sales person
+    $("#Team").change(function () {
+        var IdTeam = $('#Team').val();
+        $.ajax({
+            type: "Post",
+            url: "/SaleLead/GetMemberSalesPersonByTeam",
+            data: { "IdTeam": IdTeam },
+            success: function (data) {
+                $('#Member').html('');
+                $('#Member').append($('<option value="">All</option>'));
+                $('#Member').append($('<option value="Unassigned">Unassigned</option>'));
+                $.each(data, function (id, option) {
+                    $('#Member').append($('<option></option>').val(option.Id).html(option.Name));
+                });
+                $(".dataTable").DataTable().ajax.reload();
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                alert('fail');
+            }
+        });
+    })
+
+    $(document).ready(function () {
+        $('.ico-help').tooltip();
+    });
+    $(".datepicker").datepicker({
+        changeMonth: true,
+        changeYear: true,
+        yearRange: '1950:2050'
+    });
+    function sendQuestionareEmail(code) {
+        $("#send-email-to-customer").show();
+        $.ajax({
+            method: "POST",
+            url: "/merchantman/SendQuestionareEmail",
+            data: { code },
+            dataType: "json"
+        })
+            .done(function (data) {
+                if (data[0]) {
+                    var Success = $.parseJSON('{"text":"' + data[1] + '", "layout":"top", "type":"success"}');
+                    noty(Success);
+                }
+                else {
+                    var Error = $.parseJSON('{"text":"' + data[1] + '", "layout":"top", "type":"error"}');
+                    noty(Error);
+                }
+
+            })
+            .fail(function () {
+                //alert("Oops! Something went wrong");
+                var Error = $.parseJSON('{"text":"Oops! Something went wrong", "layout":"top", "type":"error"}');
+                noty(Error);
+            }).always(function () { $("#send-email-to-customer").hide(); });
+
+    }
+
+    function sendGiftCardForm(code) {
+        $("#send-email-to-customer").show();
+        $.ajax({
+            method: "POST",
+            url: "/merchantman/SendGiftCardForm",
+            data: { code },
+            dataType: "json"
+        })
+            .done(function (data) {
+                if (data[0]) {
+                    var Success = $.parseJSON('{"text":"' + data[1] + '", "layout":"top", "type":"success"}');
+                    noty(Success);
+                }
+                else {
+                    var Error = $.parseJSON('{"text":"' + data[1] + '", "layout":"top", "type":"error"}');
+                    noty(Error);
+                }
+
+            })
+            .fail(function () {
+                //alert("Oops! Something went wrong");
+                var Error = $.parseJSON('{"text":"Oops! Something went wrong", "layout":"top", "type":"error"}');
+                noty(Error);
+            }).always(function () { $("#send-email-to-customer").hide(); });
+    }
+</script>
+

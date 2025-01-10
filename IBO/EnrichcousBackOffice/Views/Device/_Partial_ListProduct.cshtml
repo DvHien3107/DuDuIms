@@ -1,0 +1,67 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.O_Product>
+@using EnrichcousBackOffice.Models;
+@{
+    var list_product = ViewBag.list_model as List<IGrouping<string, O_Product_Model>>;
+}
+
+    <table class="table-striped col-md-12" style="margin-top:10px;">
+        <tbody>
+            @foreach (var product in Model)
+            {
+
+                <tr class="product_item" id="product_@product.Code" style="padding-bottom:10px">
+                    <td style="width:80px;padding-left:20px; border:1px solid #ddd; border-right:none">
+                        <img onerror="this.onerror=null; this.src='/Upload/Img/no_image.jpg'" width="80" class="product_img" src="">
+                    </td>
+                    <td style="padding:10px; border:1px solid #ddd; border-left:none">
+                        <input type="hidden" class="product_code" value="@product.Code" />
+                        <label class="col-md-6 product_name text-success">@product.Name</label>
+                        <label class="col-md-6"><b>Line:</b> @product.ProductLineCode.ToUpper()</label><br />
+                        @*<div class="col-md-12" style="margin-bottom:5px;">
+                                <div class="input-group">
+                                    <span class="input-group-addon"><b>Vendor</b></span>
+                                    <div class="form-control" style="padding:0; border:none">
+                                        <select class="model_vendor" style="width:100%">
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-10" style="margin-bottom:5px; padding-right: 0">
+                                <div class="input-group">
+                                    <span class="input-group-addon"><b>Color</b></span>
+                                    <div class="form-control" style="padding:0; border:none">
+                                        <select class="model_color" style="width:100%">
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>*@
+                        <div class="col-md-10" style="margin-bottom:5px; padding-right: 0">
+                            <div class="input-group">
+                                <span class="input-group-addon"><b>Model</b></span>
+                                <div class="form-control" style="padding:0; border:none">
+                                    <select class="select_model" style="width:100%">
+                                        @{ var models = list_product.Find(g => g.Key == product.Code);}
+                                        @if (models != null)
+                                        {
+                                            foreach (var m in models.ToList())
+                                            {
+                                                <option value="@m.ModelCode">@m.ModelName</option>
+                                            };
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2" style="padding-left:10px">
+                            <a class="btn btn-success" onclick="select_model('@product.Code')">
+                                <i class="fa fa-check"></i>
+                                <img class="loading_img" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="margin-left:-15px; display:none" />
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+
+            }
+        </tbody>
+    </table>
+

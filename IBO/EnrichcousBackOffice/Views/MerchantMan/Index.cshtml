@@ -1,0 +1,1180 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.CustomizeModel.Merchant_IndexView>
+@using EnrichcousBackOffice.Models
+@using EnrichcousBackOffice.Models.CustomizeModel.Merchant
+@using EnrichcousBackOffice.AppLB
+@using EnrichcousBackOffice.Utils.IEnums
+@using Inner.Libs.Helpful;
+@{
+    WebDataModel db = new WebDataModel();
+    Dictionary<string, bool> p = ViewBag.p;
+    P_Member cMem = Authority.GetCurrentMember();
+    var page = TempData["Page"]?.ToString() ?? string.Empty;
+    //var searchText = "&Type=" + TempData["Type"] +
+    //                "&Status=" + TempData["Status"] +
+    //                "&AccountManager=" + TempData["AccountManager"] +
+    //                "&Remaining=" + TempData["Remaining"] +
+    //                "&number_Remaining=" + TempData["number_Remaining"] +
+    //                "&DateCreated=" + TempData["DateCreated"] +
+    //                "&number_DateCreated=" + TempData["number_DateCreated"] +
+    //                "&AtRick=" + TempData["AtRick"] +
+    //                "&City=" + TempData["City"] +
+    //                "&State=" + TempData["State"] +
+    //                "&ZipCode=" + TempData["ZipCode"] +
+    //                "&mType=" + TempData["mType"] +
+    //                "&Tab=" + TempData["Tab"] +
+    //                "&SearchText=" + ViewBag.SearchText +
+    //                "&SearchBy=" + ViewBag.SearchBy;
+    ViewBag.Title = "Merchant Dashboard";
+    // var Partners = db.C_Partner.Where(c => c.Status > 0 && (cMem.SiteId == 1 || cMem.SiteId == c.SiteId)).OrderBy(c => c.SiteId).ToList();
+    //  var ProductName = db.SystemConfigurations.FirstOrDefault().ProductName ?? db.SystemConfigurations.FirstOrDefault().CompanyName;
+    //  var ClosedStatusOrder = InvoiceStatus.Closed.ToString();
+    //  var PaidStatusOrder = InvoiceStatus.Paid_Wait.ToString();
+    //  var PaymentLaterStatusOrder = InvoiceStatus.PaymentLater.ToString();
+    var ListAccountManager = ViewBag.ListAccountManager as List<P_Member>;
+    var SiteAvailables = ViewBag.SiteAvailables as List<Site>;
+    string STORE_IN_HOUSE = MerchantType.STORE_IN_HOUSE.Code<string>();
+    var ProcessorAvailabels = ViewBag.ProcessorAvailables as List<EnumValue>;
+}
+
+
+<style type="text/css">
+    .fileinput-button {
+        position: relative;
+        overflow: hidden;
+        display: inline-block;
+    }
+
+        .fileinput-button input {
+            position: absolute;
+            top: 0;
+            right: 0;
+            margin: 0;
+            opacity: 0;
+            -ms-filter: 'alpha(opacity=0)';
+            font-size: 200px !important;
+            direction: ltr;
+            cursor: pointer;
+        }
+</style>
+<section class="content-header">
+    <h1>
+        Merchant Dashboard
+        <small>Merchant</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Dashboard</a></li>
+        <li><i class="fa fa-users"></i> Merchants</li>
+    </ol>
+</section>
+<!-- Main content -->
+<section class="content">
+    <div class="row">
+        @if (TempData["e"] != null)
+        {
+            <div class="alert alert-warning alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+            </div>
+        }
+
+        else if (TempData["s"] != null)
+        {
+            <div class="alert alert-success alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+            </div>
+        }
+
+        <div class="col-md-12">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">List Merchants</h3>
+
+                    <div class="pull-right box-tools">
+
+                        @if (p.Any(k => k.Key.Equals("boss_view")) == true && p["boss_view"] == true)
+                        {
+                            <a href="/bossmanagement" target="_blank" class="btn btn-sm btn-warning" style="color:white;"><i class="fa fa-user-circle-o" aria-hidden="true"></i> Boss manage</a>
+                        }
+
+                        @if (p.Any(k => k.Key.Equals("customer_addnew")) == true && p["customer_addnew"] == true)
+                        {
+                            if (page.Equals("storeinhouse"))
+                            {
+                                <button type="button" onclick="update_merchant('0', 'true', true)" class="btn btn-info btn-sm">
+                                    <i class="fa fa-plus"></i> Add store in hourse
+                                </button>
+                            }
+                            @*<button type="button" onclick="update_merchant('0', 'true')" class="btn btn-success btn-sm">
+                                    <i class="fa fa-plus"></i> Add new merchant
+                                </button>*@
+                        }
+                    </div>
+                </div>
+                <!-- /.box-header -->
+
+                <div class="box-body">
+                    <form id="search_Form" class="form-inline" role="form" action="/merchantman">
+                        <div class="row">
+                            <div class="col col-md-12">
+                                <div class="box box-solid">
+
+                                    <input name="ServiceType" id="ServiceType" type="hidden" value="@TempData["ServiceType"]" />
+                                    <div style="display:flex;align-items:center;padding-bottom:15px;">
+                                        <div class="form-group" style="width:50%">
+                                            <div class="input-group" style="width:100%">
+                                                <div class="input-group-addon" style="white-space:nowrap;width:70px">
+                                                    Search By
+                                                </div>
+                                                <input type="text" class="form-control change-search" id="SearchText" name="SearchText" placeholder="Business Name | Owner Name | Phone Number | Email | Store Code | Zipcode ..." value="@(TempData["SearchText"])">
+                                            </div>
+                                        </div>
+                                        <button class="btn btn-primary" style="margin-left:2px;" type="submit">Search</button>
+                                    </div>
+                                    <div style="display:flex">
+                                        <div>
+                                            <div id="filter" style=" display: flex;width:100%; padding:0 20px 20px 0">
+
+                                                @*@if (TempData["ServiceType"]?.ToString() != ((int)ServiceType.Merchant_MID).ToString())
+                                                    {
+                                                        <div style="display: inline-block; padding-left: 0; margin-right: 15px; min-width: 127px">
+                                                            <label>License Status</label><br />
+                                                            <select title="Filter License Status" style="width: 150px; margin-right: 5px; " class="form-control merchant-filter" id="LicenseStatus" name="LicenseStatus">
+                                                                <option value="">All</option>
+                                                                <option @(TempData["LicenseStatus"]?.ToString() == "1" ? "selected" : "") value="1">Active</option>
+                                                                <option @(TempData["LicenseStatus"]?.ToString() == "-1" ? "selected" : "") value="-1">Expires</option>
+                                                                <option @(TempData["LicenseStatus"]?.ToString() == "0" ? "selected" : "") value="0">Inactive</option>
+                                                            </select>
+                                                        </div>
+                                                    }
+
+                                                    @if (TempData["ServiceType"]?.ToString() != ((int)ServiceType.Merchant_License).ToString())
+                                                    {
+                                                        <div style="display: inline-block; padding-left: 0; margin-right: 15px; min-width: 127px">
+                                                            <label>Terminal Status</label><br />
+                                                            <select title="Filter Terminal Status" style="width: 150px; margin-right: 5px; " class="form-control merchant-filter" id="TerminalStatus" name="TerminalStatus">
+                                                                <option value="">All</option>
+                                                                <option @(TempData["TerminalStatus"]?.ToString() == "1" ? "selected" : "") value="1">Active</option>
+                                                                <option @(TempData["TerminalStatus"]?.ToString() == "0" ? "selected" : "") value="0">Inactive</option>
+                                                            </select>
+                                                        </div>
+                                                    }*@
+
+
+
+                                                <div style="display:inline-block;padding-left:0;margin-right:15px;min-width:127px;">
+                                                    <label>Merchant Status</label><br />
+                                                    <select title="Merchant Status" data-placeholder="All" style="width: 280px; margin-right: 5px;" class="form-control filter-multiple merchant-filter select2" id="MerchantStatus" name="MerchantStatus" multiple>
+                                                        @*<option  value="@((int)MerchantStatusSearch.All)" @((TempData["MerchantStatus"] as List<int>)?.Any(x => x == ((int)MerchantStatusSearch.All)) == true ? "selected" : "")>@(MerchantStatusSearch.All.Code<string>())</option>*@
+                                                        @*<option value="@((int)MerchantStatusSearch.LiveMerchant)" @(TempData["MerchantStatus"] as int? == ((int)MerchantStatusSearch.LiveMerchant) ? "selected" : "")>@(MerchantStatusSearch.LiveMerchant.Code<string>())</option>*@
+                                                        <option value="@((int)MerchantStatusSearch.OnlyLicense)" @((TempData["MerchantStatus"] as List<int>)?.Any(x => x == ((int)MerchantStatusSearch.OnlyLicense)) == true ? "selected" : "")>@(MerchantStatusSearch.OnlyLicense.Code<string>())</option>
+                                                        <option value="@((int)MerchantStatusSearch.OnlyTerminal)" @((TempData["MerchantStatus"] as List<int>)?.Any(x => x == ((int)MerchantStatusSearch.OnlyTerminal)) == true ? "selected" : "")>@(MerchantStatusSearch.OnlyTerminal.Code<string>())</option>
+                                                        <option value="@((int)MerchantStatusSearch.LicenseTerminal)" @((TempData["MerchantStatus"] as List<int>)?.Any(x => x == ((int)MerchantStatusSearch.LicenseTerminal)) == true ? "selected" : "")>@(MerchantStatusSearch.LicenseTerminal.Code<string>())</option>
+                                                        @*<option value="@((int)MerchantStatusSearch.ExpiredLicenseActiveTerminal)" @(TempData["MerchantStatus"] as int? == ((int)MerchantStatusSearch.ExpiredLicenseActiveTerminal) ? "selected" : "")>@(MerchantStatusSearch.ExpiredLicenseActiveTerminal.Code<string>())</option>
+                                                            <option value="@((int)MerchantStatusSearch.ExpiredLicenseInactiveTerminal)" @(TempData["MerchantStatus"] as int? == ((int)MerchantStatusSearch.ExpiredLicenseInactiveTerminal) ? "selected" : "")>@(MerchantStatusSearch.ExpiredLicenseInactiveTerminal.Code<string>())</option>
+                                                            <option value="@((int)MerchantStatusSearch.InactiveLicenseInactiveTerminal)" @(TempData["MerchantStatus"] as int? == ((int)MerchantStatusSearch.InactiveLicenseInactiveTerminal) ? "selected" : "")>@(MerchantStatusSearch.InactiveLicenseInactiveTerminal.Code<string>())</option>*@
+                                                        <option value="@((int)MerchantStatusSearch.Cancel)" @((TempData["MerchantStatus"] as List<int>)?.Any(x => x == ((int)MerchantStatusSearch.Cancel)) == true ? "selected" : "")>@(MerchantStatusSearch.Cancel.Code<string>())</option>
+                                                    </select>
+                                                </div>
+
+                                                <div style="display: inline-block; padding-left: 0; margin-right: 15px; min-width: 200px">
+                                                    <label>Account Manager</label><br />
+                                                    <select title="Filter Account Manager" data-placeholder="All" style="width: 200px; margin-right: 5px; " class="form-control filter-multiple select2 merchant-filter" id="AccountManager" name="AccountManager" multiple>
+                                                        @foreach (var member in ListAccountManager)
+                                                        {
+                                                            <option value="@member.MemberNumber" @((TempData["AccountManager"] as List<string>)?.Any(x => x == member.MemberNumber) == true ? "selected" : "")>@member.FullName (@member.MemberNumber)</option>
+                                                        }
+                                                    </select>
+                                                </div>
+
+                                                <div class="form-group" style="margin-right:15px">
+                                                    <label>Remaining Date</label><br />
+                                                    <select title="All Severity" class="form-control merchant-filter" id="Remaining" name="Remaining">
+                                                        <option @if (TempData["Remaining"]?.ToString() == "") { @Html.Raw("selected") } value="">All</option>
+                                                        <option @if (TempData["Remaining"]?.ToString() == "1") { @Html.Raw("selected") } value="1">7 days</option>
+                                                        <option @if (TempData["Remaining"]?.ToString() == "2") { @Html.Raw("selected") } value="2">14 days</option>
+                                                        <option @if (TempData["Remaining"]?.ToString() == "3") { @Html.Raw("selected") } value="3">1 month</option>
+                                                        <option @if (TempData["Remaining"]?.ToString() == "4") { @Html.Raw("selected") } value="4">2 month</option>
+                                                        <option @if (TempData["Remaining"]?.ToString() == "5") { @Html.Raw("selected") } value="5">3 month</option>
+                                                        <option @if (TempData["Remaining"]?.ToString() == "6") { @Html.Raw("selected") } value="6">4 months</option>
+                                                        <option @if (TempData["Remaining"]?.ToString() == "7") { @Html.Raw("selected") } value="7">6 months</option>
+                                                        <option @if (TempData["Remaining"]?.ToString() == "8") { @Html.Raw("selected") } value="8">12 months</option>
+                                                        @*<option @if (TempData["Remaining"]?.ToString() == "9") { @Html.Raw("selected")  } value="9">Days custom</option>*@
+                                                    </select>
+                                                    @*<input type="number" name="number_Remaining" id="number_Remaining" class="form-control" style="margin-top:5px; @(TempData["Remaining"]?.ToString() == "9" ? "" : "display:none")" min="0" step="1" placeholder="0" value="@TempData["number_Remaining"]" />*@
+                                                </div>
+
+                                                <div class="form-group" style="margin-right: 15px; width: 155px">
+                                                    <label>Processing Partner</label><br />
+                                                    <select title="All" style="width:100%" class="form-control merchant-filter" id="Processor" name="Processor">
+                                                        <option @if (TempData["Processor"]?.ToString() == "") { @Html.Raw("selected") } value="">All</option>
+                                                        @foreach (var item in ProcessorAvailabels)
+                                                        {
+                                                            <option value="@item.Value" @(TempData["Processor"]?.ToString() == item.Value ? "selected" : "")>@item.Name</option>
+                                                        }
+                                                    </select>
+                                                </div>
+
+                                                <div class="form-group hide">
+                                                    <label>Enterprise/In House</label><br />
+                                                    <select title="All" class="form-control merchant-filter" id="Type" name="Type">
+                                                        <option value="">All</option>
+                                                        <option value='STORE_OF_MERCHANT' @if (TempData["Type"]?.ToString() == "STORE_OF_MERCHANT") { @Html.Raw("selected") }>Simply Enterprise</option>
+                                                        <option value='STORE_IN_HOUSE' @if (TempData["Type"]?.ToString() == "STORE_IN_HOUSE") { @Html.Raw("selected") }>Store In House</option>
+                                                    </select>
+                                                </div>
+                                                <div style="display: inline-block; padding-left: 0; margin-right: 15px; min-width: 127px">
+                                                    <label>&nbsp;</label><br />
+                                                    <a href="#" data-toggle="control-sidebar" class="btn btn-link">
+                                                        <i class="fa fa-search"></i> Advanced search
+                                                    </a>
+                                                </div>
+
+                                                <div style="display: inline-block; padding-left: 0; margin-right: 15px; min-width: 127px">
+                                                    <label>&nbsp</label><br />
+                                                    <a id='btn_clear' class="btn btn-default" data-toggle='tooltip' data-original-title='Click to clear filter' style=' vertical-align: sub; display: none; color: #00acd6; font-weight: bold' onclick='clear_filter()'> < Clear filter > </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                        @*<input type="hidden" name="hd_url" value="@Request.Url.PathAndQuery" />*@
+                        <br />
+                        @*<div class="" style="padding-bottom:15px">
+                                <a href="javascript:void(0)" onclick="changeTab('')" title="Merchant" data-placement="bottom"
+                                   class="btn btn-app merchant-tab @if (string.IsNullOrWhiteSpace(TempData["ServiceType"]?.ToString()) == true || TempData["ServiceType"]?.ToString() == "") {@Html.Raw("btn-info active") } ">
+                                    @if (p.Any(k => k.Key.Equals("customer_view_count_total")) == true && p["customer_view_count_total"] == true && (string.IsNullOrWhiteSpace(TempData["ServiceType"]?.ToString()) == true || TempData["ServiceType"]?.ToString() == ""))
+                                    {
+                                        <span class="badge bg-aqua"><span id="TotalMerchant" class="fill_count">-</span></span>
+                                    }
+                                    <i class="fa fa-user-o" aria-hidden="true"></i> All
+                                </a>
+
+                                <a href="javascript:void(0)" onclick="changeTab(@((int)ServiceType.Merchant_License))" title="Software Only" data-placement="bottom"
+                                   class="btn btn-app merchant-tab @if (TempData["ServiceType"]?.ToString() == ((int)ServiceType.Merchant_License).ToString()) {@Html.Raw("btn-info active") }">
+                                    @if (p.Any(k => k.Key.Equals("customer_view_count_total")) == true && p["customer_view_count_total"] == true && (TempData["ServiceType"]?.ToString() == ((int)ServiceType.Merchant_License).ToString()))
+                                    {
+                                        <span class="badge bg-aqua"><span id="TotalSoftwareMerchant" class="fill_count">-</span></span>
+                                    }
+                                    <i class="fa fa-check-square-o" aria-hidden="true"></i> Software Only
+                                </a>
+
+                                <a href="javascript:void(0)" onclick="changeTab(@((int)ServiceType.Merchant_MID))" title="Terminal Only" data-placement="bottom"
+                                   class="btn btn-app merchant-tab @if (TempData["ServiceType"]?.ToString() == ((int)ServiceType.Merchant_MID).ToString()) {@Html.Raw("btn-info active") } ">
+                                    @if (p.Any(k => k.Key.Equals("customer_view_count_total")) == true && p["customer_view_count_total"] == true&& (TempData["ServiceType"]?.ToString() == ((int)ServiceType.Merchant_MID).ToString()))
+                                    {
+                                        <span class="badge bg-aqua"><span id="TotalTerminalMerchant" class="fill_count">-</span></span>
+                                    }
+                                    <i class="fa fa-truck" aria-hidden="true"></i> Terminal Only
+                                </a>
+
+                                <a href="javascript:void(0)" onclick="changeTab(@((int)ServiceType.Merchant_License_MID))"  title="Software & Terminal" data-placement="bottom"
+                                   class="btn btn-app merchant-tab @if (TempData["ServiceType"]?.ToString() == ((int)ServiceType.Merchant_License_MID).ToString()) {@Html.Raw("btn-info active") } ">
+                                    @if (p.Any(k => k.Key.Equals("customer_view_count_total")) == true && p["customer_view_count_total"] == true&& (TempData["ServiceType"]?.ToString() == ((int)ServiceType.Merchant_License_MID).ToString()))
+                                    {
+                                        <span class="badge bg-aqua"><span id="TotalSoftwareTerminalMerchant" class="fill_count">-</span></span>
+                                    }
+                                    <i class="fa fa-angle-double-right" aria-hidden="true"></i> Software & Terminal
+                                </a>
+
+
+                            </div>*@
+                    </form>
+                    <div class="nav-tabs-custom">
+                        <ul class="nav nav-tabs nav-link" style="margin:10px 0px;">
+                            <li class="@((TempData["Type"]?.ToString()==MerchantType.STORE_OF_MERCHANT.Code<string>()||string.IsNullOrEmpty(TempData["Type"]?.ToString()))?"active":"")">
+                                <a style="cursor: pointer; font-size: 16px" class="tabs" href="javascript:void(0)" onclick="changeMerchantType('@(MerchantType.STORE_OF_MERCHANT.Code<string>())')">
+                                    Simply Enterprise
+                                    <span class="badge" id="count-number-merchant"></span>
+                                </a>
+                            </li>
+
+                            <li class="@(TempData["Type"]?.ToString()==MerchantType.STORE_IN_HOUSE.Code<string>()?"active":"")">
+                                <a style="cursor: pointer; font-size: 16px" class="tabs" href="javascript:void(0)" onclick="changeMerchantType('@(MerchantType.STORE_IN_HOUSE.Code<string>())')">
+                                    Store in House
+                                    <span class="badge" id="count-number-house"></span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div style="position: absolute;right: 10px;">
+                        @if (p.Any(k => k.Key.Equals("customer_export_excel")) == true && p["customer_export_excel"] == true)
+                        {
+                            <a href="javascript:void(0)" onclick="ExportMerchant()" class="btn btn-sm btn-success"><i class="fa fa-file-excel-o" aria-hidden="true"></i> Export excel</a>
+                        }
+
+
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-toggle="dropdown">Import Excel  <span class="caret"></span></button>
+
+                            <ul class="dropdown-menu" style="left:-100%" role="menu">
+                                <li>
+                                    <a href="javascript:void(0)" style="margin-right:5px;">
+                                        <span class="btn btn-succes btn-sms fileinput-button">
+                                            <i class="fa fa-cloud-upload"></i>
+                                            <span>Import File</span>
+                                            <input id="add_attachment" type="file" accept=".xlsx, .xls, .csv" name="files">
+                                        </span>
+                                    </a>
+                                </li>
+                                <li> <a href="/Upload/Merchant/Template/ImportMerchantTemplate.xlsx" style="margin-right:5px;"><i class="fa fa-download"></i>Download Template</a></li>
+
+                            </ul>
+                        </div>
+                    </div>
+
+
+                    <table id="example1" class="table table-bordered table-striped" data-order='[[ 0, "desc" ]]'>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Business</th>
+                                <th>Owner</th>
+                                @*<th>Service Type</th>*@
+                                <th>Life times</th>
+                                <th>Last updated</th>
+                                <th>Salon Note</th>
+                                <th>Processing Partner</th>
+                                <th>Activated License</th>
+                                <th>MID</th>
+                                <th>Terminal Status</th>
+
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th>#</th>
+                                <th>Business</th>
+                                <th>Owner</th>
+                                @*<th>Service Type</th>*@
+                                <th>Life times</th>
+                                <th>Last updated</th>
+                                <th>Salon Note</th>
+                                <th>Processing Partner</th>
+                                <th>Activated License</th>
+                                <th>MID</th>
+                                <th>Terminal Status</th>
+
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                <!-- /.box-body -->
+            </div>
+            <!-- /.box -->
+        </div>
+
+    </div>
+</section>
+
+<!--Modal merchant-->
+<div id="merchant_popup">
+    @*@Html.Partial("_MerchantPopupPartial", new C_Customer(), new ViewDataDictionary { { "update", false } })*@
+</div>
+<!--/.End-->
+
+<div class="modal fade" id="modal-salon-note" role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-content">
+        <form action="/merchantman/savesalonnote" method="post" id="form-salon-note">
+            <div class="modal-header">
+                <div class="modal-title pull-left"><h4 style="margin:0"></h4></div>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="control-label">Salon note</label>
+                    <textarea type="text" class="form-control" style="min-height:100px;resize:vertical;" name="BusinessDescription" id="BusinessDescription"></textarea>
+                </div>
+                <input name="Id" id="customer_id_edit" value="" hidden />
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary" onsubmit="overlayOn()">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section style
+{
+    <!-- DataTables -->
+    <link rel="stylesheet" href="~/content/admin/bower_components/datatables.net-bs/css/dataTables.bootstrap.min.css">
+    <style>
+        .modal {
+            text-align: center;
+            padding: 0 !important;
+        }
+
+            .modal:before {
+                content: '';
+                display: inline-block;
+                height: 100%;
+                vertical-align: middle;
+                margin-right: -4px;
+            }
+
+        .modal-dialog {
+            display: inline-block;
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        .label-search {
+            font-size: 13px;
+        }
+    </style>
+}
+
+
+@section script
+{
+    <!-- DataTables -->
+    <script src="~/content/admin/bower_components/datatables.net/js/jquery.dataTables.min.js"></script>
+    <script src="~/content/admin/bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/Content/Admin/bower_components/moment/moment.js"></script>
+
+    <script type="text/javascript">
+        var dataCustomer = null;
+        $(function () {
+            var dataT = $('#example1').DataTable({
+                "language": {
+                    "processing": '<img src="/Content/ajax-loaders/loading2.gif" width="60px" />',
+                    "lengthMenu": "Show _MENU_ of <span id='total-record'></span> entries",
+                },
+                "pageLength": 50,
+                "serverSide": true, // for process server side
+                "processing": true, // for show progress bar
+                'paging': true,
+                'lengthChange': true,
+                'searching': false,
+                'ordering': true,
+                'info': true,
+                'autoWidth': true,
+                'stateSave': false,
+                "ajax": {
+                    "url": "/merchantman/LoadListMerchant",
+                    "type": "POST",
+                    "datatype": "json",
+                     data: function (data) {
+                        data.SearchText = $("input[name='SearchText']").val();
+                        data.SearchBy = $("input[name='SearchBy']").val();
+                        data.Sites = ($("#Sites").val())?.map(x => parseInt(x));
+                        data.AccountManager = $("#AccountManager").val();
+                        data.MerchantStatus = ($("#MerchantStatus").val()).map(x => parseInt(x));
+                        @*data.LicenseStatus = $("#LicenseStatus").val();
+                        data.TerminalStatus = $("#TerminalStatus").val();
+                        data.ServiceType = "@(TempData["ServiceType"]?.ToString())";*@
+                        data.Remaining = $("#Remaining").val();
+                        data.number_Remaining = $("#number_Remaining").val();
+                        data.Type = $("#Type").val();
+                        data.NODaysCreated = $("#NODaysCreated").val();
+                        data.custom_NODaysCreated = $("#custom_NODaysCreated").val();
+                        data.AtRisk = $("#AtRisk").val();
+                        data.State = $("#State").val();
+                        data.City = $("#City").val();
+                        data.ZipCode = $("#ZipCode").val();
+                        data.Processor = $("#Processor").val();
+                        return data;
+                    },
+                    'dataSrc': function (data) {
+                        $("#count-number-merchant").html(data["summary"].TotalStoreOfMerchant);
+                        $("#count-number-house").html(data["summary"].TotalStoreInHouse);
+                        //$("#TotalSoftwareMerchant").html(data["summary"].TotalSoftwareMerchant);
+                        //$("#TotalTerminalMerchant").html(data["summary"].TotalTerminalMerchant);
+                        $(".merchant-tab.active .fill_count").html(data["recordsTotal"]);
+                        $("#total-record").html(data["recordsTotal"]);
+                        dataCustomer = data.data;
+                        return data.data;
+                    }
+                },
+                'fnCreatedRow': function (nRow, aData, iDataIndex) {
+                    /*$(nRow).attr('onclick', `load_invoice('${aData.Customer.CustomerCode}', $(this))`);*/
+                    $(nRow).hover(
+                        function () {
+                            $('#btn-edit-note-' + aData['CustomerCode']).show();
+                        }, function () {
+                            $('#btn-edit-note-' + aData['CustomerCode']).hide();
+                        }
+                    );
+                },
+                "columns": [
+                    //{
+                    //    "name": "CustomerCode",
+                    //    "render": function (data, type, row) {
+                    //        return `<b>${row["Customer"].CustomerCode} ${row["Customer"].WordDetermine != null && row["Customer"].WordDetermine != '' ? "-" + row["Customer"].WordDetermine : ""}</b>`;
+                    //    },
+                    //    "className": 'align-middle',
+                    //},
+                    {
+                        "name": "StoreCode",
+                        "render": function (data, type, row) {
+                            let html = '';
+                            //if (row["Customer"].Active == 0)
+                            //    html = `<p id="cus-status"><span class="label label-default" style="margin-top:10px">Inactive</span></p>`;
+                            //else if (row["Customer"].Active == -1)
+                            //    html = '<p id="cus-status"><span class="label" style="background-color:orangered">Not processing</span></p>';
+                            //else
+                            //    html = '<p id="cus-status"><span class="label label-success">Active</span></p>';
+                            return `<b>#${row["StoreCode"]}</b>${html}`;
+                        },
+                        "className": 'align-middle',
+                    },
+                    {
+                        "name": "Business",
+                        "render": function (data, type, row) {
+                            let html = `<a href="/merchantman/detail/${row["Id"]}" >
+                                        <b>${row["BusinessName"].toUpperCase()}</b>
+                                        </a ><br />
+                                        <span style="color:grey">Phone: ${row["SalonPhone"]}</span><br/>
+                                        <span style="color:grey">Address: ${row["Address"]}</span><br/>`;
+                            if (row["PartnerCode"] != null) {
+                                html += `<span class="label label-default" style="font-size: 12px;">${row["PartnerCode"]} - ${row["PartnerName"]}</span><br/>`
+                            }
+                            html += `<span class="label label-default" style="margin-top:5px" type="button" data-toggle="tooltip" title="update account manager" onclick="update_merchant('${row["Id"]}', 'true', null, true)"><i class="fa fa-user" aria-hidden="true"></i> ${row["FullName"] || "N/A"}</span>`;
+                            return html;
+                        },
+                    },
+                    {
+                        "name": "Owner",
+                        "render": function (data, type, row) {
+                            let html = `<a href="/merchantman/detail/${row["Id"]}" style="cursor:pointer; color:#258e4f">
+                                            <b>${row["ContactName"].toUpperCase()}</b>
+                                        </a><br />
+                                        <span style="color:grey">Phone: ${row["CellPhone"]}</span>`;
+                            //if (row["Customer"].PreferredLanguage != null && row["Customer"].PreferredLanguage != '') {
+                            //    html += `<br /><span style="color:grey">Preferred language: ${row["Customer"].PreferredLanguage}</span>`;
+                            //}
+                            return html;
+                        },
+                    },
+                    @*{
+                        "name": "ServiceType",
+                        "render": function (data, type, row) {
+
+                            let html = '';
+                            if (row["ServiceType"] == @((int)(ServiceType.Merchant_License_MID))) {
+                                html += `<span> Software and Terminal </span>`
+                            }
+                            else if (row["ServiceType"] == @((int)(ServiceType.Merchant_License))){
+                                html += `<span> Software Only </span>`
+                            }
+                            else if (row["ServiceType"] == @((int)(ServiceType.Merchant_MID))){
+                                html += `<span> Terminal Only </span>`
+                            }
+                            else {
+                                html += `<span> N/A </span>`
+                            }
+                            return html;
+                        },
+                    },*@
+                    {
+                        "name": "Lifetimes",
+                        "render": function (data, type, row) {
+                            let html = '';
+
+                            //html = `<span class="label label-primary" style="font-size: 12px">${moment(row["Customer"].CreateAt).toNow(true)}</span>`;
+                            if (row["CreateAt"]) {
+                                html = `<span class="label label-primary" style="font-size: 12px">${row["LifeTime"]} days</span><br/>`;
+                                html += `<b>Started:<br/> ${row["StartedDate"]}</b>`;
+                            }
+                            return html;
+                        },
+                    },
+                    {
+                        "name": "LastUpdated",
+                        "render": function (data, type, row) {
+                            let html = '';
+                            html += `<p>${row["LastUpdateDate"] || ''} ${row["LastUpdateBy"] ? " - by " + row["LastUpdateBy"] :""}</p>`
+                            return html;
+                        },
+                        "className": 'align-middle',
+                    },
+                    {
+                        "name": "Description",
+                        "render": function (data, type, row) {
+                            let html = '';
+                            if (row['BusinessDescription']) {
+                                html += `<p style="color:grey">${row['BusinessDescription']}</p>`;
+                                html += `<button class="btn btn-sm btn-outline-warning" id="btn-edit-note-${row['CustomerCode']}"
+                                            onclick="updateSalonNote('${row['CustomerCode']}')"
+                                            style="display:none"><i class="fa fa-pencil" aria-hidden="true"></i></button>`;
+                            }
+                            else {
+                                html += `<button class="btn btn-sm btn-outline-info" id="btn-edit-note-${row['CustomerCode']}"
+                                            onclick="updateSalonNote('${row['CustomerCode']}')"
+                                            style="display:none"><i class="fa fa-plus" aria-hidden="true"></i></button>`;
+                            }
+                            return html;
+                        },
+                    },
+                    {
+                        "name": "Processor",
+                        "data": "ProcessorName",
+                        "className": 'align-middle',
+                    },
+                    {
+                        "name": "LicenseActivate",
+                        "render": function (data, type, row) {
+                            let html = '';
+                            if (row["License"]?.LicenseName != null) {
+                                html += `<b style="margin-right: 10px">${row["License"]?.LicenseName}</b></br>`
+                            }
+                            if (row["License"]?.LicenseStatus == @((int)(LicenseStatusUniversal.Active))) {
+                                if (row["License"].RemainingDate > 3650) {
+                                    html += `<label class="label" style="background-color: #00CC00"> Lifetime </label>`
+                                }
+                                else {
+                                    html += `<label class="label" style="background-color: #00CC00"> ${row["License"]?.RemainingDate} days</label>`
+                                }
+                            }
+                            else if (row["License"]?.LicenseStatus == @((int)(LicenseStatusUniversal.Expired))) {
+                                html += `<label class="label" style="background-color: #EE0000"> Expires</label>`
+                            }
+                            else if (row["License"]?.LicenseStatus == @((int)(LicenseStatusUniversal.FutureActive))) {
+                                html += `<label class="label label-warning">Active on : ${moment(row["License"]?.EffectiveDate).format('ll')}</label>`
+                            }
+                            else if (row["License"]?.LicenseStatus == @((int)(LicenseStatusUniversal.InActive))) {
+                                html += `<label class="label label-default">Inactive</label>`
+                            }
+                            else {
+                                html += `<label class="label label-default">N/A</label>`
+                            }
+                            return html;
+                        },
+                        "className": 'align-middle',
+                    },
+                    {
+                        "name": "MID",
+                        "data":"MID",
+                        "className": 'align-middle',
+                    },
+
+                     {
+                        "name": "Terminal",
+                        "render": function (data, type, row) {
+                            let html = '';
+                            if (row["TerminalStatus"] == @((int)(TerminalStatus.Active))) {
+                                html += `<label class="label label-success">Active</label>`
+                            }
+                            else if (row["TerminalStatus"] == @((int)(TerminalStatus.InActive))) {
+                                html += `<label class="label label-default">Inactive</label>`
+                            }
+                            else {
+                                html += `<label class="label label-default">N/A</label>`
+                            }
+                            return html;
+                        },
+                        "className": 'align-middle',
+                    }
+                ]
+            })
+
+            $('#search_Form').submit(function () {
+                $('#loading_search').css('visibility', 'visible');
+            });
+
+            $('#form-salon-note').ajaxForm(function (data) {
+                if (data[0]) {
+                    var mess = $.parseJSON('{"text":"' + data[1] + '", "layout":"top", "type":"success"}');
+                    noty(mess);
+                } else {
+                    var mess = $.parseJSON('{"text":"' + data[1] + '", "layout":"top", "type":"error"}');
+                    noty(mess);
+                }
+                overlayOff();
+                dataT.ajax.reload();
+                $('#modal-salon-note').modal('hide');
+            })
+
+             @*@if (p.Any(k => k.Key.Equals("customer_view_count_total")) == true && p["customer_view_count_total"] == true)
+             {
+                 <text>
+                loadCountTab();
+                </text>
+             }*@
+        });
+
+        $('#search_Form').submit(function (event) {
+            event.preventDefault();
+            filterChange();
+        });
+        $(".merchant-filter").change(function () {
+          //  $("#search_Form").serialize();
+
+            filterChange();
+          //  $("#search_Form").submit();
+        })
+        function filterChange() {
+            var mainFormFilter = $("#search_Form").serialize();
+            var serviceType = $("#ServiceType").val();
+            var advancedFormFilter = $("#side_search_form").serialize();
+            url = new URL(window.location.origin + "/" + "merchantman?" + mainFormFilter + "&servicetype=" + serviceType +"&" + advancedFormFilter);
+            window.location.replace(url);
+        }
+        function changeMerchantType(type) {
+            $("#Type").val(type);
+            // Get the current URL
+            //let currentUrl = window.location.href;
+            //var url = new URL(currentUrl);
+            //url.searchParams.set('serviceType', serviceType);
+            // Add a new parameter to the query string
+            //let newParam = `serviceType=${serviceType}`;
+            //let newUrl = currentUrl.includes('?')
+            //    ? currentUrl + '&' + newParam
+            //    : currentUrl + '?' + newParam;
+
+            // Update the URL with the new parameter
+
+            //setMerchantFieldForm('serviceType', serviceType, function(url){
+            //    window.location.replace(url);
+            //})
+            filterChange();
+        }
+        function setMerchantFieldForm(name,value,callback) {
+            let currentUrl = window.location.href;
+            var url = new URL(currentUrl);
+            url.searchParams.set(name, value);
+
+            callback(url);
+        }
+        //Merchant popup -- Add new/Edit/View detail
+        //_id la CustomerId
+        //_update == 'true' --- la Add New or Edit
+        //_update == 'false' -- la View Detail
+        function update_merchant(_id, _update, _storeinhouse) {
+            overlayOn();
+            $.ajax({
+                method: "POST",
+                url: "/merchantman/GetMerchantInfo",
+                data: { id: _id, update: _update, storeinhouse: _storeinhouse },
+                dataType: "html"
+            })
+                .done(function (data) {
+                    $("#merchant_popup").html(data);
+                    $("#modal-merchant").modal('show');
+                    //if (_accountMan == true) {
+                    //    $('a[href="#account_manager"]').trigger('click');
+                    //}
+                })
+                .fail(function () {
+                    alert("Oops! Something went wrong");
+                    $("#modal-merchant").modal('hide');
+                })
+                .always(function () {
+                    //$("#loading").hide();
+                    overlayOff();
+                });
+        }
+
+        function SaveComplete(data) {
+            //event.preventDefault();
+            if (data[0] == true) {
+                $('#modal-merchant').modal('toggle');
+                var url = $("input[name='hd_url']").val();
+                window.location.href = url;
+            }
+            else {
+                var Error = {"text": data[1], "layout":"top", "type":"error"};
+                noty(Error);
+            }
+        }
+
+        function SaveError() {
+            alert("Oops! Something went wrong");
+            $("#modal-merchant").modal('hide');
+        }
+
+        function updateSalonNote(customerCode, note) {
+            let store = dataCustomer.find(c => c.CustomerCode == customerCode);
+            console.log(store.BusinessDescription);
+            $('#modal-salon-note .modal-title h4').html("Update salon note #" + store['StoreCode']);
+            $('#BusinessDescription').val(store.BusinessDescription);
+            $('#customer_id_edit').val(store['Id']);
+            $('#modal-salon-note').modal();
+        }
+
+        function ExportMerchant() {
+            if (confirm("Export merchant list to Excel?")) {
+                $.ajax({
+                    type: "POST",
+                    url: "/merchantman/ExportMerchantToExcel",
+                    data: {
+                        SearchText : $("input[name='SearchText']").val(),
+                        SearchBy : $("input[name='SearchBy']").val(),
+                        Sites: ($("#Sites").val())?.map(x => parseInt(x)),
+                        AccountManager: $("#AccountManager").val(),
+                        MerchantStatus: ($("#MerchantStatus").val()).map(x => parseInt(x)),
+                        @*LicenseStatus : $("#LicenseStatus").val(),
+                        TerminalStatus : $("#TerminalStatus").val(),
+                         ServiceType : "@(TempData["ServiceType"]?.ToString())",*@
+                         Remaining : $("#Remaining").val(),
+                         number_Remaining : $("#number_Remaining").val(),
+                         Type : $("#Type").val(),
+                         NODaysCreated : $("#NODaysCreated").val(),
+                         custom_NODaysCreated : $("#custom_NODaysCreated").val(),
+                         AtRisk : $("#AtRisk").val(),
+                    },
+                    dataType: "json",
+                    success: function (data) {
+                        if (data.status == true) {
+                            window.location.href = "/Ticket_New/DownloadExcelFile?path=" + data.path;
+
+                        }
+                    }
+                });
+
+            }
+        }
+    </script>
+
+}
+
+@section control_sidebar
+{
+    <!-- Control Sidebar -->
+    <aside class="control-sidebar control-sidebar-dark" style="height:100vh">
+        <!-- Create the tabs -->
+        <ul class="nav nav-tabs nav-justified control-sidebar-tabs">
+            <li><a href="#control-sidebar-home-tab" data-toggle="tab"><i class="fa fa-search"></i> Search</a></li>
+        </ul>
+        <!-- Tab panes -->
+        <div class="tab-content">
+            <!-- Home tab content -->
+            <div class="tab-pane active" id="control-sidebar-home-tab">
+                <form role="form" id="side_search_form" action="/Merchantman">
+                    @*<input type="hidden" name="Page" class="form-control" value="@page" />*@
+
+                    @if (cMem.SiteId == 1)
+                    {
+                        <div class="form-group">
+                            <label>Source</label><br />
+                            <select title="All Partner" data-placeholder="All" style="width: 100%; " class="form-control filter-multiple merchant-filter select2" id="Sites" name="Sites" multiple>
+                                @foreach (var site in SiteAvailables)
+                                {
+                                    <option value='@site.Id' @((TempData["Sites"] as List<int>)?.Any(x => x == site.Id) == true ? "selected" : "")>@site.Name</option>
+                                }
+                            </select>
+                        </div>
+                    }
+                    <div class="form-group">
+                        <label>Days since Created</label>
+                        <select class="form-control" id="NODaysCreated" name="NODaysCreated">
+                            <option @if (TempData["NODaysCreated"]?.ToString() == "") { @Html.Raw("selected") } value="">All</option>
+                            <option @if (TempData["NODaysCreated"]?.ToString() == "1") { @Html.Raw("selected") } value="1">7 days</option>
+                            <option @if (TempData["NODaysCreated"]?.ToString() == "2") { @Html.Raw("selected") } value="2">14 days</option>
+                            <option @if (TempData["NODaysCreated"]?.ToString() == "3") { @Html.Raw("selected") } value="3">1 month</option>
+                            <option @if (TempData["NODaysCreated"]?.ToString() == "4") { @Html.Raw("selected") } value="4">2 months</option>
+                            <option @if (TempData["NODaysCreated"]?.ToString() == "5") { @Html.Raw("selected") } value="5">3 months</option>
+                            <option @if (TempData["NODaysCreated"]?.ToString() == "6") { @Html.Raw("selected") } value="6">4 months</option>
+                            <option @if (TempData["NODaysCreated"]?.ToString() == "7") { @Html.Raw("selected") } value="7">6 months</option>
+                            <option @if (TempData["NODaysCreated"]?.ToString() == "8") { @Html.Raw("selected") } value="8">12 months</option>
+                            <option @if (TempData["NODaysCreated"]?.ToString() == "9") { @Html.Raw("selected") } value="9">Days custom</option>
+                        </select>
+                        <input type="number" name="custom_NODaysCreated" id="custom_NODaysCreated" class="form-control" style="margin-top:5px; @(TempData["NODaysCreated"]?.ToString() == "9" ? "" : "display:none")" min="0" step="1" placeholder="0" value="@TempData["number_DateCreated"]" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>At Risk</label>
+                        <select class="form-control" id="AtRisk" name="AtRisk">
+                            <option @if (TempData["AtRisk"]?.ToString() == "") { @Html.Raw("selected") } value="">All</option>
+                            <option @if (TempData["AtRisk"]?.ToString() == "1") { @Html.Raw("selected") } value="1">Expiring in 3 days and no card on profile</option>
+                            <option @if (TempData["AtRisk"]?.ToString() == "2") { @Html.Raw("selected") } value="2">Have not process credit card</option>
+                            <option @if (TempData["AtRisk"]?.ToString() == "3") { @Html.Raw("selected") } value="3">Inactive store for 7 days or more</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>State</label>
+                        <input type="text" name="State" value="@(TempData["State"]?.ToString())" id="State" class="form-control" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>City</label>
+                        <input type="text" name="City" value="@(TempData["City"]?.ToString())" id="City" class="form-control" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Zip Code</label>
+                        <input type="text" name="ZipCode" value="@(TempData["ZipCode"]?.ToString())" id="ZipCode" class="form-control" />
+                    </div>
+                    <button type="submit" name="Search" class="btn btn-primary">Search</button>
+                    <a style="margin-left:10px" href="#" onclick="clearSearch()"><i class="fa fa-undo"></i> Clear</a>
+                    <a style="margin-left:10px" href="#" onclick="closeControlSidebar()"><i class="fa fa-close"></i> Close</a>
+                </form>
+            </div>
+        </div>
+    </aside>
+    <style type="text/css">
+        .datepicker {
+        }
+
+        .control-sidebar {
+            width: 300px;
+            right: -300px;
+        }
+
+        .merchant-tab:not(.active) .badge {
+            padding: 0px;
+        }
+    </style>
+    <script type="text/javascript">
+
+
+        $(document).ready(function () {
+            if ($("#Sites").val()?.length) {
+                $("#Sites").next().find('.select2-search__field').hide();
+            }
+        });
+
+        $(".datepicker").prop("readonly", true);
+        $(".datepicker").datepicker({
+            changeMonth: true,
+            changeYear: true,
+            yearRange: '-50:+50'
+        });
+
+        $("select[name='Remaining']").on("change", function () {
+            if ($(this).val() == "9") $('#number_Remaining').show();
+            else $('#number_Remaining').hide();
+        })
+
+        $("select[name='DateCreated']").on("change", function () {
+            if ($(this).val() == "9") $('#number_DateCreated').show();
+            else $('#number_DateCreated').hide();
+        })
+
+        $('#side_search_form').submit(function (event) {
+            debugger;
+            event.preventDefault();
+            filterChange();
+            //let currentUrl = window.location.href;
+            //var url = new URL(currentUrl);
+            //// set Remaining
+            //url.searchParams.set("Remaining", $("#Remaining").val());
+            //// set number_Remaining
+            //url.searchParams.set("number_Remaining", $("#number_Remaining").val());
+            //// set Type
+            //url.searchParams.set("Type", $("#Type").val());
+            //// set NODaysCreated
+            //url.searchParams.set("NODaysCreated", $("#NODaysCreated").val());
+            //// set AtRisk
+            //url.searchParams.set("AtRisk", $("#AtRisk").val());
+            //window.location.replace(url);
+            // Your form submission code here
+        });
+
+        //function loadState(val) {
+        //    $.ajax({
+        //        method: "POST",
+        //        url: "/Merchantman/LoadListState",
+        //        dataType: "json"
+        //    })
+        //        .done(function (data) {
+        //            state = data[0];
+        //            country = data[1];
+        //            $("#state,.state").autocomplete({
+        //                source: data[0],
+        //                minLength: 0
+        //            }).focus(function () {
+        //                $(this).autocomplete('search', $(this).val())
+        //            });
+        //        })
+        //        .fail(function () {
+        //        })
+        //        .always(function () {
+        //        });
+
+        //    $("#state").val(val);
+        //}
+
+        @*function loadCountTab() {
+            var SearchText = '@(ViewBag.SearchText ?? "")';
+            var SearchBy ='@(ViewBag.SearchBy ?? "")';
+            var Type = '@(TempData["Type"] ?? "")';
+            var Remaining = '@(TempData["Remaining"] ?? "")';
+            var DateCreated = '@(TempData["DateCreated"] ?? "")';
+            var AccountManager = '@(TempData["AccountManager"] ?? "")';
+            var number_Remaining = '@(TempData["number_Remaining"] ?? "0")';
+            var number_DateCreated = '@(TempData["number_DateCreated"] ?? "0")';
+            var AtRick = '@(TempData["AtRick"] ?? "")';
+            var State = '@(TempData["State"] ?? "")';
+            var City = '@(TempData["City"] ?? "")';
+            var ZipCode = '@(TempData["ZipCode"] ?? "")';
+            var Page = '@(TempData["Page"] ?? "")';
+            var mType = '@(TempData["mType"] ?? "")';
+            var Partner = '@(TempData["Partner"] ?? "")';
+            var Tab = '@(TempData["Tab"] ?? "")'
+            var Status = '@(TempData["Status"] ?? "")'
+            $.ajax({
+                method: "POST",
+                url: "/Merchantman/LoadSearchCount",
+                dataType: "json",
+                data: { SearchText, Type, Remaining, AccountManager, number_Remaining, number_DateCreated, DateCreated, AtRick, State, City, ZipCode, Page, mType, Partner, Tab, Status }
+            })
+                .done(function (data) {
+                    $("#count-number-merchant").html(data[2]);
+                    $("#count-number-slice").html(data[3]);
+                    $("#count-number-house").html(data[4]);
+                    if (!data[0]) {
+                        noty({ "text": data[1], "layout": "topRight", "type": "error" });
+                    }
+                })
+                .fail(function () {
+                })
+                .always(function () {
+                });
+        }*@
+
+        function clearSearch() {
+            $("#side_search_form input").val("");
+            $("#side_search_form select").each(function () {
+                $("option", this).eq(0).prop('selected', true);
+            });
+        }
+
+        function isNumeric(val) {
+            return /^-?\d+$/.test(val);
+        }
+
+        @*$(function () {
+            var listSearchBy  =@Html.Raw(Json.Encode(ListSearchBy));
+
+            $("#SearchText").autocomplete({
+                minLength: 1,
+                source: function (d, e) {
+                    let arraySearch = listSearchBy;
+                    if (isNumeric(d.term)) {
+                        arraySearch = arraySearch.filter(x => x.type.includes("number"));
+                    }
+                    else {
+                        arraySearch = arraySearch.filter(x => x.type.includes("text"));
+                    }
+
+                    e(arraySearch)
+                },
+                change: function (event, ui) {
+                    let currentInput = $("#SearchText").val();
+                    if (currentInput != "") {
+                        $("#SearchText-value-description").html(currentInput);
+                    }
+                    else {
+                        $("#SearchText-description").html("");
+                    }
+                },
+                autoFocus: true,
+                focus: function (event, ui) {
+                    let currentInput = $("#SearchText").val();
+                    $("#SearchText").val(currentInput);
+                    return false;
+                },
+                select: function (event, ui) {
+                    let currentInput = $("#SearchText").val();
+                    $("#SearchText").val(currentInput);
+                    $("#SearchText-Type").val(ui.item.value);
+                    $("#SearchText-icon").html(`<span class='label-search'>${ui.item.label}</span>`);
+                 //   $("#SearchText-description").html('<i class="fa fa-info" aria-hidden="true"></i> ' + ui.item.label + " is <b id='SearchText-value-description'>" + currentInput + "</b>");
+                    $("#search_Form").submit();
+                    return false;
+                }
+            }).autocomplete("instance")._renderItem = function (ul, item) {
+                let currentInput = $("#SearchText").val();
+                    return $("<li>")
+                        .append("<div> <span>" + item.icon + "</span> " + item.label + " is <b>" + currentInput+ "</b></div>")
+                        .appendTo(ul);
+                };
+
+            $("#mSearchText").autocomplete({
+                minLength: 1,
+                source: function (d, e) {
+                    let arraySearch = listSearchBy;
+                    if (isNumeric(d.term)) {
+                        arraySearch = arraySearch.filter(x => x.type.includes("number"));
+                    }
+                    else {
+                        arraySearch = arraySearch.filter(x => x.type.includes("text"));
+                    }
+                    e(arraySearch)
+                },
+                change: function (event, ui) {
+                    let currentInput = $("#mSearchText").val();
+                    if (currentInput != "") {
+                        $("#mSearchText-value-description").html(currentInput);
+                    }
+                    else {
+                        $("#mSearchText-description").html("");
+                    }
+                },
+                autoFocus: true,
+                focus: function (event, ui) {
+                    let currentInput = $("#mSearchText").val();
+                    $("#mSearchText").val(currentInput);
+                    return false;
+                },
+                select: function (event, ui) {
+                    let currentInput = $("#mSearchText").val();
+                    $("#mSearchText").val(currentInput);
+                    $("#mSearchBy").val(ui.item.value);
+                    $("#mSearchText-icon").html(`<span class='label-search'>${ui.item.label}</span>`);
+                    //   $("#SearchText-description").html('<i class="fa fa-info" aria-hidden="true"></i> ' + ui.item.label + " is <b id='SearchText-value-description'>" + currentInput + "</b>");
+
+                    return false;
+                }
+            }).autocomplete("instance")._renderItem = function (ul, item) {
+                let currentInput = $("#mSearchText").val();
+                return $("<li>")
+                    .append("<div> <span>" + item.icon + "</span> " + item.label + " is <b>" + currentInput + "</b></div>")
+                    .appendTo(ul);
+            };
+        });*@
+        $('#add_attachment').on("change", function () {
+            if (confirm("Are you sure you want to upload this file? The data will change and cannot be undone.")) {
+                overlayOn();
+                var file = $("#add_attachment")[0].files[0];
+                var formData = new FormData();
+                formData.append("file", file);
+                $.ajax({
+                    url: "/MerchantMan/ProcessImportExcelFile",
+                    type: "POST",
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function (response) {
+                        if (response.success) 
+                        {
+                            if (response.status == 1) {
+                                success(response.message);
+                            }
+                            else {
+                                warning(response.message);
+                            }
+                          
+                            $('#example1').DataTable().ajax.reload();
+                        }
+                        else {
+                            error(response.message);
+                        }
+                      
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        alert("Error uploading file: " + textStatus);
+                    },
+                    complete: function (data) {
+                        document.getElementById("add_attachment").value = "";
+                        overlayOff();
+                    }
+                });
+            }
+        });
+    </script>
+    <!-- /.control-sidebar -->
+    <!-- Add the sidebar's background. This div must be placed
+         immediately after the control sidebar if>
+    <div class="control-sidebar-bg"></div>-->
+
+
+}

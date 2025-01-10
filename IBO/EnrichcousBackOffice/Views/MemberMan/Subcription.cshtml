@@ -1,0 +1,160 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.P_MemberSubscription>
+@using EnrichcousBackOffice.AppLB
+@{
+    ViewBag.Title = "Members Subcription";
+    Dictionary<string, bool> p = ViewBag.p;
+}
+
+
+
+<section class="content-header">
+    <h1>
+        Members Subcription
+        <small>Member management</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li><a href="/memberman/"> Member management</a></li>
+        <li class="active">Subcription</li>
+    </ol>
+
+</section>
+
+<!-- Main content -->
+<section class="content">
+    <div class="row">
+
+        <!-- /.col -->
+        <div class="col-md-12">
+            <div class="box box-default">
+                <div class="box-header">
+                    <h3 class="box-title">Members subcription</h3>
+
+                </div>
+                <div class="box-body">
+                    @if (TempData["e"] != null)
+                    {
+                        <div class="alert alert-warning alert-dismissible">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                            <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+                        </div>
+                    }
+                    else if (TempData["s"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                            <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+                        </div>
+                    }
+                    <br />
+
+                    <table id="mytable" class="table table-bordered table-striped" data-order='[[0,"desc"]]'>
+                        <thead>
+                            <tr>
+                                <th>#Date</th>
+                                <th>Full name</th>
+                                <th>Member type</th>
+                                <th>Status</th>
+                                <th style="width:150px"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td data-order="@((item.CreateAt??DateTime.MinValue).Ticks)">
+                                        <span>
+                                            @item.CreateAt.Value.UtcToIMSDateTime().ToString("MMM dd, yyyy hh:mm tt")
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <strong>@item.FirstName @item.LastName</strong>
+                                        <br /><u>Ads: </u>@item.Address @item.City @item.State @item.ZipCode @item.Country
+                                        <br /><u>Email: </u>@item.PersonalEmail
+                                        <br /><u>C.Phone: </u>@item.CellPhone
+                                    </td>
+                                    <td>
+                                        @item.MemberTypeName
+                                        @if (item.MemberType.Equals("distributor"))
+                                        {
+                                            <br /><u>Referal by: </u>@item.ReferedByName<span>(#@(item.ReferedByNumber?.ToUpper()))</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (item.ConfirmAt == null)
+                                        {
+                                            <span class="label label-default">Pending approve</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="label label-success">Approved</span>
+                                            <br /><i style="color:grey">By @item.ConfirmBy</i>
+                                            <br /><i style="color:grey">
+                                                      <span>
+                                                          @item.ConfirmAt.Value.UtcToIMSDateTime().ToString("MMM dd, yyyy hh:mm tt")
+                                                      </span>
+                                            </i>
+                                        }
+                                    </td>
+                                    <td>
+
+                                        @if (p["partners_addnewmember"] == true && item.ConfirmAt == null)
+                                        {
+                                            <a href="/memberman/subcription_approve/@item.Id" onclick="return confirm('You want to approve this member?')" class="btn btn-xs btn-primary"><i class="glyphicon glyphicon-thumbs-up"></i>  Approve</a>
+                                        }
+
+                                        <a href="/memberman/subcription_delete/@item.Id" onclick="return confirm('You want to delete this subcription?')" class="btn btn-xs btn-danger"><i class="glyphicon glyphicon-trash"></i>  Delete</a>
+
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th>#Date</th>
+                                <th>Full name</th>
+                                <th>Member type</th>
+                                <th>Status</th>
+                                <th style="width:150px"></th>
+                            </tr>
+
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+        <!-- /.col -->
+
+
+    </div>
+    <!-- /.row -->
+</section>
+
+
+@section style
+{
+    <!--datatable-->
+    <link rel="stylesheet" href="~/content/admin/bower_components/datatables.net-bs/css/dataTables.bootstrap.min.css" />
+
+}
+
+
+@section script
+{
+    <script src="~/content/admin/bower_components/datatables.net/js/jquery.dataTables.min.js"></script>
+    <script src="~/content/admin/bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js"></script>
+
+    <script type="text/javascript">
+        $('#mytable').DataTable({
+            'paging': true,
+            'lengthChange': true,
+            'searching': true,
+            'ordering': true,
+            'info': false,
+            'autoWidth': true
+        })
+    </script>
+
+
+}

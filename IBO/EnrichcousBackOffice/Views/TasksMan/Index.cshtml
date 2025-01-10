@@ -1,0 +1,212 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.Ts_Task>
+@using EnrichcousBackOffice.Models
+
+@{
+    Layout = "~/Views/TasksMan/_TaskLayout.cshtml";
+    WebDataModel db = new WebDataModel();
+    const string NotificationPage = "NotificationPage";
+    var Page = ViewBag.Page as string;
+}
+<link rel="stylesheet" href="~/Content/Tasks/StyleSheet1.css">
+<link href="~/Content/Admin/bower_components/bootstrap-daterangepicker/daterangepicker.css" rel="stylesheet" />
+<style>
+
+
+    .title-noiti {
+        display: none
+    }
+
+    .bell {
+        -webkit-animation: ring 4s .7s ease-in-out infinite;
+        -webkit-transform-origin: 50% 4px;
+        -moz-animation: ring 4s .7s ease-in-out infinite;
+        -moz-transform-origin: 50% 4px;
+        animation: ring 4s .7s ease-in-out infinite;
+        color: red
+    }
+
+    .bell-noti {
+        -webkit-animation: ring 4s .7s ease-in-out infinite;
+        -webkit-transform-origin: 50% 4px;
+        -moz-animation: ring 4s .7s ease-in-out infinite;
+        -moz-transform-origin: 50% 4px;
+        animation: ring 4s .7s ease-in-out infinite;
+    }
+
+    .myDiv {
+        display: none;
+    }
+
+
+
+    /*.select2-results__option {
+        padding-right: 20px;
+        vertical-align: middle;
+    }
+
+        .select2-results__option:before {
+            content: "";
+            display: inline-block;
+            position: relative;
+            height: 20px;
+            width: 20px;
+            border: 2px solid #e9e9e9;
+            border-radius: 4px;
+            background-color: #fff;
+            margin-right: 20px;
+            vertical-align: middle;
+        }
+
+        .select2-results__option[aria-selected=true]:before {
+            font-family: fontAwesome;
+            content: "\f00c";
+            color: #fff;
+            background-color: #117a8b;
+            border: 0;
+            display: inline-block;
+            padding-left: 3px;
+        }
+
+    .select2-container--default .select2-results__option[aria-selected=true] {
+        background-color: #fff;
+    }
+
+    .select2-container--default .select2-results__option--highlighted[aria-selected] {
+        background-color: #eaeaeb;
+        color: #272727;
+    }
+
+    .select2-container--default .select2-selection--multiple {
+        margin-bottom: 10px;
+    }
+
+    .select2-container--default.select2-container--open.select2-container--below .select2-selection--multiple {
+        border-radius: 4px;
+    }
+
+    .select2-container--default.select2-container--focus .select2-selection--multiple {
+        border-color: #f77750;
+        border-width: 2px;
+    }
+
+    .select2-container--default .select2-selection--multiple {
+        border-width: 1px;
+        height: 34px
+    }
+
+    .select2-container--open .select2-dropdown--below {
+        border-radius: 6px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    }
+
+    .select2-selection .select2-selection--multiple:after {
+        content: 'hhghgh';
+    }
+
+    .select-icon .select2-selection__placeholder .badge {
+        display: none;
+    }
+
+    .select-icon .placeholder {
+        display: none;
+    }
+
+    .select-icon .select2-results__option:before,
+    .select-icon .select2-results__option[aria-selected=true]:before {
+        display: none !important;*/
+    /* content: "" !important; */
+    /*}
+
+    .select-icon .select2-search--dropdown {
+        display: none;
+    }
+
+    .select2-container--default.select2-container--focus .select2-selection--multiple {
+        height: 34px;
+        padding-bottom: 5px;
+        border-width: 1px !important;
+    }*/
+
+    .filter {
+        width: 80px;
+        display: flex;
+        align-items: center;
+        height: 34px;
+        border: 1px solid #d2d6de;
+        padding-left: 12px;
+        text-align: center;
+    }
+
+    .ico-help {
+        display: inline-block;
+        transform: translateY(1 px );
+        color: var(--main-color-1);
+        font-size: 1em;
+        padding-left: 1px;
+    }
+
+    .dropdown-dot {
+        transition-duration: .28s;
+        transition-property: box-shadow,transform,opacity;
+        transition-timing-function: cubic-bezier(.4,0,.2,1);
+        border-radius: 50%;
+        width: 35px;
+        height: 35px;
+    }
+
+        .dots-menu.open .dropdown-dot, .dropdown-dot:hover {
+            background: #ccd0d5;
+        }
+
+        .dropdown-dot:after {
+            content: '\2807';
+            font-size: 22px;
+            left: 12px;
+            top: 3px;
+            cursor: pointer;
+            color: #686868;
+            position: absolute;
+        }
+
+        .dropdown-dot:hover:after {
+            color: black;
+        }
+
+    .font-italic {
+        font-style: italic;
+    }
+</style>
+
+
+<section class="content">
+    <div class="row">
+
+        @if (TempData["e"] != null)
+        {
+            <div class="alert alert-warning alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+            </div>
+        }
+        else if (TempData["s"] != null)
+        {
+            <div class="alert alert-success alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+            </div>
+        }
+        <div class="col-md-12">
+            <div class="box box-primary">
+                <!--<div class="box-header with-border">
+                    <h1 style="font-size:17px;margin:0px;">@(Page == NotificationPage ? "Notification": "Task")</h1>-->
+                    <!-- /.box-tools -->
+                <!--</div>-->
+                <div class="box-body">
+
+                    @Html.Action("TaskPageContent", new { Page = Page })
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

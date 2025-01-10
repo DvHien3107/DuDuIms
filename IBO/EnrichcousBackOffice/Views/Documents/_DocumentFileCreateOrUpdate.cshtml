@@ -1,0 +1,189 @@
+﻿@using EnrichcousBackOffice.Models
+@model EnrichcousBackOffice.Models.Document_File
+<div id="document_files_modal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <form id="document_files_form" action="/Documents/AddOrUpdateDocumentFilesSubmit" method="post" class="modal-content" enctype="multipart/form-data">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">@(Model.Id>0? "Update Document File" : "Add Document File")</h4>
+            </div>
+            <div class="modal-body">
+                <input name="Id" value="@Model.Id" hidden />
+                <input name="CategoryId" value="@Model.CategoryId" hidden />
+                <div class="row">
+                    <div class="col-ms-12">
+                        <div class="header-progress">
+                            <div class="progress-title">
+                                <h2>@(Model.Id>0? "Select Type" : "DOCUMENT FILES")</h2>
+                            </div>
+                            <div class="step-progress">
+                                <ul>
+                                    <li class="active-step">
+                                        <a onclick="StepOne()">Select Type</a>
+                                    </li>
+                                    <li class="step-two-header @(Model.Id>0?"active-step":"inactive-step")">
+                                        <a onclick="StepTwo()">DOCUMENT FILES</a>
+                                    </li>
+
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <div data-step="1" class="documentfile-step @(Model.Id>0?"":"active")">
+                            <div class="form-group">
+                                <div style="padding-bottom:10px;padding-top:35px;">
+                                    <span style="display:block;padding-bottom:5px;">
+                                        <label for="AttachmentType" class="label-select">
+                                            <input class="input-select" type="radio" name="Type" id="AttachmentType" value="Attachment" autocomplete="off" @(Model.Type == "Attachment" ? "checked" : "")> Attachment File (Word, Pdf, Excel ...)
+                                        </label>
+
+                                    </span>
+                                    <span style="display:block">
+                                        <label for="LinkType" class="label-select">
+                                            <input class="input-select" type="radio" name="Type" id="LinkType" value="GoogleLink" autocomplete="off" @(Model.Type == "GoogleLink" ? "checked" : "")> Google Link (Google Docs, Google Sheets, Google Slides ...)
+                                        </label>
+                                    </span>
+
+                                </div>
+                            </div>
+                        </div>
+                        <div data-step="2" style="padding-top:35px;padding-bottom:10px" class="documentfile-step @(Model.Id>0?"active":"")">
+
+
+                            <div class="form-group">
+                                <label for="DocumentFileName">Name:</label><span style="color:red"> *</span>
+                                <input class="form-control" id="DocumentFileName" name="Name" placeholder="Name" type="text" autocomplete="off" value="@Model.Name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="DocumentFileDescription">Description:</label>
+                                <textarea class="form-control" rows="4" id="DocumentFileDescription" name="Description" placeholder="Description">@Model.Description</textarea>
+                            </div>
+                            <div id="attachment_step" class="form-group" style="@(Model.Type!="Attachment"?"display:none":"")">
+                                @Html.Partial("_UploadMoreFilesPartial", ViewBag.attachments as List<UploadMoreFile>, new ViewDataDictionary() { { "upload", true } })
+                            </div>
+                            <div id="link_step" class="form-group" style="@(Model.Type!="GoogleLink"?"display:none":"")">
+                                <div class="form-group">
+                                    <label for="DocumentFileDescription">Google Link:</label><span style="color:red"> *</span>
+                                    <input type="text" class="form-control" name="Link" placeholder="Google Link" value="@Model.Link" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                <button type="button" style="@(Model.Id>0?"":"display:none")" id="previous_step" class="btn btn-default">Previous</button>
+                <button type="button" style="@(Model.Id>0?"display:none":"")" id="next_step" class="btn btn-primary">Next</button>
+                <button type="submit" style="@(Model.Id>0?"":"display:none")" id="save_form" class="btn btn-primary">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    $("#next_step").click(function () {
+        StepTwo();
+    })
+    $("#previous_step").click(function () {
+
+        StepOne();
+    })
+
+    function StepOne() {
+        $(".documentfile-step[data-step='1']").addClass('active');
+        $(".documentfile-step[data-step='2']").removeClass('active');
+        $("#previous_step").hide();
+        $("#next_step").show();
+        $("#save_form").hide();
+        $(".progress-title h2").html("SELECT TYPE");
+        $(".step-two-header").addClass("inactive-step").removeClass("active-step");
+    }
+
+    function StepTwo() {
+        @*let existFile = @(!string.IsNullOrEmpty(Model.UploadIds)?"true":"false");*@
+        var currentType = $('input[name="Type"]:checked','#document_files_form').val();
+        if (currentType == "Attachment") {
+            $("#attachment_step").show();
+            $("#link_step").hide();
+            //$("[name=AttachmentFile]", "#document_files_form").attr("required", true);
+            $("[name=Link]", "#document_files_form").attr("required", false);
+        }
+        else {
+            $("#attachment_step").hide();
+            $("#link_step").show();
+            $("#AttachmentFile").attr("required", true);
+            //$("[name=AttachmentFile]", "#document_files_form").attr("required", false);
+            $("[name=Link]", "#document_files_form").attr("required", true);
+            //if (existFile) {
+            //    $("[name=Link]", "#document_files_form").val('');
+            //}
+
+        }
+        $(".documentfile-step[data-step='1']").removeClass('active');
+        $(".documentfile-step[data-step='2']").addClass('active');
+        $("#previous_step").show();
+        $("#next_step").hide();
+        $("#save_form").show();
+        $(".step-two-header").removeClass("inactive-step").addClass("active-step");
+        $(".progress-title h2").html("DOCUMENT FILES");
+    }
+
+    $("#document_files_form").submit(function (e) {
+        @*let existFile = @(!string.IsNullOrEmpty(Model.FileName)?"true":"false");*@
+        e.preventDefault();
+        //var currentType = $('input[name="Type"]:checked', '#document_files_form').val();
+        //if (!existFile&&currentType == "Attachment" && !(document.getElementById('Attachment').files.length)) {
+        //    let error = $.parseJSON('{"text":"please select file","layout":"topRight","type":"error"}');
+        //    noty(error);
+        //    return;
+        //}
+        overlayOn();
+        var form = $(this);
+        let data = new FormData(document.getElementById("document_files_form"));
+        $.ajax({
+            type: form.attr('method'),
+            url: form.attr('action'),
+            data: data,
+            contentType: false,
+            processData: false,
+            success: function (data) {
+                if (data.status) {
+                    $("#document_files_modal").modal("hide");
+                    let success = $.parseJSON('{"text":"' + data.message + '","layout":"topRight","type":"success"}');
+                    noty(success);
+                    $(".table-document-file").DataTable().ajax.reload();
+                }
+                else {
+                    let error = $.parseJSON('{"text":"' + data.message + '","layout":"topRight","type":"error"}');
+                    noty(error);
+                }
+            },
+            error: function () {
+
+            },
+            complete: function () {
+                overlayOff();
+            }
+        })
+    })
+
+</script>
+<style>
+    .label-select {
+        font-weight: normal;
+    }
+
+    .input-select {
+        transform: translateY(2px);
+    }
+
+    .documentfile-step {
+        display: none;
+    }
+
+        .documentfile-step.active {
+            display: block;
+        }
+</style>

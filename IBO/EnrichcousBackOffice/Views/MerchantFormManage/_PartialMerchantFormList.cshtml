@@ -1,0 +1,157 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.CustomizeModel.MerchantFormView>
+@using EnrichcousBackOffice.Models
+@{
+    int page = ViewBag.Page;
+    int countPages = ViewBag.countPages;
+    var list_orders = ViewBag.ListOrder as List<O_Orders>;
+}
+
+
+<style type="text/css">
+    .pagination li a {
+        cursor: pointer;
+    }
+</style>
+
+@foreach (var mer in Model)
+{
+    <div class="col-md-6">
+        <div class="box box-primary box-solid" style="margin-top: 10px; border-radius:unset">
+            <div class="box-header with-border">
+                <h4 class="box-title" style="font-weight: normal">@mer.Name </h4>
+                <i style="color:orange"> <b>#@mer.Code<u>@mer.WordDetermine</u></b></i>
+
+                <div class="box-tools pull-left">
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                            <span class="fa fa-list-ul"></span>
+                        </button>
+                        <ul class="dropdown-menu" style="background-color:whitesmoke">
+                            <li><a href="/merchantman/detail/@mer.Code?url_back='/MerchantFormManage'" onclick="overlayOn()">Dashboard</a></li>
+                            <li><a href="javascript:void(0)" onclick="update_merchant('@mer.Id', 'false')">View detail</a></li>
+                            <li><a href="javascript:void(0)" onclick="update_merchant('@mer.Id', 'true')">Edit</a></li>
+                        </ul>
+                    </div>
+
+                    @*<a style="cursor:pointer" title="" data-toggle="tooltip" data-original-title="Delete">
+                            <i class="fa fa-list-ul"></i>
+                        </a>*@
+                </div>
+            </div>
+            <div class="box-body">
+                <!--div list group-->
+                <div class="scrollbar scroll-style-1" style="height:180px">
+                    <table class="table table-bordered table-responsive table-hover">
+                        <thead>
+                            <tr>
+                                <th style="width:5px">Status</th>
+                                <th>PDF file name</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (mer.List_pdf.Count > 0)
+                            {
+                                foreach (var form in mer.List_pdf.OrderByDescending(x => x.UpdateAt ?? x.CreateAt))
+                                {
+                                    var orderCode = list_orders.Where(o => o.Id == form.OrderId).FirstOrDefault()?.OrdersCode;
+                                    
+                                    <tr id="tr_@form.Id" onclick="ViewForSend('view','@form.Id', '@(form.TemplateName?.Split('(')[0]?.Trim() + "|" + form.MerchantCode + "|" + orderCode)'@((form.TemplateName=="DEJAVOO Z11 DATA SHEET")?", true":""))" style="cursor:pointer" title="@form.TemplateName">
+                                        <td>
+                                            @if (form.Status.Equals("completed", StringComparison.OrdinalIgnoreCase))
+                                            {@Html.Raw("<span class='label label-primary'>Signed</span>")}
+                                        else if (form.Status.Equals("sent", StringComparison.OrdinalIgnoreCase))
+                                        {@Html.Raw("<span class='label label-success'>Sent</span>")}
+                                    else if (form.Status.Equals("delivered", StringComparison.OrdinalIgnoreCase))
+                                    {@Html.Raw("<span class='label'  style='background-color:deepskyblue'>Delivered</span>")}
+                                else
+                                {@Html.Raw("<span class='label label-warning'>Uploaded</span>")}
+                                        </td>
+                                        <td>
+                                            @if (form.TemplateName.Length > 40)
+                                            {
+                                                <span style="color:dodgerblue; font-weight:bold">@(form.TemplateName.Substring(0, 40))...</span>
+                                            }
+                                            else
+                                            {
+                                                <span style="color:dodgerblue; font-weight:bold">@(form.TemplateName)</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="2">
+                                        <center><span>No file</span></center>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <!--/.End div list group-->
+                <br>
+                <div>
+                    <button type="button" class="btn btn-sm btn-info btn-flat pull-right" onclick="AddMoreFile('@mer.Code','@mer.Name')">
+                        <i class="fa fa-plus"></i> Add document
+                        <img id="addmorefile_loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+<div class="col-md-12">
+    <ul class="pagination">
+        <li @if (page == 0) { @Html.Raw("class='disabled'") }><a onclick="Load(@(page-1))"> << </a></li>
+        @for (int i = 0; i < countPages; i++)
+        {
+            <li @if (i == page) { @Html.Raw("class='active'") }><a onclick="Load(@i)">@(i + 1)</a></li>
+        }
+        <li @if (page == countPages - 1) { @Html.Raw("class='disabled'") }><a onclick="Load(@(page+1))"> >> </a></li>
+    </ul>
+</div>
+
+<script>
+    //Edit Merchant
+    function update_merchant(_id, _update, tabname = null) {
+        $.ajax({
+            method: "POST",
+            url: "/merchantman/GetMerchantInfo",
+            data: { id: _id, update: _update },
+            dataType: "html"
+        })
+            .done(function (data) {
+                $("#merchant_popup").html(data);
+                $("#modal-merchant").modal('show');
+                if (tabname != null) {
+                    $('#' + tabname).trigger('click');
+                }
+            })
+            .fail(function () {
+                alert("Oops! Something went wrong");
+                $("#modal-merchant").modal('hide');
+
+            })
+            .always(function () {
+                //$("#loading").hide();
+            });
+    }
+
+    //save edit merchant completed
+    function SaveComplete(data) {
+
+        if (data[0] == true) {
+            $('#modal-merchant').modal('toggle');
+            var Success = $.parseJSON('{"text":"' + data[2] + '", "layout":"topRight", "type":"success"}');
+            noty(Success);
+        }
+        else {
+            var Error = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"error"}');
+            noty(Error);
+        }
+
+    }
+
+</script>

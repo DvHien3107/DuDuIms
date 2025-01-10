@@ -1,0 +1,183 @@
+﻿@model EnrichcousBackOffice.Models.Document_File
+@{ 
+   var AttachmentsFile = ViewBag.Attachments as IEnumerable<EnrichcousBackOffice.Models.UploadMoreFile>;
+}
+<style>
+    .image-upload {
+        max-width: 100%;
+        height: auto;
+        max-height: 75px;
+        border-radius: 3px;
+    }
+
+    .file-avatar {
+        max-height: 75px;
+        border-radius: 3px;
+    }
+
+    .upload-table td, .upload-table th {
+        /* border: 1px solid #ddd;*/
+        padding: 8px;
+    }
+
+    .upload-table tr:nth-child(even) {
+        /*  background-color: #f2f2f2;*/
+    }
+
+    .upload-table tr:hover {
+        /* background-color: #ddd;*/
+    }
+
+    .upload-table th {
+        padding-top: 12px;
+        padding-bottom: 12px;
+        text-align: left;
+        /*   background-color: #04AA6D;*/
+        color: white;
+    }
+
+    .files-upload-wrapper {
+        border: 2px dashed #ccc;
+        border-radius: 5px;
+    }
+
+    .upload-table {
+        width: 100%;
+    }
+
+        .upload-table tr td:first-child {
+            width: 30%;
+        }
+    .icon-detail-file{
+        font-size:17px;
+    }
+</style>
+<div id="document_file_detail_modal" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-lg" style="@(Model.Type != "Attachment"?"width:95vw":"")">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+
+                <h4 class="modal-title">
+                    @(Model.Name)
+                    @if (Model.Type != "Attachment")
+                    {
+                        <a target="_blank" href="@Model.Link" style="font-size: 15px;margin-left: 10px;">
+                            <i class="fa fa-external-link" aria-hidden="true" style="transform: translateY(1px);"></i> Open in new tab
+                        </a>
+                    }
+
+                </h4>
+            </div>
+            <div class="modal-body" style="position:relative;@(Model.Type != "Attachment"?"min-height:95vh":"min-height:45vh")">
+
+                @if (Model.Type == "Attachment")
+                {
+                    <div class="files-upload-wrapper">
+                        <table class="upload-table">
+                            @if (AttachmentsFile.Count() > 0)
+                            {
+                                foreach (var item in AttachmentsFile)
+                                {
+                                    string filename = "";
+                                    if (item.FileName.Length > 30)
+                                    {
+                                        filename = "..." + item.FileName.Substring(item.FileName.Length - 30);
+                                    }
+                                    else
+                                    {
+                                        filename = item.FileName;
+                                    }
+
+
+                                    <!--khong cho phep update-->
+                                    var avatar = "";
+                                    if (item.FileName.ToLower().LastIndexOf(".pdf") == item.FileName.ToLower().Length - 4)
+                                    {
+                                        avatar = "/upload/img/pdf.png";
+                                    }
+                                    else if (item.FileName.ToLower().LastIndexOf(".doc") == item.FileName.ToLower().Length - 4 || item.FileName.ToLower().LastIndexOf(".docx") == item.FileName.Length - 5)
+                                    {
+                                        avatar = "/upload/img/word.png";
+                                    }
+                                    else if (item.FileName.ToLower().LastIndexOf(".xls") == item.FileName.ToLower().Length - 4 || item.FileName.ToLower().LastIndexOf(".xlsx") == item.FileName.Length - 5)
+                                    {
+                                        avatar = "/upload/img/excel.png";
+                                    }
+                                    else if (item.FileName.ToLower().LastIndexOf(".mp4") == item.FileName.ToLower().Length - 4 || item.FileName.ToLower().LastIndexOf(".webm") == item.FileName.Length - 5)
+                                    {
+                                        avatar = "/content/img/video-placeholder.png";
+                                    }
+
+                                    if (string.IsNullOrEmpty(item.FileName) == false)
+                                    {
+                                        if (item.FileName.Contains("http") == false && item.FileName.Contains("www") == false)
+                                        {
+
+                                            <tr>
+                                                @if (string.IsNullOrEmpty(avatar) == true)
+                                                {
+                                                    <td><img class="image-upload" src="@item.FileName" onerror="this.onerror=null; this.src='/Upload/Img/no_image.jpg'" /></td>
+                                                }
+                                                else
+                                                {
+                                                    <td><img class="file-avatar" src="@avatar" onerror="this.onerror=null; this.src='/Upload/Img/no_image.jpg'" /></td>
+                                                }
+
+                                                <td>@filename</td>
+                                                <td>
+                                                    <a class="icon-detail-file" style="padding-left:10px" href="@item.FileName" target="_blank" title="" data-original-title="View file">
+                                                        <i class="glyphicon glyphicon-zoom-in"></i>
+                                                    </a>
+
+                                                    <a class="icon-detail-file" style="padding-left:10px" href="@Url.Action("downloadfile", "upload", new {area = "", id = item.UploadId })" data-toggle="tooltip" data-original-title="Download">
+                                                        <i class="fa fa-download"></i>
+                                                    </a>
+
+                                                </td>
+                                            </tr>
+                                        }
+                                        else
+                                        {
+
+                                            <tr>
+                                                <td><img class="image-upload" alt="" src="@item.FileName" /></td>
+                                                <td>@filename</td>
+                                                <td>
+                                                    <a class="icon-detail-file" style="padding-left:10px" href="@item.FileName" target="_blank" title="" data-original-title="View file">
+                                                        <i class="fa fa-download"></i>
+                                                    </a>
+                                                </td>
+                                            </tr>
+
+                                        }
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td><span style="color:#6c6c6c">No File Uploaded</span></td>
+                                </tr>
+                            }
+
+                        </table>
+                    </div>
+
+                }
+                else
+                {
+                    <iframe src="@Model.Link" frameborder="0" style="overflow:hidden;height:100%;width:98%;position:absolute" height="100%" width="100%"></iframe>
+                }
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+             
+            </div>
+        </div>
+           
+       
+    </div>
+</div>

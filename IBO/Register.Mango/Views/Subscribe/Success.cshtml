@@ -1,0 +1,236 @@
+﻿
+@{
+    ViewBag.Title = "Success";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@{
+    ViewBag.title = "Trial Account Successfully Create";
+}
+@section css{
+    <style>
+        *,
+        .row,
+        div,
+        p {
+            margin: 0;
+            padding: 0;
+        }
+
+        body,
+        html {
+            width: 100%;
+            height: 100vh;
+            position: relative;
+            background-color: #03bed5;
+            font-family: "Montserrat";
+            font-weight: 400;
+        }
+
+        .master-wrapper-page {
+            width: 100%;
+            min-height: 100vh;
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: -moz-box;
+            display: -ms-flexbox;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            background-size: cover;
+            background-attachment: fixed;
+            height: 100%;
+            background-position: center;
+        }
+
+        .form-register-wrapper {
+            width: 50%;
+            max-width: 600px;
+            -webkit-box-shadow: 10px 6px 25px -13px rgba(0,0,0,0.75);
+            -moz-box-shadow: 10px 6px 25px -13px rgba(0,0,0,0.75);
+            box-shadow: 10px 6px 25px -13px rgba(0,0,0,0.75);
+            position: relative;
+            border-radius: 6px;
+            border-left: 1px solid #69d8e6;
+            border-top: 1px solid white;
+        }
+
+        .logo img {
+            width: 60%;
+        }
+
+        .list-icon {
+            list-style: none;
+            margin-bottom: 0;
+        }
+
+        .header {
+            justify-content: space-between;
+            align-items: center;
+            background-image: linear-gradient(to right, #03bed5, #04d4ec);
+            padding: 15px 30px;
+            position: relative;
+            z-index: 99;
+        }
+
+        .list-icon li {
+            width: 8px;
+            margin-bottom: 6px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: white;
+        }
+
+        .form-content {
+            background-color: white;
+            border-radius: 0px 0px 8px 8px;
+            min-height: 300px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            z-index: 9;
+        }
+
+
+
+
+        .circle-1 {
+            position: absolute;
+            width: 30%;
+            padding-bottom: 30%;
+            top: -7%;
+            right: -9%;
+            z-index: 1;
+            -webkit-filter: blur(3px);
+            background-color: #b2e1e65c;
+            border-radius: 50%;
+        }
+
+
+
+        .circle-2 {
+            position: absolute;
+            border-radius: 50%;
+            width: 50%;
+            padding-bottom: 50%;
+            bottom: -20%;
+            left: -25%;
+            overflow: hidden;
+            z-index: 1;
+            -webkit-filter: blur(3px);
+            background-color: #b2e1e65c;
+            border-radius: 50%;
+        }
+
+        .title-thank-1 {
+            color: #03bed5;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+            .title-thank-1 .span1 {
+                font-size: 30px;
+                font-weight: 600;
+            }
+
+            .title-thank-1 .span2 {
+                font-size: 25px;
+                font-weight: 400;
+            }
+
+        .title-thank-2 {
+            text-transform: uppercase;
+            color: #757676;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        @@media all and (max-width: 769px) {
+            .form-register-wrapper {
+                margin: 1rem 0px;
+                min-width: 400px;
+            }
+        }
+
+        @@media all and (max-width: 481px) {
+            .title-thank-1 .span1 {
+                font-size: 25px;
+                font-weight: 600;
+            }
+
+            .title-thank-1 .span2 {
+                font-size: 20px;
+                font-weight: 400;
+            }
+
+            .circle-1 {
+                right: -3%;
+            }
+
+            .form-register-wrapper {
+                margin: 1rem 0px;
+                min-width: 300px;
+            }
+
+            .title-1, .title-2 {
+                font-size: 17px;
+            }
+
+            .title-register {
+                font-size: 25px;
+            }
+        }
+    </style>
+}
+<div class="master-wrapper-page">
+    <div class="form-register-wrapper">
+
+        <div class="header d-flex">
+            <div class="logo">
+                <img src="/images/logo.png" />
+            </div>
+        </div>
+        <div class="form-content">
+            @if (ViewBag.IsSendEmail == true)
+            {
+                <div class="content">
+                    <div class="title-thank-1">
+                        <span class="span1">Trial Account Successfully Create</span>
+                    </div>
+                    <div class="line" style=" width: 60%;height: 1px;margin: auto; background: #757676;"></div>
+                    <div class="title-thank-2">
+                        Please click on the link that has just been sent to your email account to verify your email and continue the registration process.<br />
+                        Email verification sent. Please verify your email to receive login credentials.<br />
+                        <br />
+                        Support Phone: +1 (404) 902-5252.
+                    </div>
+                </div>
+            }
+            else
+            { 
+                <div class="content">
+                    <div class="title-thank-1">
+                        <span class="span1">THANK YOU</span>
+                    </div>
+                    <div class="line" style=" width: 60%;height: 1px;margin: auto; background: #757676;"></div>
+                    <div class="title-thank-2">
+                        Thank you for your subscribe.
+                        <br />
+                        Support Phone: +1 (404) 902-5252.
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="circle-1">
+
+        </div>
+        <div class="circle-2">
+
+        </div>
+    </div>
+
+</div>

@@ -1,0 +1,663 @@
+﻿@model EnrichcousBackOffice.Models.Ts_Task
+@using EnrichcousBackOffice.Models.CustomizeModel
+@using EnrichcousBackOffice.Models
+@using EnrichcousBackOffice.Services.Tickets
+
+@{
+    //Huong dan su dung Task Popup
+    //--- HTML
+    //@Html.Partial("_TaskPopupPartial", new Ts_Task(), new ViewDataDictionary { { "ts_update", false } })
+    //--- Java Script
+    //Goi function: update_task(_action, _id, _update, ticket_id, ticket_name) --- de goi popup
+    //_action (true/false) -- true:co quyen thao tac tat ca cac task
+    //_id la TaskId
+    //_update == 'true' --- la Add New or Edit
+    //_update == 'false' -- la View Detail
+    //truyen vao ticket_id va ticket_name neu Add Task tu Ticket
+
+    bool ts_update = bool.Parse(ViewData["ts_update"]?.ToString());
+
+    var list_ticket = new List<T_SupportTicket>();
+    if (ViewBag.ListTicket != null)
+    {
+        list_ticket = ViewBag.ListTicket as List<T_SupportTicket>;
+    }
+
+    var list_member = ViewBag.ListMember as List<MemberSelect_View> ?? new List<MemberSelect_View>();
+    var task_files = ViewBag.TaskFiles as List<UploadMoreFile>;
+    var list_subtask = ViewBag.ListSubTask as List<Ts_Task_session> ?? new List<Ts_Task_session>();
+    int percent_complete = 0;
+    int subtask_complete = list_subtask?.Where(st => st.Complete == true).Count() ?? 0;
+    int subtask_all = list_subtask?.Count() ?? 0;
+
+    if (list_subtask != null && list_subtask.Count() > 0)
+    {
+        //list_subtask = ViewBag.ListSubTask as List<Ts_Task>;
+
+        if (list_subtask.Count() > 0)
+        {
+            percent_complete = (int)((float)list_subtask.Where(st => st.Complete == true).Count() / list_subtask.Count() * 100);
+        }
+    }
+    else
+    {
+        subtask_complete = Model.Complete == true ? 1 : 0;
+        percent_complete = Model.Complete == true ? 100 : 0;
+    }
+
+    var Reminder = new EnrichcousBackOffice.Models.T_RemindersTicket();
+    DateTime? currentDate = null;
+    if (Model.TicketId > 0)
+    {
+        Reminder = ViewBag.Reminders as EnrichcousBackOffice.Models.T_RemindersTicket;
+        if (Reminder?.Id > 0)
+        {
+            currentDate = Reminder.Date + Reminder.Time;
+        }
+
+    }
+}
+
+
+<!--Modal content-->
+<style>
+    .reminder-task-wrapper {
+        background-color: #ffffff;
+        margin-top: 20px;
+    }
+
+        .reminder-task-wrapper.active {
+            border: 1px solid #d3d3d3;
+        }
+
+    .body-reminder {
+        padding: 0px 15px;
+    }
+</style>
+
+@if (string.IsNullOrWhiteSpace(ViewBag.err) == true)
+{
+
+
+    //using (Ajax.BeginForm("Save", null, new AjaxOptions
+    //{
+    //    HttpMethod = "POST",
+    //    OnSuccess = "TaskSaveComplete",
+    //    OnFailure = "TaskSaveError",
+
+
+    //}, new { id = "taskform", enctype = "multipart/form-data", onsubmit = "overlayOn()" }))
+    //{
+    <form id="task_template_form" action="/tasksman/Save" method="post" class="modal-content" enctype="multipart/form-data">
+        <div>
+            <div class="modal-header">
+                <button type="button" class="close" style="font-size:2em" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+
+                @if (Model.Id > 0)
+                {
+                    <h4 id="modal-merchant-title" class="modal-title">Update Task</h4>
+                }
+                else
+                {
+                    <h4 id="modal-merchant-title" class="modal-title">Add Task</h4>
+                }
+            </div>
+
+            <div class="modal-body custom-scroll">
+                <div class="row">
+                    <input type="hidden" name="ts_id" value="@Model.Id" />
+                    <input type="hidden" name="TicketId" value="@Model.TicketId" />
+
+                    <div class="col-md-9" style="border-right: 1px solid lightgray">
+
+                        <div class="form-group hide">
+
+                            @if (ViewBag.Ticket != null)
+                            {
+                                <label class="control-label">Ticket</label>
+                                <input type="text" class="form-control" name="ticket" value="@ViewBag.Ticket" readonly />
+                            }
+                            else if (Model.TicketId > 0)
+                            {
+                                <label class="control-label">Ticket</label>
+                                <select class="form-control" name="ticket_id">
+                                    <option value="">--N/A--</option>
+                                    @foreach (var item in list_ticket)
+                                    {
+                                        <option @if (Model.TicketId == item.Id) { @Html.Raw("selected") } value="@item.Id">#@EnrichcousBackOffice.AppLB.CommonFunc.view_TicketId(item.Id) - @(item.Name)</option>
+                                    }
+                                </select>
+                            }
+                        </div>
+                        <div class="form-group" style="margin-bottom:0px">
+                            <label class="control-label">Task Name <span style="color:red">*</span></label>
+                            <textarea type="text" class="form-control" name="Name" required rows="3">@Model.Name</textarea>
+                        </div>
+                        @Html.Partial("_UploadAttachments", task_files ?? new List<UploadMoreFile>(), new ViewDataDictionary { { "upload", ts_update }, { "unique", Model.Id } })
+                        <div class="form-group">
+                            <label class="control-label">Assigned To</label>
+                            <select id="Assigned_select" class="form-control taskselect2" name="task_assign" style="width:100%" multiple onchange="ShowPicture($(this).val())">
+                                @foreach (var item in list_member)
+                                {
+                                    <option @if (Model.AssignedToMemberNumber != null && Model.AssignedToMemberNumber.Contains(item.MemberNumber)) { @Html.Raw("selected") } value="@(item.MemberNumber)">@(item.Name) - #@(item.MemberNumber)</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="box-body no-padding" style="background-color: #F0F0F0; margin-bottom:20px">
+                            <ul class="users-list clearfix" id="list_img">
+                            </ul>
+                            <!-- /.users-list -->
+                        </div>
+
+                    </div>
+                    <div class="col-md-3" style="border-left: 1px solid lightgray; margin-left:-1px">
+                        <div class="form-group">
+                            <label class="control-label">Recurring:</label>&nbsp;&nbsp;&nbsp;<br />
+                            <label style="cursor:pointer">
+                                Weekly <input type="checkbox" id="chk_weekly" class="minimal" name="chk_weekly" @if (Model.ReminderWeeklyAt != null) { @Html.Raw("checked") } value="1" />
+                            </label>
+                            &nbsp;&nbsp;&nbsp;
+                            <label style="cursor:pointer">
+                                Monthly <input type="checkbox" id="chk_monthly" class="minimal" name="chk_monthly" @if (Model.ReminderMonthlyAt != null) { @Html.Raw("checked") } value="1" />
+                            </label>
+                            <br />
+
+                            <div id="reminder_weekly" class="col-md-12" @if (Model.ReminderWeeklyAt == null) { @Html.Raw("style='display:none'") }>
+                                <label style="font-weight: normal"><input type="radio" class="minimal" name="r_weekly" value="1" @if (Model.ReminderWeeklyAt == 1 || Model.ReminderWeeklyAt == null) { @Html.Raw("checked") } /> Monday</label><br />
+                                <label style="font-weight: normal"><input type="radio" class="minimal" name="r_weekly" value="2" @if (Model.ReminderWeeklyAt == 2) { @Html.Raw("checked") } /> Tuesday</label><br />
+                                <label style="font-weight: normal"><input type="radio" class="minimal" name="r_weekly" value="3" @if (Model.ReminderWeeklyAt == 3) { @Html.Raw("checked") } /> Wednesday</label><br />
+                                <label style="font-weight: normal"><input type="radio" class="minimal" name="r_weekly" value="4" @if (Model.ReminderWeeklyAt == 4) { @Html.Raw("checked") } /> Thursday</label><br />
+                                <label style="font-weight: normal"><input type="radio" class="minimal" name="r_weekly" value="5" @if (Model.ReminderWeeklyAt == 5) { @Html.Raw("checked") } /> Friday</label><br />
+                            </div>
+                            <div id="reminder_monthly" class="form-group" @if (Model.ReminderMonthlyAt == null) { @Html.Raw("style='display:none'") }>
+                                <select name="r_monthly" class="form-control">
+                                    @for (int i = 1; i <= 30; i++)
+                                    {
+                                        <option @if (Model.ReminderMonthlyAt == i) { @Html.Raw("selected") } value="@i">@i</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label">Due date</label>
+                            <input type="text" id="deadline" class="form-control" name="DueDate" value="@(Model.DueDate?.ToString("MM/dd/yyyy"))" placeholder="MM/dd/yyyy" autocomplete="off" />
+                        </div>
+
+                    </div>
+                    <div class="col-md-10 col-xs-9 col-sm-9">
+                        <div class="form-group">
+                            <span id="_noty" class="pull-left"><i class="fa fa-pencil-square-o" style="color:#00a65a"></i> <span class="count_done">@(subtask_complete)</span>/<span class="count_all">@(subtask_all==0?1: subtask_all)</span> </span>
+                            <span id="_percent" class="pull-right" style="color:green"><b>@(percent_complete)%</b></span>
+                            <div class="clearfix"></div>
+                            <div class="progress progress-xs">
+                                <div id="progress_bar" class="progress-bar progress-bar-success progress-bar-striped" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: @(percent_complete)%">
+                                    <span class="sr-only">60% Complete (success)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2 col-xs-3 col-sm-3" style="padding-left:0px">
+                        <div style="margin:auto; margin-top:10px; border: 1px solid #eee; text-align:center">
+                            <label class="control-label" style="cursor:pointer;">
+                                <input type="checkbox" class="minimal" id="complete_task" name="complete_task" value="1" @if (Model.Complete == true) { @Html.Raw("checked") } /> ALL Completed
+                            </label>
+                        </div>
+                    </div>
+                    @*<div class="col-md-7">
+
+        </div>
+        <div class="col-md-3" style="border-left:1px dotted lightgray; border-right:1px dotted lightgray">
+
+
+
+        </div>
+        <div class="col-md-2">
+
+        </div>*@
+                    <div class="clearfix"></div>
+                    <div id="list_subtask">
+                        <div class="col-md-12">
+                            <input type="hidden" id=" " name="sub_number_hd" value="1" />
+                            <table class="table table-bordered table-striped" style="margin-bottom:0">
+                                <thead>
+                                    <tr>
+                                        <th class="text-center">
+                                            <label class="pull-left" style="line-height:29px;">Sub tasks</label>
+                                            <button onclick="save_subtask('addnew','');" type="button" class="btn btn-success"><i class="fa fa-plus" aria-hidden="true"></i> Add Sub Task</button>
+                                        </th>
+                                        <th style="width:100px">
+                                            <label>Completed</label>
+
+                                        </th>
+                                        @if (ts_update)
+                                        {
+                                            <th style="width: 50px"><label>Action</label></th>
+                                        }
+                                    </tr>
+                                </thead>
+                                <tbody id="subtask_body">
+                                    @if (list_subtask != null && list_subtask.Count() > 0)
+                                    {
+                                        foreach (var item in list_subtask)
+                                        {
+                                            <tr id="div_subtask_@item.Id">
+                                                <td>
+                                                    <input type="hidden" name="subtask_id" value="@item.Id" />
+                                                    <input type="text" class="form-control" name="sub_name_@item.Id" value="@item.Name" required />
+                                                    @Html.Partial("_UploadAttachments", item.Files ?? new List<UploadMoreFile>(), new ViewDataDictionary { { "upload", ts_update }, { "unique", item.Id } })
+                                                </td>
+
+                                                <td>
+                                                    <center><input type="checkbox" id="chk_@item.Id" name="chk_@item.Id" class="check_completed" @if (item.Complete == true) { @Html.Raw("checked") } onclick="changeComplete()" style="cursor:pointer" /></center>
+                                                </td>
+                                                @if (ts_update)
+                                                {
+                                                    <td>
+                                                        <button type="button" class="btn btn-sm btn-danger" id="btn_del_@item.Id" title="Delete" onclick="detete_sub('@item.Id')"><i class="fa fa-trash-o"></i></button>
+                                                    </td>
+                                                }
+                                            </tr>
+                                        }
+                                    }
+                                    @*@if (ts_update)
+                        {
+                            var newsub_id = DateTime.UtcNow.ToString("yyMMddhhmmssfff");
+                            @Html.Partial("_new_subtask", newsub_id)
+                        }*@
+
+
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="col-md-12" style="margin-top:15px;">
+                        <div class="form-group">
+                            <label class="control-label">Note</label>
+                            <textarea class="form-control" name="Note">@Model.Note</textarea>
+                        </div>
+                    </div>
+                    @if (Model.TicketId > 0)
+                    {
+                        <div class="col-md-12">
+                            <div class="reminder-task-wrapper @(Reminder?.Id>0?"active":"")">
+                                <div style="display: inline-flex; transform: translateY(-11px); background: white; padding: 0px 5px; ">
+                                    <label class="control-label">Reminders</label>
+                                    <div>
+                                        <div class="">
+                                            <label class="switch " style="vertical-align: text-top;margin-left:5px">
+                                                <input id="enable_reminder_edit" name="enableReminder" value="true" type="checkbox" @(Reminder?.Id > 0 ? "checked" : "")>
+                                                <span class="slider round"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="body-reminder" style="@(Reminder?.Id>0?"":"display:none")">
+                                    <div class="row">
+                                        <div class="col-sm-7">
+                                            <div class="form-group">
+                                                <label>Time <span id="gmt-feedback"></span>:</label>
+                                                <div style="display:flex;">
+                                                    <input placeholder="Date" autocomplete="off" id="date-reminder-edit" class="form-control" @(Reminder?.Id > 0 ? "required" : "") />
+                                                    <input placeholder="Time" autocomplete="off" style="margin-left:5px" id="time-reminder-edit" class="form-control" @(Reminder?.Id > 0 ? "required" : "") />
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-5">
+                                            <div class="form-group">
+                                                <label>Repeat:</label>
+                                                <select name="Repeat" class="form-control">
+                                                    <option value="@RepeatDefine.Never" @(Reminder?.Repeat == @RepeatDefine.Never ? "selected" : "")>Never</option>
+                                                    <option value="@RepeatDefine.Daily" @(Reminder?.Repeat == @RepeatDefine.Daily ? "selected" : "")>Daily</option>
+                                                    <option value="@RepeatDefine.Weekly" @(Reminder?.Repeat == @RepeatDefine.Weekly ? "selected" : "")>Weekly</option>
+                                                    <option value="@RepeatDefine.Monthly" @(Reminder?.Repeat == @RepeatDefine.Monthly ? "selected" : "")>Monthly</option>
+                                                </select>
+
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Note:</label>
+                                        <textarea name="Note" class="form-control" rows="3"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+
+
+                @if (ts_update)
+                {
+                    if (Model.Id > 0)
+                    {
+                        <button  class="btn btn-danger" onclick="deleteTask('@Model.Id')" type="button">
+                            Delete
+                            <img id="delete_loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                        </button>
+                        <button @*type="submit"*@ class="btn btn-primary" type="submit">
+                            Update
+                            <img id="submit_loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                        </button>
+                    }
+                    else
+                    {
+                        <button @*type="submit"*@ type="submit" class="btn btn-primary">
+                            Save
+                            <img id="submit_loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                        </button>
+                    }
+                }
+
+            </div>
+
+        </div>
+       </form>
+
+
+        }
+        else
+        {
+
+        <div>
+            <div class="modal-header">
+                <button type="button" class="close" style="font-size:2em" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 id="modal-task-title" class="modal-title">@Model.Name</h4>
+
+            </div>
+        </div>
+        <div class="modal-body">
+            <strong>@ViewBag.err</strong>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        </div>
+
+        }
+
+
+
+        <script>
+    function changeComplete() {
+        refresh_progress_bar();
+    }
+    $(function () {
+        $("#Assigned_select").trigger("change");
+        var list_subtask = '@string.Join(",", list_subtask.Select(c => c.Id))'.split(',');
+
+        //$("#taskform").on("keydown", "input", function (e) {
+        //    if (e.which == 13) {
+        //        if (e.target.id == 'submit-subtask') {
+        //            if (e.target.name.replace('sub_name_', '') == $('input[name^=sub_name_]')[$('input[name^=sub_name_]').length - 1].name.replace('sub_name_', '')) {
+        //                save_subtask('addnew', e.target.name.replace('sub_name_', ''));
+        //            }
+        //        }
+        //        e.preventDefault();
+        //    }
+        //});
+
+
+        $("#complete_task").on("ifChecked", function () {
+            var new_check = $('.check_completed');
+            if (new_check.length) {
+                new_check.prop('checked', true);
+                refresh_progress_bar();
+            }
+            else {
+                refresh_progress_bar();
+            }
+        })
+        $("#complete_task").on("ifUnchecked", function () {
+            debugger;
+            var new_check = $('.check_completed');
+            if ($('.check_completed:not(:checked)').length == 0) {
+                if (new_check.length) {
+                    new_check.prop('checked', false);
+                    refresh_progress_bar();
+                }
+                else {
+                    setTimeout(function () {
+                        $("#complete_task").iCheck('uncheck');
+                        refresh_progress_bar();
+                    }, 0);
+
+                }
+            }
+
+        })
+
+    @if (ts_update)
+    {
+        <text>
+        $(".taskselect2").select2();
+        $('input[type="checkbox"].minimal, input[type="radio"].minimal').iCheck({
+            checkboxClass: 'icheckbox_minimal-blue',
+            radioClass: 'iradio_minimal-blue'
+        });
+
+        //Inactive checked khi xem chi tiet
+        $('input[type="checkbox"].inactive_unchecked').on('ifChanged', function (e) {
+            var isChecked = e.currentTarget.checked;
+            if (isChecked == false) {  //neu uncheck thi gan lai la check
+                this.iCheck('check');
+            }
+            else {  //neu uncheck thi gan lai la check
+                this.iCheck('uncheck');
+            }
+        });
+
+        $('#chk_weekly').on('ifChecked', function () {
+            $('#reminder_weekly').show("500");
+            $('#chk_monthly').iCheck('uncheck');
+            $('#reminder_monthly').hide("500");
+        });
+        $('#chk_weekly').on('ifUnchecked', function () {
+            $('#reminder_weekly').hide("500");
+
+        });
+        $('#chk_monthly').on('ifChecked', function () {
+            $('#reminder_monthly').show("500");
+            $('#chk_weekly').iCheck('uncheck');
+            $('#reminder_weekly').hide("500");
+        });
+        $('#chk_monthly').on('ifUnchecked', function () {
+            $('#reminder_monthly').hide("500");
+        });
+        //Datepicker
+        $("#deadline").datepicker({
+            changeMonth: true,
+            changeYear: true,
+            yearRange: '1950:2050'
+        });
+
+        $(".datepicker_jq").datepicker({
+            changeMonth: true,
+            changeYear: true,
+            yearRange: '1950:2050'
+        });
+        </text>
+    }
+    else
+    {
+                <text>
+        $("#Assigned_select").off().hide();
+
+        var task = $("#taskform textarea[name=Name]");
+        task.before($(`<div class='note_view'>${task.val().replace(/\n/g,"<br/>")}</div>`));
+        task.remove();
+        $("#taskform input:checkbox").each(function (i, v) {
+            $(v).before($(`<i class="fa fa${($(v).is(':checked') ? '-check' : "")}-square-o" style="font-size:1.4em; vertical-align: sub;color: #0075ff"></i>`));
+            $(v).remove();
+        });
+        $("#taskform input:radio").each(function (i, v) {
+            $(v).before($(`<i class="fa fa${($(v).is(':checked') ? '-check' : "")}" style="font-size:1em; vertical-align: sub;color: #0075ff; float:right; margin-left:5px"></i>`));
+            $(v).remove();
+        });
+        $("#taskform input:text").each(function (i, v) {
+            $(v).before($(`<div class='note_view'>${$(v).val()}</div>`));
+            $(v).remove();
+        });
+        </text>
+        }
+    });
+
+    function read(input) {
+        if (input[0].files && input[0].files[0]) {
+            var reader = new FileReader();
+            var el = input.next('input');
+            reader.onload = function (e) {
+                el.val(e.target.result);
+            };
+            //$(this).next('a').html($(this)[0].files[0].name).attr('href', $(this)[0].files[0].name)
+            reader.readAsDataURL(input[0].files[0]);
+        }
+    }
+    //function Submit(key) {
+    //if (key == "save") {
+    //$("#save_submit_loading").show();
+    //$("#update_submit_loading").hide();
+    //}
+    //else {
+    //$("#update_submit_loading").show();
+    //$("#save_submit_loading").hide();
+    //}
+
+    //return true;
+    //}
+
+    function ShowPicture(list_id) {
+
+        $.ajax({
+            method: "POST",
+            url: "/TasksMan/GetPicture",
+            data: { list_id: list_id.join(",") },
+            dataType: "json"
+        })
+            .done(function (data) {
+                if (data[0] == true) {
+                    $("#list_img").empty();
+                    for (var i = 0; i < data[1].length; i++) {
+                        $("#list_img").append("<li><img src=\"" + (data[1][i]["Picture"] || "/Upload/Img/no_image.jpg") + "\" onerror=\"this.src='/Upload/Img/no_image.jpg'\" style='width:70px; height:70px;object-fit: cover;' alt=\"User Image\"><a class=\"users-list-name\" href=\"#\">" + data[1][i]["FullName"] + "</a></li>");
+                    }
+                }
+            })
+            .fail(function () {
+            });
+    }
+
+
+    @if(Model.TicketId>0){
+        <text>
+       $("#enable_reminder_edit").change(function () {
+        if ($(this).is(":checked")) {
+            $(".reminder-task-wrapper").addClass('active');
+            $(".body-reminder").slideDown();
+            $('#date-reminder-edit').attr("required", "required");
+            $('#time-reminder-edit').attr("required", "required");
+        }
+        else
+        {
+            $(".reminder-task-wrapper").removeClass('active');
+            $(".body-reminder").slideUp();
+            $('#date-reminder-edit').removeAttr("required");
+            $('#time-reminder-edit').removeAttr("required");
+        }
+       })
+     $('#date-reminder-edit').datepicker();
+        $('#time-reminder-edit').datetimepicker({
+            format: 'LT',
+        });
+
+   @if (Reminder?.Id > 0)
+    {
+        <text>
+
+       $('#date-reminder-edit').datepicker('setDate', moment("@string.Format("{0:r}", currentDate)").toDate());
+       $('#time-reminder-edit').data('DateTimePicker').date(moment("@string.Format("{0:r}", currentDate)"));
+        </text>
+    }
+            </text>
+    }
+function deleteTask(Id) {
+    if (confirm("are you sure delete this task ?")) {
+        overlayOn();
+        $.ajax({
+            type: "POST",
+            url: "/TasksMan/Delete",
+            data: { Id }, // serializes the form's elements.
+            success: function (data) {
+                if (data.status) {
+                    success(data.message);
+                    $("#modal-task").modal("hide");
+                    if (window.location.href.search(/ticket|development/ig) > 0) {
+                        GetTaskStatusList();
+                        Gettimeline();
+                    }
+                    else {
+                        $("#taskTable").DataTable().ajax.reload();
+                    }
+                }
+                else {
+                    error(data.message);
+                }
+            },
+            error: function (xhr) {
+                alert("Error occured.please try again");
+            },
+            complete: function () {
+                overlayOff();
+            },
+        });
+    }
+   
+}
+
+$("#task_template_form").submit(function (e) {
+    e.preventDefault(); // avoid to execute the actual submit of the form.
+    overlayOn();
+    var form = $(this);
+    var url = form.attr('action');
+    let dataForm = new FormData(document.getElementById("task_template_form"));
+  
+    if ($("#enable_reminder_edit").is(":checked")) {
+        var date = $('#date-reminder-edit').datepicker('getDate');
+        var time = $("#time-reminder-edit").data("DateTimePicker").date().toDate();
+        dataForm.append("GMT", moment().format("Z"));
+        dataForm.append("Date", $.datepicker.formatDate('M-dd-yy', date))
+        dataForm.append("Time", time.getHours() + ":" + time.getMinutes() + ":00")
+    }
+    $.ajax({
+        type: "POST",
+        url: url,
+        data: dataForm, // serializes the form's elements.
+        contentType: false,
+        processData: false,
+        success: function (data) {
+            TaskSaveComplete();
+        },
+        error: function (xhr) {
+            alert("Error occured.please try again");
+        },
+        complete: function () {
+            overlayOff();
+        },
+    });
+});
+        </script>
+        <style>
+            .note_view {
+                padding: 10px 20px;
+                border: 1px solid #eee;
+                background-color: #fff;
+            }
+        </style>

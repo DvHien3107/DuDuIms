@@ -1,0 +1,14 @@
+#Invoice_Detail {
+    padding: 40px;
+}
+@media (min-width: 768px) {
+    #Invoice_Detail {
+        padding: 20px !important;
+    }
+}
+table.invoice-detail {}
+table.invoice-detail th{
+    font-weight: unset;
+    text-align: center;
+    white-space: nowrap;
+}

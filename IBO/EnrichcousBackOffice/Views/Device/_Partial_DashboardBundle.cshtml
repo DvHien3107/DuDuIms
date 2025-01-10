@@ -1,0 +1,55 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.CustomizeModel.I_Bundle_view>
+@{
+    var db = new EnrichcousBackOffice.Models.WebDataModel();
+}
+
+<thead>
+    <tr>
+        <th>Package Number</th>
+        <th>Name</th>
+        <th style="width:400px">Detail</th>
+        <th>Price</th>
+        <th>Note</th>
+        <th>Agent</th>
+        <th style="width:109px"></th>
+    </tr>
+</thead>
+<tbody>
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>#<b>@item.BundleCode</b></td>
+            <td>@item.Name</td>
+            <td>
+                @foreach (var m in item.list_model)
+                {<div class="col-md-12 container-fluid" style="border: 2px outset #bbd3e9; border-radius: 5px; padding:0; margin-bottom:10px; background-color:#f5faff">
+                        <div style="border-right: 1px solid lightgray; padding:5px; width:80%;float:left">
+                            Product: <b class="text-blue">@m.ProductName</b><br />
+                            Model: <b class="text-orange">
+                                @m.ModelName
+                            </b> <br />
+                            Color: <b class="text-green">@(string.IsNullOrEmpty(m.Color) ? "Default" : m.Color)</b><br />
+                        </div>
+                        <div style="padding:0; text-align:center; width:20%; float:right">
+                            <div style="width:100%; border-bottom: 1px solid lightgray; padding:5px">QTY</div>
+                            <b>@(m.Quantity)</b>
+                        </div>
+                    </div>}
+            </td>
+            <td>@(item.Price?.ToString("#,##0 đ"))</td>
+            <td>@item.Info</td>
+            <td>
+                <b>By @(item.UpdateBy)</b><br />At
+                <span id="localtime-@item.Id">
+                    <script>convertLocalTime("@item.Id", "@item.UpdateAt")</script>
+                </span>
+            </td>
+            <td style="padding:5px">
+                <a class="btn btn-warning" onclick="show_modal_bundle(@item.Id)"><i class="fa fa-pencil-square-o"></i></a>
+                <a class="btn btn-danger" onclick="delete_bundle(@item.Id)"><i class="fa fa-trash-o"></i></a>
+            </td>
+        </tr>
+    }
+</tbody>
+
+

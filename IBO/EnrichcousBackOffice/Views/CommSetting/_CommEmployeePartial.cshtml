@@ -1,0 +1,29 @@
+﻿@using EnrichcousBackOffice.Models
+
+@{
+    var listSettings = ViewBag.CommEmpSettings as List<P_CommEmployeeSetting>;
+}
+@using (Html.BeginForm("SaveCommEmp", "CommSetting", FormMethod.Post))
+{
+   
+    <table class="table table-striped table-bordered bootstrap-datatable">
+        <thead>
+            <tr>
+                <th scope="col">Level</th>
+                <th scope="col">Commission Employee Percent</th>
+            </tr>
+        </thead>
+        <tbody id="tbodycomm">
+            @{
+                foreach (var item in listSettings)
+                {
+                        <tr>
+                            <td>Level#@item.LevelNumber - (<b>@item.LevelName</b>)</td>
+                            <td><input name="CommEmpPercent_@item.Id" class="smallInput" type="text" value="@item.CommPercent"></td>
+                        </tr>
+                }
+            }
+        </tbody>
+    </table>
+    <button onclick="return Submit()" type="submit" class="btn btn-primary"><span>Save Changes</span></button>
+}

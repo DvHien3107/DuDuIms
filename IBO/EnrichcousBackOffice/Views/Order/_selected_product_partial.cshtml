@@ -1,0 +1,517 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.CustomizeModel.Device_Service_ModelCustomize>
+@{
+    var i = 1;
+    var access = ViewBag.p as Dictionary<string, bool>;
+}
+@foreach (var item in Model?.Where(m => m.Type != "license" && m.Type != "addon" && m.Type != "other" && m.Type != "giftcard" && m.Type != "setupfee" && m.Type != "interactionfee").ToList())
+{
+    <tr class="item" data-id="@(item.BundleId==null?item.ModelCode:item.BundleId.ToString())" data-type="@(item.BundleId==null?"device":"package")">
+        <td>@i</td>
+        <td @((access.Any(k => k.Key.Equals("orders_update_discount")) == true && access["orders_update_discount"] == true) ? "" : "colspan=2")>
+            @if (item.BundleId == null)
+            {
+                <div class="row" id="model_@(item.ModelCode?.Replace(" ","_"))">
+                    <div class="col-md-3">
+                        @if (string.IsNullOrEmpty(item.Picture) == false)
+                        {
+                            <img src="@(item.Picture??"/Content/Img/noimage.png")" onerror="this.onerror=null; this.src='/Content/Img/noimage.png'" class="img-thumbnail" style="height:75px" />
+                        }
+                        else
+                        {
+                            <img src="~/Upload/Img/no_image.jpg" class="img-thumbnail" style="height:75px" />
+                        }
+                    </div>
+                    <div class="col-md-9">
+                        <button type="button" class="btn btn-xs btn-default pull-right" style="cursor:pointer"
+                                data-toggle="tooltip" data-placement="bottom" title="Unselect product"
+                                onclick="if(confirm('Are you sure to remove Model @item.ModelName.ToUpper() ?')){ $('#select_@(item?.ModelCode)').trigger('click') }">
+                            <i class="glyphicon glyphicon-trash text-danger"></i>
+                        </button>
+                        <b style="color:dodgerblue">@(item.ProductName)</b>
+                        <i>(Model: @(item.ModelName))</i><br />
+                        <div>Type:<b><i> Device</i></b></div>
+                        <div>Color: <b><i>@(!string.IsNullOrEmpty(item.Feature) ? item.Feature : "N/A")</i></b></div>
+                        <div>Price: <b><i><input class="price_show" value="@(item.PriceApply.ToString("$0.00"))"></i></b></div>
+                    </div>
+                </div>
+            }
+            else if (item.BundleId != null)
+            {
+                <div class="row" id="bundle_@item.BundleId">
+                    <div class="col-md-3"><img src="@(item.Picture??"/Content/Img/noimage.png")" onerror="this.src='/Content/Img/noimage.png'" class="img-thumbnail" style="height:75px"></div>
+                    <div class="col-md-9">
+                        <button type="button" class="btn btn-xs btn-default pull-right" style="cursor:pointer"
+                                onclick="if(confirm('Are you sure to remove Package @item.BundleName.ToUpper() ?')){ $('#select_@(item?.BundleId)').trigger('click') }">
+                            <i class="glyphicon glyphicon-trash text-danger"></i>
+                        </button>
+                        <b>Pakage: <span class="text-green">@item.BundleName</span></b><br />
+                        <div>Price: <b><i><input class="price_show" value="@(item.PriceApply.ToString("$#,##0.00"))"></i></b></div>
+                        @if (item.list_Bundle_Device != null)
+                        {
+                            foreach (var m in item.list_Bundle_Device)
+                            {
+                                <div class="container-fluid" style="border: 2px outset lightgray; border-radius:5px; background-color: #fff; margin-bottom: 5px">
+                                    <b style="color:dodgerblue">@m.ProductName</b><br />
+                                    <span> Model: </span><b>@m.ModelName</b><br />
+                                    <div style="float:left; width:60%">
+                                        <span>Color:</span> <b>@(!string.IsNullOrEmpty(m.Color) ? m.Color : "N/A")</b>
+                                    </div>
+                                    <div style="float:left; width:40%">
+                                        <span>QTY:</span> <b class="model_qty_@item.BundleId" data-qty="@m.Quantity">@(m.Quantity * item.Quantity)</b>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+            }
+        </td>
+        <td class="qty_change">
+            @if (item.BundleId == null)
+            {
+                @*<input type="number" id="qty_model_@item.ModelCode.Replace(" ","_")" class="hide_arrow" value="@item.Quantity" onchange="load_change_hardware(this)" style="border:1px solid gray; padding:2px 5px; width:50px; background-color: transparent;float:left" />
+                    <button type="button" style="float:left; margin-left:-1px" onclick="load_change_hardware(this, -1)"><i class="fa fa-minus"></i></button><button onclick="load_change_hardware(this, 1)" type="button" style="float:left; margin-left:-1px"><i class="fa fa-plus"></i></button>*@
+
+                <div class="input-group">
+                    <label>
+                        <input type="number" id="qty_model_@item.ModelCode.Replace(" ","_")" class="form-control hide_arrow" value="@item.Quantity" onchange="load_change_hardware(this)" min="1" step="1"
+                               style="transform:translateY(17px);width:50px;height:35px;" />
+                        <button class="btn btn-flat btn-default" type="button" style="transform: translateY(17px);float:left; margin-left: -2px;height:35px"
+                                onclick="load_change_hardware(this, -1)">
+                            <i class="fa fa-minus"></i>
+                        </button>
+                        <button class="btn btn-flat btn-default" type="button" style="transform: translateY(17px);float:left; margin-left: -2px;height:35px"
+                                onclick="load_change_hardware(this, 1)">
+                            <i class="fa fa-plus"></i>
+                        </button>
+                    </label>
+                </div>
+
+            }
+            else
+            {
+                @*<input type="number" id="qty_bundle_@item.BundleId" class="hide_arrow" value="@item.Quantity" onchange="load_change_hardware(this)" style="border:1px solid gray; padding:2px 5px; width:50px; background-color: transparent;float:left" />
+                    <button type="button" style="float:left; margin-left:-1px" onclick="load_change_hardware(this, -1)"><i class="fa fa-minus"></i></button><button onclick="load_change_hardware(this, 1)" type="button" style="float:left; margin-left:-1px"><i class="fa fa-plus"></i></button>*@
+
+                <div class="input-group">
+                    <label>
+                        <input id="qty_bundle_@item.BundleId" class="form-control hide_arrow" value="@item.Quantity" onchange="load_change_hardware(this)" min="1" step="1"
+                               style="transform:translateY(17px);width:50px;height:35px;" />
+                        <button class="btn btn-flat btn-default" type="button" style="transform: translateY(17px);float:left; margin-left: -2px;height:35px"
+                                onclick="load_change_hardware(this, -1)">
+                            <i class="fa fa-minus"></i>
+                        </button>
+                        <button class="btn btn-flat btn-default" type="button" style="transform: translateY(17px);float:left; margin-left: -2px;height:35px"
+                                onclick="load_change_hardware(this, 1)">
+                            <i class="fa fa-plus"></i>
+                        </button>
+                    </label>
+                </div>
+
+            }
+        </td>
+        @if (access.Any(k => k.Key.Equals("orders_update_discount")) == true && access["orders_update_discount"] == true)
+        {
+            <td class="discount text-right @((item.Discount != 0 || item.DiscountPercent != 0) ? "actived" : "")">
+
+                <div class="input-group" style="margin:-2px">
+                    <input type="text" step="0.01" class="form-control discount-value hide_arrow disable-enter" onchange="load_change_hardware(this)"
+                           value="@(item.DiscountPercent != 0 ? item.DiscountPercent.ToString() : (item.Discount != 0 ? item.Discount.ToString("#,##0.00") : ""))" data-toggle="tooltip" title="Giảm giá" />
+                    <div class="input-group-addon discount-type" style="padding:0">
+                        <label class="discount-radio" style="margin:0">
+                            <input class="disable-enter" type="radio" name="discount_@item.ModelCode" value="amount" onchange="load_change_hardware(this)"
+                                   @(item.DiscountType != "rate" ? "checked=checked" : "") style="display:none" />
+                            <b data-toggle="tooltip" title="Amount">$</b>
+                        </label>
+                    </div>
+                    <div class="input-group-addon hide discount-type" style="padding:0">
+                        <label class="discount-radio" style="margin:0">
+                            <input class="disable-enter" type="radio" name="discount_@item.ModelCode" value="rate" onchange="load_change_hardware(this)"
+                                   @(item.DiscountType == "rate" ? "checked=checked" : "") style="display:none" />
+                            <b class="fa fa-percent" data-toggle="tooltip" title="Percent"></b>
+                        </label>
+                    </div>
+                </div>
+            </td>
+        }
+        <td class="text-right">
+            @if (access.Any(k => k.Key.Equals("orders_update_discount")) == true && access["orders_update_discount"] == true)
+            {
+                if (item.Discount > 0)
+                {
+                    <b><i style="text-decoration:line-through">@((item.Price).ToString("$#,##0.00"))</i></b><br />
+                }
+            }
+
+            <b style="color:#258e4f" id="@( item.BundleId == null ? "amount_model_" + item.ModelCode.Replace(" ","_") : "amount_package_" + item.BundleId )">@((item.Amount).ToString("$#,##0.00"))</b>
+        </td>
+    </tr>
+    i++;
+}
+@foreach (var item in Model?.Where(c => !string.IsNullOrEmpty(c.SubscriptionId)).ToList())
+{
+    if (item.Type != "setupfee" && item.Type != "interactionfee")
+    {
+        <tr id="subs_@item.SubscriptionId" class="@(item.Type == "license" ? "selected_subscription" : "selected_addon") item" data-id="@(item.SubscriptionId)" data-type="@(item.Type)">
+            <td>
+                @(i)
+            </td>
+            <td @((access.Any(k => k.Key.Equals("orders_update_discount")) == true && access["orders_update_discount"] == true) ? "" : "colspan=2" )>
+                <div class="row" bis_skin_checked="1">
+                    <div class="col-md-3" bis_skin_checked="1">
+                        <img src="/Content/Img/noimage.png" class="img-thumbnail" style="height:75px">
+                    </div>
+                    <div class="col-md-9" bis_skin_checked="1">
+                        <button type="button" class="btn btn-xs btn-default pull-right" style="cursor:pointer"
+                                data-toggle="tooltip" data-placement="bottom" title="Unselect"
+                                onclick="if (confirm('Are you sure to unselect @item.SubscriptionName?')) { $('#pr_@item.SubscriptionId').trigger('click') }">
+                            <i class="glyphicon glyphicon-trash text-danger"></i>
+                        </button>
+                        @if (item.SubscriptionDuration == "MONTHLY")
+                        {
+                            <button type="button" class="btn btn-xs btn-default pull-right" style="cursor:pointer;margin-right: 5px"
+                                    onclick="$('#subscriptions_box').slideDown(300);;$('html, body').animate({ scrollTop: $('#pr_@item.SubscriptionId').offset().top }, 1000);"
+                                    data-toggle="tooltip" data-placement="bottom" title="Edit">
+                                <i class="glyphicon glyphicon-pencil text-primary"></i>
+                            </button>
+                        }
+
+                        <b style="color:dodgerblue">@item.SubscriptionName</b> <i>(<span style="text-transform:capitalize">@(item.Type =="other"? "Virtual Hardware & Other":item.Type)</span>)</i><br>
+
+                        <span>Price: <input class="price_show" value="@(item.PriceApply.ToString("$#,##0.00"))"></span>
+                        <br />
+                        @if (item.Type == "license")
+                        {
+                            <div class="form-group" style="margin-bottom: 0">
+                                @if (item.TrialMonths > 0)
+                                {
+                                    <label class="PriceType">
+                                        <input type="checkbox" name="PriceType" value="Trial" class="minimal" @(!string.IsNullOrEmpty(item.PriceType) && item.PriceType.Split(',').Contains("Trial") ? "checked" : "")>
+                                        <span style="display:inline-block;transform:translateY(2px)">&nbsp;Trial</span>
+                                    </label>
+                                }
+                                @if (item.Promotion_Apply_Status == true && item.Promotion_Apply_Months > 0)
+                                {
+                                    <label class="PriceType" style="margin-left:10px">
+                                        <input type="checkbox" value="Promotional" name="PriceType" class="minimal" @(!string.IsNullOrEmpty(item.PriceType) && item.PriceType.Split(',').Contains("Promotional") ? "checked" : "")>
+                                        <span style="display:inline-block;transform:translateY(2px)"> &nbsp;Promotional Price</span>
+                                    </label>
+                                }
+                                <label class="PriceType" style="margin-left:10px">
+                                    <input type="checkbox" value="Real" name="PriceType" class="minimal" @(string.IsNullOrEmpty(item.PriceType) || item.PriceType.Split(',').Contains("Real") ? "checked" : "")>
+                                    <span style="display:inline-block;transform:translateY(2px)">&nbsp;Regular Price</span>
+                                </label>
+                            </div>
+                        }
+                        @if (item.SubscriptionDuration == "MONTHLY")
+                        {
+                            <span>Effective date: <i id="Effective_date_@item.SubscriptionId">@(item.StartDate?.ToString("MM/dd/yyyy")) - @(item.ExpiryDate?.ToString("MM/dd/yyyy"))</i></span>
+                            <br />
+                            <span id="recurring_price_txt_@item.SubscriptionId" style="@(item.AutoRenew == true ? "" : "display:none")">Recurring price: <input class="price_show" value="@(item.RecurringPrice?.ToString("$#,##0.00"))"></span>
+                        }
+
+                    </div>
+                </div>
+            </td>
+            <td class="qty_change">
+                @if ((item.SubscriptionDuration == "MONTHLY"))
+                {
+                    <div class="input-group">
+                        <input id="qty_@item.SubscriptionId" type="number" onblur="load_change_hardware(this)" class="form-control hide" value="@item.Quantity" readonly />
+                        <label>
+                            <input type="number" class="form-control hide_arrow" id="ip_quantity_@item.SubscriptionId" placeholder="1" min="1" step="1"
+                                   value="@(item.SubscriptionQuantity == 0 ? 1 : item.SubscriptionQuantity)"
+                                   onchange="update_selected('@item.SubscriptionId', '@(item.Type)', 1, null, '@item.PriceType', null, null, true, null, $(this).val());"
+                                   style="transform:translateY(17px);width:50px;height:35px" />
+                            <button class="btn btn-flat btn-default" type="button" style="transform: translateY(17px);float:left; margin-left: -2px;height:35px"
+                                    onclick="if($('#ip_quantity_@item.SubscriptionId').val() > 1) $('#ip_quantity_@item.SubscriptionId').val($('#ip_quantity_@item.SubscriptionId').val() - 1).trigger('change')">
+                                <i class="fa fa-minus"></i>
+                            </button>
+                            <button class="btn btn-flat btn-default" type="button" style="transform: translateY(17px);float:left; margin-left: -2px;height:35px"
+                                    onclick="$('#ip_quantity_@item.SubscriptionId').val(parseInt($('#ip_quantity_@item.SubscriptionId').val()) + 1).trigger('change')">
+                                <i class="fa fa-plus"></i>
+                            </button>
+                        </label>
+                        <p style="display:inline-block;margin:10px 0 0 0">
+                            <b style="margin:5px"> X </b>
+                            <span>@item.Quantity </span>
+                            @if (!string.IsNullOrEmpty(item.PeriodRecurring))
+                            {
+                                if (item.Quantity == 1)
+                                {
+                                    <span>(@item.PeriodRecurring.ToLower().Replace("ly", ""))</span>
+                                }
+                                else
+                                {
+                                    <span>(@item.PeriodRecurring.ToLower().Replace("ly", "")s)</span>
+                                }
+                            }
+                            else
+                            {
+                                <span>(@(item.Quantity == 1 ? "month" : "months"))</span>
+                            }
+                        </p>
+                        @*<b id="txt_SubscriptionQuantity_@item.SubscriptionId"> x @(item.SubscriptionQuantity == 0 ? 1 : item.SubscriptionQuantity)</b>*@
+                    </div>
+                }
+                @*else if ((item.SubscriptionDuration == "MONTHLY" && item.Type == "other"))
+                    {
+                        <div class="input-group">
+                            <input id="qty_@item.SubscriptionId" type="number" onblur="load_change_hardware(this)" class="form-control" value="@item.Quantity"  />
+                            <span class="input-group-addon">Months</span>
+                        </div>
+                    }*@
+                else
+                {
+                    <input type="number" id="qty_@item.SubscriptionId" class="form-control hide_arrow" value="@item.Quantity"
+                           onchange="load_change_hardware(this)"
+                           style="width:50px; background-color: transparent;float:left;font-weight:bold;" />
+                    <button class="btn btn-flat btn-default" type="button" style="float:left; margin-left:-1px" onclick="load_change_hardware(this, -1)"><i class="fa fa-minus"></i></button>
+                    <button class="btn btn-flat btn-default" onclick="load_change_hardware(this, 1)" type="button" style="float:left; margin-left:-1px"><i class="fa fa-plus"></i></button>
+                }
+            </td>
+            @if (access.Any(k => k.Key.Equals("orders_update_discount")) == true && access["orders_update_discount"] == true)
+            {
+                <td class="discount text-right @((item.Discount!=0||item.DiscountPercent!=0)?"actived":"")">
+                    <div class="input-group" style="margin:-2px">
+                        <input type="text" step="0.01" class="form-control discount-value hide_arrow disable-enter" onchange="load_change_hardware(this, 0, true)"
+                               value="@(item.DiscountPercent!=0?item.DiscountPercent.ToString(): (item.Discount!=0?item.Discount.ToString("#,##0.00"):""))" data-toggle="tooltip" title="Discount" />
+                        <div class="input-group-addon discount-type" style="padding:0">
+                            <label class="discount-radio" style="margin:0">
+                                <input class="disable-enter" type="radio" name="discount_@item.SubscriptionId" value="amount" onchange="load_change_hardware(this, 0, true)"
+                                       @(item.DiscountType != "rate" ? "checked=checked" : "") style="display:none" />
+                                <b data-toggle="tooltip" title="Amount">$</b>
+                            </label>
+                        </div>
+                        <div class="input-group-addon hide discount-type" style="padding:0">
+                            <label class="discount-radio" style="margin:0">
+                                <input class="disable-enter" type="radio" name="discount_@item.SubscriptionId" value="rate" onchange="load_change_hardware(this, 0, true)"
+                                       @(item.DiscountType == "rate" ? "checked=checked" : "") style="display:none" />
+                                <b class="fa fa-percent" data-toggle="tooltip" title="Percent"></b>
+                            </label>
+                        </div>
+                    </div>
+
+                    @if (item.SubscriptionDuration == "MONTHLY")
+                    {
+                        <div class="input-group pull-left">
+                            <label style="font-weight:unset;margin-top:10px" data-toggle="tooltip" data-placement="bottom" title="We do offer discount on packages as recurring">
+                                <input type="checkbox" name="ApplyDiscountAsRecurring_@item.SubscriptionId" data-productid="@item.SubscriptionId" value="true" class="flat-red ApplyRecurring" @(item.ApplyDiscountAsRecurring == true ? "checked" : "")>
+                                Apply discount as recurring
+                            </label>
+                        </div>
+                    }
+                </td>
+            }
+            <td class="text-right">
+                @if (access.Any(k => k.Key.Equals("orders_update_discount")) == true && access["orders_update_discount"] == true)
+                {
+                    if (item.Discount > 0)
+                    {
+                        if (item.SubscriptionDuration != "MONTHLY")
+                        {
+                            <b><i style="text-decoration:line-through">@((item.Price).ToString("$#,##0.00"))</i></b><br />
+                        }
+                        else
+                        {
+                            <b><i style="text-decoration:line-through">@((item.Price).ToString("$#,##0.00"))</i></b><br />
+                        }
+                    }
+                }
+
+                <b style="color:#258e4f">@((item.Amount).ToString("$#,##0.00"))</b>
+            </td>
+        </tr>
+    }
+    else
+    {
+        <tr id="subs_@item.SubscriptionId" class="@(item.Type == "license" ? "selected_subscription" : "selected_addon") item" data-id="@(item.SubscriptionId)" data-type="@(item.Type)">
+            <td>
+                @(i)
+            </td>
+            <td @((access.Any(k => k.Key.Equals("orders_update_discount")) == true && access["orders_update_discount"] == true) ? "" : "colspan=2" )>
+                <div class="row" bis_skin_checked="1">
+                    <div class="col-md-3" bis_skin_checked="1">
+                        <img src="/Content/Img/noimage.png" class="img-thumbnail" style="height:75px">
+                    </div>
+                    <div class="col-md-9" bis_skin_checked="1">
+                        <b style="color:dodgerblue">@(item.Type == "setupfee" ? "Activation Fee" : "Interaction Fee")</b><br />
+                        <i>(<span style="text-transform:capitalize">@(item.SubscriptionName)</span>)</i><br />
+                        <span>Price: <input class="price_show" value="@(item.Price.ToString("$#,##0.00"))"></span>
+                    </div>
+                </div>
+            </td>
+            <td class="qty_change">
+                One time
+            </td>
+            @if (access.Any(k => k.Key.Equals("orders_update_discount")) == true && access["orders_update_discount"] == true)
+            {
+                <td class="discount text-right @((item.Discount!=0||item.DiscountPercent!=0)?"actived":"")">
+                    <div class="input-group" style="margin:-2px">
+                        <input type="text" step="0.01" class="form-control discount-value hide_arrow disable-enter" onchange="load_change_hardware(this)"
+                               value="@(item.DiscountPercent!=0?item.DiscountPercent.ToString(): (item.Discount!=0?item.Discount.ToString("#,##0.00"):""))" data-toggle="tooltip" title="Giảm giá" />
+                        <div class="input-group-addon discount-type" style="padding:0">
+                            <label class="discount-radio" style="margin:0">
+                                <input type="radio" name="discount_@(item.SubscriptionId)_@(item.Type)" value="amount" onchange="load_change_hardware(this)"
+                                       @(item.DiscountType != "rate" ? "checked=checked" : "") style="display:none" />
+                                <b data-toggle="tooltip" title="Amount">$</b>
+                            </label>
+                        </div>
+                        <div class="input-group-addon hide discount-type" style="padding:0">
+                            <label class="discount-radio" style="margin:0">
+                                <input type="radio" name="discount_@(item.SubscriptionId)_@(item.Type)" value="rate" onchange="load_change_hardware(this)"
+                                       @(item.DiscountType == "rate" ? "checked=checked" : "") style="display:none" />
+                                <b class="fa fa-percent" data-toggle="tooltip" title="Percent"></b>
+                            </label>
+                        </div>
+                    </div>
+                </td>
+            }
+
+            <td class="text-right">
+                @if (access.Any(k => k.Key.Equals("orders_update_discount")) == true && access["orders_update_discount"] == true)
+                {
+                    if (item.Discount > 0)
+                    {
+                        if (item.SubscriptionDuration != "MONTHLY")
+                        {
+                            <b><i style="text-decoration:line-through">@((item.Price*item.Quantity).ToString("$#,##0.00"))</i></b><br />
+                        }
+                        else
+                        {
+                            <b><i style="text-decoration:line-through">@((item.Price).ToString("$#,##0.00"))</i></b><br />
+                        }
+                    }
+                }
+
+                <b style="color:#258e4f">@((item.Amount).ToString("$#,##0.00"))</b>
+            </td>
+        </tr>
+    }
+
+    i++;
+}
+<style type="text/css">
+    .hide_arrow::-webkit-outer-spin-button,
+    .hide_arrow::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    .discount .discount-radio b {
+        display: block;
+        padding: 0 10px;
+        opacity: .3;
+        line-height: 32px;
+        width: 100%;
+        cursor: pointer;
+    }
+
+    .discount .discount-radio input[type=radio]:checked + b {
+        background-color: #17a2b8;
+        border-color: #17a2b8;
+        color: #fff;
+        opacity: 1;
+    }
+
+    .discount .discount-radio {
+        display: inline-block
+    }
+
+    .discount .discount-value {
+        background-color: #fff;
+        border-color: #ddd;
+        padding: 0px 10px;
+        text-align: right;
+    }
+
+
+    .discount .discount-type {
+        background-color: #fff;
+        border-color: #ddd;
+    }
+
+    .price_show {
+        color: #258e4f;
+        font-weight: bold;
+        background-color: transparent;
+        border: none;
+        outline: none !important;
+        pointer-events: none;
+    }
+</style>
+<script>
+
+    $('.ApplyRecurring').iCheck({
+        checkboxClass: 'icheckbox_minimal-blue'
+    })
+    $('[name="PriceType"].minimal').iCheck({
+        checkboxClass: 'icheckbox_minimal-blue'
+    })
+    $('[data-toggle="tooltip"]').tooltip();
+    function load_change_hardware(el, qty_increase = 0,setEndDate=false) {
+        var item = $(el).closest(".item");
+        var id = item.data("id");
+        var type = item.data("type");
+        var qty = parseInt(item.find(".qty_change input").val()) + qty_increase;
+        if (qty < 1) {
+            qty = 1;
+        }
+        var enddate;
+        if (setEndDate == true) {
+            var enddate = $('input[name="Expiry_date_' + id + '"]').val();
+        }
+        var discount = item.find(".discount-value").val()?.replace(/[^\d.-]/g, '') || 0;
+        var discount_type = item.find(".discount-radio input:checked").val();
+        var PriceType = '';
+        var pricetypeArray = [];
+        if (type == 'license') {
+            $('input[name="PriceType"]:checked').each(function () {
+                pricetypeArray.push($(this).val());
+            });
+            PriceType = pricetypeArray.join(',');
+        }
+        update_selected(id, type, qty, discount, PriceType, discount_type, null, true, null, null, enddate);
+    }
+
+    function load_change_recurringapply(productId, applyRecurring) {
+        $.ajax({
+            method: "get",
+            url: "/Order/Change_ApplyRecurring",
+            data: { productId, applyRecurring },
+            dataType: "json"
+        })
+            .done(function (data) {
+            })
+            .fail(function () {
+            })
+    }
+    $('.disable-enter').on('keyup keypress', function (e) {
+        var keyCode = e.keyCode || e.which;
+        if (keyCode === 13) {
+            e.preventDefault();
+            return false;
+        }
+    });
+    $(document).ready(function () {
+        $('input[name="PriceType"]').off('ifChanged').on('ifChanged', function (e) {
+            var pricetypeArray = [];
+            $('input[name="PriceType"]:checked').each(function () {
+                pricetypeArray.push($(this).val());
+            });
+            if (pricetypeArray.length == 0) {
+                $(this).iCheck('check');
+                alert('There must be a price type selected !');
+                return;
+            }
+            $('input[name="PriceType"]').iCheck('update');
+            load_change_hardware(this);
+        })
+
+        $('.ApplyRecurring').off('ifChanged').on('ifChanged', function (e) {
+            let productId = $(this).attr("data-productid");
+            let applyRecurring = $(this).is(':checked');
+            load_change_recurringapply(productId, applyRecurring);
+        })
+    })
+</script>

@@ -1,0 +1,1188 @@
+@using EnrichcousBackOffice.Utils.IEnums
+@using Inner.Libs.Helpful
+@{
+    ViewBag.Title = "IMS System";
+    System.Collections.ObjectModel.ReadOnlyCollection<TimeZoneInfo> tz = TimeZoneInfo.GetSystemTimeZones();
+
+
+}
+
+
+@section style
+{
+
+    <link href="~/Content/Admin/bower_components/fullcalendar/core/main.min.css" rel="stylesheet" />
+    <link href="~/Content/Admin/bower_components/fullcalendar/daygrid/main.min.css" rel="stylesheet" />
+    <link href="~/Content/Admin/bower_components/fullcalendar/timegrid/main.min.css" rel="stylesheet" />
+    <link href="~/Content/Admin/bower_components/fullcalendar/list/main.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.min.css" rel="stylesheet" />
+    <link href='~/Content/Admin/bower_components/semantic-ui/UI-Label/label.min.css' rel='stylesheet' />
+
+}
+
+@section headscript
+{
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"></script>
+    <script src="~/Scripts/push/main.js"></script>
+    <script>
+        //publickey to subcriber service worker
+        const applicationServerPublicKey = '@System.Configuration.ConfigurationManager.AppSettings["PublicKey"]';
+    </script>
+
+
+    <script src="~/Content/Admin/bower_components/fullcalendar/core/main.min.js"></script>
+    <script src="~/Content/Admin/bower_components/fullcalendar/interaction/main.min.js"></script>
+    <script src="~/Content/Admin/bower_components/fullcalendar/daygrid/main.min.js"></script>
+    <script src="~/Content/Admin/bower_components/fullcalendar/timegrid/main.min.js"></script>
+    <script src="~/Content/Admin/bower_components/fullcalendar/list/main.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/waypoints/4.0.1/jquery.waypoints.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Counter-Up/1.0.0/jquery.counterup.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.bundle.min.js"></script>
+    <script src="https://emn178.github.io/chartjs-plugin-labels/src/chartjs-plugin-labels.js"></script>
+
+}
+
+<!-- Content Header (Page header) -->
+<section class="content-header">
+    <h1>
+        Dashboard
+        <small>Statistical settings</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li class="active">Dashboard</li>
+    </ol>
+</section>
+
+
+<!-- Main content -->
+<section class="content">
+    <!-- Small boxes (Stat box) -->
+    <div class="row">
+        <div class="col-lg-3 col-xs-6">
+            <!-- small box -->
+            <div class="small-box bg-green">
+                <div class="inner">
+                    <h3 class="number-animation" id="total-merchant">
+                        <img src="~/Content/ajax-loaders/ajax-loader-1.gif">
+                    </h3>
+                    <p>@(MerchantStatusSearch.LiveMerchant.Code<string>())</p>
+                </div>
+                <div class="icon">
+                    <i class="ion ion-person"></i>
+                </div>
+                <a href="/merchantman?merchantstatus=1" onclick="overlayOn()" class="small-box-footer">View detail <i class="fa fa-arrow-circle-right"></i></a>
+            </div>
+        </div>
+        <!-- ./col -->
+        <div class="col-lg-3 col-xs-6">
+            <!-- small box -->
+            <div class="small-box bg-aqua loading-bro">
+                <div class="inner">
+                    <h3 class="number-animation" id="total-merchant-license">
+                        <img src="~/Content/ajax-loaders/ajax-loader-1.gif">
+                    </h3>
+                    <p>@(MerchantStatusSearch.OnlyLicense.Code<string>())</p>
+                </div>
+                <div class="icon">
+                    <i class="ion ion-android-contact"></i>
+                </div>
+                <a href="/merchantman?merchantstatus=2" onclick="overlayOn()" class="small-box-footer">View detail <i class="fa fa-arrow-circle-right"></i></a>
+            </div>
+        </div>
+        <!-- ./col -->
+        <div class="col-lg-3 col-xs-6">
+            <!-- small box -->
+            <div class="small-box bg-orange">
+                <div class="inner">
+                    <h3 class="number-animation" id="total-merchant-MID">
+                        <img src="~/Content/ajax-loaders/ajax-loader-1.gif">
+                    </h3>
+                    <p>@(MerchantStatusSearch.OnlyTerminal.Code<string>())</p>
+                </div>
+                <div class="icon">
+                    <i class="ion ion-android-contact"></i>
+                </div>
+                <a href="/merchantman?merchantstatus=3" onclick="overlayOn()" class="small-box-footer">View detail <i class="fa fa-arrow-circle-right"></i></a>
+            </div>
+        </div>
+        <!-- ./col -->
+        <div class="col-lg-3 col-xs-6">
+            <!-- small box -->
+            <div class="small-box bg-purple">
+                <div class="inner">
+                    <h3 class="number-animation" id="total-merchant-license-MID">
+                        <img src="~/Content/ajax-loaders/ajax-loader-1.gif">
+                    </h3>
+                    <p>@(MerchantStatusSearch.LicenseTerminal.Code<string>())</p>
+                </div>
+                <div class="icon">
+                    <i class="ion ion-android-contacts"></i>
+                </div>
+                <a href="/merchantman?merchantstatus=4" onclick="overlayOn()" class="small-box-footer">View detail <i class="fa fa-arrow-circle-right"></i></a>
+            </div>
+        </div>
+        <!-- ./col -->
+    </div>
+    <!-- /.row -->
+    <!-- Main row -->
+    <section class="content">
+
+        @*<div class="row">
+                <div class="col-md-12">
+
+
+                    <div id='calendar' style="width:100%">
+
+                    </div>
+
+
+                </div>
+            </div>*@
+        <div class="row">
+            <div class="col col-12">
+                <div class="box box-default" id="new-customer-report">
+                    @*<div class="box-header with-border" style="padding: 12px;">
+                        <h3 class="box-title">
+                            <i class="fa fa-user-plus" aria-hidden="true"></i>
+                            New customer report
+                        </h3>
+                    </div>*@
+                </div>
+                <div class="box-body">
+                    <div class="row">
+                        @*<div class="input-group col-sm-3 pull-right" style="margin-right: 5px; margin-bottom: 5px;display:inline-table">
+                            <div class="input-group-addon">Unit time</div>
+                            <select class="form-control select2 chart-values" id="chart_unit">
+                                <option value="month">Month</option>
+                                <option value="week">Week</option>
+                            </select>
+                        </div>*@
+                        <div class="input-group col-sm-3 pull-right" style="margin-right:5px; margin-bottom: 5px;display:inline-table">
+                            <div class="input-group-addon">Year</div>
+                            <select class="form-control select2 chart-values" id="chart_year">
+                                <option value="2024">2024</option>
+                                <option value="2023">2023</option>
+                                <option value="2022">2022</option>
+                                <option value="2021">2021</option>
+                                <option value="2020">2020</option>
+                            </select>
+                        </div>
+                        <div class="col-sm-12" style="margin-bottom:2rem">
+                            <canvas id="new-customer-chart" height="500"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @*<div class="col col-12">
+                    <div class="box box-default" id="canceled-customer-report">
+                        <div class="box-header with-border" style="padding: 12px;">
+                            <h3 class="box-title">
+                                <i class="fa fa-user-times" aria-hidden="true"></i>
+                                Canceled customer report
+                            </h3>
+                        </div>
+                    </div>
+                    <div class="box-body">
+                        <div class="row">
+                            <div class="col-sm-12" style="margin-bottom:2rem">
+                                <canvas id="canceled-customer-chart" height="500"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>*@
+
+        </div>
+
+
+
+        @*<div class="row">
+                <div class="col-md-12">
+                    <div class="box box-info">
+                        <div class="box-header with-border">
+                            <h3 class="box-title pull-left">Sales Income</h3>
+                            <div class="box-tools pull-right">
+                                <button type="button" class="btn btn-box-tool" data-widget="collapse">
+                                    <i class="fa fa-minus"></i>
+                                </button>
+                                <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i></button>
+                            </div>
+                            <div class="form-group pull-right" style="width:400px; margin-right:30px">
+                                <div class="input-group">
+                                    <div class="input-group-addon" style="background-color:whitesmoke"><b><i class="fa fa-calendar"></i></b></div>
+                                    <select class="form-control" name="monthly_quarter" onchange="changeTime()">
+                                        <option value="Monthly">Monthly</option>
+                                        <option value="Quarter">Quarter</option>
+                                    </select>
+                                    <div class="input-group-addon" style="background-color:whitesmoke"><b><i class="fa fa-calendar"></i> Year</b></div>
+                                    <select class="form-control" name="_year" onchange="changeTime()">
+                                        <option value="2019">2019</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="box-body">
+                            <div id="div_ColumnChart" style="height: 350px; overflow-x:auto; overflow-y:hidden"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-12">
+                    <div class="box box-primary">
+                        <div class="box-header with-border">
+                            <h3 class="box-title pull-left">Sales capacity</h3>
+                            <div class="box-tools pull-right">
+                                <button type="button" class="btn btn-box-tool" data-widget="collapse">
+                                    <i class="fa fa-minus"></i>
+                                </button>
+                                <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i></button>
+                            </div>
+                            <div class="form-group pull-right" style="width:400px; margin-right:30px">
+                                <div class="input-group">
+                                    <div class="input-group-addon" style="background-color:whitesmoke"><b><i class="fa fa-calendar"></i> From</b></div>
+                                    <input type="text" class="form-control datepicker-jq" name="f_date" onchange="changeDate()" value="@(DateTime.Now.Month.ToString() + "/01/" + DateTime.Now.Year.ToString())" readonly style="background-color:white; cursor:pointer" />
+                                    <div class="input-group-addon" style="background-color:whitesmoke"><b><i class="fa fa-calendar"></i> To</b></div>
+                                    <input type="text" class="form-control datepicker-jq" name="t_date" onchange="changeDate()" value="@DateTime.Now.ToShortDateString()" readonly style="background-color:white; cursor:pointer" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="box-body">
+                            <div id="div_BarChart" style="height: 350px; overflow-x:auto; overflow-y:hidden"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>*@
+    </section>
+
+
+</section>
+
+<div class="modal fade" id="event_modal" role="dialog" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <form action="/home/updateevent" method="post" id="event_form">
+                <div class="modal-header">
+                    <button style="font-size:2em" type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h5 class="modal-title" style="margin-right:50px">
+                        <select name="schedule_timezone" style="width:70%;border:none;border-bottom:1px solid" required>
+                            @foreach (var item in tz.ToList())
+                            {
+                                <option value="@item.DisplayName">@item.DisplayName</option>
+                            }
+                        </select>
+
+                        <span id="span_ticket" class="pull-right"><a href="#"></a></span>
+                    </h5>
+
+                </div>
+
+                <div id="loading_over" style="width: 100%; height: 100%;position: absolute;top: 0;left: 0;opacity: 0.3; background-color:grey; z-index:999;display:none">
+                    <img style="margin:40% auto; display:block; height:50px" src="~/Content/ajax-loaders/loading-partial.gif" />
+                </div>
+
+                <div class="modal-body">
+
+                    <input type="hidden" name="hd_event_id" value="" />
+                    <div class="col-md-12">
+                        <h4 style="padding: 5px; border-left: solid 5px cornflowerblue; background-color: #b9e2fc">Title</h4>
+                        <div class="form-group">
+                            <input class="form-control" type="text" name="title" required />
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <h4 style="padding: 5px; border-left: solid 5px cornflowerblue; background-color: #b9e2fc">Event date</h4>
+                        <div class="form-group">
+                            <label style="width:100px">Start</label>
+                            <input class="form-control datepicker" style="width:150px; display:inline !important" name="start_date" onkeydown="return false" placeholder="MM/dd/yyyy" required />
+                            &nbsp;&nbsp;&nbsp;
+                            <input class="form-control" name="start_hours" type="number" min="0" max="12" maxlength="2" style="width:80px;display:inline" placeholder="hh" required /> :
+                            <input class="form-control" name="start_minute" type="number" min="0" max="60" style="width:80px;display:inline" placeholder="mm" required />
+                            <select class="form-control" name="start_am_pm" style="width:80px;display:inline">
+                                <option value="AM">AM</option>
+                                <option value="PM">PM</option>
+                            </select>
+                        </div>
+                        <div class="form-group update_event_flag div_end_date">
+                            <label style="width:100px">End</label>
+                            <input class="form-control datepicker" style="width:150px; display:inline !important" name="end_date" onkeydown="return false" placeholder="MM/dd/yyyy" />
+                            &nbsp;&nbsp;&nbsp;
+                            <input class="form-control" name="end_hours" type="number" min="0" max="12" maxlength="2" style="width:80px;display:inline" placeholder="hh" /> :
+                            <input class="form-control" name="end_minute" type="number" min="0" max="60" style="width:80px;display:inline" placeholder="mm" />
+                            <select class="form-control" name="end_am_pm" style="width:80px;display:inline">
+                                <option value="AM">AM</option>
+                                <option value="PM">PM</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <h4 style="padding: 5px; border-left: solid 5px cornflowerblue; background-color: #b9e2fc ">Description</h4>
+                        <div class="form-group">
+                            <textarea id="desc" wrap="soft" name="description" style="min-height: 50px; height: 100px; width: 100%; resize: vertical"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="col-md-12" id="container-detail">
+                        <h4 style="padding: 5px; border-left: solid 5px cornflowerblue; background-color: #b9e2fc; cursor: pointer; color: inherit" id="btn_show_detail_salelead" class="btn-link">
+                            <span class="">
+                                <i class="fa fa-plus" id="toggle-icon" style="font-size: 13px"></i>
+                            </span>
+                            Show more
+
+                        </h4>
+                        <div class="form-group content-detail">
+                            <input value="" id="salelead_id_detail" hidden />
+                            <div class="row" style="text-align: center">
+                                <img src="~/Content/ajax-loaders/loading-partial.gif" id="detail_salelead_loading" style="display: none" />
+                            </div>
+                            <table style="width: 100%" id="data_detail_salelead"></table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="col-md-12 update_event_flag" style="margin-bottom:10px;color:grey">
+                        <i>Last updated: <b id="lastUpdated">_______</b></i>
+                    </div>
+
+                    <div class="btn-group btn-group-toggle pull-left update_event_flag" data-toggle="buttons">
+                        <label class="btn btn-secondary active btn-default">
+                            <input type="radio" name="event_done" id="event_done_0" value="0" autocomplete="off" checked> <span id="status_0">No complete</span>
+                        </label>
+                        <label class="btn btn-secondary btn-default">
+                            <input type="radio" name="event_done" id="event_done_1" value="1" autocomplete="off">  <span id="status_1">DONE</span>
+                        </label>
+                    </div>
+
+
+                    <button name="btnsubmit" value="save" type="submit" class="btn btn-primary">Save</button>
+                    @*<button name="btnsubmit" value="remove" type="submit" class="btn btn-danger update_event_flag" onclick="return confirm('Do you want to delete this event?')">Remove</button>*@
+                    <button data-dismiss="modal" class="btn btn-default">Close</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!--Xem chi tiet thong tin nhan vien-->
+<div class="modal fade" id="modal-member">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Member profile</h4>
+            </div>
+            <div class="modal-body">
+                <p id="loading"><img src="~/Content/ajax-loaders/ajax-loader-1.gif" /></p>
+                <div id="content-member">
+                    <!--_MemberProfileSimplePartial Partial-->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+
+<div id="render-modal-event-calendar">
+</div>
+
+
+@section script
+{
+    <script>
+
+        localStorage.clear();
+
+        //xac dinh page cho new lead form biet duoc popup tu trang nao.
+        $("#newsalon_form").val("calendar");
+
+        var view_all_event = "@Session["view_all_event"]";
+        var d = new Date();
+        var m = (d.getMonth() + 1) >= 10 ? (d.getMonth() + 1) : '0' + (d.getMonth() + 1);
+        var da = d.getDate() >= 10 ? d.getDate() : '0' + d.getDate();
+        var date_now = d.getFullYear() + "-" + m + "-" + da;
+        var calendar;
+        //document.addEventListener('DOMContentLoaded', function () {
+        //    var calendarEl = document.getElementById('calendar');
+        //    calendar = new FullCalendar.Calendar(calendarEl, {
+        //        plugins: ['interaction', 'dayGrid', 'timeGrid', "list"],
+        //        customButtons: {
+        //            myCustomButton: {
+        //                text: '+ Add Event',
+        //                click: function () {
+        //                    new_event();
+        //                }
+        //            },
+        //            ShowAllEventButton: {
+        //                text: 'View All Events',
+        //                click: function () {
+        //                    window.location.href = "/home?show_all_event=true"
+        //                }
+        //            },
+        //            ShowMyEventButton: {
+        //                text: 'My Events Only',
+        //                click: function () {
+        //                    window.location.href = "/home?show_all_event=false"
+        //                }
+        //            }
+        //        },
+        //        header: {
+        //            left: 'prev,next today myCustomButton',
+        //            center: 'title',
+        //            right: (view_all_event == "0" ? 'ShowAllEventButton' : view_all_event == "1" ? 'ShowMyEventButton' : '') + ' dayGridMonth,timeGridWeek,timeGridDay,listWeek'
+        //        },
+        //        defaultDate: date_now,
+        //        navLinks: true, // can click day/week names to navigate views
+        //        selectable: true,
+        //        selectMirror: true,
+        //        select: function (arg) {
+
+        //            new_event(arg.start, arg.end);
+        //            calendar.unselect()
+
+        //        },
+        //        editable: true,
+        //        eventLimit: true, // allow "more" link when too many events
+        //        eventClick: function (info) {
+        //            info.el.style.borderColor = 'red';
+        //            console.log(info.event.extendedProps.type);
+        //            view_update_event(info.event.id, info.event.extendedProps.type);
+
+        //            info.el.style.borderColor = '';
+
+        //        },
+        //        eventResize: function (info) {
+
+        //            if (!confirm("Is this okay?")) {
+        //                info.revert();
+
+        //            }
+        //            else {
+        //                update_start_end_event(info);
+
+        //            }
+        //        },
+        //        eventDrop: function (info) {
+        //            if (!confirm("Are you sure about this change?")) {
+        //                info.revert();
+        //            }
+        //            else {
+        //                update_start_end_event(info);
+        //            }
+        //        },
+        //        events: {
+        //            url: '/home/GetAllEvent',
+        //            method: 'POST',
+        //            extraParams: {
+        //                year: d.getFullYear()
+        //            },
+        //            failure: function () {
+        //                alert('there was an error while fetching events!');
+        //            },
+
+        //        }
+
+        //    });
+        //    calendar.render();
+
+        //});
+        displayMerchantSummaries();
+        //Datepicker
+        $(".datepicker").datepicker({
+            changeMonth: true,
+            changeYear: true,
+            yearRange: '1950:2050'
+        });
+
+        /**
+         * add new event
+         * @@param start
+         * @@param end
+         */
+        function new_event(start, end) {
+            $(".update_event_flag").hide();
+            $("#span_ticket").empty();
+
+            //Intl.DateTimeFormat().resolvedOptions().timeZone
+            $.post("home/getclienttimezone", { id: Intl.DateTimeFormat().resolvedOptions().timeZone }, function (data) {
+                $("select[name=schedule_timezone]").val(data);
+            });
+
+
+            $("#event_modal").modal({ backdrop: 'static', keyboard: false });
+            $("#event_form").resetForm();
+            $("#container-detail").hide();
+            if (start) {
+
+                var d_start = new Date(start)
+                var d_end = new Date(end);
+
+                $("input[name=start_date]").val((d_start.getMonth() + 1) + "/" + d_start.getDate() + "/" + d_start.getFullYear());
+                $("input[name=end_date]").val((d_end.getMonth() + 1) + "/" + d_end.getDate() + "/" + d_end.getFullYear());
+                $("input[name=start_hours]").val(d_start.getHours() > 12 ? (d_start.getHours() - 12) : d_start.getHours());
+                $("input[name=start_minute]").val(d_start.getMinutes());
+                $("input[name=end_hours]").val(d_end.getHours() > 12 ? (d_end.getHours() - 12) : d_end.getHours());
+                $("input[name=end_minute]").val(d_end.getMinutes());
+                $("select[name=start_am_pm]").val(d_start.getHours() > 12 ? "PM" : "AM");
+                $("select[name=end_am_pm]").val(d_end.getHours() > 12 ? "PM" : "AM");
+                $(".div_end_date").show();
+            }
+            else {
+                $("input[name=start_date]").val(m + "/" + da + "/" + d.getFullYear());
+
+            }
+            $("textarea[name=description]").html('');
+
+        }
+        //remove event.
+        //view/update event
+        /**
+         * click to view event
+         * @@param id event id
+         */
+        function view_update_event(id, type="Event") {
+            if (type === "DemoScheduler") {
+                $('#wait_overlay_loading').show();
+                var MemberNumber = $("#calendarMemberNumber").val();
+                var DemoSchedulerId = $("#calendarDemoSchedulerId").val();
+                $.ajax({
+                    type: "POST",
+                    url: "/DemoScheduler/ShowEventPopup",
+                    data: { "DemoSchedulerId": DemoSchedulerId, "MemberNumber": MemberNumber, "EventId": id },
+                    dataType: "html",
+                    success: function (data) {
+                        $("#render-modal-event-calendar").html(data);
+                        $("#modal-event-demo-scheduler").modal("show");
+                        $('#wait_overlay_loading').hide();
+                    }
+                });
+            }
+            else {
+                $(".update_event_flag").show();
+                $.post("/home/GetEventById", { id: id }, function (data) {
+                    if (data[0]) {
+                        var h = Number(data[1].StartEvent.substring(11, 13));
+                        var ap = "AM";
+                        if (h == 12) {
+                            ap = "PM";
+                        }
+                        if (h > 12) {
+                            ap = "PM";
+                            h = h - 12;
+                        }
+                        $("input[name=hd_event_id]").val(id);
+                        $("select[name=schedule_timezone]").val(data[1].TimeZone);
+                        $("input[name=title]").val(data[1].Name);
+                        $("input[name=start_date]").val(data[1].StartEvent.substring(0, 10));
+                        $("input[name=start_hours]").val(h);
+                        $("input[name=start_minute]").val(data[1].StartEvent.substring(14, 16));
+                        $("select[name=start_am_pm]").val(ap);
+
+                        $("#span_ticket").empty();
+                        if (data[1].TicketId) {
+                            $("#span_ticket").append("<a href='/ticket/detail/" + data[1].TicketId + "'>Ticket #" + data[1].TicketId + "</a>");
+                            $("#status_0").html("No complete");
+                            $("#status_1").html("DONE");
+                        } else if (data[1].CustomerCode !== null) {
+                            $("#span_ticket").append("<a href='/SaleLead?id=" + data[1].CustomerCode + "&eventId=" + data[1].Id + "'>Sale Lead #" + data[1].CustomerCode + "</a>")
+                            $(".div_end_date").hide();
+                            $("#status_0").html("Pending");
+                            $("#status_1").html("Visited");
+
+                        }
+
+                        if (data[1].EndEvent) {
+                            let h1 = Number(data[1].EndEvent.substring(11, 13));
+                            let ap1 = "AM";
+                            if (h1 > 12) {
+                                ap1 = "PM";
+                                h1 = h1 - 12;
+                            }
+                            $("input[name=end_date]").val(data[1].EndEvent.substring(0, 10));
+                            $("input[name=end_hours]").val(h1);
+                            $("input[name=end_minute]").val(data[1].EndEvent.substring(14, 16));
+                            $("select[name=end_am_pm]").val(ap1);
+                        }
+                        else {
+                            $("input[name=end_date]").val('');
+                            $("input[name=end_hours]").val('');
+                            $("input[name=end_minute]").val('');
+                            $("select[name=end_am_pm]").val('');
+                        }
+
+                        $("textarea[name=description]").html(data[1].Description);
+
+
+                        if (data[1].Done == "1") {
+                            $("#event_done_1").prop("checked", true);
+                            $("#event_done_1").parent().addClass("active");
+                            $("#event_done_0").parent().removeClass("active");
+                        }
+                        else {
+                            $("#event_done_0").prop("checked", true);
+                            $("#event_done_0").parent().addClass("active");
+                            $("#event_done_1").parent().removeClass("active");
+                        }
+
+                        if (data[1].SalesLeadId != null && data[1].SalesLeadId != "") {
+                            $("#container-detail").show();
+                            if ($('#salelead_id_detail').val() != data[1].SalesLeadId) {
+                                $('#toggle-icon').addClass("fa-plus").removeClass("fa-minus");
+                                $("#data_detail_salelead").html("");
+                            }
+                            $('#btn_show_detail_salelead').off().on("click", function () {
+                                if ($("#data_detail_salelead").html().replace(' ', '').length > 0) {
+                                    $(".content-detail").slideToggle(200);
+                                } else {
+                                    $('#salelead_id_detail').val(data[1].SalesLeadId);
+                                    show_appoiment(data[1].SalesLeadId);
+                                }
+                                $('#toggle-icon').toggleClass("fa-plus fa-minus");
+                            });
+                        }
+                        else {
+                            $("#container-detail").hide();
+                        }
+
+                        $("#lastUpdated").html(data[1].LastUpdateBy ?? '______');
+
+                        $("#event_modal").modal({ backdrop: 'static', keyboard: false });
+                    }
+                    else {
+                        noty({ "text": data[2], "layout": "topRight", "type": "error" });
+                    }
+                });
+            }
+
+        }
+        function refesh_event() {
+            calendar.refetchEvents();
+        }
+        function refesh_resource() {
+
+        }
+        $('#event_form').on('submit', function () {
+            $('#loading_over').show();
+        });
+
+        $('#event_form').ajaxForm(function (data) {
+            $('#loading_over').hide();
+            $("input[name=hd_event_id]").val('');
+
+            //console.log(data);
+            if (data[0]) {
+                var event = calendar.getEventById(data[1].Id);
+                //console.log(event);
+
+                if (event) {
+                    event.setProp('title', data[1].Name);
+                    event.setProp('start', data[1].StartEvent);
+                    event.setProp('end', data[1].EndEvent);
+                    event.setProp('backgroundColor', data[1].Color);
+                }
+                else {
+                    calendar.addEvent({ title: data[1].Name, start: data[1].StartEvent, end: data[1].EndEvent, id: data[1].Id, backgroundColor: data[1].Color });
+                }
+
+                noty({ "text": data[2], "layout": "topRight", "type": "success" });
+                $('#event_modal').modal('hide');
+
+                //calendar.refetchEvents();
+
+            } else {
+                noty({ "text": data[2], "layout": "topRight", "type": "error" });
+            }
+        });
+
+        /**
+         * update start, end cua event
+         * @@param info info event calendar
+         */
+        function update_start_end_event(info) {
+            console.log(info);
+            var d_start = new Date(info.event.start);
+
+            var start_date = d_start.getFullYear() + "-" + ((d_start.getMonth() + 1) >= 10 ? (d_start.getMonth() + 1) : "0" + (d_start.getMonth() + 1)) + "-" + (d_start.getDate() >= 10 ? d_start.getDate() : "0" + d_start.getDate());
+            var start_time = (d_start.getHours() >= 10 ? d_start.getHours() : "0" + d_start.getHours()) + ":" + (d_start.getMinutes() >= 10 ? d_start.getMinutes() : "0" + d_start.getMinutes()) + ":00";
+
+            var offset_h = Math.abs(Math.round(d_start.getTimezoneOffset() / 60));
+            var offset_min = (Math.abs(d_start.getTimezoneOffset() / 60) - offset_h) * 60;
+            var gmt = (offset_h < 10 ? "0" + offset_h : offset_h) + ":" + (offset_min < 10 ? "0" + offset_min : offset_min);
+            if (d_start.getTimezoneOffset() > 0) {
+                gmt = "-" + gmt;
+            }
+            else {
+                gmt = "+" + gmt;
+            }
+
+            var end = '';
+            if (info.event.end) {
+                var d_end = new Date(info.event.end);
+                var end_date = ((d_end.getMonth() + 1) >= 10 ? (d_end.getMonth() + 1) : "0" + (d_end.getMonth() + 1)) + "/" + (d_end.getDate() >= 10 ? d_end.getDate() : "0" + d_end.getDate()) + "/" + d_end.getFullYear();
+                var end_time = (d_end.getHours() >= 10 ? d_end.getHours() : "0" + d_end.getHours()) + ":" + (d_end.getMinutes() >= 10 ? d_end.getMinutes() : "0" + d_end.getMinutes()) + ":00";
+                end = (end_date + "T" + end_time + gmt);
+            }
+
+            var start = (start_date + "T" + start_time + gmt)
+
+            //console.log(start);
+            //console.log(end);
+
+            $.post("/home/updateeventdate", { id: info.event.id, start: start, end: end }, function (data) {
+                if (data[0]) {
+                    var event = calendar.getEventById(data[1].Id);
+                    //console.log(event);
+
+                    if (event) {
+                        event.setProp('title', data[1].Name);
+                        event.setProp('start', data[1].StartEvent);
+                        event.setProp('end', data[1].EndEvent);
+                        event.setProp('backgroundColor', data[1].Color);
+                    }
+                    noty({ "text": "Event has been updated", "layout": "topRight", "type": "success" });
+                }
+                else {
+                    noty({ "text": "Opp ! Something went wrong", "layout": "topRight", "type": "success" });
+                    info.revert();
+                }
+            });
+        }
+
+
+        function show_appoiment(code) {
+            if (!$('#detail_salelead_loading').is(":hidden")) return;
+            $('#detail_salelead_loading').show();
+            var pr_access = false;
+            $.ajax({
+                method: "POST",
+                url: "/salelead/getAppoimentsPartial",
+                data: { code, pr_access },
+                dataType: "html"
+            })
+                .done(function (data) {
+                    $("#data_detail_salelead").html(data);
+                    $("#data_detail_salelead").show().find(".list_appoi").slideDown(200);
+                })
+                .fail(function () {
+                    alert("Show Appoiment fail");
+                })
+                .always(function () {
+                    $('#detail_salelead_loading').hide();
+                });
+        }
+
+        function displayMerchantSummaries() {
+            $.ajax({
+                method: "GET",
+                url: "/merchantman/getmerchantsummariesasync",
+                dataType: "html"
+            })
+                .done(function (data) {
+                    let _data = JSON.parse(data);
+                    $("#total-merchant").text(_data[1].TotalMerchant);
+                    $("#total-merchant-license").text(_data[1].TotalMerchantLicense);
+                    $("#total-merchant-MID").text(_data[1].TotalMerchantMID);
+                    $("#total-merchant-license-MID").text(_data[1].TotalMerchantLicenseAndMID);
+                })
+                .fail(function () {
+                })
+                .always(function () {
+                    animation();
+                });
+        }
+
+        function animation() {
+            jQuery(document).ready(function ($) {
+                $('.number-animation').counterUp({
+                    delay: 10,
+                    time: 1000
+                });
+            })
+        }
+
+        // view detail member
+        function viewdetail(mn) {
+            $("#modal-member").modal('show');
+            $.ajax({
+                method: "POST",
+                url: "/account/GetMemberInfoSimple",
+                data: { "mn": mn },
+                dataType: "html"
+            })
+                .done(function (data) {
+                    $("#content-member").html(data);
+                })
+                .fail(function () {
+                    alert("Oops! Something went wrong");
+                    $("#modal-member").modal('hide');
+                })
+                .always(function () {
+                    $("#loading").hide();
+                });
+        }
+        /* #region google chart */
+
+                     //***********************
+
+
+                                //google.charts.load('current', {packages: ['corechart', 'bar']});
+                                //google.charts.setOnLoadCallback(drawColumnChart);
+                                //google.charts.setOnLoadCallback(drawBarChart);
+
+                                //Datepicker
+                                //$(".datepicker-jq").datepicker({
+                                //    changeMonth: true,
+                                //    changeYear: true,
+                                //    yearRange: '1950:2050'
+                                //});
+
+                                //function changeTime() {
+                                //    google.charts.setOnLoadCallback(drawColumnChart);
+                                //}
+
+                                //function changeDate() {
+                                //    google.charts.setOnLoadCallback(drawBarChart);
+                                //}
+
+                                //function drawColumnChart() {
+                                //    var _monthly_quarter = $("select[name='monthly_quarter']").val();
+                                //    var _year = $("select[name='_year']").val();
+                                //    var _title = "Month";
+                                //    if (_monthly_quarter == "Quarter") {
+                                //        _title = "Quarter";
+                                //    }
+
+                                //    var options = {
+                                //        title: '',
+                                //        chartArea: { width: '65%' },
+                                //        hAxis: {
+                                //            title: _title,
+                                //            minValue: 0
+                                //        },
+                                //        vAxis: {
+                                //            title: 'Sales Income ($)'
+                                //        },
+                                //        legend: { position: 'bottom', alignment: 'start' }
+
+                                //    };
+
+                                //    $.ajax({
+                                //        method: "POST",
+                                //        url: "/home/GetColumnChartData",
+                                //        data: {
+                                //            MonthlyQuarter: _monthly_quarter,
+                                //            Year: _year
+                                //        },
+                                //        dataType: "json"
+                                //    })
+                                //        .done(function (data) {
+                                //            if (data[0] == true) {
+                                //                var data = google.visualization.arrayToDataTable(data[1]);
+                                //                var chart = new google.visualization.ColumnChart(document.getElementById('div_ColumnChart'));
+                                //                chart.draw(data, options);
+                                //            }
+                                //            else {
+                                //                var MsgError = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"error"}');
+                                //                noty(MsgError);
+                                //            }
+                                //        })
+                                //        .fail(function () {
+                                //            alert("Oops! Something went wrong");
+                                //        })
+
+                                //}
+
+                                //function drawBarChart() {
+                                //    var _f_date = $("input[name='f_date']").val();
+                                //    var _t_date = $("input[name='t_date']").val();
+
+                                //    var options = {
+                                //        title: '',
+                                //        chartArea: { width: '50%' },
+                                //        hAxis: {
+                                //            title: 'Quantity',
+                                //            minValue: 0
+                                //        },
+                                //        vAxis: {
+                                //            title: 'Product'
+                                //        },
+                                //        legend: { position: 'bottom', alignment: 'start' }
+                                //    };
+
+                                //    $.ajax({
+                                //        method: "POST",
+                                //        url: "/home/GetBarChartData",
+                                //        data: {
+                                //            f_date: _f_date,
+                                //            t_date: _t_date
+                                //        },
+                                //        dataType: "json"
+                                //    })
+                                //        .done(function (data) {
+                                //            if (data[0] == true) {
+                                //                var data = google.visualization.arrayToDataTable(data[1]);
+                                //                var chart = new google.visualization.BarChart(document.getElementById('div_BarChart'));
+                                //                chart.draw(data, options);
+                                //            }
+                                //            else {
+                                //                var MsgError = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"error"}');
+                                //                noty(MsgError);
+                                //            }
+                                //        })
+                                //        .fail(function () {
+                                //            alert("Oops! Something went wrong");
+                                //        })
+                                //}
+
+                                //function TestChanges() {
+
+                                //    $.ajax({
+                                //        url: "/api/ticketchanges/",
+                                //        dataType: "json",
+                                //        method: "get"
+                                //    }).done(function (result) {
+                                //        alert(result);
+                                //    }).fail(function () {
+                                //        alert("Opp!Something went wrong");
+                                //    }).always(function () { });
+                                //}
+
+
+
+
+        /*#endregion*/
+        $('.chart-values').change(function () {
+            LoadDataChart();
+        })
+
+        var ctx1 = document.getElementById("new-customer-chart").getContext('2d');
+        var chart1 = new Chart(ctx1, {
+            type: 'bar',
+            data: {
+                title: {
+                    text: "New customer",
+                },
+                datasets: [{
+                    label: 'New Customer',
+                    data: [0],
+                    backgroundColor: '#42ba32',
+                    borderColor: '#42ba32',
+                    borderWidth: 1,
+                    yAxisID: 'NumberCustomer',
+                    order: 1
+                },{
+                    label: 'Canceled Customer',
+                    data: [0],
+                    backgroundColor: '#fdb45c',
+                    borderColor: '#fdb45c',
+                    borderWidth: 1,
+                    yAxisID: 'NumberCustomer',
+                    order: 1
+                },{
+                    label: 'Goal',
+                    data: [0],
+                    backgroundColor: '#e32727',
+                    borderColor: '#e32727',
+                    borderWidth: 1,
+                    yAxisID: 'NumberCustomer',
+                    order: 1,
+                    type: "line"
+                }
+                ],
+                labels: ['January']
+            },
+
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                tooltips: {
+                    callbacks: {
+                        label: function (tooltipItem, data) {
+                            return Number(tooltipItem.yLabel) + " customers";
+                        }
+                    }
+                },
+                title: {
+                    display: true,
+                    text: ''
+                },
+                scales: {
+                    yAxes:
+                        [{
+                            id: 'NumberCustomer',
+                            type: 'linear',
+                            position: 'left',
+                            gridLines: {
+                                display: false,
+                            },
+                            scaleLabel:
+                            {
+                                display: true,
+                                labelString: ''
+                            },
+                            ticks: {
+                                min: 0, // it is for ignoring negative step.
+                                beginAtZero: true,
+                                callback: function (value, index, values) {
+                                    if (Math.floor(value) === value) {
+                                        return value;
+                                    }
+                                }
+                            }
+                        }]
+                },
+                elements: {
+                    line: {
+                        fill: false
+                    }
+                },
+                plugins: {
+                    labels: {
+                        render: function () {
+                            return '';
+                        }
+                    },
+                },
+                onClick: clickHandler
+            },
+        });
+
+
+        function clickHandler(evt) {
+            const points = chart1.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, true);
+
+            if (points.length) {
+                const firstPoint = points[0];
+                const label = chart1.data.labels[firstPoint._index];
+                const value = chart1.data.datasets[firstPoint._datasetIndex].data[firstPoint._index];
+                const tableName = firstPoint._model.datasetLabel;
+                const mounth = firstPoint._index + 1;
+                const year = $('#select2-chart_year-container').text();
+                let type='NEWCUS'
+                if (tableName == "Canceled Customer") {
+                    type = 'CANCEL'
+                }
+                console.log(label);
+                console.log(value);
+                location.href = `/StoreReport/DashboardDetail?year=${year}&month=${mounth}&type=${type}`
+            }
+        }
+
+        function LoadDataChart() {
+            $.ajax({
+                url: '/merchantman/reportcustomerforchart',
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    Condition: {
+                        "Unit": $("#chart_unit").val(),
+                        "Year": $("#chart_year").val(),
+                        "Type": 'chart-new-customer'
+                        }
+                },
+                success: function (data) {
+                    if (data[0]) {
+                        let fullData = JSON.parse(data[1]).Records[0]
+                        let _dataFirstInvDate = []
+                        let _dataCancelDate = []
+                        let _dataGoalDate = []
+                        if (fullData.FirstInvDate) {
+                            try {
+                                _dataFirstInvDate = JSON.parse(fullData.FirstInvDate)
+                            } catch { }
+                        }
+                        if (fullData.CancelDate) {
+                            try {
+                                _dataCancelDate = JSON.parse(fullData.CancelDate)
+                            } catch { }
+                        }
+                        if (fullData.GoalDate) {
+                            try {
+                                _dataGoalDate = JSON.parse(fullData.GoalDate)
+                            } catch { }
+                        }
+
+                        let _finFirstInvDate = [], _finCancelDate = [], _finGoalDate = [];
+                        for (let i = 1; i <= 12; i++) {
+                            let newObj = new Object();
+                            newObj.NumberCustomer = 0;
+                            newObj.ColumnNumber = i;
+                            newObj.Goal = 0;
+                            newObj.ColumnName = moment(i, 'M').format('MMMM');;
+                            let selectFirstInvDate = _dataFirstInvDate.filter(x => x.ColumnNumber == i);
+                            if (selectFirstInvDate.length != 0) {
+                                _finFirstInvDate.push(selectFirstInvDate[0])
+                            }else{
+                                _finFirstInvDate.push(newObj)
+                            }
+
+                            let selectCancelDate = _dataCancelDate.filter(x => x.ColumnNumber == i);
+                            if (selectCancelDate.length != 0) {
+                                _finCancelDate.push(selectCancelDate[0])
+                            } else {
+                                _finCancelDate.push(newObj)
+                            }
+
+                            let selectGoalDate = _dataGoalDate.filter(x => x.ColumnNumber == i);
+                            if (selectGoalDate.length != 0) {
+                                _finGoalDate.push(selectGoalDate[0])
+                            } else {
+                                _finGoalDate.push(newObj)
+                            }
+                        }
+
+                        chart1.data.datasets[0].data = _finFirstInvDate.map(c => c.NumberCustomer);
+                        chart1.data.datasets[2].data = _finGoalDate.map(c => c.Goal);
+                        chart1.options.title.text = "Customer Overview";
+                        chart1.data.labels = _finFirstInvDate.map(c => c.ColumnName);
+                       /* chart1.update();*/
+
+                        console.log(_finCancelDate.map(c => c.NumberCustomer), _finCancelDate.map(c => c.ColumnName));
+                        chart1.data.datasets[1].data = _finCancelDate.map(c => c.NumberCustomer);
+                        chart1.update();
+                    }
+                },
+                error: function (data) {
+                    console.log(data.message);
+                },
+                always: function () {
+                }
+            })
+            //$.ajax({
+            //    url: '/merchantman/reportcustomerforchart',
+            //    type: 'POST',
+            //    dataType: 'json',
+            //    data: {
+            //        Condition: {
+            //            "Unit": $("#chart_unit").val(),
+            //            "Year": $("#chart_year").val(),
+            //            "Type": 'chart-cancel-customer'
+            //        }
+            //    },
+            //    success: function (data) {
+            //        if (data[0]) {
+            //            let _data = data[1].Records;
+            //            console.log(_data.map(c => c.NumberCustomer), _data.map(c => c.ColumnName));
+            //            chart1.data.datasets[1].data = _data.map(c => c.NumberCustomer);
+            //            chart1.update();
+            //        }
+            //    },
+            //    error: function (data) {
+            //        console.log(data.message);
+            //    },
+            //    always: function () {
+            //    }
+            //})
+        }
+        LoadDataChart();
+    </script>
+
+}

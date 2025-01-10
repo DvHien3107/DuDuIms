@@ -1,0 +1,40 @@
+﻿@model IEnumerable<IMSLog_scan>
+@using EnrichcousBackOffice.Models.CustomizeModel
+<div class="panel-group" role="tablist" aria-multiselectable="false">
+    @foreach (var item in Model.OrderByDescending(l => l.CreateAt))
+    {
+        var error_count = item.scanlogs.Count(s => !string.IsNullOrEmpty(s.ex));
+        <div class="panel @(error_count==0?"panel-success":"panel-danger")">
+            <div class="panel-heading" role="tab" data-toggle="collapse" href="#@item.CreateAt.Value.Ticks" style="cursor:pointer">
+                <h5 class="panel-title">
+                    <a>[<span class="UTC-LOCAL">@item.CreateAt</span>] Scaned by @item.ScanBy</a>
+                    @*<span style="float:right">Fail count: @error_count</span>*@
+                </h5>
+            </div>
+            <div id="@item.CreateAt.Value.Ticks" class="panel-collapse collapse" role="tabpanel">
+                <div class="panel-body">
+                    @foreach (var l in item.scanlogs)
+                    {
+                        if (string.IsNullOrEmpty(l.ex))
+                        {
+                            <span class="text-success">
+                                - [<span class="UTC-LOCAL">@l.time</span>] @Html.Raw(l.log)
+                            </span><span class="pull-right text-success"><b>(Success)</b> </span><br />
+                        }
+                        else
+                        {
+                            <span class="text-danger">
+                                - [<span class="UTC-LOCAL">@l.time</span>] @Html.Raw(l.log) <button class="btn btn-sm" onclick="renderJson('@(l.time.Ticks)')">show detail</button>
+
+                            </span><span class="pull-right text-danger"><b>(Fail)</b> </span><br />
+                            <textarea id="@(l.time.Ticks)_textarea" style="display:none; width:100%" rows="3">@l.ex</textarea>
+                            <pre id="@(l.time.Ticks)_pre" style="white-space: pre-wrap; display:none" class="json-document"></pre>
+                        }
+
+                    }
+
+                </div>
+            </div>
+        </div>
+    }
+</div>

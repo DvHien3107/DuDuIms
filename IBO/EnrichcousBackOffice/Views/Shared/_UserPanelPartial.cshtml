@@ -1,0 +1,58 @@
+﻿@model EnrichcousBackOffice.Models.P_Member
+
+<li class="dropdown user user-menu">
+    <!-- Menu Toggle Button -->
+    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+        @if (string.IsNullOrEmpty(Model?.Picture) == true)
+        {
+            if (Model?.Gender == "Male")
+            {
+                <img src="~/Upload/Img/Male.png" class="user-image">
+            }
+            else
+            {
+                <img src="~/Upload/Img/Female.png" class="user-image">
+            }
+        }
+        else
+        {
+            <img src="@Model.Picture" class="user-image">
+        }
+
+        <span class="hidden-xs">@(Model?.FullName)</span>
+    </a>
+    <ul class="dropdown-menu">
+        <!-- The user image in the menu -->
+        <li class="user-header">
+            @if (string.IsNullOrEmpty(Model?.Picture) == true)
+            {
+                if (Model?.Gender == "Male")
+                {
+                    <img src="~/Upload/Img/Male.png" class="img-circle" alt="User Image">
+                }
+                else
+                {
+                    <img src="~/Upload/Img/Female.png" class="img-circle" alt="User Image">
+                }
+            }
+            else
+            {
+                <img src="@Model.Picture" class="img-circle" alt="User Image">
+            }
+            <p>
+                @(Model?.FullName)
+                <small>@(Model?.RoleName)</small>
+            </p>
+        </li>
+
+        <!-- Menu Footer-->
+        <li class="user-footer">
+            <div class="pull-left">
+                <a href="/account/myprofile" class="btn btn-default btn-flat">Xem hồ sơ</a>
+            </div>
+            <div class="pull-right">
+                <a href="/account/logout" class="btn btn-default btn-flat">Đăng xuất</a>
+            </div>
+        </li>
+    </ul>
+</li>

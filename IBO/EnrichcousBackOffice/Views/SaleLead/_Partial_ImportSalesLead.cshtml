@@ -1,0 +1,339 @@
+﻿@{
+    var totalRecords = (int)TempData["TotalRecords"];
+    var messageErr = TempData["Message"];
+    var type = TempData["Status"];
+    List<string> columnName = (List<string>)TempData["ColumnName"] ?? new List<string>();
+    var dataCells = (List<List<string>>)TempData["ColumnData"] ?? new List<List<string>>();
+    var keyName = new List<string> { "Salon Name", "Phone Number", "Address", "City", "State", "Country", "Zipcode", "City, State Zipcode", "Rating", "Sale Person #", "Sale Person Name", "More info" };
+    bool isSaler = ViewBag.IsSaler == 1;
+}
+<link href="~/Content/DualListMulti/multi.min.css" rel="stylesheet" />
+<style>
+
+    #dataTable_state tr.selected {
+        background-color: #00a65a;
+        color: #fff;
+    }
+
+    .state-label span {
+        cursor: pointer;
+    }
+
+    .state-label i:hover {
+        color: whitesmoke;
+        cursor: pointer;
+    }
+
+    .no-select {
+        -webkit-touch-callout: none; /* iOS Safari */
+        -webkit-user-select: none; /* Safari */
+        -khtml-user-select: none; /* Konqueror HTML */
+        -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+        user-select: none; /* Non-prefixed version, currentlysupported by Chrome and Opera */
+    }
+
+    .action-datatable {
+        left: -100%;
+        background: #e8e8e8;
+    }
+
+        .action-datatable li button {
+            display: inline-block;
+            color: white;
+            width: 100%;
+        }
+
+    .multi-wrapper a {
+        color: #000;
+    }
+
+    .btn-select-assigned {
+        color: #28a745;
+        background-color: #ffffff;
+        border-color: #28a745;
+        outline: none;
+    }
+
+        .btn-select-assigned:focus {
+            outline: none !important;
+        }
+
+        .btn-select-assigned:hover, .btn-select-assigned.active {
+            color: #fff;
+            background-color: #28a745;
+            border-color: #28a745;
+        }
+</style>
+
+<button id="save_data" type="button" onclick="open_assign_modal()"
+        class="btn btn-info pull-right" style="display:none;">
+    Save lead
+    <img class="loading_img" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+</button>
+
+@*@if (isSaler)
+    {
+        <label class="label label-default pull-right" style="cursor:pointer; padding:8px;margin-right:10px">
+                <input type="checkbox" id="assign-me" value="false" style="vertical-align: sub"> Assign for me
+            </label>
+        <a href="" class="btn btn-default pull-right" id="assigned-info"
+           data-toggle="modal" data-target="#addmember_modal"
+           style="margin-right: 10px">
+            Assigned to
+        </a>
+    }*@
+
+<h4>Top @(totalRecords > 50 ? 50 : totalRecords) records</h4>
+<table style="width: 100%;" class="table table-hover table-bordered table-striped dataTable_import">
+    <thead>
+        <tr>
+            @for (int i = 0; i < columnName.Count; i++)
+            {
+                <td id="option-col-@i">
+                    <select class="form-control select-data-column selectpicker" id="choice-name-column-@i" stt="@i" onchange="">
+                        <option id="option-x" value="x"> Undefined value</option>
+                        @for (int j = 0; j < keyName.Count; j++)
+                        {
+                            <option id="option-@j" value="@j" className="fa-exclamation-triangle">
+                                @(keyName[j])
+                            </option>
+                        }
+                    </select>
+                </td>
+            }
+        </tr>
+        <tr>
+            @for (int i = 0; i < columnName.Count; i++)
+            {
+                <th>@(columnName[i] ?? "Name undefine")</th>
+            }
+        </tr>
+        @if (columnName.Count == 0)
+        {
+            <tr>
+                @for (int i = 0; i < keyName.Count; i++)
+                {
+                    <th>@(keyName[i] ?? "Name undefine")</th>
+                }
+            </tr>
+        }
+    </thead>
+    <tbody>
+        @for (int i = 0; i < dataCells.Count; i++)
+        {
+            <tr id="row_@i">
+                @for (int num = 0; num < columnName.Count; num++)
+                {
+                    <td id="cell_@num">@(dataCells[i][num])</td>
+                }
+            </tr>
+        }
+    </tbody>
+</table>
+
+<script src="~/Content/Admin/plugins/input-mask/jquery.inputmask.js"></script>
+<script src="~/Content/DualListMulti/multi.custom.js"></script>
+<script src="~/Scripts/SalesLead/RI.Common.js"></script>
+
+<script>
+    //dataTable
+    $('.dataTable_import').DataTable({
+        'paging': true,
+        'searching': false,
+        'lengthChange': true,
+        'ordering': true,
+        'info': false,
+        "scrollX": true,
+        'autoWidth': true
+    })
+
+    var totalColumn = @(columnName.Count);
+    var totalRecords = @totalRecords;
+    var message = '@messageErr';
+    var type = '@type';
+    var saveCompleted = 0;
+    var tabAssign = null;
+    var reqData = "";
+
+    noty({ "text": message, "layout": "topRight", "type": type });
+
+    $('#total_number').html(totalRecords);
+    if (type == 'success') {
+        $('#save_data').show().off("click");
+
+        window.addEventListener("beforeunload", function (e) {
+            var confirmationMessage = "Do you want you stop import data";
+            if (!saveCompleted) {
+                (e || window.event).returnValue = confirmationMessage; //Gecko + IE
+                return confirmationMessage;                            //Webkit, Safari, Chrome
+            }
+
+        });
+    }
+
+    var oldValue = [];
+    for (var i = 0; i < totalColumn; i++) {
+        oldValue.push("x");
+    }
+
+    $('.select-data-column').change(function () {
+        if (this.value == '7') { // ẩn khi chọn combo
+            $('option[id^="option-3"]').hide();
+            $('option[id^="option-4"]').hide();
+            $('option[id^="option-6"]').hide();
+            //get index trong combo đã được chọn
+            let idxop1 = oldValue.indexOf('3');
+            let idxop2 = oldValue.indexOf('4');
+            let idxop3 = oldValue.indexOf('6');
+            //remove lựa chọn combo
+            $('#choice-name-column-' + idxop1).val('x');
+            $('#choice-name-column-' + idxop2).val('x');
+            $('#choice-name-column-' + idxop3).val('x');
+            //save option history
+            oldValue[idxop1] = 'x';
+            oldValue[idxop2] = 'x';
+            oldValue[idxop3] = 'x';
+        }
+        if (this.value != 'x' && this.value != '11') { //ẩn những lựa chọn trừ undefine && more info
+            $('option[id="option-' + this.value + '"]').hide();
+            //$('#option-' + this.value).hide();
+        }
+
+        if (oldValue[this.getAttribute("stt")] == '7') { // hiện khi bỏ chọn combo
+            $('option[id^="option-3"]').show();
+            $('option[id^="option-4"]').show();
+            $('option[id^="option-6"]').show();
+        }
+
+        $('option[id^="option-' + oldValue[this.getAttribute("stt")] + '"]').show(); //hiện khi bỏ chọn
+
+        oldValue[this.getAttribute("stt")] = this.value; // lưu lựa chọn
+    })
+
+    $('.btn-salesperson').click(function () {
+        tabAssign = 'btn-salesperson';
+    });
+    $('.btn-team').click(function () {
+        tabAssign = 'btn-team';
+    })
+
+    $('#assign-select').change(function () {
+        var _data = $('#assign-select').val();
+        if (_data.length > 0)
+            $('#btn-assignto-save').removeAttr("disabled");
+        else
+            $('#btn-assignto-save').attr("disabled", "disabled");
+    })
+
+    function open_assign_modal() {
+        reqData = "";
+        for (var i = 0; i < totalColumn; i++) {
+            reqData += ($('#choice-name-column-' + i).val() + '|');
+        }
+        if (reqData.indexOf('0') < 0) {
+            noty({ "text": "Please choice Salon name column", "layout": "topRight", "type": "warning" });
+            return;
+        }
+        else if (reqData.indexOf('1') < 0) {
+            noty({ "text": "Please choice Salon phone number column", "layout": "topRight", "type": "warning" });
+            return;
+        }
+
+        $('#addmember_modal').modal();
+    }
+
+    async function save_data_import(isAssign) {
+        let memberNumber = '';
+        let teamNumber = 0;
+        if (isAssign) {
+            if (tabAssign == 'btn-team') {
+                memberNumber = '';
+                teamNumber = $('#assign-select').val()[0];
+            }
+            else {
+                memberNumber = $('#assign-select').val()[0];
+                teamNumber = 0;
+            }
+        }
+        let countNumber = 500;
+        let successNum = 0;
+        let failedNum = 0;
+
+        $("#save_data .loading_img").show();
+        $('#save_data').attr("disabled", "disabled");
+        //$('#assigned-info').attr("disabled", "disabled");
+        $('.select-data-column').attr("disabled", "disabled");
+
+        $(".close_import_data").removeAttr("data-dismiss", "modal").off("click");
+        $(".close_import_data").click(function () {
+            noty({ "text": "Please wating save completed", "layout": "topRight", "type": "warning" });
+        });
+
+        //let isPravite = $("#assign-me").is(':checked');
+
+        for (let start = 0; start < totalRecords;) {
+            await $.ajax({
+                method: "GET",
+                url: "/SaleLead/ImportSaleLead",
+                data: { key: reqData, startNumber: start, memberNumber: memberNumber, teamNumber: teamNumber }
+            })
+                .done(function (data) {
+                    if (data[0]) {
+                        start = data[1];
+                        $('#success_number').html(start);
+                        $('#failed_number').html(failedNum);
+                        if (data[1] == totalRecords) {
+                            $('#save_data').hide();
+                            $("#save_data .loading_img").hide();
+                            $('#save_data').removeAttr("disabled");
+                            //$('#assigned-info').hide();
+                            $('.select-data-column').removeAttr("disabled");
+
+                            $("#import_sales_progess").attr("aria-valuenow", 100);
+                            $("#import_sales_progess").css("width", '100%');
+                            $("#import_sales_progess").html("Saved compelte.");
+
+                            noty({ "text": "Data has been save completed!", "layout": "topRight", "type": "success" });
+                            saveCompleted = 1;
+                        }
+                        else {
+                            $("#import_sales_progess").attr("aria-valuenow", Math.round(start * 100 / totalRecords));
+                            $("#import_sales_progess").css("width", Math.round(start * 100 / totalRecords) + '%');
+                            $("#import_sales_progess").html("Saving: " + Math.round(start * 100 / totalRecords) + '%');
+                        }
+                    }
+                    else {
+                        failedNum += countNumber;
+                        start += countNumber;
+                        $('#success_number').html(start);
+                        $('#failed_number').html(failedNum);
+
+                        $('#save_data').removeAttr("disabled");
+                        //$("#import_sales_progess").removeClass("progress-bar-success").addClass("progress-bar-warning");
+                        $("#import_sales_progess").html("Save error");
+                        noty({ "text": "Save data Sales lead error. " + data[1], "layout": "topRight", "type": "warning" });
+
+                        if (start >= totalRecords) {
+                            $('#save_data').hide();
+                            $("#save_data .loading_img").hide();
+                            $('#save_data').removeAttr("disabled");
+                            //$('#assigned-info').removeAttr("disabled");
+                            $('.select-data-column').removeAttr("disabled");
+
+                            $("#import_sales_progess").attr("aria-valuenow", 100);
+                            $("#import_sales_progess").css("width", '100%');
+                            $("#import_sales_progess").html("Saved compelte.");
+                        }
+                    }
+                })
+                .fail(function () {
+                    start = -1;
+                    alert("fail");
+                })
+                .always(function () {
+                });
+        }
+    }
+
+</script>

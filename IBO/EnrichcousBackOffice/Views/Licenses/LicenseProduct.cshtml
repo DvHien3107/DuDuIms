@@ -1,0 +1,236 @@
+﻿<link href="~/Content/Admin/plugins/jqueryconfirm/jquery-confirm.min.css" rel="stylesheet" />
+<style>
+    .circular {
+        animation: rotate 2s linear infinite;
+        height: 50px;
+        transform-origin: center center;
+        width: 50px;
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        margin: auto;
+    }
+
+    .path {
+        stroke-dasharray: 1, 200;
+        stroke-dashoffset: 0;
+        animation: dash 1.5s ease-in-out infinite, color 6s ease-in-out infinite;
+        stroke-linecap: round;
+    }
+
+    @@keyframes rotate {
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    @@keyframes dash {
+        0% {
+            stroke-dasharray: 1, 200;
+            stroke-dashoffset: 0;
+        }
+
+        50% {
+            stroke-dasharray: 89, 200;
+            stroke-dashoffset: -35px;
+        }
+
+        100% {
+            stroke-dasharray: 89, 200;
+            stroke-dashoffset: -124px;
+        }
+    }
+
+    @@keyframes color {
+        100%,
+        0% {
+            stroke: #d62d20;
+        }
+
+        40% {
+            stroke: #0057e7;
+        }
+
+        66% {
+            stroke: #008744;
+        }
+
+        80%,
+        90% {
+            stroke: #ffa700;
+        }
+    }
+
+    .jconfirm .jconfirm-box.jconfirm-type-blue {
+        border-top: solid 5px #3498db !important;
+    }
+
+    .jconfirm.jconfirm-white .jconfirm-box, .jconfirm.jconfirm-light .jconfirm-box {
+        border-radius: unset;
+    }
+
+    .jconfirm .jconfirm-box.jconfirm-type-blue .jconfirm-title-c .jconfirm-icon-c {
+        color: #217346 !important;
+    }
+
+    .jconfirm-icon-c {
+        font-size: 16px !important;
+        transform: translateY(-2px);
+    }
+
+    .jconfirm-title {
+        font-size: 16px !important;
+        color: #3498db;
+    }
+
+    .jconfirm-content {
+        font-size: 14px;
+    }
+
+    .btn.btn-cancel {
+        background-color: #d2d2d2;
+        border-color: #d2d2d2;
+        margin-right: 5px;
+        font-size: 14px !important;
+        font-weight: 400 !important;
+        text-transform: capitalize !important;
+    }
+
+        .btn.btn-cancel i {
+            padding-right: 5px !important;
+        }
+
+        .btn.btn-cancel:hover {
+            border-color: #d2d2d2;
+        }
+
+    .btn.btn-confirm {
+        background-color: #2ca25d;
+        color: #ffffff;
+        border-color: #38a25d;
+        margin-right: 5px;
+        font-size: 14px !important;
+        font-weight: 400 !important;
+        text-transform: capitalize !important;
+    }
+
+        .btn.btn-confirm i {
+            padding-right: 5px !important;
+        }
+
+        .btn.btn-confirm:hover {
+            border-color: #38a25d;
+        }
+</style>
+<section class="content-header">
+    <h1>
+        Licenses Product & Addon
+        <small>Licenses Management</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i>  Home</a></li>
+        <li><i class="fa fa-file-o"></i> Licenses Product & Addon</li>
+    </ol>
+</section>
+<section class="content">
+    <div class="row">
+        @if (TempData["e"] != null)
+        {
+            <div class="alert alert-warning alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+            </div>
+        }
+        else if (TempData["s"] != null)
+        {
+            <div class="alert alert-success alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+            </div>
+        }
+        <div class="box box-primary">
+            <div class="box-body" style="background:#ecf0f5;">
+                <div class="nav-tabs-custom">
+                    <ul class="nav nav-tabs" id="main_tab" style="margin:10px 0px;">
+                        <li id="license" class="active"><a style="cursor: pointer;font-size:18px;" class="tabs" data-toggle="tab" data-tab='license'>License</a></li>
+                        <li id="addon"><a style="cursor: pointer;font-size:18px;" class="tabs" data-toggle="tab" data-tab='addon'> Addon </a></li>
+                        <li id="giftcard"><a style="cursor: pointer;font-size:18px;" class="tabs" data-toggle="tab" data-tab='giftcard'> Gift Card </a></li>
+                        <li id="other"><a style="cursor: pointer;font-size:18px;" class="tabs" data-toggle="tab" data-tab='other'> Other Services </a></li>
+                    </ul>
+                    <div class="content" style="position:relative">
+                        <div class="tab-content">
+                        </div>
+                        <div class="loadding-tab" style="position: absolute;right: 50%;top: 50%;transform: translate(-50%, -50%);color: #797979;">
+                            <svg class="circular" viewBox="25 25 50 50">
+                                <circle class="path" cx="50" cy="50" r="20" fill="none" stroke-width="2" stroke-miterlimit="10" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+@section script{
+    <script src="~/Content/Admin/plugins/jqueryconfirm/jquery-confirm.min.js"></script>
+    <script>
+        $('#main_tab li a').on("click", function (e) {
+            var TabName = $(this).attr('data-tab');
+            var CurrentTab = localStorage.getItem('lastTabLicense');
+            if (TabName !== CurrentTab) {
+                localStorage.setItem('lastTabLicense', TabName);
+                LoadTabContent();
+            }
+        })
+        function LoadTabContent() {
+            $(".tab-content").html('')
+            $('.loadding-tab').show();
+            var CurrentTab = localStorage.getItem('lastTabLicense');
+            if (!($('#main_tab').find('#' + CurrentTab)[0])) {
+                CurrentTab = $('#main_tab').find('li').first().attr('id');
+                localStorage.setItem('lastTabLicense', CurrentTab);
+            }
+            $('#' + CurrentTab).tab('show');
+            $.ajax({
+                url: '/Licenses/ChangeTab',
+                type: 'POST',
+                dataType: 'html',
+                data: { "TabName": CurrentTab },
+                success: function (data) {
+                    $(".tab-content").html(data)
+                },
+                error: function (data) {
+                    console.log(data.text);
+                },
+                complete: function () {
+                    $('.loadding-tab').hide();
+                }
+            });
+        }
+        LoadTabContent();
+        function load_tab() {
+            $("#partial_loading").show();
+            //var actived_id = $(".actived").first().attr("id");
+            var tabSelected = localStorage.getItem('lastTabLicense');
+            $.ajax({
+                method: "POST",
+                url: "/Licenses/LicenseProductAddon_Partial",
+                data: { "tabSelected": tabSelected },
+                dataType: "html"
+            })
+                .done(function (data) {
+                    $("#product_tab").html(data);
+                    load_event();
+                    //$("#" + actived_id).trigger("click");
+                })
+                .fail(function () {
+                    alert("load_addon_table failure");
+                })
+                .always(function () {
+                    $("#partial_loading").hide();
+                });
+        }
+    </script>
+}

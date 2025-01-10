@@ -1,0 +1,110 @@
+﻿<!DOCTYPE html>
+<html lang="en-us">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link rel="icon" href="~/Content/Img/favico.ico" />
+    <!-- Tell the browser to be responsive to screen width -->
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+    <!-- Font: family=Roboto -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap" rel="stylesheet">
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="/content/admin/bower_components/bootstrap/dist/css/bootstrap.min.css">
+    <!-- font-awesome -->
+    <link rel="stylesheet" href="~/Areas/PaymentGate/Content/plugins/font-awesome/css/font-awesome.min.css" />
+    <!-- Noty -->
+    <link rel="stylesheet" href="~/Content/noty/jquery.noty.css" />
+    <link rel="stylesheet" href="~/Content/noty/noty_theme_default.css" />
+    <link href="/Content/css/jquery-ui.css" rel="stylesheet" />
+    <link href="~/Content/Admin/bower_components/bootstrap-colorpicker/dist/css/bootstrap-colorpicker.min.css" rel="stylesheet" />
+    <link href="~/Content/Scrollbar/style_Scrollbar.css" rel="stylesheet" />
+    <link href="~/Content/Admin/plugins/iCheck/all.css" rel="stylesheet" />
+
+    <!--datatable-->
+    <link rel="stylesheet" href="/content/admin/bower_components/datatables.net-bs/css/dataTables.bootstrap.min.css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.min.css" rel="stylesheet" />
+    <!-- Layout ContentPage css -->
+    <link rel="stylesheet" href="~/content/admin/bower_components/select2/dist/css/select2.min.css" />
+    <!-- Layout MasterPage css -->
+    <link rel="stylesheet" href="~/Areas/Page/Content/css/ticketstyle.css" />
+    <script src="~/Scripts/jquery-3.5.1.min.js"></script>
+    <script src="~/content/admin/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+
+</head>
+<body style="overflow-x: auto;background-color: aliceblue;">
+    <!--loading overlay-->
+    <div id="wait_overlay" style="height: 100%; width: 100%; background-color: grey; position: fixed; left: 0px; top: 0px; z-index: 1051; display: none; transition: opacity .5s; opacity: 0"> </div>
+    <div id="wait_overlay_loading" style="position: fixed; top: 30%; left: 50%; margin-left: -50px;text-align: center; padding-top: 10px;z-index:9999;display:none">
+        <img src="/Content/ajax-loaders/loading2.gif" style="width: 100px" />
+    </div>
+    <h3 style="padding: 20px 0;width: 100%;text-align: center;margin-bottom: 0;">
+        <img src="~/Content/Img/logo_enrich.png" width="120" />
+    </h3>
+
+    <div style="margin: auto; max-width:100%;width:@(ViewBag.page_width??"1000px")">
+        @if (!string.IsNullOrEmpty((TempData["e"] ?? "").ToString()))
+        {
+            <text>
+                <div class="alert alert-warning alert-dismissible alert-di">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                    <span><i class="icon fa fa-warning"></i> @TempData["e"].ToString()</span>
+                </div>
+            </text>
+            TempData["e"] = null;
+        }
+        @if (!string.IsNullOrEmpty((TempData["s"] ?? "").ToString()))
+        {
+            <text>
+                <div class="alert alert-success alert-dismissible alert-di">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                    <span><i class="icon fa fa-check"></i> @TempData["s"].ToString()</span>
+                </div>
+            </text>
+            TempData["s"] = null;
+        }
+
+    </div>
+
+    <div class="flex-container container">
+        <div style="flex-grow: 2;width:150px"><a href="/" class="back-to-ims"><i style="font-weight:bold;" class="fa fa-angle-double-left" aria-hidden="true"></i> Back To IMS</a></div>
+        <div style="flex-grow: 5;text-align:center;"><h1 class="page-title">Create New Ticket</h1></div>
+        <div style="flex-grow: 2;width:150px;text-align:right;font-size:14px;">
+            @if (EnrichcousBackOffice.AppLB.Authority.GetCurrentMember() != null)
+            {
+                <span>Hello, <b>@EnrichcousBackOffice.AppLB.Authority.GetCurrentMember().FullName</b></span>
+            }
+
+        </div>
+    </div>
+
+
+    <div class="container container-style" style="background-color: white;padding: 15px;">
+
+        @RenderBody()
+
+    </div>
+
+    <div style="text-align: center;margin-top: 20px;">
+        <p style="color: rgb(154, 154, 152);font-family: sans-serif;font-size: 15px;">
+            ©2020 SIMPLY POWERED BY <img src="/Areas/PaymentGate/Content/Images/logo.png" height="20" style="margin-top: -5px;margin-left: 10px; display:inline-block">
+        </p>
+    </div>
+
+
+
+
+
+    <script src="~/Scripts/jquery.validate.min.js"></script>
+    <script src="~/Scripts/jquery.validate.unobtrusive.min.js"></script>
+    <script src="~/Content/noty/jquery.noty.js"></script>
+    <script src="~/Scripts/jquery-ui.min.js"></script>
+    <script src="~/Scripts/jquery.form.min.js"></script>
+    <script src="~/Content/Admin/bower_components/bootstrap-colorpicker/dist/js/bootstrap-colorpicker.min.js"></script>
+    <!--datatable-->
+    <script src="~/content/admin/bower_components/datatables.net/js/jquery.dataTables.min.js"></script>
+    <script src="~/content/admin/bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js"></script>
+
+    @RenderSection("scripts", false)
+
+</body>
+</html>

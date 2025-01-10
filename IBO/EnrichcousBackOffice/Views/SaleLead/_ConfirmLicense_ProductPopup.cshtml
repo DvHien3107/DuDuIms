@@ -1,0 +1,121 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.License_Product>
+<div class="modal fade" id="product-confirm-modal" role="dialog">
+    <div class="modal-dialog modal-content">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal"><i class="fa fa-close"></i></button>
+            <h4 class="modal-title">Select Subscription Product</h4>
+        </div>
+        <div class="modal-body">
+            <table class="table table-bordered table-hover">
+                <thead style="background-color: #aad3ea">
+                    <tr>
+                        <th>Subscription</th>
+                        <th  class="text-center" width="100px">Trial Months</th>
+                        <th width="150px">Price</th>
+                        <th  class="text-center">Select</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var pr in Model)
+                    {
+                    <tr id="pr_@pr.Id" class="hover" onclick="show_license('@pr.Id',false)" style="cursor:pointer">
+                        <td>
+                            <b style="color: green" id="product_name_@pr.Id" class="prod_name">@pr.Name</b>
+                            @if (pr.AllowDemo == true)
+                            {
+                                <label class="label label-default">Allow Trial</label>
+                            }
+                            @if (pr.AllowSlice == true)
+                            {
+                                <label class="label label-default">Allow Slice</label>
+                            }
+                            <br />
+                            @(pr.SubscriptionDuration =="MONTHLY"? Html.Raw("<label class='label label-primary'>Monthly</label>"): Html.Raw("<label class='label label-warning'>Onetime</label>"))
+                            <img id="img_load_addon_@pr.Id" src="/Content/ajax-loaders/ajax-loader-1.gif" style="visibility:hidden">
+                        </td>
+                        <td  class="text-center">
+                          @pr.Trial_Months @(pr.Trial_Months == 1 ?"month":"months")
+
+                        </td>
+                        <td class="pr_price" style="font-weight:bold">
+                            @(pr.Price != null ? pr.Price.ToString()+"$" : "N/A")/<span>@pr.NumberOfPeriod @(pr.SubscriptionDuration == "MONTHLY" ? pr.NumberOfPeriod == 1 ?"month":"months":"times")</span>
+
+                        </td>
+
+                        <td class="text-center">
+                            <input name="selected_prd" class="selected_prd check" type="radio" @(ViewBag.ProductSelected == pr.Code ? "checked" : "") value="@pr.Id" />
+                        </td>
+                    </tr>
+                        <tr class="license_contain" style="border-bottom: 1px double; display:none; background-color:#DDD">
+                            <td id="prdata_@pr.Id" colspan="4"></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" onclick="ConfirmChangeLicenseProductStep('@(ViewBag.SalesLeadId)','@ViewBag.Command')">Confirm <img src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" id="img_load_addon_submit" /></button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover:hover {
+        background-color: #ddd !important;
+    }
+
+    .custom-scroll::-webkit-scrollbar {
+        width: 3px;
+        background-color: #f1f1f1;
+    }
+
+    .custom-scroll::-webkit-scrollbar-track {
+        -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+        border-radius: 10px;
+        background-color: #f1f1f1;
+    }
+
+    .custom-scroll::-webkit-scrollbar-thumb {
+        border-radius: 0px;
+        -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+        background-color: var(--main-color-1);
+    }
+
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+</style>
+
+<script>
+    function show_license(prd_id) {
+        $("#img_load_addon_" + prd_id).css("visibility", "visible");
+
+        $.ajax({
+            method: "POST",
+            url: "/Order/getPrdLicenseItemList",
+            data: { prd_id },
+            dataType: "html"
+        })
+            .done(function (data) {
+                $("#prdata_" + prd_id).html(data);
+                $("#pr_" + prd_id).find('input').prop("checked", true);
+                $(".license_contain").not($("#pr_" + prd_id).next("tr")).hide();
+                $("#pr_" + prd_id).next("tr").show(300);
+
+            })
+            .fail(function () {
+                alert("load_addon_table failure");
+            })
+            .always(function () {
+                $("#img_load_addon_" + prd_id).css("visibility", "hidden");
+            });
+    }
+    function loadLicenseItem() {
+        if ($(".selected_prd[type=radio]:checked").length != 0) {
+            var LicenseId = $(".selected_prd[type=radio]:checked").val();
+            show_license(LicenseId, false);
+        };
+    }
+    loadLicenseItem();
+</script>

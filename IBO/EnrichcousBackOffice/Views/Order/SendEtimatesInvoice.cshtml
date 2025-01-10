@@ -1,0 +1,118 @@
+﻿@model EnrichcousBackOffice.Models.C_Customer
+
+@{
+    Layout = null;
+    string url_back = ViewBag.Url;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>@ViewBag.Title</title>
+    <!-- Tell the browser to be responsive to screen width -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <!-- Bootstrap 3.3.7 -->
+    <link rel="stylesheet" href="/content/admin/bower_components/bootstrap/dist/css/bootstrap.min.css">
+    <!--Scrollbar CSS-->
+    <link href="~/Content/Scrollbar/style_Scrollbar.css" rel="stylesheet" />
+    <!-- Noty -->
+    <link href="~/Content/noty/jquery.noty.css" rel="stylesheet" />
+    <link href="~/Content/noty/noty_theme_default.css" rel="stylesheet" />
+
+
+    <!-- jQuery 3 -->
+    <script src="~/Content/Admin/bower_components/jquery/dist/jquery.min.js"></script>
+    <!-- Noty -->
+    <script src="~/Content/noty/jquery.noty.js"></script>
+</head>
+<body>
+    <div class="container-fluid" style="border:1px solid whitesmoke; margin-top:30px; max-width:80%; background-color:white; border-color:lightgrey">
+        <input type="hidden" name="hd_orderid" value="@(ViewBag.OrderId ?? "")" />
+        <input type="hidden" name="hd_urlback" value="@url_back" />
+        <input type="hidden" name="hd_file_url" value="@(ViewBag.FilePath != null ? ViewBag.FilePath : "")"/>
+        <div class="row" style="padding-bottom:20px">
+            <div class="col-md-12" style="padding:20px 0">
+                <div class="col-md-4">
+                    <a href="javascript:window.location = document.referrer;"><b>Cancel</b></a>
+                </div>
+                <div class="col-md-4" style="text-align:center">
+                    <h4><b>@ViewBag.Title</b></h4>
+                </div>
+                <div class="col-md-4">
+                    <a href="javascript:void(0)" class="pull-right" onclick="_send_email()"><b>Send</b></a>
+                </div>
+            </div>
+            <div class="clearfix"></div>
+            <hr style="margin-top:0" />
+            <div class="col-md-5">
+                <div class="form-group">
+                    <label class="control-label">To:</label>
+                    <input class="form-control" style="color:dodgerblue; font-style:italic; font-weight:bold" name="to" value="@(Model?.Email)" />
+                </div>
+                <div class="form-group">
+                    <label class="control-label">Cc:</label>
+                    <input class="form-control" style="color:dodgerblue; font-style:italic; font-weight:bold" name="to_cc" value="" />
+                </div>
+                <div class="form-group">
+                    <label class="control-label">Subject:</label>
+                    <input class="form-control" style="color:dodgerblue; font-style:italic; font-weight:bold" name="subject" value="" />
+                </div>
+                <div class="form-group">
+                    <label class="control-label">Content:</label>
+                    <textarea class="form-control" name="content" rows="10"></textarea>
+                </div>
+            </div>
+            <div class="col-md-7">
+                @if (ViewBag.FilePath != null)
+                {
+                    <iframe src="@(ViewBag.FilePath)" style="width:100%; height:550px"></iframe>
+                }
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+<script type="text/javascript">
+    
+    function _send_email() {
+        var _to = $("input[name='to']").val();
+        var _to_cc = $("input[name='to_cc']").val();
+        var _subject = $("input[name='subject']").val();
+        var _content = $("textarea[name='content']").val();
+        var _file_url = $("input[name='hd_file_url']").val();
+        //alert(_to + "|" + _subject);
+        
+        $.ajax({
+            method: "POST",
+            url: "/order/SendEmail",
+            data: {
+                to: _to,
+                cc: _to_cc,
+                subject: _subject,
+                content: _content,
+                file_url: _file_url
+            },
+            dataType: "json"
+        })
+            .done(function (data) {
+                if (data == true) {
+                    var MsgSuccess = $.parseJSON('{"text":"Send email success", "layout":"topRight", "type":"success"}');
+                    noty(MsgSuccess);
+                }
+                else {
+                    var MsgError = $.parseJSON('{"text":"Fail: ' + data + '", "layout":"topRight", "type":"error"}');
+                    noty(MsgError);
+                }
+            })
+            .fail(function () {
+                alert("Oops! Something went wrong");
+            });
+    };
+
+</script>
+
+

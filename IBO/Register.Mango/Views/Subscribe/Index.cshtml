@@ -1,0 +1,599 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.C_SalesLead>
+@using EnrichcousBackOffice.Models;
+@using EnrichcousBackOffice.Services
+@using EnrichcousBackOffice.ViewModel
+@using EnrichcousBackOffice.Utils.IEnums
+@using Inner.Libs.Helpful
+
+@{
+    WebDataModel db = new WebDataModel();
+    List<Ad_USAState> State = ViewBag.State ?? new List<Ad_USAState>();
+    List<TimeZoneModel> listTimeZone = new MerchantService().ListTimeZone();
+    List<License_Product> License = db.License_Product.Where(l => l.Available == true && l.Trial_Months > 0 && l.AllowSlice != true).OrderBy(c=>c.Level).ToList();
+
+}
+
+@{ ViewBag.title = "Subscribe Simply Pos";
+    Layout = "~/Views/Shared/_Layout.cshtml"; }
+
+@section css{
+    <style>
+        *,
+        .row,
+        div,
+        p {
+            margin: 0;
+            padding: 0;
+        }
+
+        body,
+        html {
+            width: 100%;
+            height: 100vh;
+            position: relative;
+            background-color: #03bed5;
+            font-family: "Montserrat";
+            font-weight: 400;
+        }
+
+        .master-wrapper-page {
+            width: 100%;
+            min-height: 100vh;
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: -moz-box;
+            display: -ms-flexbox;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            background-size: cover;
+            background-attachment: fixed;
+            height: 100%;
+            background-position: center;
+        }
+
+        .form-register-wrapper {
+            width: 50%;
+            max-width: 600px;
+            -webkit-box-shadow: 0px 3px 30px #0000004d;
+            -moz-box-shadow: 0px 3px 30px #0000004d;
+            box-shadow: 0px 3px 30px #0000004d;
+            position: relative;
+            border-radius: 6px;
+        }
+
+        .logo img {
+            width: 60%;
+        }
+
+        .list-icon {
+            list-style: none;
+            margin-bottom: 0;
+        }
+
+        .header {
+            justify-content: space-between;
+            align-items: center;
+            background-image: linear-gradient(to right, #03bed5, #04d4ec);
+            padding: 25px 0px 25px 70px;
+            border-left: 1px solid #69d8e6;
+            border-radius: 6px 6px 0px 0px;
+        }
+
+        .list-icon li {
+            width: 8px;
+            margin-bottom: 6px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: white;
+        }
+
+        .form-content {
+            background-color: white;
+            border-radius: 0px 0px 8px 8px;
+        }
+
+        .form-group {
+            margin-bottom: 0px;
+            padding-bottom: 20px;
+        }
+
+        .title-register {
+            font: normal normal 30px Montserrat;
+            font-weight: 500;
+            text-transform: uppercase;
+            color: white;
+            letter-spacing: 0px;
+        }
+
+
+        .content {
+            padding-bottom: 1rem;
+            margin: 0px 70px 0px 70px;
+        }
+
+        .title-1,
+        .title-2 {
+            font-size: 20px;
+            padding: 15px 0px;
+            color: #606161;
+            font-weight: 500;
+        }
+
+        .input-field {
+            outline: none;
+            border: none;
+            padding-left: 0px;
+            padding-bottom: 0px;
+            border-bottom: 1px solid #d7d7de;
+            border-radius: 0;
+        }
+
+        .label-field {
+            color: #bcbcbd;
+            position: absolute;
+            color: #bcbcbd;
+            top: 7px;
+            left: 0;
+            font-size: 14px;
+            transition: .2s;
+        }
+
+        .mdc-text-field {
+            position: relative;
+        }
+
+        .form-control:focus {
+            border: none;
+            border-bottom: 1px solid #03c8e0;
+            outline: 0;
+            box-shadow: unset;
+        }
+
+        .input-field:focus ~ label,
+        .input-field:valid ~ label {
+            top: -10px;
+            font-size: 11px;
+            display: none;
+        }
+
+        input.input-field:not(:placeholder-shown) ~ label {
+            top: -10px !important;
+            font-size: 11px !important;
+            display: none;
+        }
+
+        .no-select {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        .button-submit {
+            background-color: #03bed5;
+            color: white;
+            cursor: pointer;
+            border: none;
+            outline: none;
+            padding: 8px 40px;
+            font-weight: normal;
+            text-transform: uppercase;
+            border-radius: 4px;
+            font-size: 22px;
+            width: 100%;
+            bottom: 0;
+            box-shadow: 0px 3px 30px #00000029;
+        }
+
+            .button-submit:hover {
+                opacity: 0.8;
+            }
+
+            .button-submit span {
+                transform: translateY(2px);
+                display: inline-block;
+            }
+
+            .button-submit:focus, input, label {
+                outline: none;
+            }
+
+        .policy, .mcfwp-agree-input {
+            color: #91919c;
+            font-size: 15px;
+        }
+
+        .policy {
+            text-decoration: underline;
+        }
+
+            .policy:hover {
+                color: #F99D20;
+            }
+
+        .circle-1 {
+            position: absolute;
+            width: 30%;
+            padding-bottom: 30%;
+            top: -7%;
+            right: -9%;
+            z-index: 1;
+            -webkit-filter: blur(3px);
+            background-color: #b2e1e65c;
+            border-radius: 50%;
+        }
+
+        form {
+            position: relative;
+            z-index: 9;
+        }
+
+        .circle-2 {
+            position: absolute;
+            border-radius: 50%;
+            width: 50%;
+            padding-bottom: 50%;
+            bottom: -20%;
+            left: -25%;
+            overflow: hidden;
+            z-index: 1;
+            -webkit-filter: blur(3px);
+            background-color: #b2e1e65c;
+            border-radius: 50%;
+        }
+
+        @@media all and (max-width: 769px) {
+            .form-register-wrapper {
+                margin: 1rem 0px;
+                min-width: 400px;
+            }
+
+            .button-submit {
+                padding: 8px 40px;
+                font-size: 25px;
+            }
+
+            .title-register {
+                font-size: 20px;
+            }
+        }
+
+        @@media all and (max-width: 576px) {
+            .header {
+                padding: 25px 0px 25px 30px;
+            }
+
+            .content {
+                margin: 0px 30px 0px 30px;
+            }
+
+            .title-register {
+                font-size: 22px;
+            }
+
+            .row-custom .col-sm-6:first-child {
+                padding-bottom: 20px !important;
+                padding-right: 0px !important;
+            }
+
+            .row-custom .col-sm-6:nth-child(2), .row-custom .col-sm-6:nth-child(2) label {
+                padding-left: 0px !important;
+                transform: translateX(0) !important;
+            }
+
+            .button-submit {
+                padding: 8px 40px;
+                font-size: 18px;
+            }
+        }
+
+        @@media all and (max-width: 502px) {
+            .circle-2 {
+                display: none;
+            }
+
+            .circle-1 {
+                display: none;
+            }
+
+            .form-register-wrapper {
+                margin: 0;
+                min-width: 100vw;
+                background: #03a6ba;
+                min-height: 100vh;
+            }
+
+                .form-register-wrapper .form-content {
+                    min-height: calc(100vh - 74px);
+                }
+
+            .title-1, .title-2 {
+                font-size: 17px;
+            }
+
+            .title-register {
+                font-size: 20px;
+            }
+        }
+
+        .select2 {
+            z-index: 99;
+            border: none;
+            width: 100% !important;
+            border-bottom: 1px solid #d7d7de;
+        }
+
+        .select2-container--default .select2-selection--single {
+            background-color: transparent;
+        }
+
+        .select2 * {
+            outline: none;
+            font-size: 14px;
+        }
+
+        .select2-results__option {
+            font-size: 14px;
+        }
+
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background-color: #03c5dc;
+        }
+
+        .select2-dropdown {
+            border: 1px solid #e3e3e8;
+        }
+
+        .select2-container--default .select2-search--dropdown .select2-search__field {
+            border: 1px solid #e3e3e8;
+        }
+
+        .select2-container--default .select2-selection--single {
+            border: none;
+        }
+
+        .select2-container .select2-selection--single .select2-selection__rendered {
+            padding-left: 0px;
+        }
+
+        .no-select {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        .select2-container--default .select2-results__option[aria-selected=true] {
+            background-color: #03c5dc;
+            color: white;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow b {
+            background-image: url(/Content/Img/arrow_down.svg);
+            background-repeat: no-repeat;
+            z-index: 99;
+            width: 10px;
+            height: 10px;
+            background-size: cover;
+            background-position: center;
+            border-color: none;
+            border-style: none;
+            transition: all .2s linear;
+        }
+
+        .select2-container--default.select2-container--open .select2-selection--single .select2-selection__arrow b {
+            -webkit-transform: rotate(180deg);
+            -moz-transform: rotate(180deg);
+            -ms-transform: rotate(180deg);
+            -o-transform: rotate(180deg);
+            transform: rotate(180deg);
+        }
+    </style>
+}
+<div class="master-wrapper-page">
+    <div class="form-register-wrapper">
+            @using (Html.BeginForm("Create", "Subscribe", FormMethod.Post, new { @id= "form-register", role = "form" }))
+            {
+            
+                <div class="header d-flex">
+                    <div class="title-register">Create a Trial Account</div>
+                </div>
+                <div class="form-content">
+
+                    <div class="content">
+                        <div class="title-1" style="padding-top:30px">
+                            Login Information
+                        </div>
+                        <div class="info">
+                            <div class="form-group mdc-text-field">
+                                <input placeholder=" " type="email" id="L_Email" class="form-control input-field"
+                                       name="L_Email" required="required" autocomplete="">
+                                <label class="label-field" for="L_Email">Email</label>
+                            </div>
+                            <div class="form-group mdc-text-field">
+                                <input type="password" placeholder=" " maxlength="60" id="L_Password" class="form-control input-field" pattern=".{8,}" title="8 characters minimum"
+                                       name="L_Password" required="required" autocomplete="">
+                                <label class="label-field" for="L_Password">Password</label>
+                            </div>
+                            <div class="form-group mdc-text-field">
+                                <input type="password" placeholder=" " maxlength="60" id="L_Confirm_Password" class="form-control input-field"
+                                       name="L_Confirm_Password" required="required" autocomplete="">
+                                <label class="label-field" for="L_Confirm_Password">Confirm Password</label>
+                            </div>
+                        </div>
+                        <div class="title-2">
+                            Contact Information
+                        </div>
+                        <div class="info">
+                            <input type="text" hidden id="L_ContactName" class="form-control input-field" name="L_ContactName">
+                            <div class="row row-custom" style="padding-bottom:15px">
+                                <div class="col-6 form-group mdc-text-field" style="padding:0px;padding-right:15px">
+                                    <input type="text" maxlength="60" id="FName" placeholder=" " class="form-control input-field" name="FName" required="required" autocomplete="">
+                                    <label class="label-field" for="FName">First Name</label>
+                                </div>
+                                <div class="col-6 form-group mdc-text-field" style="padding:0px;padding-left:15px">
+                                    <input type="text" maxlength="60" id="LName" placeholder=" " class="form-control input-field" name="LName" required="required" autocomplete="">
+                                    <label class="label-field" for="LName" style="transform:translateX(15px)">Last Name</label>
+                                </div>
+                            </div>
+                            <div class="form-group mdc-text-field">
+                                <input type="text" id="L_BusinessName" placeholder=" " class="form-control input-field" name="L_BusinessName" required="required" autocomplete="">
+                                <label class="label-field" for="L_BusinessName">Business Name</label>
+                            </div>
+                            <div class="form-group mdc-text-field">
+                                <input type="tel" maxlength="15" id="L_Phone" placeholder=" " class="form-control input-field" name="L_Phone" required="required" autocomplete="">
+                                <label class="label-field" for="L_Phone">Phone Number</label>
+                            </div>
+                            <div class="row row-custom" style="padding-bottom:20px">
+                                <div class="col-6 form-group mdc-text-field" style="padding:0px;padding-right:15px">
+                                    <input type="text" placeholder=" " id="L_City" class="form-control input-field" name="L_City" required="required" autocomplete="">
+                                    <label class="label-field" for="L_City">City</label>
+                                </div>
+                                <div class="col-6 form-group" style="padding:0px;transform: translateY(2px);padding-left:15px">
+                                    <select id="L_State" data-placeholder=" " class="form-control input-field province select2 ui-corner-bottom" name="L_State" required>
+                                        <option style="color:#bcbcbd" value="">Please select State</option>
+                                        @foreach (var item in State)
+                                        {
+                                            <option value="@item.abbreviation">@item.name</option>
+                                        }
+                                    </select>
+                                    <label class="label-field" for="L_State" style="transform:translateX(15px)">State</label>
+                                </div>
+                            </div>
+                            <div class="row row-custom" style="padding-bottom:20px">
+                                <div class="col-sm-6 form-group mdc-text-field" style="padding:0px;padding-right:15px">
+                                    <select id="L_NumberofSalons" data-placeholder="" data-minimum-results-for-search="Infinity" class="form-control select2 input-field province ui-corner-bottom" name="L_NumberofSalons" required>
+                                        <option style="color:#bcbcbd" value="">Number of Salons</option>
+                                        <option value="1">1 Salon</option>
+                                        <option value="2">2 Salons</option>
+                                        <option value="3">3 Salons</option>
+                                        <option value="4+">More than 4 Salons</option>
+                                    </select>
+                                    <label class="label-field" for="L_NumberofSalons">Number of Salons</label>
+                                </div>
+                                <div class="col-sm-6 form-group mdc-text-field" style="padding:0px;padding-left:15px">
+                                    <select id="L_NumberofTechnicians" data-placeholder="" data-minimum-results-for-search="Infinity" class="form-control select2 input-field province ui-corner-bottom" name="L_NumberofTechnicians" required>
+                                        <option style="color:#bcbcbd" value="">Number of Technicians</option>
+                                        <option value="6-">Under 6 Technicians</option>
+                                        <option value="7-14">7-14 Technicians</option>
+                                        <option value="15+">More than 15 Technicians</option>
+                                    </select>
+                                    <label class="label-field" for="L_NumberofTechnicians" style="transform:translateX(15px)">Number of Technicians</label>
+                                </div>
+                            </div>
+                            <div class="form-group mdc-text-field" style="padding:0px;padding-bottom:20px">
+                                <select id="L_Packages" data-placeholder="" data-minimum-results-for-search="Infinity" class="form-control select2 input-field province ui-corner-bottom" name="L_Packages" required>
+                                    <option style="color:#bcbcbd" value="">Packages</option>
+                                    @foreach (var license in License)
+                                    {
+                                        <option value="@license.Code" @(ViewBag.License_Code == license.Code ? "selected" : "")>@license.Name</option>
+                                    }
+                                </select>
+                                <label class="label-field" for="L_Packages">Packages</label>
+                            </div>
+                            <div class="form-group mdc-text-field">
+                                <select id="L_Timezone" data-placeholder="" data-minimum-results-for-search="Infinity" class="form-control select2 input-field province ui-corner-bottom" name="L_Timezone" required>
+                                    @*<option style="color:#bcbcbd" value="">Time zone</option>
+                                <option value="Eastern Standard Time">(UTC-05:00) Eastern Time (US &amp; Canada)</option>
+                                <option value="Central Standard Time">(UTC-06:00) Central Time (US &amp; Canada)</option>
+                                <option value="Mountain Standard Time">(UTC-07:00) Mountain Time (US &amp; Canada)</option>
+                                <option value="Pacific Standard Time">(UTC-08:00) Pacific Time (US &amp; Canada)</option>
+                                <option value="SE Asia Standard Time">(UTC+07:00) Bangkok, Hanoi, Jakarta</option>*@
+                                    @if (listTimeZone.Count > 0)
+                                    {
+                                        foreach (TimeZoneModel time in listTimeZone)
+                                        {
+                                            <option value="@time.Name">(UTC @time.TimeDT) @time.Name</option>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <option value="Eastern">(UTC @(TIMEZONE_NUMBER_BY_ID.Eastern.Text())) Eastern</option>
+                                        <option value="Central">(UTC  @(TIMEZONE_NUMBER_BY_ID.Central.Text())) Central</option>
+                                        <option value="Mountain">(UTC  @(TIMEZONE_NUMBER_BY_ID.Mountain.Text())) Mountain</option>
+                                        <option value="Pacific">(UTC  @(TIMEZONE_NUMBER_BY_ID.Pacific.Text())) Pacific</option>
+                                        <option value="VietNam">(UTC  @(TIMEZONE_NUMBER_BY_ID.VietNam.Text())) VietNam</option>
+                                    }
+                                </select>
+                                <label class="label-field" for="L_Timezone">Time Zone</label>
+                            </div>
+                        </div>
+                        @*<div>
+                        <label class="mcfwp-agree-input no-select">
+                            <input class="inited no-select"
+                                   name="i_agree_privacy_policy" required="" type="checkbox" value="1"> &nbsp;Tôi đồng ý
+                            với&nbsp;<a href="/privacy-policy/" class="policy" target="_blank"> điều khoản</a>
+                        </label>
+                    </div>*@
+                        <div class="button-content text-center" style="margin:1rem 0px">
+                            <button class="button-submit" type="submit"><span>Get Started</span><i class="fa fa-spinner fa-spin fa-fw loading" style="display: none;margin-left: 8px; "></i></button>
+                        </div>
+
+                    </div>
+                </div>
+            }
+        <div class="circle-1"></div>
+        <div class="circle-2"></div>
+    </div>
+</div>
+@section scripts{
+    <script>
+        var password = document.getElementById("L_Password"),
+            confirm_password = document.getElementById("L_Confirm_Password");
+
+        function validatePassword() {
+            if (password.value != confirm_password.value) {
+                confirm_password.setCustomValidity("Passwords Don't Match");
+            } else {
+                confirm_password.setCustomValidity("");
+            }
+        }
+
+        password.onchange = validatePassword;
+        confirm_password.onkeyup = validatePassword;
+
+        $("#form-register").submit(function (e) {
+            if (!($("#form-register").valid())) {
+                return false;
+            }
+            $('.loading').show();
+            e.preventDefault(); // avoid to execute the actual submit of the form.
+            if ($("#L_Phone").val().indexOf("_") != -1) {
+                $('.loading').hide();
+                warning("Number phone is incorrect");
+                $("#L_Phone").focus();
+                return;
+            }
+            $('#L_ContactName').val($('#FName').val() + " " + $('#LName').val());
+            var form = $(this);
+            var url = form.attr('action');
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: form.serialize(), // serializes the form's elements.
+                success: function (data) {
+                    $('.loading').hide();
+                    if (data[0]) {
+                        window.location = '/subscribe/success?key=' + data[2] + '';
+                    }
+                    else {
+                        warning(data[1]);
+                    }
+                }
+            });
+        });
+
+        $('#L_Phone').inputmask("(999) 999-9999");
+        function isEmail(email) {
+            var regex = /^([a-zA-Z0-9_.+-])+\@@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,4})+$/;
+            return regex.test(email);
+        }
+        $('.select2').select2({ allowClear: true });
+    </script>
+}

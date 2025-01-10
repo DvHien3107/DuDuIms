@@ -1,0 +1,37 @@
+﻿@model EnrichcousBackOffice.Models.CustomizeModel.HierarchyEmployeesViewModel
+
+
+@foreach (var item in Model.ChildEmployees.ToList())
+{
+    <ul>
+        <li id="@item.MemberNumber" title="Click to view this profile" data-jstree='{"icon":"/content/jstree/usericon.png"}'>
+
+                @if (item.Active != true)
+                {
+                    if (item.Active == false)
+                    {
+                        <del>@item.FullName - <b>#@item.MemberNumber)</b></del> @:-> <span class="label label-important">Inactive</span>
+                    }
+                    else
+                    {
+                        <i>@item.FullName - <b>#@item.MemberNumber</b></i> @:-> <span class="label">Pending approve</span>
+                    }
+
+                }
+                else
+                {
+                    <span>@item.FullName - <b>#@item.MemberNumber</b></span>
+                }
+          
+            @if (item.ChildEmployees.Count() > 0)
+            {
+                @Html.Partial("_ChildEmployeesHierarchyPartial", item)
+
+            }
+        </li>
+    </ul>
+
+
+}
+
+

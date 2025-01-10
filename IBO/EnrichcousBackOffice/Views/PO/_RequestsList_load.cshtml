@@ -1,0 +1,37 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.PO_Request>
+@{
+    EnrichcousBackOffice.Models.P_Member cMem = EnrichcousBackOffice.AppLB.Authority.GetCurrentMember();
+}
+@foreach (var item in Model)
+{<tr>
+        <td>
+            #@(item.Code)<br />
+
+        </td>
+        <td>
+            <span id="localtime-@item.Code">
+                <script>convertLocalTime("@item.Code", "@item.CreatedAt")</script>
+            </span>
+            <br />
+            <span style="font-size:0.8em"> By @item.CreatedBy</span>@*<label style="color:green"></label>*@
+        </td>
+        <td style="text-align:center"><img src="@(item.ModelPicture)" height="60" onerror="this.onerror=null; this.src='/Upload/Img/no_image.jpg'" /> </td>
+        <td><label style="color:#a43a04">@(item.ModelName)</label><br /><span style="color:gray">@(item.ProductName)</span></td>
+        <td>@(string.IsNullOrEmpty(item.Color)?"N/A":item.Color)</td>
+        <td>@(item.RequestQty) <br /><b>@(item.Qty.HasValue ? "(" + item.Qty.ToString() + ")" : "")</b></td>
+        <td><label class="@(item.Status.ToLower().Replace(" ",""))">@(item.Status)</label></td>
+        <td>
+            @if ((item.Status == "Requested") && (item.CreatedbyId == ViewBag.cMemId || ViewBag.manager))
+            {
+                <a class="btn btn-warning" onclick="open_request('@item.Code', $(this).find('.fa'))"><i class="fa fa-pencil"></i></a>
+                <a class="btn btn-danger" onclick="delete_request('@item.Code',$(this).find('.fa'))"><i class="fa fa-trash"></i></a>
+            }
+        </td>
+        <td style="text-align:center">@if (item.Status == "Requested")
+        {<input type="checkbox" style="height:25px; width:25px" name="createpo" value="@(item.Code)" />}</td>
+    </tr>
+}
+<script>
+    $(".requested").addClass("label label-warning");
+    $(".submited").addClass("label label-primary");
+</script>

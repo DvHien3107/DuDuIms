@@ -1,0 +1,273 @@
+﻿ @using EnrichcousBackOffice.Models
+@{
+    Layout = null;
+    P_Member mem = ViewBag.mem;
+    bool IsAdmin = mem != null && mem.RoleCode.Contains("admin");
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>CountDown</title>
+</head>
+<body class="" style=" background-color: #EEE">
+    <div class="container-fluid" style="background-color: var(--main-color-1); margin-bottom:20px;padding:0px; color: #fff">
+      
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4"><img class="img img-responsive  eshop-logo" src="@System.Configuration.ConfigurationManager.AppSettings["LogoImg"]" style="height:50px;width:auto"></div>
+                <div class="col-md-4" style="text-align:center; padding:10px"> <span style="font-size:2em;">IMS auto Service</span></div>
+                <div class="col-md-4">
+                    <div class="pull-right" style="padding-top:10px">
+                        @if (mem != null)
+                        {
+                            <div style="padding:10px"><img class="user-image" src="@mem.Picture" />Hi, @mem.FullName! </div>
+                            if (!IsAdmin)
+                            {
+                                <a class="btn btn-default" href="/account/login?ReturnUrl=/AutoServices/Start"><i class="fa fa-user-circle"></i> Admin login</a>
+                            }
+                        }
+                        else
+                        {
+                            <a class="btn btn-default" href="/account/login?ReturnUrl=/AutoServices/Start"><i class="fa fa-user-circle"></i> Admin login</a>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <div class="container" style="height:100vh;">
+        <div class="row">
+            <div class="col-md-12">
+                @if (TempData["e"] != null)
+                {
+                    <div class="alert alert-warning alert-dismissible">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                        <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+                    </div>
+                }
+                @if (TempData["s"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                        <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+                    </div>
+                }
+                 </div>
+                <div class="col-md-12">
+                    <div class="panel panel-primary">
+                        <div class="panel-heading">
+                            Next Scan:
+                            <div class="pull-right" style="display:inline-flex">
+                                <a class="btn btn-success" style="margin:-7px;margin-right:15px;" onclick="restartScan()" id="restart_scan"> <i class="fa fa-refresh" aria-hidden="true"></i> Restart Scan</a>
+                                @if (IsAdmin)
+                                {
+                                    <a class="btn btn-warning" style="margin:-7px" id="scan_now"> <i class="fa fa-play"></i> Scan Now</a>
+                                }
+                                else
+                                {
+                                    <span>(Only Administrator can using scan now!)</span>
+                                }
+
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div id="wait_overlay" style="background-color: #fff; position: absolute; left: 15px; top: 0px; right: 15px; bottom: 20px; border-radius: 3px; transition: opacity 0.5s ease 0s; opacity: 0.95; display:none">
+                                <div style="margin: auto; margin-top: 40px; display: block; text-align:center; font-size:2em">Scaning <img src="/Content/ajax-loaders/loading2.gif" style="width: 100px;"></div>
+                            </div>
+                            <div id="count-down">
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-12">
+                    <div class="panel panel-primary" style="border-color: forestgreen">
+                        <div class="panel-heading" style="background-color:forestgreen">
+                            Logs Scaned
+                            <select class="pull-right" style="color: #111; padding:5px">
+                                <option selected>From 24 hours</option>
+                                <option>From 7 days</option>
+                                <option>From 30 days</option>
+                                <option>All Logs</option>
+                            </select>
+                        </div>
+                        <div class="panel-body custom-scroll" id="logs" style="overflow-y:auto">
+
+
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <style type="text/css">
+        #count-down {
+            text-align: center;
+            font-size: 5em;
+            width: 100%;
+            padding: initial;
+        }
+
+        #logs {
+            height: 60vh;
+            background-color: #fff;
+        }
+
+        .user-image {
+            float: right;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            margin-left: 10px;
+            margin-top: -2px;
+        }
+
+        ::-webkit-scrollbar {
+            width: 3px;
+        }
+
+        /* Track */
+        ::-webkit-scrollbar-track {
+            box-shadow: inset 0 0 5px grey;
+            border-radius: 10px;
+        }
+
+        /* Handle */
+        ::-webkit-scrollbar-thumb {
+            background: forestgreen;
+            border-radius: 1px;
+        }
+
+            /* Handle on hover */
+            ::-webkit-scrollbar-thumb:hover {
+                background: #b30000;
+            }
+    </style>
+    <link rel="stylesheet" href="/content/admin/bower_components/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/content/admin/bower_components/font-awesome/css/font-awesome.min.css">
+    <link href="~/Content/css/jquery-ui.css" rel="stylesheet" />
+    <link rel="stylesheet" href="~/content/admin/bower_components/datatables.net-bs/css/dataTables.bootstrap.min.css" />
+    <link href="https://cdn.datatables.net/1.10.19/css/dataTables.bootstrap4.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700,300italic,400italic,600italic">
+    <link href="~/Content/noty/jquery.noty.css" rel="stylesheet" />
+    <link href="~/Content/noty/noty_theme_default.css" rel="stylesheet" />
+    <link href="~/Content/Jsonviewer/jquery.json-viewer.css" rel="stylesheet" />
+    <script src="~/Content/Admin/bower_components/jquery/dist/jquery.min.js"></script>
+    <script src="~/Scripts/jquery.form.min.js"></script>
+    <script src="/content/admin/bower_components/select2/dist/js/select2.full.min.js"></script>
+    <script src="~/Scripts/task_popup.js"></script>
+    <script src="~/Scripts/jquery-ui.min.js"></script>
+    <script src="~/content/admin/bower_components/datatables.net/js/jquery.dataTables.min.js"></script>
+    <script src="~/Content/Admin/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="~/content/admin/bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js"></script>
+    <script src="~/content/login/vendor/daterangepicker/moment.min.js"></script>
+    <script src="~/Content/scripts/jquery.countdown.min.js"></script>
+    <script src="~/Content/noty/jquery.noty.js"></script>
+    <script src="~/Scripts/noty-cfg.js"></script>
+    <script src="~/Content/Jsonviewer/jquery.json-viewer.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            var scantime = moment("@ViewBag.ScanTime");
+            if (scantime < moment()) { scantime = scantime.add(1, "days"); }
+            start_countDown(scantime);
+            $("#scan_now").on("click", function (event) {
+                scan(true);
+            });
+            getLogScans();
+        });
+        function start_countDown(scantime) {
+            $('#count-down').countdown(scantime.toDate(), function (event) {
+                $(this).html(event.strftime('%Hh:%Mm:%Ss'));
+            }).on("finish.countdown", function () {
+                start_countDown(scantime.add(1, "days"));
+            });
+        }
+        async function scan(admin_scan = null) {
+            if (!$("#wait_overlay").is("visible")) {
+                $("#wait_overlay").show();
+                console.log("scan");
+                $.ajax({
+                    method: "POST",
+                    url: "/Start/StartScan",
+                    data: { admin_scan },
+                }).done(function (data) {
+                    if (data[0]) {
+                        console.log("scaning completed");
+                        getLogScans();
+                        success(data[1]);
+                    } else {
+                        console.log(data);
+                        warning(data[1]);
+                    }
+
+                }).fail(function () {
+
+                }).always(function () {
+                    $("#wait_overlay").hide();
+                });
+
+
+            }
+        }
+        function getLogScans() {
+            $("#wait_overlay").hide();
+            $.ajax({
+                method: "POST",
+                url: "/Start/getLogsScan",
+                dataType: "html"
+            }).done(function (data) {
+                $("#logs").html(data);
+                refresh_localTime();
+            }).fail(function () {
+
+            }).always(function () {
+                $("#wait_overlay").hide();
+            });
+        }
+        function refresh_localTime() {
+            $(".UTC-LOCAL").html(function (index, value) {
+                return moment(value).format("MMM DD YYYY, h:mm:ss A");
+            }).removeClass("UTC-LOCAL");
+        }
+        function restartScan() {
+            $("#wait_overlay").show();
+            $.ajax({
+                method: "POST",
+                url: "/autoservices/start/RestartScan",
+                dataType: "json"
+            }).done(function (data) {
+                if (data.status) {
+                    location.reload();
+                }
+                else {
+                    noty({ "text": data.message, "layout": "topRight", "type": "error" });
+                }
+
+            }).fail(function () {
+
+            }).always(function () {
+                $("#wait_overlay").hide();
+            });
+        }
+
+        function renderJson(log) {
+            try {
+                var input = eval('(' + $('#' + log +"_textarea").val() + ')');
+            }
+            catch (error) {
+                return alert("Cannot eval JSON: " + error);
+            }
+            $('#' + log + "_pre").jsonViewer(input).toggle(300);
+        }
+        window.setTimeout(function () {
+            $(".alert-success").fadeTo(500, 0).slideUp(800, function () {
+                $(this).remove();
+            });
+        }, 3000);
+    </script>
+</body>
+</html>

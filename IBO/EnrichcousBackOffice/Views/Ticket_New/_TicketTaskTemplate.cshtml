@@ -1,0 +1,383 @@
+﻿@model EnrichcousBackOffice.Models.Ts_Task
+@{ 
+    var category = ViewBag.Category as List<EnrichcousBackOffice.Models.Ts_TaskTemplateCategory>;
+}
+    <style>
+        .step-progress {
+            margin: 0;
+            text-align: right;
+            width: 100%;
+        }
+
+            .step-progress ul {
+                font-size: 0;
+                margin-bottom: 0px;
+            }
+
+            .step-progress li {
+                display: inline-block;
+                position: relative;
+                margin: 2px;
+            }
+
+                .step-progress li:nth-child(1) {
+                    z-index: 6;
+                }
+
+                .step-progress li:nth-child(2) {
+                    z-index: 5;
+                }
+
+                .step-progress li:nth-child(3) {
+                    z-index: 4;
+                }
+
+                .step-progress li:nth-child(4) {
+                    z-index: 3;
+                }
+
+                .step-progress li:nth-child(5) {
+                    z-index: 2;
+                }
+
+                .step-progress li:nth-child(6) {
+                    z-index: 1;
+                }
+
+            .step-progress a {
+                display: block;
+                position: relative;
+                min-width: 100px;
+                height: 32px;
+                background-color: #ececec;
+                padding: 0 16px 0 24px;
+                font-size: 13px; /*reset zeroing*/
+                line-height: 32px;
+                font-weight: bold;
+                color: #777;
+                text-transform: uppercase;
+            }
+
+                .step-progress a:before {
+                    content: "";
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    height: 32px;
+                    border-width: 16px 8px;
+                    border-style: dashed dashed dashed solid;
+                    border-color: transparent transparent transparent #ffffff;
+                }
+
+                .step-progress a:after {
+                    content: "";
+                    display: block;
+                    position: absolute;
+                    top: 0;
+                    right: -16px;
+                    height: 32px;
+                    border-width: 16px 8px;
+                    border-style: dashed dashed dashed solid;
+                    border-color: transparent transparent transparent #e9e9e9;
+                }
+
+            .step-progress li.active-step a {
+                background-color: #03bed5;
+                color: #fff;
+                cursor: pointer;
+            }
+
+                .step-progress li.active-step a:after {
+                    border-left-color: #03bed5;
+                }
+
+            .step-progress li.inactive-step a {
+                cursor: default;
+            }
+
+        .header-progress {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            width: 100%;
+            align-items: center;
+            padding: 0px 15px 10px 10px;
+        }
+
+        .progress-title h2 {
+            font-size: 16px;
+            text-transform: uppercase;
+            margin: 0px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .step-progress li:first-child a:before {
+            display: none;
+        }
+        .task_template-step{
+            display:none;
+        }
+        .task_template-step.active{
+            display:block;
+        }
+        .users-list > li{
+            width:10%;
+        }
+    </style>
+<div id="ticket_task_template_modal" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <!-- Modal content-->
+        <form id="ticket_task_template_form" action="/Ticket_New/AddOrUpdateTicketTaskTemplate" method="post" class="modal-content" enctype="multipart/form-data">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">@(Model.Id>0? "Update Task" : "Add Task")</h4>
+            </div>
+            <div class="modal-body">             
+                <div class="row">
+                    <div class="col-ms-12">
+                        <div class="header-progress">
+                            <div class="progress-title">
+                                <h2>@(Model.Id>0? "Task Form" : "Select Template")</h2>
+                            </div>
+                            <div class="step-progress">
+                                <ul>
+                                    <li class="active-step">
+                                        @if (Model.Id > 0)
+                                        {
+                                            <a style="cursor:not-allowed">Select Template</a>
+                                        }
+                                        else
+                                        {
+                                            <a onclick="StepOne()">Select Template</a>
+                                        }
+                                    </li>
+                                    <li class="step-two-header @(Model.Id>0?"active-step":"inactive-step")">
+                                        @if (Model.Id > 0)
+                                        {
+                                            <a  style="cursor:not-allowed">Task Form</a>
+                                        }
+                                        else
+                                        {
+                                            <a onclick="StepTwo()">Task Form</a>
+                                        }
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        @if (!(Model.Id > 0))
+                        {
+                            <button type="button" style="float:right;margin-top:5px;@(Model.Id>0?"":"display:none")" id="previous_step" class="btn btn-sm  btn-default"><i class="fa fa-angle-double-left" aria-hidden="true"></i> Go Back</button>
+                        }
+
+                        <div data-step="1" class="task_template-step @(Model.Id>0?"":"active")">
+                            <div class="form-group">
+                                <div style="padding-bottom:10px;padding-top:15px;">
+                                    <div class="form-group">
+                                        <label for="template_category_id">Select Template: </label>
+                                        <select id="template_category_id" class="form-control">
+                                            <option value="">N/A</option>
+                                            @foreach (var item in category)
+                                            {
+                                                <option requirement="@(item.Requirement==true?"true":"false")" value="@item.Id">@item.Name </option>
+                                            }
+                                        </select>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                        <div data-step="2" style="padding-top:15px;padding-bottom:10px" class="task_template-step @(Model.Id>0?"active":"")">
+
+                        @Html.Action("LoadTicketTaskTemplate",new {TaskId=Model.Id,TicketId= Model.TicketId})
+                            @*<div class="form-group">
+                <label for="DocumentFileName">Name:</label><span style="color:red"> *</span>
+                <input class="form-control" id="DocumentFileName" name="Name" placeholder="Name" type="text" autocomplete="off" value="@Model.Name" required>
+            </div>
+            <div class="form-group">
+                <label for="DocumentFileDescription">Description:</label>
+                <textarea class="form-control" rows="4" id="DocumentFileDescription" name="Description" placeholder="Description">@Model.Description</textarea>
+            </div>*@
+
+                        </div>
+                        <div id="loading_task_ticket_form" style="min-height: 100px; position: relative;display:none;">
+                            <img id="submit_loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+
+
+                <button type="button"  id="delete_task" onclick="deleteTaskTemplate(@Model.Id)" class="btn btn-danger">Delete</button>
+                <button type="button" style="@(Model.Id>0?"display:none":"")" id="next_step" class="btn btn-primary">Next</button>
+                <button type="submit" style="@(Model.Id>0?"":"display:none")" id="save_form" class="btn btn-success" onclick="changeButtonClick('save')">Save</button>
+                <button type="submit" style="@(Model.Id>0?"":"display:none")" id="save_close_form" onclick="changeButtonClick('saveandclose')" class="btn btn-primary">Save & Close</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    if ((typeof variable !== 'undefined')) {
+        let buttonClick;
+    }
+    $("#gmt-feedback").html("(" + moment().format("Z") + ")");
+    function changeButtonClick(val) {
+        buttonClick = val;
+    }
+    $("#template_category_id").select2({ templateResult: resultTaskTemplate });
+    function resultTaskTemplate(category) {
+        var requirement = $(category.element).attr("requirement");
+        if (category.id !== '') {
+            var $category = $(
+                `<span>${category.text} ${requirement == 'true' ?'<span style="color:red">*<span>':''}</span>`
+            );
+            return $category;
+        }
+        else {
+            return category.text;
+        }
+    };
+    @if (!(Model.Id > 0))
+    {
+        <text>
+        $("#next_step").click(function () {
+            StepTwo();
+        })
+
+        $("#previous_step").click(function () {
+            StepOne();
+        })
+        </text>
+    }
+  
+
+    function StepOne() {
+        $(".task_template-step[data-step='1']").addClass('active');
+        $(".task_template-step[data-step='2']").removeClass('active');
+        $("#previous_step").hide();
+        $("#next_step").show();
+        $("#save_form").hide();
+        $("#save_close_form").hide();
+        
+        $(".progress-title h2").html("SELECT TEMPLATE");
+        $(".step-two-header").addClass("inactive-step").removeClass("active-step");
+     }
+
+    function StepTwo() {
+        var categoryId = $("#template_category_id").val();
+        if (categoryId == '') {
+            var options = $.parseJSON('{"text":"please select template category","layout":"topRight","type":"error"}');
+            noty(options);
+            return;
+        }
+        $(".task_template-step[data-step='1']").removeClass('active');
+            $("#loading_task_ticket_form").show();
+        $.ajax({
+                        method: "POST",
+            url: "/ticket_new/LoadTicketTaskTemplate",
+            data: { 'categoryId': categoryId,'ticketId':@ViewBag.TicketId },
+            dataType: "html"
+        })
+            .done(function (data) {
+                $(".task_template-step[data-step='2']").html(data);
+        })
+            .fail(function () {
+            alert("Oops! can not load task template");
+        })
+            .always(function () {
+                $(".task_template-step[data-step='2']").addClass('active');
+                $("#previous_step").show();
+                $("#next_step").hide();
+                $("#save_form").show();
+                $("#save_close_form").show();
+                $(".step-two-header").removeClass("inactive-step").addClass("active-step");
+                $(".progress-title h2").html("TASK FORM");
+                $("#loading_task_ticket_form").hide();
+        });    
+    }
+
+
+
+    $("#ticket_task_template_form").submit(function (e) {
+        e.preventDefault(); // avoid to execute the actual submit of the form.
+        overlayOn();
+        var form = $(this);
+        var url = form.attr('action');
+        let dataForm = new FormData(document.getElementById("ticket_task_template_form"));
+      
+        if ($("#enable_ticket_reminder_edit").is(":checked")) {
+            var date = $('#date-ticket-reminder-edit').datepicker('getDate');
+            var time = $("#time-ticket-reminder-edit").data("DateTimePicker").date().toDate();
+            dataForm.append("GMT", moment().format("Z"));
+            dataForm.append("Date", $.datepicker.formatDate('M-dd-yy', date))
+            dataForm.append("Time", time.getHours() + ":" + time.getMinutes() + ":00")
+        }
+
+    
+   
+        $.ajax({
+            type: "POST",
+            url: url,
+            data: dataForm, // serializes the form's elements.
+            contentType: false,
+            processData: false,
+            success: function (data) {
+                if (data.status) {
+                    success(data.message);
+                    if (buttonClick == 'saveandclose')
+                    {
+                        $("#ticket_task_template_modal").modal("hide");
+                    }
+                    GetTaskStatusList();
+                }
+                else {
+                    error(data.message);
+                }
+            },
+            error: function (xhr) {
+                alert("Error occured.please try again");
+            },
+            complete: function () {
+                overlayOff();
+            },
+        });
+    });
+
+
+    function deleteTaskTemplate(Id) {
+        if (confirm("are you sure delete this task ?")) {
+            overlayOn();
+            $.ajax({
+                type: "POST",
+                url: "/TasksMan/Delete",
+                data: { Id }, // serializes the form's elements.
+                success: function (data) {
+                    if (data.status) {
+                        success(data.message);
+                        $("#ticket_task_template_modal").modal("hide");
+                        if (window.location.href.search(/ticket|development/ig) > 0) {
+                            GetTaskStatusList();
+                            Gettimeline();
+                        }
+                        else {
+                            $("#taskTable").DataTable().ajax.reload();
+                        }
+                    }
+                    else {
+                        error(data.message);
+                    }
+                },
+                error: function (xhr) {
+                    alert("Error occured.please try again");
+                },
+                complete: function () {
+                    overlayOff();
+                },
+            });
+        }
+
+    }
+</script>

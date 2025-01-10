@@ -1,0 +1,107 @@
+
+<script src="/js/jquery.min.js"></script>
+<script src="/js/moment.min.js"></script>
+<script>
+    function authenticateUser(user, password) {
+        var token = user + ":" + password;
+
+        // Should i be encoding this value????? does it matter???
+        // Base64 Encoding -> btoa
+        var hash = btoa(token);
+
+        return "Basic " + hash;
+    }
+
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    const SId = urlParams.get('SId')
+    const AuthToken = urlParams.get('AuthToken')
+    const authentToken = authenticateUser(SId, AuthToken)
+    //console.log(SId)
+    //console.log(AuthToken)
+    //console.log(authentToken)
+
+    const Today = moment().format("YYYY-MM-DD")
+    const Yesterday = moment().add(-1,'days').format("YYYY-MM-DD")
+    function syncResponse(url,dataSend) {
+        var settings = {
+            "url": `https://api.twilio.com/2010-04-01/Accounts/` + SId + `/Messages.json?PageSize=10000&&DateSent=${dataSend}`,
+            "method": "GET",
+            "timeout": 0,
+            "headers": {
+                "Authorization": authentToken
+            },
+        };
+
+        $.ajax(settings).done(function (response) {
+            var onError = false;
+            if (response.messages.length == 0) {
+                window.close();
+                return;
+            }
+            $.each(response.messages, function (key, item) {
+
+                //--------------------------------------------------------------
+                var setting2 = {
+                    "url": "/v1/Twilio/AddTwillioResponse",
+                    "method": "POST",
+                    "contentType": "application/json",
+                    "timeout": 0,
+                    "data": JSON.stringify({
+                        "storeCode": 0,
+                        "maxRVCNo": urlParams.get('maxRVCNo'),
+                        "countRVCNo": urlParams.get('countRVCNo'),
+                        "dataFrom": urlParams.get('dataFrom'),
+                        "sid": SId,
+                        "authToken": AuthToken,
+                        "verificationStatus": "",
+                        "messaging_service_sid": item.messaging_service_sid,
+                        "smsid": item.sid,
+                        "tw_body": item.body,
+                        "num_segments": item.num_segments,
+                        "status": item.status,
+                        "error_message": item.error_message,
+                        "date_created": item.date_created,
+                        "direction": item.direction,
+                        "fromNumber": item.from,
+                        "toNumber": item.to,
+                        "uri": item.uri,
+                        "jsonResult": JSON.stringify(item)
+                    }),
+                    "error": function () {
+                        onError = true;
+                    },
+                    "success": function () {
+                        onError = false;
+                    }
+                };
+                if (response.end = response.start + response.page_size - 1) {
+                    onError = true;
+                    syncResponse(`https://api.twilio.com/` + response.next_page_uri, dataSend)
+                }
+                $.ajax(setting2).done(function (response2) {
+                    if (key == response.messages.length - 1 && onError == false) {
+                        window.close();
+                    }
+                    console.log(response2);
+                });
+                //--------------------------------------------------------------
+                //var object =
+
+                //var save = {
+                //    "url": `/v1/Twilio/AddTwillioResponse`,
+                //    "method": "POST",
+                //    "data": JSON.stringify(object)
+                //};
+
+                //$.ajax(save)
+            });
+
+            
+        });
+    }
+
+    syncResponse(`https://api.twilio.com/2010-04-01/Accounts/` + SId + `/Messages.json?PageSize=10000`, Today)
+    syncResponse(`https://api.twilio.com/2010-04-01/Accounts/` + SId + `/Messages.json?PageSize=10000`, Yesterday)
+
+</script>

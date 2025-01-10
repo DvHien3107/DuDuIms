@@ -1,0 +1,610 @@
+﻿@model EnrichcousBackOffice.Models.T_SupportTicket
+@using Enrich.DataTransfer
+@using EnrichcousBackOffice.Models
+@using EnrichcousBackOffice.Services.Tickets
+
+@{
+    var timeline = ViewBag.timeline as List<EnrichcousBackOffice.Models.CustomizeModel.TicketTimelineModel>;
+
+    EmailTemplateContent replace = ViewBag.EmailTemplateData;
+    var cmem = EnrichcousBackOffice.AppLB.Authority.GetCurrentMember();
+    string controller = ViewContext.RouteData.Values["controller"].ToString().ToLower();
+    var AllTagMember = ViewBag.AllTagMember as List<P_Member>;
+    //var db = new EnrichcousBackOffice.Models.WebDataModel();
+
+}
+<style>
+    .title-transfer th {
+        text-align: center
+    }
+
+    td p {
+        /*margin: 10px*/
+    }
+
+    td li {
+        background-color: var(--main-color-1);
+        border-color: var(--main-color-2);
+        padding: 5px 3px;
+        color: #fff;
+        list-style: none;
+        border-radius: 5px;
+        width: auto;
+    }
+
+    .wrapper-update {
+        background-color: #d2d6de78;
+        max-height: 180px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        -webkit-line-clamp: 4;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        max-width: 250px;
+    }
+
+    .read-more-update .content_tooltip {
+        visibility: hidden;
+        min-width: 250px;
+        background-color: #555;
+        color: #fff;
+        border-radius: 6px;
+        padding: 5px 3px;
+        font-size: 13px;
+        position: absolute;
+        z-index: 1;
+        bottom: 125%;
+        max-width: 330px;
+        left: 50%;
+        transform: translate(-22%,-13px);
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+
+    .btn-edit-feedback {
+        display: none;
+    }
+
+    .feedback-item:hover .btn-edit-feedback {
+        display: inline-block;
+        position: absolute;
+        top: 5px;
+        right: 10px;
+    }
+</style>
+<div class="nav-tabs-custom">
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#timeline" data-toggle="tab"><b>Timeline</b></a></li>
+        <li><a href="#feedback" data-toggle="tab"><b>Add Action</b></a></li>
+        <li>
+            <a href="#edit" data-toggle="tab" style="display: none" class="edit-tab">
+                <b>Edit Action</b>
+                <img src="~/Content/ajax-loaders/ajax-loader-1.gif" name="loading_action" style="display:none" />
+            </a>
+        </li>
+        <li onclick="loadTransferContent()" id="transfer-nav-li" class="@(ViewBag.ShowTranfer?"":"hide")"><a href="#transfer" data-toggle="tab"><b>Transfer History </b></a></li>
+    </ul>
+    <div class="tab-content">
+
+        <div class="active tab-pane" id="timeline">
+            <!-- The timeline -->
+            <ul class="timeline timeline-inverse">
+
+                @foreach (var item in timeline)
+                {
+                    string y = item.date.Substring(0, 4);
+                    string m = item.date.Substring(4, 2);
+                    string d = item.date.Substring(6, 2);
+
+                    var date = DateTime.Parse(m + "/" + d + "/" + y + " 12:00:00");
+
+
+                    <!-- timeline time label -->
+                    <li class="time-label">
+                        <span id="localtime-@item.date" class="bg-green">
+                            <script>convertLocalTime(@item.date, "@date", "MMMddyyyy")</script>
+                        </span>
+                    </li>
+
+                    <!-- /.timeline-label -->
+                    foreach (var itemd in item.detail.OrderByDescending(f => f.CreateAt))
+                    {
+                        string dateago = EnrichcousBackOffice.AppLB.CommonFunc.DateTimeRemain(itemd.CreateAt.Value);
+                        var attachments = new List<EnrichcousBackOffice.Models.UploadMoreFile>();
+                        using (var db = new EnrichcousBackOffice.Models.WebDataModel())
+                        {
+                            attachments = db.UploadMoreFiles.Where(f => f.TableId == itemd.Id && f.TableName == "T_TicketFeedback").ToList();
+                        }
+
+                        <!-- timeline item -->
+                        <li class="feedback-item" @*onmouseover="mouse_over_out('@itemd.Id','over')" onmouseout="mouse_over_out('@itemd.Id','out')"*@>
+                            <span style="background: #f39c12;color: white;border-radius: 26px;padding: 2px 5px;margin-left:5px;" class="time-timeline">
+                                @string.Format("{0:r}", itemd.CreateAt.Value)
+                            </span>
+
+                            <div class="timeline-item">
+
+                                <div class="timeline-header">
+                                    <table style="width:100%">
+                                        <tr>
+                                            @if (itemd.CreateByName.ToLower() != "system")
+                                            {
+                                                <td><a>@itemd.CreateByName</a></td>
+                                            }
+                                            else
+                                            {
+                                                <td>@Html.Raw(@itemd.FeedbackTitle)</td>
+                                            }
+
+                                            <td style="text-align:right">
+
+                                                <span style="color: #999;font-size:12px"><i class="fa fa-clock-o"></i> @dateago</span>
+                                                &nbsp;&nbsp;
+
+                                                <input type="hidden" id="hdglobal-@itemd.Id" value="@itemd.GlobalStatus" />
+                                                @*<input type="hidden" id="hdshare-@itemd.Id" value="@(itemd.Share == true ? '1': '0')" />*@
+                                                <a class="btn-xs btn-primary" title="Click to private" id="iconpublish-@itemd.Id" onclick="fbaction('@itemd.Id', 'private')" style="@if (itemd.GlobalStatus == "private") {@Html.Raw("display:none") }">
+                                                    <i class="fa fa-users"></i> Publish
+                                                </a>
+
+                                                <a class="btn-xs btn-warning" title="Click to Publish" onclick="fbaction('@itemd.Id', 'publish')" id="iconprivate-@itemd.Id" style="@if (itemd.GlobalStatus != "private") {@Html.Raw("display:none") }">
+                                                    <i class="fa fa-user"></i> Private
+                                                </a>
+
+                                                @* TypeId tu 2000 den 2999 la Development ticket *@
+                                                @*@if (Model.TypeId < 2000)
+                                                    {
+                                                        <a class="btn-xs btn-info" id="iconshare-@itemd.Id" st style="margin-right:10px;@if (itemd.Share != true) {@Html.Raw("display:none") }"><i class="fa fa-share-alt"></i> Shared</a>
+                                                    }*@
+
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    @if (itemd.CreateByName.ToLower() != "system")
+                                    {
+                                        @Html.Raw(@itemd.FeedbackTitle)
+                                    }
+                                </div>
+
+                                <div class="timeline-body timeline-@itemd.Id" style="max-width:100%; overflow-x:auto;position:relative">
+                                    <div class="noi-dung-ticket" style="white-space: pre-line">
+                                        @Html.Raw(itemd.Feedback)
+                                    </div>
+                                    <script type="text/javascript">
+                                        zoomWrapper(".timeline-@itemd.Id .noi-dung-ticket").then(() => {
+                                            $('.timeline-@itemd.Id .noi-dung-ticket .zoom.wrapper').simpleLightbox();
+                                        });
+                                    </script>
+
+
+                                    @Html.Partial("_UploadMoreFilesPartial_Small", attachments, new ViewDataDictionary { { "upload", false } })
+                                    @*@Html.Partial("_AttachmentsPartial", itemd.Attachments, new ViewDataDictionary { { "upload", false } })*@
+
+                                    @if (itemd.CreateByNumber == cmem.MemberNumber)
+                                    {
+                                        <a id="edit-@itemd.Id" class="btn-edit-feedback btn btn-xs btn-warning" onclick="retrieveAction('@Model.Id','@itemd.Id')">
+                                            <i class="fa fa-pencil"></i><span> Edit</span>
+                                        </a>
+                                    }
+                                </div>
+                            </div>
+                        </li>
+                    }
+
+                    <!-- END timeline item -->
+
+                }
+
+                <li>
+                    <i class="fa fa-clock-o bg-gray"></i>
+                </li>
+            </ul>
+
+
+        </div>
+
+
+        <div class="tab-pane" id="feedback">
+            <form role="form" id="feedback_form" class="form-horizontal" action="/Ticket_New/Feedback" method="post" enctype="multipart/form-data" onsubmit="overlayOn()">
+                <input type="hidden" value="@Model.Id" name="fb_ticketId" />
+                <input type="hidden" value="@ViewBag.urlback" name="urlback" />
+                <input type="hidden" value="" name="_controller" />
+                <input type="hidden" value="" id="InsertFb_MentionMemberNumbers" name="MentionMemberNumbers" />
+
+                <div class="pull-right">
+                    <a class="btn btn-default" onclick="$('#modal_select_et').modal('show')">Select template</a>
+                </div>
+                <div class="clearfix"></div>
+                <div>
+                    <textarea id="fb_content" name="fb_content" required></textarea>
+                </div>
+                <br />
+
+                <!--khong thay doi status khi feedback-->
+                <input type="hidden" value="@Model.StatusId" name="fb_status" />
+
+                @*}*@
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Publish/Private</label>
+                    <div class="col-sm-4">
+                        <select name="globalStatus" class="form-control">
+
+                            <option value="publish">Publish</option>
+                            <option value="private">Private</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Attachments</label>
+                    <div class="col-sm-9">
+                        @Html.Partial("_UploadMoreFilesPartial", null, new ViewDataDictionary { { "upload", true }, { "prefix", "addFeedBack" } })
+                    </div>
+                </div>
+
+                <br />
+                <button type="submit" class="btn btn-primary btn-block">Save changes</button>
+
+            </form>
+        </div>
+
+        <div class="tab-pane" id="edit"></div>
+        <div class="tab-pane" id="transfer">
+            <div id="tranfer-loading" style="display: none;text-align:center">
+                <img src="/Content/ajax-loaders/ajax-loader-1.gif" id="loading_timeline">
+            </div>
+            <div id="tranfer-content"></div>
+        </div>
+        <!-- /.tab-content -->
+    </div>
+    @Html.Partial("_EmailTemplateSelectPartial", replace, new ViewDataDictionary { { "ElementId", "fb_content" } })
+</div>
+<!-- CK Editor -->
+@*<script src="/content/admin/bower_components/ckeditor/ckeditor.js"></script>*@
+<script type="text/javascript">
+ 
+
+    $("#gmt-feedback").html("("+moment().format("Z")+")");
+
+
+    $(function () {
+        $(".nav.nav-tabs a").on("click", function () {
+            if ($(this).attr("href").trim() == "#timeline" || $(this).attr("href").trim() == "#transfer") {
+                $("#save_change_btn").show();
+            } else {
+                $("#save_change_btn").hide();
+            }
+        });
+
+        $('[data-toggle="tooltip"]').tooltip();
+
+    })
+
+    $(".time-timeline").html(function (index, value) {
+        let result = moment(value).format('LT');
+        return result;
+    });
+
+    $(".time-timeline-createat").html(function (index, value) {
+        let result = moment(value).format('lll');
+        return result;
+    });
+
+    function dataFeed(opts, callback) {
+        var matchProperty = 'FullName';
+         data = usersMentions.filter(function (item) {
+                    return item[matchProperty].toLowerCase().includes(opts.query.toLowerCase());
+                });
+            data = data.sort(function (a, b) {
+                return a[matchProperty].localeCompare(b[matchProperty], undefined, { sensitivity: 'accent' });
+            });
+            callback(data);
+        }
+
+    function fbaction(id, type) {
+        $.ajax({
+            url: "/Ticket_New/SetActionFeedback",
+            dataType: "json",
+            method: "post",
+            data: {
+                fbid: id,
+                type: type
+            }
+        }).done(function (result) {
+            //return Json(new object[] {true, fbid, type, active });
+            if (result[2] == "share") {
+                if (result[3] == 1) {
+
+                    $("#hdshare-" + id).val(1);
+
+                    $("#iconshare-" + id).show();
+                    var optionsErr = $.parseJSON('{"text":"Share successfull.","layout":"topRight","type":"success"}');
+                    noty(optionsErr);
+                }
+                else {
+                    $("#hdshare-" + id).val(0);
+                    $("#iconshare-" + id).hide();
+                    var optionsErr = $.parseJSON('{"text":"Unshare successfull.","layout":"topRight","type":"success"}');
+                    noty(optionsErr);
+                }
+
+            }
+            else {
+                $("#hdglobal-" + id).val(type);
+                if (type != "private") {
+                    $("#iconprivate-" + id).hide();
+                    $("#iconpublish-" + id).show();
+
+                    var optionsErr = $.parseJSON('{"text":"Publish successfull.","layout":"topRight","type":"success"}');
+                    noty(optionsErr);
+                }
+                else {
+                    $("#iconprivate-" + id).show();
+                    $("#iconpublish-" + id).hide();
+
+                    var optionsErr = $.parseJSON('{"text":"Go back private.","layout":"topRight","type":"success"}');
+                    noty(optionsErr);
+                }
+            }
+
+            //alert(result[4]);
+            $("<i>" + result[4] + "</i><br/>").insertBefore($("#update-" + id).children().first());
+
+        }).fail(function () {
+            var optionsErr = $.parseJSON('{"text":"Opp, something went wrong.","layout":"topRight","type":"warning"}');
+            noty(optionsErr);
+            return;
+
+        });
+    }
+
+
+
+    /**
+     * Get Action detail
+     * @@param id cction id
+     */
+
+
+
+    CKEDITOR.replace('fb_content', {
+        extraPlugins: 'mentions',
+        mentions: [
+            {
+                feed: dataFeed,
+                itemTemplate: '<li data-id="{MemberNumber}">' +
+                    '<img class="photo" src="{Avatar}" />' +
+                    '<strong class="username">#{MemberNumber}</strong>' +
+                    '<span class="fullname">{FullName}</span>' +
+                    '</li>',
+                outputTemplate: '<a href="#Mentions_{MemberNumber}">@('@'){FullName}</a><span>&nbsp;</span>',
+                minChars: 0
+            },
+        ],
+
+    })
+    var currentMemberTag = $("[name='TagMemberNumber']").val();
+    CKEDITOR.instances.fb_content.on('change', function () {
+        var comment = CKEDITOR.instances.fb_content.getData();
+
+                        var listMention = [];
+                        $.each(usersMentions, function (i, item) {
+                            if (comment.includes('#Mentions_' + item.MemberNumber)) {
+                                listMention.push(item.MemberNumber);
+                            }
+                        });
+                        $("#excludeTicketUpdateNotice").val(listMention.join(','));
+                        $("#InsertFb_MentionMemberNumbers").val(listMention.join(','));
+
+                        // add member tag
+                         let newMemberTag = currentMemberTag.concat(listMention);
+                        let groupMemberTag = newMemberTag.filter((item, pos) => newMemberTag.indexOf(item) === pos);
+                      
+                       $("[name='TagMemberNumber']").val(groupMemberTag).trigger("change.select2");
+    });
+
+
+
+    function retrieveAction(ticketId, feedbackId) {
+        let controllerBase = '@controller';
+        if ($("#hd_controller").val() != "") {
+            controllerBase = $("#hd_controller").val();
+        }
+        $("img[name=loading_action]").show();
+        $.ajax({
+            url: "/Ticket_New/GetActionFeedback",
+            method: "post",
+            data: {
+                ticketId: ticketId,
+                fbid: feedbackId,
+                controller: controllerBase
+            }
+        }).done(function (result) {
+            $("div#edit").html(result);
+            $(".edit-tab").show().click();
+            CKEDITOR.replace('fb_edit_content', {
+            extraPlugins: 'mentions',
+            mentions: [
+                {
+                    feed: dataFeed,
+                    itemTemplate: '<li data-id="{MemberNumber}">' +
+                        '<img class="photo" src="{Avatar}" />' +
+                        '<strong class="username">#{MemberNumber}</strong>' +
+                        '<span class="fullname">{FullName}</span>' +
+                        '</li>',
+                    outputTemplate: '<a href="#Mentions_{MemberNumber}">@('@'){FullName}</a><span>&nbsp;</span>',
+                    minChars: 0
+                },
+            ],
+
+
+        });
+            CKEDITOR.instances.fb_edit_content.on('change', function () {
+                var comment = CKEDITOR.instances.fb_edit_content.getData();
+
+                var listMention = [];
+                $.each(usersMentions, function (i, item) {
+                    if (comment.includes('#Mentions_' + item.MemberNumber)) {
+                        listMention.push(item.MemberNumber);
+                    }
+                });
+                $("#UpdateFb_MentionMemberNumbers").val(listMention.join(','));
+                
+            });
+
+
+        }).fail(function () {
+            let optionsErr = $.parseJSON('{"text":"Opp, something went wrong.","layout":"topRight","type":"warning"}');
+            noty(optionsErr);
+        }).always(() =>
+            $("img[name=loading_action]").hide()
+        );
+    }
+
+
+
+
+
+    zoomWrapper(".timeline-body .noi-dung-ticket").then(() =>{
+        $('.timeline-body .noi-dung-ticket .zoom.wrapper').simpleLightbox();
+    });
+    loadform_submit();
+        function loadform_submit() {
+            $("#feedback_form").on("keypress", function (event) {
+                var keyPressed = event.keyCode || event.which;
+                if (keyPressed === 13) {
+                    event.preventDefault();
+                    return false;
+                }
+            });
+            $("#feedback form").submit(async function (e) {
+                        overlayOn();
+                        e.preventDefault(); // avoid to execute the actual submit of the form.
+                        $("#ActionFeedBack").val(true);
+                        await $("#MainFormTicket").submit();
+                        $("#ActionFeedBack").val(false);
+
+                        //$("#loading_transfer_submit").show();
+                        var form = $(this);
+                        var url = form.attr('action');
+                          var statusTicket = $("#status").val();
+                          for (instance in CKEDITOR.instances)
+                         CKEDITOR.instances[instance].updateElement();
+                        let data = new FormData(document.getElementById("feedback_form"));
+                        //var time = $("#time-reminder").data("DateTimePicker").date().toDate();
+                        data.append("statusTicket", statusTicket);
+                        //data.append("Time", (time.getHours() + ":" + time.getMinutes() + ":00"));
+                        data.append("GMT", moment().format("Z"));
+                        data.append("excludeTicketUpdateNotice", $("#excludeTicketUpdateNotice").val());
+                        currentMemberTag = $("[name='TagMemberNumber']").val();
+                        $.ajax({
+                            type: "POST",
+                            url: url,
+                            contentType: false,
+                            processData: false,
+                            data: data, // serializes the form's elements.
+                            success: async function (data) {
+                                 if (data[0]) {
+                           var comment = CKEDITOR.instances.fb_content.getData();
+
+                        var listMention = [];
+                        $.each(usersMentions, function (i, item) {
+                            if (comment.includes('#Mentions_' + item.MemberNumber)) {
+                                listMention.push(item.MemberNumber);
+                            }
+                        });
+
+                        if (listMention.length) {
+                            $.ajax({
+                                url: "/Ticket_New/NotificationMentions",
+                                method: "post",
+                                data: {
+                                    MemberNumbers: listMention,
+                                    TicketId: '@Model.Id'
+                                }
+                            })
+                        }
+
+                        success(data[1]);
+                        $("[name=urlback]").val("");
+                        $("#save_change_btn").show();
+                                     await Gettimeline();
+                                     overlayOff();
+                       // loadReminder();
+                                 }
+                                 else {
+                      error(data[1]);
+
+                    }
+
+                    }
+                });
+
+
+            });
+
+
+        $("#edit form").on("submit",  function (e) {
+            $("#ActionFeedBack").val(true);
+            $("#MainFormTicket").submit();
+            $("#ActionFeedBack").val(false);
+            for (instance in CKEDITOR.instances)
+                CKEDITOR.instances[instance].updateElement();
+
+        })
+        $("#edit form").on("keypress", function (event) {
+            var keyPressed = event.keyCode || event.which;
+            if (keyPressed === 13) {
+                event.preventDefault();
+                return false;
+            }
+        });
+        $("#edit form").ajaxForm(async function (data) {
+            if (data[0]) {
+                await Gettimeline();
+                success(data[1]);
+                $("[name=urlback]").val("");
+
+                $("#save_change_btn").show();
+            } else {
+                error(data[1]);
+            }
+            overlayOff();
+        })
+        }
+
+   @if (Model.Id > 0)
+   {
+       <text>
+        function loadTransferContent(reload = false) {
+            let checkLoaded = $("#tranfer-content").html();
+            if (reload != true && checkLoaded.length > 0) {
+                return;
+            }
+            $("#tranfer-content").empty();
+            $("#tranfer-loading").show();
+
+        $.ajax({
+            method: "POST",
+            url: "/ticket_new/GetContentTransfer",
+            data: { TicketId: '@Model.Id' },
+            dataType: "html"
+        })
+            .done(function (data) {
+                $("#tranfer-content").html(data);
+            })
+            .fail(function () {
+                alert("Oops! cannot load transfer content");
+            })
+            .always(function () {
+                $("#tranfer-loading").hide();
+            });
+    }
+    //loadTransferContent();
+    </text>
+   }
+    $(".entry-time-ticket-feedback").html(function (index, value) {
+        let date = moment(value +' +00').format('lll');
+        return date;
+    });
+</script>

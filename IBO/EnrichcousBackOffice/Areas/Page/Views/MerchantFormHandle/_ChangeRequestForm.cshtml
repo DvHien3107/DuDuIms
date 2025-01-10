@@ -1,0 +1,307 @@
+﻿@using EnrichcousBackOffice.Areas.Page.Models.Customize;
+
+@{
+    var data = Session["NameChangeFormData"] as FormModel.NameChangeForm_Data;
+}
+
+<link rel="preconnect" href="https://fonts.gstatic.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@300;400;700&display=swap" rel="stylesheet">
+@if (ViewBag.Error != null)
+{
+    <p class="text-center"><b>@ViewBag.Error</b></p>
+}
+else
+{
+    <form id="ChangeForm" action="/Page/MerchantFormHandle/ChangeData_NCF" onchange="$('#ChangeForm').submit();">
+        <div style="width: 100%;
+        background-color: gray;
+        padding: 10px;
+        font-family: 'Roboto Condensed', sans-serif; font-size:13px">
+            <div style="width: 800px; margin: auto; background-color: #fff; border: 2px inset; padding:20px">
+                <center style="font-size:23px; font-weight:700">CHANGE REQUEST FORM</center>
+                <div style=" margin: 20px 40px">
+                    <table class="tableform" border="1" style="width:100%;">
+                        <thead>
+                            <tr>
+                                <th colspan="2">MERCHANT ACCOUNT INFORMATION</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="width:50%">
+                                    <div class="input-group">
+                                        <span>DATE:</span> <input name="Date" class="form-control" value="@(data?.Date ?? DateTime.Now.ToString("MM/dd/yyyy"))" />
+                                    </div>
+                                </td>
+                                <td style="width:50%"><div class="input-group"><span>MERCHANT ID NUMBER:</span> <input class="form-control" name="MID" value="@(data?.MID)" onblur="changeData()" /></div></td>
+                            </tr>
+                            <tr><td colspan="2"><div class="input-group"><span>ACCOUNT OWNER’S NAME:</span> <input class="form-control" name="OwnerName" value="@(data?.OwnerName)" onblur="changeData()" /></div></td></tr>
+                            <tr><td colspan="2"><div class="input-group"><span>BUSINESS NAME (DBA):</span> <input class="form-control" name="BusinessName" value="@(data?.BusinessName)" onblur="changeData()" /></div></td></tr>
+                            <tr>
+                                <td colspan="2">
+                                    <div class="input-group"><span>CURRENT LEGAL NAME:</span> <input class="form-control" name="LegalName" value="@(data?.LegalName)" onblur="changeData()" /></div>
+                                    <div style="font-size:8px; line-height:8px; margin: 0px 0">(FOR LEGAL NAME CHANGES A NEW MERCHANT APPLICATION WILL BE REQUIRED. PLEASE CONTACT YOUR SALES AGENT OR CLIENT SERVICES)</div>
+                                </td>
+
+                            </tr>
+                        </tbody>
+                    </table>
+                    <table class="tableform" border="1" style="width:100%;">
+                        <thead>
+                            <tr>
+                                <th colspan="2">DBA CHANGES REQUESTED</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="width:60%"><b>CHANGE REQUEST</b></td>
+                                <td style="width:40%"><b>ADDITIONAL DOCUMENTATION REQUIRED</b></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="input-group"><input class="left_checkbox" type="checkbox" value="true" name="NewBusinessName_check" /><span>DBA NAME:</span> <input class="form-control" name="NewBusinessName"  onblur="changeData()" /></div>
+                                </td>
+                                <td>BUSINESS CERTIFICATE OR PRE-PRINTED VOIDED CHECK</td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="input-group"><input class="left_checkbox" type="checkbox" value="true" name="LegalAddress_check" /><span>LEGAL ADDRESS:</span> <input class="form-control" name="LegalAddress" onblur="changeData()" /></div>
+                                </td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="input-group"><input class="left_checkbox" type="checkbox" value="true" name="BusinessAddress_check" /><span>DBA ADDRESS:</span> <input class="form-control" name="BusinessAddress" onblur="changeData()" /></div>
+                                </td>
+                                <td>
+                                    BUSINESS CERTIFICATE OR PREPRINTED VOIDED CHECK
+                                    OR COPY OF VALID UTILITY BILL OR COPY OF BUSINESS
+                                    LOCATION LEASE
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="input-group"><input class="left_checkbox" type="checkbox" value="true" name="EmailAddress_check" /><span>EMAIL ADDRESS:</span> <input class="form-control" name="EmailAddress" onblur="changeData()" /></div>
+                                </td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="input-group"><input class="left_checkbox" type="checkbox" value="true" name="BusinessPhone_check" /><span>DBA PHONE NUMBER:</span> <input class="form-control" name="BusinessPhone" onblur="changeData()" /></div>
+                                </td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="input-group"><input class="left_checkbox" type="checkbox" value="true" name="Fax_check" /><span>DBA FAX NUMBER:</span> <input class="form-control" name="Fax" onblur="changeData()" /></div>
+                                </td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="input-group"><input class="left_checkbox" type="checkbox" value="true" name="Website_check" /><span>WEBSITE ADDRESS:</span> <input class="form-control" name="Website" onblur="changeData()" /></div>
+                                </td>
+                                <td></td>
+                            </tr>
+                        </tbody>
+                        <thead>
+                            <tr>
+                                <th colspan="2">PRICING AND CARD TYPE CHANGES REQUESTED</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="border-right: 0">
+                                    <div class="input-group">
+                                        <input class="left_checkbox" type="checkbox" value="true" name="AmexOPT_check" /><span style="padding-right:60px">AMEX OPT BLUE</span>
+                                        <input class="left_checkbox" type="checkbox" value="true" name="Interchange_check" /><span style="padding-right:20px">INTERCHANGE</span>
+                                        <input class="left_checkbox" type="checkbox" value="true" name="Tiered_check" /><span>TIERED</span>
+                                    </div>
+                                </td>
+                                <td style="border-left: 0"><div class="input-group"><span>RATE:</span> <input class="form-control" name="AmexOPT_rate" onblur="changeData()" /></div></td>
+                            </tr>
+                            <tr>
+                                <td style="border-right: 0">
+                                    <div class="input-group">
+                                        <input class="left_checkbox" type="checkbox" value="true" name="AmexDirect_check" /><span style="padding-right:60px">AMEX DIRECT SE#</span>
+                                    </div>
+                                </td>
+                                <td style="border-left: 0"></td>
+                            </tr>
+                            <tr>
+                                <td style="border-right: 0">
+                                    <div class="input-group">
+                                        <input class="left_checkbox" type="checkbox" value="true" name="AddDiscover_check" /><span style="padding-right:60px">ADD DISCOVER</span>
+                                    </div>
+                                </td>
+                                <td style="border-left: 0"></td>
+                            </tr>
+                            <tr>
+                                <td style="border-right: 0">
+                                    <div class="input-group">
+                                        <input class="left_checkbox" type="checkbox" value="true" name="PinDebitDiscount_check" /><span style="padding-right:60px">PIN DEBIT DISCOUNT</span>
+                                    </div>
+                                </td>
+                                <td style="border-left: 0"><div class="input-group"><span>RATE:</span> <input class="form-control" name="PinDebitDiscount_rate" onblur="changeData()" /></div></td>
+                            </tr>
+                            <tr>
+                                <td style="border-right: 0">
+                                    <div class="input-group">
+                                        <input class="left_checkbox" type="checkbox" value="true" name="EBT_check" /><span style="padding-right:60px">EBT</span>
+                                        <span>FNS#</span> <input class="form-control" name="FNS" onblur="changeData()" />
+                                    </div>
+                                </td>
+                                <td style="border-left: 0"><div class="input-group"><span>TRANSACTION FEE:</span> <input class="form-control" name="ETBTransFee" onblur="changeData()" /></div></td>
+                            </tr>
+                            <tr>
+                                <td style="border-right: 0">
+                                    <div class="input-group">
+                                        <input class="left_checkbox" type="checkbox" value="true" name="AddCashBenefits_check" /><span style="padding-right:60px">ADD CASH BENEFITS</span>
+                                    </div>
+                                </td>
+                                <td style="border-left: 0"></td>
+                            </tr>
+                            <tr>
+                                <td style="border-right: 0">
+                                    <div class="input-group">
+                                        <input class="left_checkbox" type="checkbox" value="true" name="AddMerchantBenefits_check" /><span style="padding-right:60px">ADD MY MERCHANT BENEFITS</span>
+                                    </div>
+                                </td>
+                                <td style="border-left: 0"><div class="input-group"><span>RATE:</span> <input class="form-control" name="MerchantBenefits_rate" onblur="changeData()" /></div></td>
+                            </tr>
+                            <tr>
+                                <td style="border-right: 0">
+                                    <div class="input-group">
+                                        <input class="left_checkbox" type="checkbox" value="true" name="VisaMastercardDiscoverDiscount_check" /><span style="padding-right:60px">VISA/MASTERCARD/DISCOVER DISCOUNT</span>
+                                    </div>
+                                </td>
+                                <td style="border-left: 0"><div class="input-group"><span>NEW RATE</span> <input class="form-control" name="VisaMastercardDiscoverDiscount_rate" onblur="changeData()" /></div></td>
+                            </tr>
+                            <tr>
+                                <td style="border-right: 0">
+                                    <div class="input-group">
+                                        <input class="left_checkbox" type="checkbox" value="true" name="CheckcardDiscount_check" /><span style="padding-right:60px">CHECK CARD DISCOUNT</span>
+                                    </div>
+                                </td>
+                                <td style="border-left: 0"><div class="input-group"><span>RATE:</span> <input class="form-control" name="CheckCardDiscount_rate" onblur="changeData()" /></div></td>
+                            </tr>
+
+                            <tr>
+                                <td style="border-right: 0">
+                                    <div class="input-group">
+                                        <input class="left_checkbox" type="checkbox" value="true" name="Other1_check" /><span>OTHER:</span><input class="form-control" name="Other1"  onblur="changeData()" />
+                                    </div>
+                                </td>
+                                <td style="border-left: 0"><div class="input-group"><span>RATE:</span> <input class="form-control" name="Other1_rate" onblur="changeData()" /></div></td>
+                            </tr>
+                            <tr>
+                                <td style="border-right: 0">
+                                    <div class="input-group">
+                                        <input class="left_checkbox" type="checkbox" value="true" name="Other2_check" /><span>OTHER:</span><input class="form-control" name="Other2" onblur="changeData()" />
+                                    </div>
+                                </td>
+                                <td style="border-left: 0"><div class="input-group"><span>RATE:</span> <input class="form-control" name="Other2_rate" onblur="changeData()" /></div></td>
+                            </tr>
+                        </tbody>
+                        <thead>
+                            <tr>
+                                <th colspan="2">NOTES</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="2"><textarea rows="3" class="form-control" name="Notes" onblur="changeData()"></textarea></td>
+                            </tr>
+                        </tbody>
+                        <thead>
+                            <tr>
+                                <th colspan="2">MERCHANT SIGNATURE</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="border-right: 0">
+                                    <div class="input-group"><span>MERCHANT SIGNATURE:</span> <input class="form-control" name="PhoneNumber" value="@(data?.LegalName)" onblur="changeData()" /></div>
+                                    <div style="font-size:8px; line-height:8px; margin: 0 0 0 150px">***SIGNATURE IS REQUIRED FOR ALL CHANGES ON FORM***</div>
+                                </td>
+                                <td style="border-left: 0">
+                                    <div class="input-group"><span>DATE:</span> <input class="form-control" name="DATE" /></div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <br />
+                    <div style="color:#3592CC; line-height:13px">
+                        <b>PLEASE RETRN CHANGE REQUEST FORM TO:</b><br />
+                        <b>BY FAX:</b> 855.819.4403<br />
+                        <b>BY EMAIL:</b> CUSTOMERSERVICETSYS@PPS.IO<br />
+                        <b>BY MAIL:</b> MERCHANT SERVICES, PO BOX 246, ALPHARETTA, GA 30009<br />
+
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </form>
+}
+<link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+<style type="text/css">
+    .tableform, th, td {
+        border: 1px solid #494849;
+        padding: 5px 15px;
+        vertical-align: top;
+    }
+
+        .tableform th {
+            text-align: center;
+            background-color: #494849;
+            color: #fff;
+            font-weight: 400;
+            font-size: 14px;
+        }
+
+        .tableform td {
+            font-size: 12px;
+        }
+
+    .tableform {
+        border-collapse: collapse;
+    }
+
+        .tableform span {
+            line-height: 24px;
+        }
+
+        .tableform td input {
+            font-size: 14px;
+            padding: 0 5px;
+            height: 24px;
+        }
+
+        .tableform .left_checkbox {
+            margin: 0px 5px 0px -10px;
+        }
+</style>
+<script type="text/javascript">
+
+    function changeData() {
+        //$("#ChangeForm").submit();
+    }
+
+    $("#ChangeForm").submit(function (e) {
+        e.preventDefault(); //avoid to execute the actual submit of the form.
+        var form = $(this);
+        var url = form.attr('action');
+
+        $.ajax({
+            type: "POST",
+            url: url,
+            data: form.serialize(), //serializes the form's elements.
+            success: function (data) {
+                //alert(data); // show response from the php script.
+            }
+        });
+    });
+
+</script>

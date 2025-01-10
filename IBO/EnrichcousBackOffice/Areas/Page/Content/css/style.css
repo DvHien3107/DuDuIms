@@ -1,0 +1,435 @@
+body {
+    background-size: cover;
+    background-attachment: fixed;
+    background-repeat: repeat;
+    background-color: rgba(204,204,204,1);
+}
+
+.forms-form {
+    background-color: rgba(255,255,255,1);
+}
+
+@media print {
+    a[href]:after {
+        content: none !important;
+    }
+
+    footer,
+    #non-printable {
+        display: none !important;
+    }
+
+    #printable {
+        display: block;
+    }
+}
+
+@media (min-width: 1200px) {
+    .container {
+        width: 900px;
+    }
+
+    .forms-form {
+        margin-bottom: 40px;
+        margin-top: 40px;
+    }
+
+    .container {
+        padding-top: 40px;
+        padding-bottom: 40px;
+    }
+
+    .logo img {
+        width: 20%;
+    }
+}
+
+@media (min-width: 992px) {
+    .container {
+        width: 970px;
+        padding-top: 40px;
+        padding-bottom: 40px;
+    }
+
+    .forms-form {
+        margin-bottom: 40px;
+        margin-top: 40px;
+    }
+}
+
+@media (max-width: 768px) {
+    .progress-steps li span {
+        display: none;
+    }
+
+    .progress-steps li a {
+        padding: 0;
+    }
+
+    .forms-form {
+        padding: 15px;
+    }
+
+    /*.form-item, .item {
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+    }*/
+
+    .mango {
+        padding: 0;
+    }
+
+    .logo img {
+        width: 50%;
+    }
+
+    .forms-form h1 {
+        font-size: 22px !important;
+    }
+
+    .content_style {
+        margin-top: 15px;
+    }
+}
+
+.forms-form h1 {
+    font-size: 30px;
+    font-weight: bold;
+}
+
+.col-md-2 {
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+.progress-steps ul {
+    position: relative;
+    display: inline-block;
+    padding: 0 !important;
+    counter-reset: mycounter;
+    list-style: none;
+    margin: 0;
+    clear: both;
+    margin-top: 20px;
+}
+
+.progress-steps li.active {
+    font-weight: bold;
+    opacity: 1;
+}
+
+.progress-steps li {
+    padding: 0;
+    margin-right: 1em;
+    font-weight: bold;
+    opacity: .7;
+    float: left;
+    position: relative;
+    list-style-type: none;
+    margin-bottom: 5px;
+}
+
+    .progress-steps li a {
+        display: inline-block;
+        font-weight: bold !important;
+    }
+
+        .progress-steps li a:before {
+            background-color: rgba(0,0,0,0.1);
+            color: #000000;
+        }
+
+        .progress-steps li a:hover {
+            text-decoration: none;
+        }
+
+    .progress-steps li span {
+        padding-left: .5em;
+        vertical-align: middle;
+    }
+
+.forms-progress li.active a:before {
+    background-color: #D85427;
+    color: #fff;
+    border-color: #D85427;
+}
+
+.progress-steps a:before {
+    content: counter(mycounter);
+    counter-increment: mycounter;
+    display: inline-flex;
+    justify-content: center;
+    vertical-align: middle;
+    color: #999;
+    font-size: .8em;
+    width: 1.5em;
+    height: 1.5em;
+    line-height: 1.5em;
+    border-radius: 50%;
+    border-width: 1px;
+    border-style: solid;
+    background-color: #fff;
+}
+
+.form-item, .item {
+    border: 1px dotted;
+    padding: 15px;
+    /*display: inline-block;*/
+}
+
+.item-note {
+    display: inline-block;
+    margin-top: 20px;
+}
+
+    .item-note .note {
+        padding: 0;
+    }
+
+.submit {
+    margin-top: 20px;
+    display: inline-block;
+}
+
+.switch {
+    position: relative;
+    height: 30px;
+    width: 94px;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 3px;
+    -webkit-box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px rgba(255, 255, 255, 0.1);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.switch-label {
+    position: relative;
+    float: left;
+    width: 50%;
+    line-height: 30px;
+    font-size: 12px;
+    color: #000;
+    text-align: center;
+    cursor: pointer;
+}
+
+    .switch-label:active {
+        font-weight: bold;
+    }
+
+.switch-label-off {
+    padding-left: 2px;
+}
+
+.switch-label-on {
+    padding-right: 2px;
+}
+
+
+.switch-input {
+    display: none;
+}
+
+    .switch-input:checked + .switch-label {
+        font-weight: bold;
+        color: rgba(0, 0, 0, 0.65);
+        -webkit-transition: 0.15s ease-out;
+        -moz-transition: 0.15s ease-out;
+        -ms-transition: 0.15s ease-out;
+        -o-transition: 0.15s ease-out;
+        transition: 0.15s ease-out;
+        -webkit-transition-property: color, text-shadow;
+        -moz-transition-property: color, text-shadow;
+        -ms-transition-property: color, text-shadow;
+        -o-transition-property: color, text-shadow;
+        transition-property: color, text-shadow;
+    }
+
+    .switch-input:checked + .switch-label-on ~ .switch-selection {
+        left: 50%;
+        /* Note: left: 50%; doesn't transition in WebKit */
+    }
+
+.switch-selection {
+    position: absolute;
+    z-index: 1;
+    display: block;
+    width: 50%;
+    height: 30px;
+    border-radius: 3px;
+    background-color: #adadad;
+    background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #dadada), color-stop(100%, #adadad));
+    background-image: -webkit-linear-gradient(top, #dadada, #adadad);
+    background-image: -moz-linear-gradient(top, #dadada, #adadad);
+    background-image: -ms-linear-gradient(top, #dadada, #adadad);
+    background-image: -o-linear-gradient(top, #dadada, #adadad);
+    background-image: linear-gradient(top, #dadada, #adadad);
+    -webkit-box-shadow: inset 0 1px rgba(255, 255, 255, 0.5), 0 0 2px rgba(0, 0, 0, 0.2);
+    box-shadow: inset 0 1px rgba(255, 255, 255, 0.5), 0 0 2px rgba(0, 0, 0, 0.2);
+    -webkit-transition: left 0.15s ease-out;
+    -moz-transition: left 0.15s ease-out;
+    -ms-transition: left 0.15s ease-out;
+    -o-transition: left 0.15s ease-out;
+    transition: left 0.15s ease-out;
+}
+
+.footer-area {
+    background: #191919;
+    color: #fff;
+    position: relative;
+    padding: 25px 0 15px;
+}
+
+#results {
+    margin-top: 20px;
+}
+
+.social i {
+    font-size: 30px;
+    padding: 0 10px;
+}
+
+.social i {
+    color: #fff;
+}
+
+.social .fa-facebook:hover {
+    color: #3b5998;
+}
+
+.social .fa-twitter:hover {
+    color: #55acee;
+}
+
+.social .fa-youtube:hover {
+    color: #ed302f;
+}
+
+.item-add {
+    padding: 0;
+    float: left;
+    color: var(--main-color-1);
+    font-weight: bold;
+    margin-top: 5px;
+}
+
+.widget_text {
+    margin-bottom: 35px;
+}
+
+.booth {
+    width: 400px;
+    height: auto;
+    margin: 20px auto;
+    padding: 10px;
+    display: none;
+}
+
+    .booth a {
+        display: block;
+        padding: 10px;
+        text-align: center;
+        margin: 10px 0;
+        font-size: 15px;
+        color: #fff;
+        text-decoration: none;
+    }
+
+.nav-tabs > li {
+    cursor: pointer;
+}
+
+    .nav-tabs, .nav-tabs > li.active > a, .nav-tabs > li.active > a:focus, .nav-tabs > li.active > a:hover {
+        border: none;
+    }
+
+.nav > li > a:focus, .nav > li > a:hover {
+    background-color: transparent;
+    border: none;
+}
+
+@media screen and (max-width: 768px) {
+    .booth, #results img {
+        width: 100%;
+        padding: 0;
+        margin: 0;
+    }
+  
+}
+
+#my_camera, video {
+    width: 100% !important;
+    height: auto !important;
+    min-width: 100px;
+    min-height: 100px;
+}
+
+.form-check-inline {
+    display: -webkit-inline-box;
+    display: -ms-inline-flexbox;
+    display: inline-flex;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    padding-left: 0;
+    margin-right: .75rem;
+}
+
+.form-check {
+    position: relative;
+    display: block;
+    padding-left: 1.25rem;
+}
+
+.invalid-feedback {
+    background-color: #b91f1f;
+    color: #fff;
+    padding-left: 10px;
+    border-radius: 0 0 4px 4px;
+}
+
+.offscreen {
+    font-weight: bold;
+    font-size: 12px;
+    color: red;
+    font-style: normal;
+    margin-left: .15em;
+}
+
+.page-numbering {
+    float: right;
+    margin-top: 12px;
+    padding: 8px;
+    display: inline-block;
+}
+
+h2 {
+    display: inline-block;
+}
+
+.input-radio:hover, .label-radio:hover {
+    cursor: pointer;
+}
+
+
+.input-required, .input-required:focus {
+    border: 1px solid red;
+}
+
+.errspan {
+    float: right;
+    margin-right: 6px;
+    margin-top: -23px;
+    position: relative;
+    z-index: 2;
+    color: red !important;
+}
+
+.errtextarea {
+    float: right;
+    margin-right: 6px;
+    margin-top: -65px;
+    position: relative;
+    z-index: 2;
+    color: red !important;
+}
+

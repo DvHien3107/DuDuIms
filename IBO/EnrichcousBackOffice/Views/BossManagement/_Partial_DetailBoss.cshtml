@@ -1,0 +1,242 @@
+﻿@model EnrichcousBackOffice.Models.C_BossStore
+@using EnrichcousBackOffice.Models;
+@using EnrichcousBackOffice.Models.CustomizeModel;
+@using EnrichcousBackOffice.AppLB
+@{
+    var customers = (List<Merchant_IndexView>)ViewBag.Customers ?? new List<Merchant_IndexView> { };
+}
+
+<tr id="detail_boss_@Model.Id" style="margin-bottom: 10px;">
+    <td colspan="7" style="background-color: var(--main-color-1)">
+        <div class="nav-tabs-custom" style="margin: auto; padding: 10px; overflow-x: auto; overflow-y: no-display;">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#tab_list_store" data-toggle="tab"><b>List stores</b></a></li>
+                <li><a href="#tab_boss_information" data-toggle="tab"><b>Boss Information</b></a></li>
+            </ul>
+            <div class="tab-content">
+                <div class="active tab-pane" id="tab_list_store">
+                    <div class="tab-pane">
+                        <table id="list_store_@Model.Id" class="table table-bordered table-striped" data-order='[[ 0, "desc" ]]' style="margin: 0">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Business</th>
+                                    <th>Owner</th>
+                                    <th>Remaining days</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (customers.Count() > 0)
+                                {
+                                    var i = 1;
+                                    foreach (var item in customers)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <B>
+                                                    @item.Customer.CustomerCode@if (string.IsNullOrWhiteSpace(item.Customer.WordDetermine) == false)
+                                                    {@Html.Raw("-" + item.Customer.WordDetermine)}
+                                                </B>
+                                            </td>
+                                            <td>
+                                                <a href="/merchantman/detail/@item.Customer.Id" target="_blank">
+                                                    <b>@(item.Customer.BusinessName?.ToUpper())</b>
+                                                </a>
+                                                <br />
+                                                <span style="color:grey">@(item.Customer.BusinessAddressStreet), @(item.Customer.BusinessCity), @(item.Customer.BusinessState) @(item.Customer.BusinessZipCode), @item.Customer.BusinessCountry</span>
+
+                                            </td>
+                                            <td>
+                                                <a href="/merchantman/detail/@item.Customer.Id" target="_blank" style="cursor:pointer; color:#258e4f">
+                                                    <b>@(item.Customer.OwnerName?.ToUpper())</b>
+                                                </a>
+                                                <br />
+                                                <span style="color:grey">Phone: @(string.IsNullOrEmpty(item.Customer.OwnerMobile) ? item.Customer.BusinessPhone : item.Customer.OwnerMobile)</span>
+                                                @if (string.IsNullOrWhiteSpace(item.Customer.PreferredLanguage) == false)
+                                                {
+                                                    <br /><span style="color:grey">Preferred language: @(item.Customer.PreferredLanguage)</span>
+                                                }
+
+                                            </td>
+                                            <td style="font-size:16px !important">
+                                                @if (item.Remaning >= 0)
+                                                {
+                                                    <label class="label" style="background-color: #00CC00"> @CommonFunc.LicenseRemainingTime(item.RenewDate.Value)</label>
+                                                }
+                                                else if (item.Remaning < 0)
+                                                {
+                                                    <label class="label" style="background-color: #EE0000"> Expires</label>
+                                                }
+                                                else
+                                                {
+                                                    <label class="label label-default"> N/A</label>
+                                                }
+                                            </td>
+                                        </tr>
+                                        i++;
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="tab-pane" id="tab_boss_information">
+                    <div class="tab-pane">
+                        <table class="table table-striped table-bordered" style="margin: 0">
+                            <tr>
+                                <th class="col-md-3">Owner</th>
+                                <td><b class="text-success">@(Model.Owner)</b></td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <th class="col-md-3">Contact person</th>
+                                <td>@(Model.ContactPerson)</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <th class="col-md-3">Phone number</th>
+                                <td>@(Model.Phone)</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <th class="col-md-3">Email</th>
+                                <td>@(Model.Email)</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <th class="col-md-3">Url Connect</th>
+                                <td><a href="@(Model.UrlConnect)" target="_blank">@(Model.UrlConnect)</a></td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <th class="col-md-3">Password</th>
+                                <td>******</td>
+                                <td>
+                                    <a data-placement="bottom" title="Change password"
+                                       class="btn btn-warning btn-sm btn-flat pull-right" onclick="openModalPass(this)"><i class="fa fa-key" aria-hidden="true"></i> Change password</a>
+                                </td>
+                            </tr>
+                            <tr style="height: auto">
+                                <th class="col-md-3">Stores</th>
+                                <td>
+                                    @foreach (var cus in customers)
+                                    {
+                                        <p style="display: inline-block">
+                                            <label class="label label-success" style="font-size: 13px;">@cus.Customer.BusinessName</label>
+                                        </p>
+                                    }
+
+                                </td>
+                                <td></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+            <!-- /.tab-content -->
+
+            <div class="card-footer" style="text-align: center">
+                <a onclick="open_modal_boss('@Model.Id')" data-toggle="tooltip" data-placement="bottom" title="Edit"
+                   class="btn btn-default text-green on_row">
+                    <i class="fa fa-pencil"></i>
+                    Edit
+                </a>
+
+                <a onclick="remove_boss('@Model.Id', '@Model.Owner')" data-toggle="tooltip" data-placement="bottom" title="Remove"
+                   class="btn btn-default text-red on_row">
+                    <i class="fa fa-trash"></i>
+                    Remove
+                </a>
+            </div>
+        </div>
+    </td>
+</tr>
+
+<script>
+    $(function () {
+        $('#list_store_@Model.Id').DataTable({
+            'paging': true,
+            'searching': false,
+            'ordering': true,
+            'info': false
+        });
+    });
+
+    function openModalPass(e) {
+        $('#modal_change_pass').modal("show");
+        $('#password').val("");
+        $('#cf_password').val("");
+        $(e).find('.img_loading').hide();
+    }
+
+    function changePass(e) {
+        $(e).find('.img_loading').show();
+        if ($('#password').val() != $('#cf_password').val()) {
+            $('#msg_change_pass').html("Password not match");
+            $(e).find('.img_loading').hide();
+            return;
+        }
+
+        let id = '@Model.Id';
+        let password = $('#password').val()
+        let url = "/bossmanagement/changepassword";
+        if (id) url += `?key=${id}`;
+        $.ajax({
+            method: "POST",
+            url: url,
+            data: { password: password}
+        })
+            .done(function (data) {
+                $(e).find('.img_loading').hide();
+                $("#modal_change_pass").modal('hide');
+                $('#msg_change_pass').html("");
+                if (data[0]) {
+                    var mess = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"success"}');
+                    noty(mess);
+                }
+                else {
+                    var mess = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"error"}');
+                    noty(mess);
+                }
+            })
+            .fail(function () {
+                overlayOff();
+                $('#msg_change_pass').html("");
+                $(e).find('.img_loading').hide();
+                alert("Oops! Something went wrong");
+                $("#modal_change_pass").modal('hide');
+            })
+            .always(function () {
+                //$("#loading").hide();
+            });
+    }
+
+    function remove_boss(id, name) {
+        if (confirm("Are you sure you want to remove " + name + "?") == true) {
+            overlayOn();
+            $.ajax({
+                url: `/bossmanagement/delete?key=${id}`,
+                type: "get",
+                success: function (data) {
+                    if (data[0]) {
+                        noty({ "text": data[1], "layout": "topRight", "type": "success" });
+                        //$("#view_boss_list").DataTable().ajax.reload();
+                        $.ajax({
+                            url: '@Url.Action("ReloadIndex", "bossmanagement")',
+                            type: "POST",
+                            data: { search: $("#search").val() },
+                            success: function (data) {
+                                $("#data_list_boss").html(data);
+                                overlayOff();
+                            },
+                        })
+                    }
+                    else {
+                        noty({ "text": data[1], "layout": "topRight", "type": "error" });
+                    }
+                },
+            })
+        }
+    }
+</script>

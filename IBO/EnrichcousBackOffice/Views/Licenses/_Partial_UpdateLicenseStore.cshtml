@@ -1,0 +1,176 @@
+﻿@model List<EnrichcousBackOffice.Models.CustomizeModel.LicenseStoreActive>
+@using Newtonsoft.Json;
+@{
+    var stores = Model.Select(s => new
+    {
+        Id = Convert.ToString(s.Id),
+        Active = s.Active,
+        LicenseId = s.LicenseId,
+        StoreCode = s.StoreCode,
+        StoreName = s.StoreName
+    }).ToList();
+    var logJson = JsonConvert.SerializeObject(stores);
+}
+<input type="hidden" id="list-store-actived" value="@logJson" />
+<div class="modal fade in" id="store_actived_modal" style="display: none;" data-keyboard="false" data-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close close-update-store" onclick="load_tab();" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <h4 id="modal-department-title" class="modal-title">Update Stores actived product</h4>
+            </div>
+            <div class="modal-body" style="overflow-y:auto; max-height:80vh">
+                <div class="pull-right" style="margin-bottom: 10px">
+                    <button id="btn-update-store" onclick="updateStoreActived(false)" class="btn btn-primary pull-right hide">Update all</button>
+                </div>
+                <table id="order_table" class="table table-bordered table-striped table-hover" style="margin:0px; background-color:#fff">
+                    <thead>
+                        <tr style="background-color: lightskyblue">
+                            <th> Store Name</th>
+                            <th>Store Code</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                        @foreach (var store in Model)
+                        {
+                            <tr>
+                                <td>#@store.StoreCode</td>
+                                <td> @store.StoreName </td>
+                                <td id="status-@store.StoreCode">
+                                    Waiting update
+                                    <img id="loading" class="loading_img" src="/Content/ajax-loaders/ajax-loader-1.gif" style="display:none">
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                <div class="pull-left" style="font-size: 16px;">
+                    <span id="total-success"> The stores not yet updated License: @Model.Count</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-right close-update-store" onclick="skipUpdateStoreActived('@(Model[0].Id)')" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    //dataTable
+    var table = $('#order_table').DataTable({
+        'paging': true,
+        'lengthChange': true,
+        'searching': false,
+        'ordering': false,
+        'info': false,
+        'autoWidth': true
+    });
+
+    function skipUpdateStoreActived(productId) {
+        noty({ "text": "Have some store not yet updated License", "layout": "topRight", "type": "warning" });
+        load_tab();
+    }
+
+    async function updateStoreActived(reUpdate) {
+        if (!reUpdate) {
+            var stores = JSON.parse($('#list-store-actived').val());
+            await updateStoreActivedOnServer(stores);
+        }
+        else {
+            var products = JSON.parse($('#list-store-actived').val());
+            productId = products[0].Id;
+            var sts = [];
+            //get data
+            await $.ajax({
+                method: "POST",
+                url: "/Licenses/GetStoresActivedProduct",
+                data: { productId, reUpdate },
+                dataType: "html"
+            })
+                .done(function (data) {
+                    sts = JSON.parse(data)[0];
+                })
+                .fail(function () {
+                    noty({ "text": "Get data store fail", "layout": "topRight", "type": "fail" });
+                })
+            await updateStoreActivedOnServer(sts);
+        }
+    };
+
+    async function updateStoreActivedOnServer(stores) {
+        var productId = stores[0].Id.toString();
+        $(".close-update-store").removeAttr("data-dismiss", "modal");
+        $(".close-update-store").off("click");
+        $(".close-update-store").click(function () {
+            noty({ "text": "Please update all stores waiting", "layout": "topRight", "type": "warning" });
+        });
+        $("#btn-update-store").attr('disabled', 'disabled');
+
+        var countSucces = 0;
+        for (var index = 0; index < stores.length; index++) {
+            table.page(Math.floor(index / 10)).draw(false);
+            if (index % 10 == 0) {
+                var html = `Waiting update <img id="loading" class="loading_img" src="/Content/ajax-loaders/ajax-loader-1.gif" style="display:none">`
+                $('td[id^="status-"]').html(html);
+                $("#store_actived_modal tbody").find(".loading_img").show();
+            }
+            var licenseId = stores[index].LicenseId;
+            try {
+                await $.ajax({
+                    method: "POST",
+                    url: "/Licenses/Update_StoreActivedProduct",
+                    data: { productId, licenseId },
+                    dataType: "html"
+                })
+                    .done(function (data) {
+                        data = JSON.parse(data);
+                        var value = `<span style="color: green">${data.status}</span>`;
+                        $("#status-" + stores[index].StoreCode).html(value);
+                        $("#status-" + stores[index].StoreCode).attr('id', stores[index].StoreCode);
+                        countSucces++;
+                        var total = `Update success ${countSucces} / ${stores.length}`;
+                        $("#total-success").html(total);
+                    })
+                    .fail(function (data) {
+                        var value = `<span style="color: red">${data.status}</span>`;
+                        $("#status-" + stores[index].StoreCode).html(value);
+                    })
+            }
+            catch (err) {
+                var data = JSON.parse(err.responseText);
+                var value = `<span style="color: red">${data.status}</span><img class="loading_img" src="/content/ajax-loaders/ajax-loader-1.gif" style="display:none" />`;
+                $("#status-" + stores[index].StoreCode).html(value);
+                $(".close-update-store").attr('onclick', 'updateStoreActived(' + productId + ')').attr("data-dismiss", "modal");
+            }
+        }
+        noty({ "text": "Update stores actived product done.", "layout": "topRight", "type": "success" });
+        if (countSucces == stores.length) {
+            load_tab();
+            deleteFileLogs(productId);
+            $("#btn-update-store").remove();
+            $(".close-update-store").removeAttr('onclick');
+        }
+        else {
+            $(".close-update-store").click(function () {
+                load_tab();
+            });
+            $("#btn-update-store").removeAttr('disabled', 'disabled');
+            $("#btn-update-store").removeAttr('onclick', 'updateStoreActived(false)');
+            $("#btn-update-store").attr('onclick', 'updateStoreActived(true)');
+        }
+        $(".close-update-store").off("click").attr("data-dismiss", "modal");
+    }
+
+    function deleteFileLogs(productId) {
+        $.ajax({
+            method: "GET",
+            url: "/Licenses/RemoveHistoryStoreActivedProduct",
+            data: { productId },
+            dataType: "html"
+        });
+    }
+</script>

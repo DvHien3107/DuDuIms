@@ -1,0 +1,79 @@
+﻿
+@{
+    Layout = null;
+    string title = ViewBag.TemplateName;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>@title.Replace("_", " ")</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- jQuery 3 -->
+    <script src="~/Content/Admin/bower_components/jquery/dist/jquery.min.js"></script>
+    <!-- Bootstrap 3.3.7 -->
+    <link rel="stylesheet" href="/content/admin/bower_components/bootstrap/dist/css/bootstrap.min.css">
+    <script src="/content/admin/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+    <!-- Noty -->
+    <link href="~/Content/noty/jquery.noty.css" rel="stylesheet" />
+    <link href="~/Content/noty/noty_theme_default.css" rel="stylesheet" />
+    <script src="~/Content/noty/jquery.noty.js"></script>
+    <style type="text/css">
+        @@media print
+        {
+            footer {page-break-after: always;}
+        }
+    </style>
+
+</head>
+<body>
+    <div>
+        <input type="hidden" id="templateName" value="@ViewBag.TemplateName" />
+        <input type="hidden" id="merchantCode" value="@ViewBag.MerchantCode" />
+        <input type="hidden" id="orderCode" value="@ViewBag.OrderCode" />
+        <input type="hidden" id="update" value="@ViewBag.Update" />
+        <input type="hidden" id="period" value="@ViewBag.Period" />
+    </div>
+
+    <div id="append_partial" action="/test" method="get">
+        @Html.Raw(Model)
+        <!--Append Form Parial-->
+    </div>
+</body>
+</html>
+
+<script type="text/javascript">
+    //$(async function () {
+    //    await LoadPartial();
+    //});
+    //LoadPartial();
+    //async function LoadPartial() {
+    //    var template_Name = $("#templateName").val();
+    //    var merchant_Code = $("#merchantCode").val();
+    //    var order_Code = $("#orderCode").val();
+    //    var update = $("#update").val();
+    //    var period = $("#period").val();
+    //    debugger;
+    //    await $.ajax({
+    //        method: "POST",
+    //        url: "/Page/MerchantFormHandle/LoadPartial",
+    //        data: {
+    //            templateName: template_Name,
+    //            merchantCode: merchant_Code,
+    //            orderCode: order_Code,
+    //            update: update,
+    //            period: period
+    //        },
+    //        dataType: "html"
+    //    })
+    //        .done(function (data) {
+    //            $("#append_partial").html(data);
+    //        })
+    //        .fail(function () {
+    //            $("#view_pdf_loading").hide();
+    //            alert("Oops! Something went wrong");
+    //        })
+    //}
+</script>

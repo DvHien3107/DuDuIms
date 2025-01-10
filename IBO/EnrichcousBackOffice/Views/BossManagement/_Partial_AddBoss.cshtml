@@ -1,0 +1,303 @@
+﻿@model EnrichcousBackOffice.Models.C_BossStore
+@using EnrichcousBackOffice.Models;
+@{
+    List<C_Customer> stores = (List<C_Customer>)TempData["ListStore"];
+    var storeId = ViewBag.StoreId?.ToString();
+    List<string> StoreAllow = ViewBag.StoreAllow ?? new List<string> { };
+}
+
+<!--Modal boss-->
+<div class="modal fade" id="modal_add_new_boss">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form id="edit_boss_manage" action="/bossmanagement/create" method="post" onsubmit="overlayOn()">
+                @Html.AntiForgeryToken()
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    @if (string.IsNullOrEmpty(Model.Id))
+                    {
+                        <h3 class="modal-title">Add boss</h3>
+                    }
+                    else
+                    {
+                        <h3 class="modal-title">Edit boss</h3>
+                    }
+                </div>
+                <div class="modal-body">
+                    <div id="smartwizard">
+                        <ul>
+                            <li><a href="#step-1" onclick="previousStep()">Step 1<br /><small>BOSS information</small></a></li>
+                            <li><a href="#step-2" onclick="nextStep()">Step 2<br /><small>Add Stores</small></a></li>
+                        </ul>
+                        <br />
+                        <div class="mt-4">
+                            <div id="step-1">
+                                <div class="row">
+                                    <div class="col-xs-12">
+                                        <input tabindex="1" type="text" class="form-control" id="IdBossManage" name="IdBossManage" value="@Model.IdBossManage" style="display: none" />
+                                        <div class="form-group">
+                                            <label class="control-label">Owner <span style="color:red">*</span></label>
+                                            <input tabindex="1" type="text" class="form-control" id="Owner" name="Owner" value="@Model.Owner" required />
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="control-label" style="width:100%">Contact Person <span style="color:red">*</span></label>
+                                            <input tabindex="2" type="text" class="form-control" id="ContactPerson" name="ContactPerson" value="@Model.ContactPerson" required />
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="control-label">Email <span style="color:red">*</span></label>
+                                            <input tabindex="3" type="email" class="form-control" id="Email" name="Email" value="@Model.Email" required />
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="control-label">Phone <span style="color:red">*</span></label>
+                                            <input tabindex="4" type="tel" class="form-control State" id="Phone" name="Phone" value="@Model.Phone" required />
+                                        </div>
+                                        @*<div class="form-group">
+                                                <label class="control-label">Select stores</label>
+                                                <select id="StoreCodes" name="StoreCodes" class="boss_stores form-control select2" multiple style="width:100%;">
+                                                    @foreach (var store in stores)
+                                                    {
+                                                        <option value="@store.StoreCode" @if (!string.IsNullOrEmpty(Model.StoreCodes) && Model.StoreCodes.Split(',').Contains(store.StoreCode)) { @Html.Raw("selected") }>
+                                                            @store.BusinessName - @store.AddressLine()
+                                                        </option>
+                                                    }
+                                                </select>
+                                            </div>*@
+                                        <div class="form-group">
+                                            <label class="control-label">Description</label>
+                                            <input tabindex="5" type="text" class="form-control" id="Description" name="Description" value="@Model.Description" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="step-2">
+                                <table id="view_store_list" class="table table-bordered table-striped table-hover" data-order='[[ 4, "asc" ]]'>
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Name</th>
+                                            <th>Address</th>
+                                            <th>Email</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @if (Model != null)
+                                        {
+                                            foreach (var store in stores)
+                                            {
+                                                if (StoreAllow.Any(c => c == store.CustomerCode))
+                                                {
+                                                    <tr id="view_@store.CustomerCode" style="border-color: lightblue; cursor: pointer"
+                                                        class="@if (!string.IsNullOrEmpty(Model.StoreCodes) && Model.StoreCodes.Split(',').Contains(store.StoreCode)) { @Html.Raw("bg-light-blue-gradient") }">
+                                                        <td onclick="clickRow('@store.CustomerCode')">@store.CustomerCode</td>
+                                                        <td onclick="clickRow('@store.CustomerCode')">@store.BusinessName</td>
+                                                        <td onclick="clickRow('@store.CustomerCode')">@store.AddressLine()</td>
+                                                        <td onclick="clickRow('@store.CustomerCode')">@store.BusinessEmail</td>
+                                                        <td>
+                                                            <input id="StoreCodes" type="checkbox" name="StoreCodes" value="@store.StoreCode" onchange="drawbackgroundChoice('@store.CustomerCode',this)"
+                                                                   @if (!string.IsNullOrEmpty(Model.StoreCodes) && Model.StoreCodes.Split(',').Contains(store.StoreCode)) { @Html.Raw("checked") } />
+                                                        </td>
+                                                    </tr>
+                                                }
+                                                else
+                                                {
+                                                    <tr id="view_@store.CustomerCode" style="border-color: lightblue; cursor: pointer">
+                                                        <td>@store.CustomerCode</td>
+                                                        <td>@store.BusinessName</td>
+                                                        <td>@store.AddressLine()</td>
+                                                        <td>@store.BusinessEmail</td>
+                                                        <td data-toggle="tooltip" data-placement="bottom" title="Cannot add boss">
+                                                            <input type="hidden" />
+                                                            <i class="fa fa-ban text-red" aria-hidden="true"></i>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <tr>
+                                                <td colspan="6">
+                                                    <center><span>Boss not found</span></center>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal" style="float:left">Close</button>
+                    <button type="button" class="btn btn-success btn-next-step" onclick="nextStep()">Add Stores</button>
+                    <button type="button" class="btn btn-secondary btn-previous-step" onclick="previousStep()" style="display: none"><i class="fa fa-angle-double-left"></i> Back</button>
+
+                    <button type="submit" class="btn btn-primary" id="btn_save_boss">
+                        Save
+                        <img class="img_loading_save" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                    </button>
+
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<!--/.End-->
+
+<link href="~/Content/smartwizard/smart_wizard.min.css" rel="stylesheet" type="text/css" />
+<link href="~/Content/smartwizard/smart_wizard_theme_arrows.min.css" rel="stylesheet" />
+<style>
+    .ui-widget.ui-widget-content {
+        z-index: 9999;
+    }
+
+    .select2-container--default .select2-selection--multiple .select2-selection__choice {
+        background-color: #00a65a !important;
+        border-color: var(--main-color-2) !important;
+        color: #fff;
+    }
+
+    .input_process {
+        margin: auto;
+        border: none;
+        border-bottom: 1px solid #BBB;
+        background-color: transparent;
+        padding: 2px 5px;
+        font-size: 18px
+    }
+
+        .input_process:read-only {
+            background-color: transparent;
+        }
+</style>
+
+<script src="~/Content/smartwizard/jquery.smartWizard.min.js" type="text/javascript"></script>
+<script>
+    $(function () {
+        $(".loading_img").hide();
+        var storeId = '@storeId';
+
+        $('#view_store_list').DataTable({
+            'paging': true,
+            'searching': true,
+            'ordering': true,
+            'info': false,
+            "language": {
+                "paginate": {
+                    "first": '<i class="fa fa-angle-double-left" aria-hidden="true"></i>',
+                    "last": '<i class="fa fa-angle-double-right" aria-hidden="true"></i>',
+                    "next": '<i class="fa fa-angle-right" aria-hidden="true"></i>',
+                    "previous": '<i class="fa fa-angle-left" aria-hidden="true"></i>'
+                },
+            },
+        });
+
+        $('#edit_boss_manage').ajaxForm(function (data) {
+            overlayOff();
+            if (data[0] == true) {
+                var mess = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"success"}');
+                noty(mess);
+                $("#modal_add_new_boss").modal("hide");
+                $('.modal-backdrop').remove();
+                if (data[2] == null) {
+                    if (storeId != null && storeId != '')
+                        ChangeSubTab('StoreBoss', storeId)
+                    else {
+                        $.ajax({
+                            url: '@Url.Action("ReloadIndex", "bossmanagement")',
+                            type: "POST",
+                            data: { search: $("#search").val() },
+                            success: function (data) {
+                                $("#data_list_boss").html(data);
+                            },
+                        })
+                    }
+                }
+                else {
+                    $.ajax({
+                        url: '@Url.Action("ReloadIndex", "bossmanagement")',
+                        type: "POST",
+                        data: { search: $("#search").val() },
+                        success: function (data) {
+                            $("#data_list_boss").html(data);
+                        },
+                    })
+                }
+            }
+            else {
+                var Error = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"error"}');
+                noty(Error);
+                $('.img_loading_save').hide();
+                $("#modal_add_new_boss").modal("hide");
+            }
+        });
+
+        $('#smartwizard').smartWizard({
+            selected: 0,
+            theme: 'arrows',
+            autoAdjustHeight: true,
+            transitionEffect: 'fade',
+            showStepURLhash: false,
+            cycleSteps: false,
+            toolbarSettings: {
+                showNextButton: false, // show/hide a Next button
+                showPreviousButton: false, // show/hide a Previous button
+                toolbarButtonPosition: 'right',
+            },
+            lang: { // Language variables for button
+                next: 'Next',
+                previous: 'Previous'
+            },
+            anchorSettings: {
+                //enableAnchorOnDoneStep: true, // Bật / Tắt điều hướng các bước đã thực hiện
+                //enableAllAnchors: true,
+            },
+            keyboardSettings: {
+                keyNavigation: false, // Enable/Disable keyboard navigation(left and right keys are used if enabled)
+
+            },
+        });
+        $('#smartwizard').smartWizard('next');
+        $('#smartwizard').smartWizard('prev');
+    });
+
+    function nextStep() {
+        $('.btn-next-step').hide();
+        $('.btn-previous-step').show();
+        $('#smartwizard').smartWizard('next');
+    }
+
+    function previousStep() {
+        $('.btn-next-step').show();
+        $('.btn-previous-step').hide();
+        $('#smartwizard').smartWizard('prev');
+    }
+
+    function drawbackgroundChoice(customerCode, _e) {
+        if ($(_e).is(":checked"))
+            $('#view_' + customerCode).addClass('bg-light-blue-gradient');
+        else
+            $('#view_' + customerCode).removeClass('bg-light-blue-gradient');
+    }
+
+    function clickRow(customerCode) {
+        if ($('#view_' + customerCode + " input").is(":checked")) {
+            $('#view_' + customerCode + " input").prop('checked', false);
+            $('#view_' + customerCode).removeClass('bg-light-blue-gradient');
+        }
+        else {
+            $('#view_' + customerCode + " input").prop('checked', true);
+            $('#view_' + customerCode).addClass('bg-light-blue-gradient');
+        }
+
+    }
+
+    $('#Phone').inputmask("(999) 999-9999");
+    function isEmail(email) {
+        var regex = /^([a-zA-Z0-9_.+-])+\@@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,4})+$/;
+        return regex.test(email);
+    }
+</script>
+
+

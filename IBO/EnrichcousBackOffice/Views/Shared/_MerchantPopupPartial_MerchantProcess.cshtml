@@ -1,0 +1,58 @@
+﻿@*@model IEnumerable<EnrichcousBackOffice.Models.C_MerchantProcess>*@
+@model IEnumerable<EnrichcousBackOffice.Models.C_MerchantSubscribe>
+@{
+    Dictionary<string, bool> p = ViewBag.p;
+}
+<table class="table table-hover table-striped table-bordered">
+    <thead>
+        <tr>
+            <th>MID</th>
+            <th>DBA Name</th>
+            <th>Gateway Terminal number</th>
+            <th>App Id</th><!--& SharedSecret-->
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody id="tbody_mp">
+        @if (Model.Count() > 0)
+        {
+            foreach (var merchant in Model)
+            {
+                <tr id="tb_mcTr_@merchant.Id">
+                    <td class="merchant_id">
+                        @merchant.MerchantID
+                    </td>
+                    <td>@merchant.DbaName</td>
+                    <td>@merchant.GatewayTerminalNumbers</td>
+                    <td>
+                        @merchant.ApplicationId
+                        @if (!string.IsNullOrWhiteSpace(merchant.SharedSecret))
+                        {
+                           <br/><i>Shared Secret: </i>@merchant.SharedSecret
+                        }
+                    </td>
+                    <td>
+                        @if (string.IsNullOrWhiteSpace(merchant.ResponseStatus) == true)
+                        {
+                            <span class="label label-default">Waiting</span>
+                        }
+                        else
+                        {
+                            <strong>@merchant.ResponseStatus</strong> 
+                        }
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+@*@if (p?.Any(k => k.Key.Equals("customer_update")) == true && p?["customer_update"] == true)
+    {
+        <a class="btn btn-success center-block" style="width:200px"
+           onclick="MerchantEdit()">
+            <span class="fa fa-plus"></span> New merchant process
+        </a>
+    }*@
+
+<div class="clearfix"></div>

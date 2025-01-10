@@ -1,0 +1,220 @@
+﻿@model EnrichcousBackOffice.Models.CustomizeModel.Document.DocumentCategoryModel
+@{ 
+    var access = EnrichcousBackOffice.AppLB.Authority.GetAccessAuthority();
+    var cMem = EnrichcousBackOffice.AppLB.Authority.GetCurrentMember();
+    const string CategoryEditFunctionCodePrefix = "document_category_update_";
+}
+<style>
+    .tr-view-file{
+        cursor:pointer;
+    }
+</style>
+<div class="box-header with-border" style="padding:4px;">
+    <h3 style="text-align:center;font-size:17px;margin:0 0 0px 0;font-weight:600;display:inline-block;"> <i data-toggle="tooltip" data-original-title="@Model.Description" class="fa fa-info" title="@Model.Description"></i> - @Model.Name.ToUpper()</h3>
+    <div style="float:right;transform:translateY(-5px)">
+        @if (cMem.RoleCode?.Contains("admin") == true||(access.Any(k => k.Key.Equals(CategoryEditFunctionCodePrefix + Model.Id)) == true && access[CategoryEditFunctionCodePrefix + Model.Id] == true))
+        {
+            <button onclick="EditCategory(@Model.Id)" class="btn btn-warning btn-sm"><i class="fa fa-pencil"></i></button>
+            <button onclick="DeleteCategory(@Model.Id)" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i></button>
+        }
+
+    </div>
+</div>
+        <div class="box-body box-body-data" style="min-height:200px;">
+           
+            <div class="row">
+                <div class="col-sm-12">
+                  <div style="margin-bottom:5px;">- Description: @Html.Raw(Model.Description)
+                  </div>
+                    <span>
+                      - Last Update:
+                        <span>
+                            <span class="entry-time">@(string.Format("{0:r}", Model.UpdateAt ?? Model.CreateAt))</span> - By: @(Model.UpdateBy??Model.CreateBy)
+                        </span>
+
+                    </span>
+                </div>
+             
+              
+            
+            </div>
+            <div class="panel-body">
+                <div class="list_groups custom-scroll" style="margin-top:10px; background-color: #ffffff">
+                    <div class="text-right">
+                        @if (cMem.RoleCode?.Contains("admin") == true || (access.Any(k => k.Key.Equals(CategoryEditFunctionCodePrefix + Model.Id)) == true && access[CategoryEditFunctionCodePrefix + Model.Id] == true))
+                        {
+                            <button class="btn btn-info" onclick="AddDocumentFiles(@(Model.Id))"><i class="fa fa-plus"></i> Add File</button>
+                        }
+
+                    </div>
+                    <table class="table table-bordered table-hover table-striped table-document-file" style="margin-bottom:0px">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Description</th>
+                                @*<th>Type</th>*@
+                                <th>Last Update</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <script>
+          $(document).ready(function () {
+
+              var t = $(".table-document-file").DataTable({
+                  "language": {
+                      "processing": '<i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>',
+                      "emptyTable": "No file to display",
+                      "paginate": {
+                          "first": '<i class="fa fa-angle-double-left" aria-hidden="true"></i>',
+                          "last": '<i class="fa fa-angle-double-right" aria-hidden="true"></i>',
+                          "next": '<i class="fa fa-angle-right" aria-hidden="true"></i>',
+                          "previous": '<i class="fa fa-angle-left" aria-hidden="true"></i>'
+                      },
+                  },
+                  // "lengthMenu": [10, 25, 50, 75, 100],
+                  "pageLength": 10,
+                  "serverSide": true, // for process server side
+                  "processing": true, // for show progress bar
+                  "lengthChange": false,
+                  'searching': false,
+                  "orderable": true,
+                  //'ordering': false,
+                  'stateSave': true,
+                  'info': false,
+                  'autoWidth': true,
+                  "order": [],
+                  'fnCreatedRow': function (nRow, aData, iDataIndex) {
+                      $(nRow).attr('data-id',  aData.Id.toString());
+                      $(nRow).attr('class', "tr-view-file");
+                      $(nRow).attr('title', "click to view document file");
+                  },
+
+                  "ajax": {
+                      "url": "/Documents/GetListFile",
+                      "type": "get",
+                      "datatype": "json",
+                      'data': function (data) {
+                          //data.Tab = $('.select-tab.active').attr("data-tab");
+                          //data.FromDate = $('[name="FromDate"]').val();
+                          //data.ToDate = $('[name="ToDate"]').val();
+                          //data.AssignedTo = $('[name="AssignedTo"]').val();
+                          data.SearchText = $('[name="SearchText"]').val();
+                          data.CategoryId = @Model.Id;
+                          return data;
+                      },
+                      "complete": function (json) {
+                          $(".tr-view-file").click(function (e) {
+                              if ($(e.target).closest(".on_rows").length == 0) {
+                                  var id = $(this).attr("data-id");
+                                  ViewDocumentFile(id);
+                              }
+                            
+                          })
+                      },
+                      //'dataSrc': function (data) {
+                      //    //$('#numberOpen').html(data.totalOpen);
+                      //    //$('#numberCompleted').html(data.totalComplete);
+                      //    //if ($('.select-tab.active').attr("data-tab") == "open") {
+                      //    //    $('#numberOpenFilter').html(data.recordsTotal + "/");
+                      //    //    $('#numberCompletedFilter').html("");
+                      //    //}
+                      //    //else {
+                      //    //    $('#numberCompletedFilter').html(data.recordsTotal + "/");
+                      //    //    $('#numberOpenFilter').html("");
+                      //    //}
+                      //    //return data.data;
+                      //}
+                  },
+
+                  "columns": [
+
+                      {
+                          "name": "Name",
+                          'data': "Name",
+                          "render": function (data, type, row) {
+                              let html = '';
+                              html +='<b>'+ data+'</b>';
+                              html += "<br/>";
+                              html += '<i style="font-size:13px">'+row['Breadcrumb']+'</i>';
+                              return html;
+                          },
+                          "orderable": true,
+                      },
+
+                      {
+                          "name": "Description",
+                          'data': "Description",
+
+                          "orderable": true,
+                      },
+                      //{
+                      //    "name": "Type",
+                      //    'data': "Type",
+                      //    "render": function (data, type, row) {
+                      //        let html = '';
+                      //        if (data == "GoogleLink") {
+                      //            html += "Google Link";
+                      //        }
+                      //        else {
+                      //            html += "Attachment File";
+                      //        }
+
+                      //        return html;
+                      //    },
+                      //    "orderable": true,
+                      //},
+                      {
+                          "name": "UpdateBy",
+                          'data': "UpdateBy",
+
+                          "render": function (data, type, row) {
+                              let html = '';
+                              html += `- <span>${moment(row['UpdateAt'] || row['CreateAt']).format('ll')}<span><br/><span>- by: ${row['UpdateBy'] || row['UpdateBy']}</span>`;
+
+                              return html;
+                          },
+                          "orderable": true,
+                      },
+
+                      {
+                          "name": "Action",
+                          "class": "text-center",
+                          "render": function (data, type, row) {
+                              return `<div class="on_rows btn-group">
+                                <div class="dots-menu btn-group">
+                                    <div class="dropdown-dot" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></div>
+                                    <ul class="dropdown-menu dropdown-menu-right">
+                                              <li class=""><a href="javascript:void(0)" style="margin-right:5px;" onclick="ViewDocumentFile(${row['Id']})"><i class="fa fa-eye"></i>View</a></li>
+                                            @if (cMem.RoleCode?.Contains("admin") == true||(access.Any(k => k.Key.Equals(CategoryEditFunctionCodePrefix + Model.Id)) == true && access[CategoryEditFunctionCodePrefix + Model.Id] == true))
+                                            {
+                                                  <text>
+                                            <li class=""><a href="javascript:void(0)" style="margin-right:5px;" onclick="EditDocumentFile(${row['Id']})"><i class="fa fa-pencil"></i>Edit</a></li>
+                                            <li class=""><a href="javascript:void(0)" style="margin-right:5px;" onclick="DeleteDocumentFile(${row['Id']})"><i class="fa fa-trash"></i>Delete</a></li>
+                                                 </text>
+                                              }
+                                        
+                                    </ul>
+                                </div>
+                            </div>`;
+                          },
+                          "orderable": false,
+                      },
+                  ]
+
+              });
+          })
+          $('[data-toggle="tooltip"]').tooltip();
+          $(".entry-time").html(function (index, value) {
+
+              return moment(value).format('ll');
+          });
+           
+        </script>
+  

@@ -1,0 +1,221 @@
+﻿@model EnrichcousBackOffice.Models.T_SupportTicket
+@using EnrichcousBackOffice.Models
+@using EnrichcousBackOffice.Models.CustomizeModel
+@using EnrichcousBackOffice.AppLB
+@{
+    List<TicketFeedback_Custom> List_feedback = ViewBag.ListFeedback;
+    ViewData["upload"] = false;
+    List<UploadMoreFile> ticketAttachFile = ViewBag.TicketAttachFiles;
+
+    ViewBag.Title = Model.Name + " #" + Model.Id;
+}
+
+<style>
+    .noi-dung-ticket img,
+    .noi-dung-ticket table {
+        /*max-width: 70% !important;*/
+        height: auto !important;
+    }
+</style>
+
+<section class="content-header">
+    <h1>
+        KB #@Model.Id
+        <small>Knowledge base</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li><i class="fa fa-life-ring"></i> Support</li>
+        <li>Knowledge base</li>
+        <li class="active">KB #@Model.Id</li>
+    </ol>
+</section>
+<script src="~/Content/plugins/zoom_image.js"></script>
+<!-- Main content -->
+<section class="content">
+    <div class="row">
+        @if (TempData["e"] != null)
+        {
+            <div class="alert alert-warning alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+            </div>
+        }
+        else if (TempData["s"] != null)
+        {
+            <div class="alert alert-success alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+            </div>
+        }
+
+
+        <div class="col-md-12">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">@ViewBag.Title</h3>
+                    <div class="box-tools pull-right">
+                        <a href="/kb#goback" class="btn btn-default" data-toggle="tooltip" title="" data-original-title="Go back">
+                            <i class="fa fa-arrow-left"></i> Go back
+                        </a>
+
+                    </div>
+                </div>
+                <div class="box-body">
+                    <!--ticket-->
+                    <div class="col-md-12">
+                        <br />
+                        <div class="card col-md-12" style="padding:20px; margin:20px; background-color: #F9F9F9; border:1px solid #F0F0F0">
+                            <div class="card-body">
+                                <div style="padding-left:20px">
+                                    <p style="font-size:17px">
+                                        Category: @(string.IsNullOrWhiteSpace(Model.ProjectName) ? "NO CATEGORY" : Model.ProjectName)
+                                    </p>
+                                    <h2> @Model.Name </h2>
+                                        -Ticket <a target="_blank" title="click to view detail" href="/ticket_new/detail/@Model.Id?urlback=/kb/KnowledgeBaseDetail/@Model.Id"><b>#@CommonFunc.view_TicketId(Model.Id)</b></a>
+                                    
+
+                                </div>
+                                <hr />
+                                <div class="row">
+                                    <div class="col-md-2" style="min-width:100px; margin-right: 20px;">
+                                        <img src="@ViewBag.Avatar" onerror="this.onerror=null; this.src='/Upload/Img/no_image.jpg'" style="width:100%; min-width: 100px; max-width:200px; border: 1px solid lightgray; border-radius:5px" />
+                                    </div>
+
+                                    <div class="col-md-9" id="kb" style="overflow: auto;padding:20px;margin:auto; border: 1px solid lightblue; border-radius: 5px; min-height:100px; background-color:#fff; font-size:16px">
+                                        <i style="display:inline-block; float: left"><b>@Model.CreateByName</b></i>
+                                        <i style="display:inline-block; float: right">
+                                            <span id="localtime-@Model.Id">
+                                                <script>convertLocalTime("@Model.Id", "@Model.CreateAt")</script>
+                                            </span>
+                                        </i>
+                                        <br style="clear:both" />
+                                        @*<p>
+                                                Customer: @if (Model.CustomerCode != null)
+                                                {<b>@Model.CustomerName</b>}
+                                            else
+                                            { @Html.Raw("(Unknow)")}
+                                            </p>*@
+
+                                        <div class="noi-dung-ticket">
+                                            @Html.Raw(Model.Description)
+                                        </div>
+
+                                        <div class="col-md-12" style="margin:20px">
+                                            @Html.Partial("_UploadMoreFilesPartial_Small", ticketAttachFile, new ViewDataDictionary { { "upload", false } })
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!--feedback-->
+                    <div class="col-md-12">
+                        <div class="card" style="padding:20px; margin-top:20px; margin-left: 15%; background-color: #F9F9F9; border:1px solid #F0F0F0">
+                            <div class="card-body">
+                                @*<div style="padding-left:20px">
+                                        <h2>Feedback (@List_feedback.Count)</h2>
+                                    </div>
+                                    <hr />*@
+                                @if (List_feedback.Count == 0)
+                                {
+                                    <div style="margin:20px">
+                                        <p>
+                                            No feedback for this ticket yet!
+                                        </p>
+                                    </div>
+                                }
+                                else
+                                {
+                                    foreach (var feedback in List_feedback)
+                                    {
+                                        <div class="row" style="padding:20px">
+                                            <div class="col-md-12">
+                                                <div class="col-md-2" style="min-width:100px; margin-right: 20px;">
+                                                    <img src="@feedback.Avatar" onerror="this.onerror=null; this.src='/Upload/Img/no_image.jpg'" style="width:100%; min-width: 100px ; max-width:200px ; border: 1px solid lightgray; border-radius:5px" />
+                                                </div>
+                                                <div id="timeline-@feedback.Id" class="col-md-9" style="overflow: auto;padding:20px;margin:auto; border: 1px solid lightblue; border-radius: 5px; min-height:100px; background-color:#fff;  font-size:16px">
+                                                    <p style="display:inline-block; float: left"><b>@feedback.CreateBy</b></p>
+                                                    <i style="display:inline-block; float: right">
+                                                        <span id="localtime-@feedback.Id">
+                                                            <script>convertLocalTime("@feedback.Id", "@feedback.CreateAt")</script>
+                                                        </span>
+                                                    </i>
+                                                    <div style="clear:both"></div>
+                                                    <div class="noi-dung-ticket">
+                                                        @Html.Raw(feedback.Feedback)
+                                                    </div>
+                                                    <div style="margin-top:20px">
+                                                        @Html.Partial("_AttachmentsPartial", feedback.Attachment, new ViewDataDictionary { { "upload", false } })
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <script>
+                                            @*zoomWrapper("#timeline-@feedback.Id .noi-dung-ticket").then(() => {
+                                            $('#timeline-@feedback.Id .noi-dung-ticket .zoom.wrapper').simpleLightbox();
+                                        });*@
+                                        </script>
+                                    }
+                                }
+
+
+                            </div>
+
+                        </div>
+                        <div class="card" style="padding:20px; margin-top:20px; margin-left: 15%; background-color: #F9F9F9; border:1px solid #F0F0F0">
+                            <div class="tab-pane" id="feedback">
+                                <h4>Write note:</h4>
+                                <form role="form" class="form-horizontal" action="/ticket_new/FeedbackKb" method="post" enctype="multipart/form-data">
+                                    <input type="hidden" value="@Model.Id" name="fb_ticketId" />
+                                    <input type="hidden" value="@ViewBag.urlback" name="urlback" />
+                                    <input type="hidden" value="" name="_controller" />
+
+                                    @*<div class="pull-right">
+                                            <a class="btn btn-default" onclick="$('#modal_select_et').modal('show')">Select template</a>
+                                        </div>*@
+                                    <div class="clearfix"></div>
+                                    <div>
+                                        <textarea id="fbkb" name="fb_content" required></textarea>
+                                    </div>
+                                    <br />
+
+                                    <button onclick="overlayOn()" type="submit" class="btn btn-primary btn-block">Save</button>
+
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="box-tools pull-right">
+                    <a href="/kb#goback" class="btn btn-default" data-toggle="tooltip" title="" data-original-title="Go back">
+                        <i class="fa fa-arrow-left"></i> Go back
+                    </a>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+@section style{
+    <link href="~/Content/plugins/simpleLightbox.min.css" rel="stylesheet" />
+}
+<script src="~/Scripts/upload_and_review.js"></script>
+<script src="~/Content/Admin/bower_components/ckeditor2/ckeditor.js"></script>
+<script src="~/Content/plugins/simpleLightbox.min.js"></script>
+@section script{
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            CKEDITOR.replace('fbkb');
+            zoomWrapper("#kb .noi-dung-ticket").then(() => {
+                $('#kb .noi-dung-ticket .zoom.wrapper').simpleLightbox();
+            });
+
+
+        });
+    </script>
+
+}

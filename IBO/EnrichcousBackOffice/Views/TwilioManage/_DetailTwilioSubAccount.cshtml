@@ -1,0 +1,207 @@
+﻿@using EnrichcousBackOffice.Models;
+@model EnrichcousBackOffice.Models.TwilioAccount
+@{ 
+
+    var phoneNumbers = ViewBag.TwilioA2PTollFreeVerifications as List<TwilioA2PTollFreeVerification>;
+}
+<tr class="detail-phone tr-detail tr-detail-@Model.Id" style="background-color: #b7b6b6">
+    <td colspan="10" class="td-detail" style="padding:10px 20px;">
+        <div class="col-md-8 div-detail-@Model.Id" style="display:none;margin: auto;float: none;background: white;padding: 5px;">
+            <div class="header detail text-right">
+
+                <span onclick="showDetailPhone('@Model.Id', false)" style="cursor:pointer;margin-right: 12px;font-size: 16px;color: #58595a;"><i class="fa fa-times" aria-hidden="true"></i></span>
+                <br />
+                <button onclick="requestTollFree(@Model.Id)" type="button" style="margin: 9px 11px 0px 0px;" class="btn btn-sm btn-primary block"><i class="fa fa-plus" aria-hidden="true"></i> Buy Phone Number (Toll-Free)</button>
+            </div>
+            <div id="phone-@Model.Id">
+                <div class="list_groups custom-scroll" style="margin:20px 10px; border: 1px solid var(--main-color-1); background-color: #ffffff;padding:1rem">
+                    <table id="detail-phone-table" class=" table table-bordered table-hover table-striped" style="margin-bottom:0px; margin-top:20px">
+                        <thead>
+                            <tr>
+                                <th>Phone Number</th>
+                                <th>Verification Status</th>
+                                <th>Sync To Pos Status</th>
+                                <th>Twilio Update</th>
+                                <th>Create At</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="col-md-8" style="margin: auto;float: none;padding:10px 0px 10px 0;text-align: right;display: flex;flex-wrap: wrap;">
+            <button onclick="showDetailPhone('@Model.Id',false)" class="btn btn-default" style="margin-left:auto !important">Close</button>
+        </div>
+    </td>
+    <script>
+    $(document).ready(function () {
+         $('#detail-phone-table').DataTable({
+        "language": {
+            "processing": '<img src="/Content/ajax-loaders/loading2.gif" width="60px" />',
+        },
+        "pageLength": 10,
+        "serverSide": true, // for process server side
+        "processing": true, // for show progress bar
+        'paging': false,
+        'lengthChange': true,
+        'searching': false,
+        'ordering': false,
+        'info': false,
+        'autoWidth': true,
+        'stateSave': false,
+        "ajax": {
+            "url": "/TwilioManage/LoadPhoneNumber",
+            "type": "POST",
+            "data": { Id:@Model.Id},
+            "datatype": "json",
+        },
+        "columns": [
+
+            {
+                "title": "Phone Number",
+                "name": "PhoneNumber",
+                "data": "PhoneNumber",
+                "className": 'align-middle',
+            },
+            {
+                "title": "Verification Status",
+                "name": "VerificationStatus",
+                "data": "VerificationStatus",
+                "className": 'align-middle',
+            },
+            {
+                "title": "Sync To Pos",
+                "name": "SyncToPosStatus",
+                "data": "SyncToPosStatus",
+                "className": 'align-middle',
+                render: function (data, type, row, meta) {
+                    let html = '';
+                        html += `<label class="switch on_row" style="vertical-align: text-top;">
+                             <input type="checkbox" onchange="syncPhoneNumberToPos(this,${row['Id']},'${row['SyncToPosStatus']?'enable':'disable'}')" ${row['SyncToPosStatus']?'checked':''}>
+                             <span class="slider round"></span>
+                            </label>`;
+                    return html;
+                },
+            },
+            {
+                name: 'Twilio Update Date',
+                render: function (data, type, row, meta) {
+                    let html = '';
+                    if (row['TwilioUpdateDate']) {
+                        let Date = moment.utc(row['TwilioUpdateDate']).format("MMM DD, YYYY");
+                        html += `<span>${Date}</span>`;
+                    }
+                    return html;
+                },
+            },
+            {
+                name: 'Create Date',
+                render: function (data, type, row, meta) {
+                    let html = '';
+                    let Date = moment.utc(row['CreatedOn']).format("MMM DD, YYYY");
+                    html += `<span>${Date}</span>`;
+                    html += `</br><span>${row['CreatedBy']}</span>`;
+                    return html;
+                },
+            },
+            {
+                "title": "",
+                "name": "",
+                "data": "",
+                "render": function (data, type, row) {
+                    let html = `<button class='btn btn-sm btn-primary btn-sm' style="margin-right:3px" onclick="detailTollFreeVerification(${row["Id"]})">Review Information Verification</button>`;
+                  /*  html += `<button class='btn btn-sm btn-success btn-sm' onclick="syncPhoneNumberToPos(${row["Id"]})">Sync To Pos</button>`;*/
+                    return html;
+                },
+                "className": 'align-middle',
+            }
+        ]
+    })
+  });
+
+    function requestTollFree(Id) {
+        overlayOn();
+        $.ajax({
+            type: "POST",
+            url: "/TwilioManage/RequestTollFreeVerification",
+            data: {Id},
+            success: function (data) {
+                $("#render-popup-request-toll-free").html(data);
+                $("#request-toll-free-popup").modal("show");
+            },
+            error: function (data) {
+                console.log('An error occurred.');
+                console.log(data);
+            },
+            complete: function (data) {
+                overlayOff();
+            }
+        });
+    }
+
+
+    function detailTollFreeVerification(Id) {
+        overlayOn();
+        $.ajax({
+            type: "POST",
+            url: "/TwilioManage/DetailTollFreeVerification",
+            data: { Id },
+            success: function (data) {
+                $("#detail-toll-free-verification").html(data);
+                $("#detail-toll-free-popup").modal("show");
+            },
+            error: function (data) {
+                console.log('An error occurred.');
+                console.log(data);
+            },
+            complete: function (data) {
+                overlayOff();
+            }
+        });
+        }
+
+        function syncPhoneNumberToPos(element, Id, type) {
+            var curentval = !$(element).prop("checked");
+            console.log(curentval);
+            var text = '';
+            if (type == "enable") {
+                text = 'Are you sure to disable this phone number on mango !';
+            }
+            else {
+                text = 'Are you sure to enable this phone number on mango !';
+            }
+            if (confirm(text)) {
+                overlayOn();
+                $.ajax({
+                    type: "post",
+                    url: "/TwilioManage/SyncPhoneNumberToPos",
+                    data: { TollFreeVerificationId:Id },
+                    success: function (data) {
+                        if (data.status) {
+                            success(data.message);
+                            $('#detail-phone-table').DataTable().ajax.reload();
+                        }
+                        else {
+                            error(data.message)
+                        }
+                    },
+                    error: function (data) {
+                        Error('An error occurred.')
+                    },
+                    complete: function (data) {
+                        overlayOff();
+                    }
+                });
+            }
+            else {
+                $(element).prop("checked", curentval);
+            }
+        }
+    </script>
+</tr>
+

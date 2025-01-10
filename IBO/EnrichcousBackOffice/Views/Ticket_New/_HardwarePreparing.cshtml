@@ -1,0 +1,692 @@
+﻿@using EnrichcousBackOffice.Models
+@using EnrichcousBackOffice.Utils.IEnums;
+@using Inner.Libs.Helpful;
+@{
+    Dictionary<string, bool> p = ViewBag.access;
+}
+<!--packaging-->
+<div class="modal fade" id="delivery_bundle" role="dialog">
+    <div class="modal-dialog" style="width:800px; max-width:100%">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div id="delivery_bundle_over" style="width: 100%; height: 100%;position: absolute;top: 0;left: 0;opacity: 0.5; background-color:white; z-index:9;">
+                <img style="margin:auto; display:block; height:200px" src="~/Content/ajax-loaders/loading-partial.gif" />
+            </div>
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Package a Bundle</h4>
+            </div>
+            <div class="modal-body" style="overflow:auto; padding-right:5px">
+                <form id="Shipping_info" action="/device/ShippingSave" method="post" style="max-height:70vh; overflow-x:hidden">
+                    <input type="hidden" id="update_order_id" name="update_order_id" />
+                    <input type="hidden" id="status_complete" name="status_complete" />
+                    @*<div class="form-group" style="padding-top:10px" id="select_bundle_group">
+                            <label>Bundle:</label>
+                            <select class="select2" id="bundle_id" name="bundle_id" onchange="Load_Bundle_Info($(this).val())" style="width:100%">
+                                <option value="">----- Select bundle -----</option>
+                                @foreach (I_Bundle item in ViewBag.pend_bundle)
+                                {
+                                    <option value="@item.Id">Bundle: #@item.BundleCode - @item.Name, Order: #@item.OrderCode - @item.MerchantName</option>
+                                }
+                            </select>
+                        </div>*@
+                    <div class="row">
+                        <div class="col-md-12">
+                            <img id="Load_Bundle_Info_img" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+
+                            <div class="col-md-12" style="border: dotted 1px orange; padding:0px;margin-bottom:20px">
+                                <div class="col-md-12" style="padding-top:10px">
+                                    <table class="table table-striped">
+                                        <tbody>
+                                            <tr>
+                                                <th>Order</th>
+                                                <td>#<b id="order_code">------</b></td>
+                                            </tr>
+                                            <tr>
+                                                <th>Merchant</th>
+                                                <td id="bundle_info_merchantname">------</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Argent</th>
+                                                <td id="argent">-----</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Progress status</th>
+                                                <td id="progress_status">-----</td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="2">
+                                                    <b>Note: </b>
+                                                    <p id="bundle_info_info">----------</p>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="2">
+                                                    <b>Devices: </b>
+                                                    <table id="bundle_info_code_device" class="table table-hover ">
+                                                        <!--_PartialOrder_SelectDeviceList-->
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td id="shipping_address" colspan="2" style="padding: 8px 10px; width:100%">
+                                                    <label>Shipping address <span style="color:red">*</span></label><div class="pull-right">
+                                                        <input type="checkbox" value="1" id="same_address" onchange="btnSaveChange()" />
+                                                        <label for="same_address">Same of salon Address</label>
+                                                    </div>
+                                                    <div id="input_address">
+                                                        <div class="col-md-12" style="padding:0">
+                                                            <input required type="text" class="form-control" name="sh_street" placeholder="Street" onchange="btnSaveChange()">
+                                                        </div>
+
+                                                        <div class="col-md-6" style="padding:0">
+                                                            <input required type="text" class="form-control" name="sh_city" placeholder="City/Town">
+                                                        </div>
+                                                        <div class="col-md-6" style="padding:0">
+                                                            <input required type="text" class="form-control ui-autocomplete-input" id="state" name="sh_state" placeholder="State/Province" onchange="btnSaveChange()">
+                                                        </div>
+
+                                                        <div class="col-md-6" style="padding:0">
+                                                            <input required type="text" class="form-control" name="sh_zip" placeholder="ZIP code" autocomplete="off">
+                                                        </div>
+                                                        <div class="col-md-6" style="padding:0">
+                                                            <input required type="text" class="form-control ui-autocomplete-input" id="country" name="sh_country" placeholder="Country" onchange="btnSaveChange()">
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-12">
+                            <input id="completed_save" name="completed_save" value="" type="hidden" />
+                            <ul class="nav nav-tabs">
+                                @*<li id="tab_preparation" class="active"><a data-toggle="tab" href="#preparation" style=""><strong>PREPARATION STEP</strong></a></li>*@
+                                @*<li id="tab_testing"><a data-toggle="tab" href="#testing_field">Testing progress</a></li>*@
+                                @*<li id="tab_packaging"><a data-toggle="tab" href="#packaging"><strong>UPS PACKAGING</strong></a></li>*@
+                                <li id="tab_order_carrier" class="active"><a data-toggle="tab" href="#order_carrier"><strong>OTHER CARRIER</strong></a></li>
+                            </ul>
+                            <div class="col-md-12 tab-content" style="border: solid 1px #ddd; border-top:none">
+                                <!--Preparation step-->
+                                @*<div id="preparation" class="tab-pane fade in active" style="padding:10px 0">
+                                    <table class="table table-striped table-hover">
+                                        <tbody>
+                                            @foreach (I_ProcessSetting item in ViewBag.packaging_field)
+                                            {
+                                                <tr>
+                                                    <td style="width:25%">
+                                                        <label> @item.FieldName </label> @if (item.Requirement == true)
+                                                        {@Html.Raw("<span style='color:red'> * </span>")}
+                                                    </td>
+                                                    @if (item.IsCheck == true)
+                                                    {
+                                                        <td class="td_checkbox" style="cursor:pointer">
+                                                            <input style="margin:auto; height:20px; width:20px; margin:0px" onchange="btnSaveChange()"
+                                                                   type="checkbox" @if (item.Requirement == true) { @Html.Raw("class='field_required'") } id="fill_@item.Id" name="fill_@item.Id" value="1" />
+                                                        </td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td style="padding-top:0">
+                                                            <input type="text" class="form-control input_process  @if (item.Requirement == true) { @Html.Raw("field_required") }" onchange="btnSaveChange()"
+                                                                   id="fill_@item.Id" name="fill_@item.Id" />
+                                                        </td>
+                                                    }
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>*@
+
+                                <!--UPS packaging-->
+                                @*<div id="packaging" class="tab-pane fade in" style="padding:10px 0">
+
+                                        @Html.Partial("_PartialUPSShipmentLabel")
+
+                                        <br /><br /><br />
+                                    </div>*@
+                                <!--Other Carrier-->
+                                <div id="order_carrier" class="tab-pane fade in active" style="padding:10px 0">
+                                    <table class="table table-striped table-hover">
+                                        <tbody>
+                                            <tr>
+                                                <td>
+                                                    <label>Carrier <span style='color:red'> * </span></label>
+
+                                                </td>
+                                                <td style="padding-top:0">
+                                                    <select class="form-control input_process carrier_required" name="CarrierName" onchange="btnSaveChange()">
+                                                        @{ var ls = Enum.GetValues(typeof(OrderCarriers)).Cast<OrderCarriers>();}
+                                                        <option value="">N/A</option>
+                                                        @foreach (var carrier in ls)
+                                                        {
+                                                            <option value="@(carrier.Text())">@(carrier.Text())</option>
+                                                        }
+                                                    </select>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="width:25%">
+                                                    <label>Add Tracking <span style='color:red'> * </span></label>
+                                                </td>
+                                                <td style="padding-top:0">
+                                                    <input type="text" class="form-control input_process carrier_required" name="TrackingNumber" onchange="btnSaveChange()" />
+                                                </td>
+                                            </tr>
+
+                                            <tr>
+                                                <td style="width:25%">
+                                                    <label>Date Shipped <span style='color:red'> * </span></label>
+                                                </td>
+                                                <td>
+                                                    <input type="text" class="date-shipper form-control input_process view_only carrier_required" onchange="btnSaveChange()" name="DateShipped" readonly />
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12" style="padding-top:20px">
+                            <label style="border: 1px solid #ccc; padding: 10px; margin:0; margin-bottom: -1px; border-bottom-color: #fff; z-index: 10">Additional note</label>
+                            <textarea id="Add_note_packaging" rows="4" name="Add_note_packaging" class="form-control"></textarea>
+                        </div>
+                    </div>
+                    @*<button style="display:none" type="submit" id="Shipping_info_submit"></button>*@
+                </form>
+
+
+                <br />
+                <hr id="Progress_line" style="height:2px;" />
+                <ul id="Delivery_step" style="margin-top:-40px" class="list-unstyled multi-steps">
+                    <li class="ready">Preparation</li>
+                    <li class="complete">Complete/Shipped</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <a class="btn btn-primary" id="Shipping_info_submit" style="" onclick="submitform(this,false)">
+                    Save changes
+                </a>
+                <a class="btn btn-success" id="btn_submit_next" onclick="submitform(this,true)">
+                    COMPLETED
+                </a><img id="Shipping_info_submit_img" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<link href="~/Content/Admin/plugins/bootstrap-inputtag/bootstrap-tagsinput.css" rel="stylesheet" />
+<script src="~/Content/Admin/plugins/bootstrap-inputtag/bootstrap-tagsinput.js"></script>
+<link href="~/Content/progress-tracker.css" rel="stylesheet" />
+<script type="text/javascript">
+
+    $(".disabled a").on("click", function () { $(this).off("click"); });
+    $("#Shipping_info").on("submit", function () {
+        /*$('#Shipping_info_submit_img').show();*/
+        overlayOn();
+    });
+
+    $(".td_checkbox").on("click", function () {
+        $(this).find("input").trigger("click");
+    });
+    $(".td_checkbox input").on("click", function (e) {
+        e.stopPropagation();
+    });
+    //$('input[readonly]').on("click", function () {
+    //    alert("input disable click");
+    //})
+    $(".date-shipper").datepicker({
+            dateFormat: "mm/dd/yy",
+            changeMonth: true,
+            changeYear: true,
+        yearRange: '-100:+100',
+        beforeShow: function (input, inst) { setDatepickerPos(input, inst) },
+        });
+    function setDatepickerPos(input, inst) {
+        var rect = input.getBoundingClientRect();
+        // use 'setTimeout' to prevent effect overridden by other scripts
+        setTimeout(function () {
+            var scrollTop = $("body").scrollTop();
+            inst.dpDiv.css({ top: rect.top + input.offsetHeight + scrollTop });
+        }, 0);
+    }
+  
+    $("#same_address").on("click", function () {
+        //alert("the same salon address");
+        var order_id = $("#update_order_id").val();
+        if ($(this).is(":checked")) {
+            $.ajax({
+                method: "POST",
+                url: "/device/GetSalonAddress",
+                data: { order_id },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    if (data[0] == true) {
+                        $('input[name="sh_street"]').val(data[1]);
+                        $('input[name="sh_city"]').val(data[2]);
+                        $('input[name="sh_state"]').val(data[3]);
+                        $('input[name="sh_zip"]').val(data[4]);
+                        $('input[name="sh_country"]').val(data[5]);
+                        $('#shipping_address input').prop("readonly", true);
+                    }
+                    else {
+                        noty({ "text": data[1], "layout": "topRight", "type": "error" });
+                    }
+                })
+                .fail(function () {
+                })
+                .always(function () {
+                });
+
+        } else {
+            $('#shipping_address input').removeAttr("readonly");
+        }
+    });
+    $("#bundle_dashboard_list_filter input").css("width", "250px");
+    function GetProcessSetting() {
+        $.ajax({
+            method: "POST",
+            url: "/device/GetProcessSetting",
+            dataType: "html"
+        })
+            .done(function (data) {
+                $("#div_process_setting").html(data);
+                $("#modal-process-setting").modal("show");
+            })
+            .fail(function () {
+                console.log("[GetProcessSetting]Oops! Something went wrong");
+            })
+    }
+    function load_more_history() {
+        $("#load_history_img").show();
+        var count = $('.history_item').length;
+        $.ajax({
+            method: "POST",
+            url: "/device/LoadHistory",
+            data: {
+                count, "page": "dashboard"
+            },
+            dataType: "json"
+        })
+            .done(function (data) {
+                $('#List_history').append(data[1]);
+                if (data[2] == false)
+                    $('#add_history').hide();
+            })
+            .fail(function () {
+            })
+            .always(function () {
+                $("#load_history_img").hide();
+            });
+    }
+    function load_autocomplete() {
+        $.ajax({
+            method: "POST",
+            url: "/Merchantman/LoadListState",
+            dataType: "json"
+        })
+            .done(function (data) {
+                $('#state').autocomplete
+                    ({
+                        source: data[0]
+                    });
+                $("#country").autocomplete({
+                    source: data[1]
+                });
+            })
+            .fail(function () {
+            })
+            .always(function () {
+            });
+    }
+
+    //
+    //Load form
+    var status = "";
+    $(function () {
+        $('#Shipping_info').ajaxForm(function (data) {
+            overlayOff();
+            if (data[0] == true) {
+                var Success = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"success"}');
+                noty(Success);
+                $("#Shipping_info_submit_img").hide();
+                $('#List_history').prepend(data[3]);
+                Gettimeline();
+                $('#delivery_bundle').modal('hide');
+                if ($("#completed_save").val() == 'true') {
+                    $('.btn-preparation').removeClass('btn-warning').addClass('btn-default');
+                    $(".btn-preparation").html('Hardware Preparing Completed <i class="fa fa-check text-success" aria-hidden="true"></i>');
+                }
+            }
+            else {
+                var Error = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"error"}');
+                noty(Error);
+            }
+            $('#Shipping_info_submit_img').hide();
+        });
+        //$("select[name=CarrierName]").on("change", function () {
+        //    if ($(this).val()) {
+        //        $(".carrier_required:not([name=CarrierName])").prop("disabled", "");
+        //    }
+        //    else {
+        //        $(".carrier_required:not([name=CarrierName])").val("").prop("disabled", "disabled");
+        //    }
+
+        //})
+    });
+
+    function submitform(el, completed) {
+
+        if ($(el).is('[disabled=disabled]')) {
+            return;
+        }
+        $('#completed_save').val(completed);
+        //$('#Shipping_info_submit').trigger("click");
+        $("#Shipping_info").submit();
+    }
+
+    function show_progress_modal(id) {
+        $("#Shipping_info").resetForm();
+        $('#delivery_bundle').modal('show');
+        $('#delivery_bundle_over').show();
+
+        var ordprogress = $.ajax({
+            method: "POST",
+            url: "/device/getOrderProgress",
+            data: { id },
+            dataType: "json"
+        })
+            .done(function (data) {
+
+                if (data[0] == true) {
+                    status = data[1]['BundelStatus'].toLowerCase();
+
+                    //set val
+                    $('#Shipping_info input[type=text]').val('');
+                    $('#update_order_id').val(data[1]['Id']);
+                    $('#delivery_bundle .modal-title')
+                        .html('Update process order #' + data[1]['OrdersCode']);
+                    $('#order_code').html(data[1]['OrdersCode']);
+                    $('#progress_status').html(data[1]['BundelStatus']);
+                    $('#argent').html(data[3]);
+                    $('#bundle_info_merchantname').html(data[1]["CustomerName"]);
+                    $('#bundle_info_code_device').html(data[2]);
+                    var address = (data[1]["ShippingAddress"] || "").split("|");
+                    $('[name="sh_street"]').val(address[0]);
+                    $('[name="sh_city"]').val(address[1]);
+                    $('[name="sh_state"]').val(address[2]);
+                    $('[name="sh_zip"]').val(address[3]);
+                    $('[name="sh_country"]').val(address[4]);
+
+                    //set value fill input
+                    for (var i = 0; i < data[4].length; i++) {
+                        var item = data[4][i];
+                        if (item.IsCheck == true) {
+                            $("#fill_" + item.FieldFillId).attr("checked", item.Content == "1");
+                        } else {
+                            $("#fill_" + item.FieldFillId).val(item.Content);
+                        }
+                    }
+                    $('[name=Add_note_packaging]').val(data[1].Note_Delivery ?? "");
+                    $('[name=TrackingNumber]').val(data[5]?.TrackingNumber);
+                    //if ($('[name=CarrierName] option[value="' + data[5]?.CarrierName + '"]').length == 0) {
+                    //    $('[name=CarrierName]').val(data[5]?.CarrierName.replace('_',' '));
+                    //} else {
+                    //    $('[name=CarrierName]').val(data[5]?.CarrierName);
+                    //}
+                    $('[name=CarrierName]').val(data[5]?.CarrierName);
+                    $('[name=DateShipped]').val(data[6]);
+                    $('[name=CarrierNote]').val(data[5]?.CarrierNote);
+
+                    //check required
+                    $(".field_required,.carrier_required,#ups_trackingnumber").on("change", function () {
+                        refresh_submit_button();
+                    });
+                    $(".field_required").trigger("input");
+                    $(".inv_numbers").on("change", function () {
+                        refresh_submit_button();
+                    });
+
+                    $('#Delivery_step .is-active').removeClass('is-active');
+                    $('#Delivery_step .' + status).addClass('is-active');
+                    var percent = (($('.is-active').index() + 1) * 100 / $('#Delivery_step li').length);
+                    $("#Progress_line").css("background", "linear-gradient(to right, green " + percent + "%, #ddd " + percent + "%)");
+                    if (data[1].BundelStatus == "Complete") {
+                        $("#status_complete").val(1);
+                        $('#Shipping_info_submit').hide();
+                        btnSaveChange();
+                        $('#btn_submit_next').hide();
+                    } else {
+                        $("#status_complete").val(0);
+                        $('#Shipping_info_submit').show();
+                        $('#btn_submit_next').show();
+                    }
+                    $(".inv_numbers").trigger("change");
+                }
+                else {
+                    //$('#delivery_bundle_over').hide();
+                    noty({ "text": data[1], "layout": "topRight", "type": "error" });
+                    $('#delivery_bundle').modal('hide');
+                }
+            })
+            .fail(function () {
+            })
+            .always(function () {
+
+                if ($('[name="sh_street"]').val() == "") {
+                    $("#same_address").trigger("click");
+                }
+
+            });
+
+        var upsPakage = $.ajax({
+            method: "POST",
+            url: "/device/GetUPSPackage",
+            data: { id },
+            dataType: "json"
+        })
+            .done(function (data) {
+                $("#tbody_ups").empty();
+
+                //console.log(data);
+
+                if (data[0] != null) {
+                    for (var i = 0; i < data[1].length; i++) {
+                        var upsbodycontent = $("#table_template tbody").html();
+                        //console.log(upsbodycontent);
+                        var index = i + 1;
+                        upsbodycontent = upsbodycontent.replace(/\{number\}/igm, index);
+                        upsbodycontent = upsbodycontent.replace(/\{print_label\}/igm, "<a href='/device/upslabelprinter/" + data[1][i].Id + "' target='_blank' class='btn btn-danger'><i class='glyphicon glyphicon-print'></i> Print label</a>");
+                        $("#tbody_ups").append(upsbodycontent);
+                        $("input[name=package_" + index + "]").val(data[1][i].PackageWeight);
+                        $("select[name=type_" + index + "]").val(data[1][i].PackageType);
+                        $("#upsDescription").val(data[0].ShippmentDescription);
+                        $('#upsServiceCode').val(data[0].UPS_Service_Code);
+                    }
+
+
+                    if ($("#tr_trackingnumber").length) {
+                        $("#tr_trackingnumber").remove();
+                    }
+
+                    $("#tfoot_ups").append("<tr id='tr_trackingnumber'><td colspan='4' style='text-align:center;font-size:1.2em;border-bottom:2px solid red;'>TRACKING NUMBER:  <strong>" + data[0].TrackingNumber + "</strong></td></tr>");
+                    offSubmitUPS(data[0].TrackingNumber, status);
+
+                }
+                else {
+                    onSubmitUPS();
+                }
+            })
+            .fail(function () {
+                console.log("GetUPSPackage Error!!!")
+            })
+            .always(function () {
+            });
+
+        $.when(ordprogress, upsPakage).then(function (r1, r2) {
+            $('#delivery_bundle_over').hide();
+        });
+
+
+    }
+
+    /**
+     * disabled after submit ups compleled
+     * @@param trackNumber
+     * @@param status
+     */
+    function offSubmitUPS(trackNumber, status = "ready") {
+        $("#ups_trackingnumber").val(trackNumber);
+        $("#upssubmit_button").empty();
+        $("#upssubmit_button").html("Submited ");
+        $("#upssubmit_button").append('<i class="glyphicon glyphicon-ok"></i>');
+        $("#upssubmit_button").attr("disabled", true);
+        $("#upsDescription").attr("disabled", true);
+        $("#upsServiceCode").attr("disabled", true);
+
+        $("#ups_package_add").hide(300);
+
+        if (trackNumber == "" || trackNumber == "0" || trackNumber == "-1") {
+            $("#upscancel_button").hide();
+        }
+        else if (status != "complete") {
+            $("#upscancel_button").show();
+        }
+
+        $("#tbody_ups input").each(function () {
+            $(this).attr("disabled", true);
+        });
+        $("#tbody_ups select").each(function () {
+            $(this).attr("disabled", true);
+        });
+
+        refresh_submit_button();
+    }
+
+    /**
+     * ready for submit ups
+     * */
+    function onSubmitUPS() {
+        $("#ups_trackingnumber").val("");
+        $("#upssubmit_button").empty();
+        $("#upssubmit_button").html("Submit to UPS ");
+        $("#upssubmit_button i").remove();
+        $("#upssubmit_button").removeAttr("disabled");
+        $("#ups_package_add").show(300);
+        $("#upsDescription").removeAttr("disabled");
+        $("#upsDescription").val();
+        $("#upsServiceCode").removeAttr("disabled");
+        $("#tbody_ups input").each(function () {
+            $(this).removeAttr("disabled");
+        });
+        $("#tbody_ups select").each(function () {
+            $(this).removeAttr("disabled");
+        });
+        refresh_submit_button();
+    }
+
+    function refresh_submit_button() {
+        var ups_complete = !($("#ups_trackingnumber").val() == null || $("#ups_trackingnumber").val() == "" || $("#ups_trackingnumber").val() == "0");
+        var order_carrier_complete = $(".carrier_required").filter(function () { return this.value.trim() == ""; }).length == 0;
+        if (check_select_inv() && check_required_fill() && (ups_complete || order_carrier_complete)) {
+            $('#btn_submit_next').removeClass('disabled');
+        } else {
+            $('#btn_submit_next').addClass('disabled');
+        }
+    }
+    function check_select_inv() {
+        var result = true;
+        $('.model_item').each(function () {
+            if ($(this).attr("data-devicerequired") == "True") {
+                var selectedInv = $(this).find('.inv_numbers').val().length;
+                var selectedSer = $(this).find('.ser_numbers').val().length;
+                var selectedCus = $(this).find('.list_cus_number').val();
+                var need = $(this).find('.qty_input').val();
+                if (selectedInv != need && selectedSer != need && selectedCus == "") {
+                    result = false; return false;
+                }
+            }
+        });
+        return result;
+    }
+
+    function check_required_fill() {
+        var c = $(".field_required").filter(function () {
+            return $.trim($(this).val()).length == 0;
+        }).length + $(".field_required:checkbox:not(:checked)").length;
+        return c == 0;
+    }
+
+    function check_required_ship_fill() {
+        var c = $(".fill_required").filter(function () {
+            return $.trim($(this).val()).length == 0;
+        }).length;
+        if (c == 0) {
+            $('#btn_submit_next').attr('disabled', false);
+            //$('#btn_submit_next').removeClass('disabled');
+        } else {
+            $('#btn_submit_next').attr('disabled', true);
+            //$('#btn_submit_next').addClass('disabled');
+        }
+    }
+
+
+</script>
+@if ((p.Any(k => k.Key.Equals("deployment_director")) == true && p["deployment_director"] == true))
+{
+    <script>
+        function btnSaveChange() {
+            $('#Shipping_info_submit').show();
+            if ($('#status_complete').val() == 1) {
+                var ups_complete = !($("#ups_trackingnumber").val() == null || $("#ups_trackingnumber").val() == "" || $("#ups_trackingnumber").val() == "0");
+                var order_carrier_complete = $(".carrier_required").filter(function () { return this.value.trim() == ""; }).length == 0;
+                if (check_select_inv() && check_required_fill() && (ups_complete || order_carrier_complete)) {
+                    $('#Shipping_info_submit').attr('disabled', false);
+                } else {
+
+                    $('#Shipping_info_submit').attr('disabled', true);
+                }
+            }
+        }
+    </script>
+}
+else
+{
+    <script>
+        function btnSaveChange() {
+            return;
+        }
+    </script>
+}
+<style>
+
+    .select2-container--default .select2-selection--multiple .select2-selection__choice {
+        background-color: var(--main-color-1) !important;
+        border-color: var(--main-color-2) !important;
+        color: #fff;
+    }
+
+    .input_process {
+        margin: auto;
+        border: none;
+        border-bottom: 1px solid #BBB;
+        background-color: transparent;
+        padding: 2px 5px;
+        font-size: 18px
+    }
+
+        .input_process:read-only {
+            background-color: transparent;
+        }
+    .date-shipper.dropdown-menu {
+        z-index: 9999 !important;
+    }
+   
+</style>
+

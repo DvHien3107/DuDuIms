@@ -1,0 +1,507 @@
+﻿
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/scroller/2.0.5/css/scroller.dataTables.min.css" />
+<div>
+
+    <div style=" display: flex;">
+        <div id="filter" style="width:100%; padding:0 20px 20px 0">
+            <form id="search_form">
+                <div class="row form-inline filter-group">
+                    <div class="col-md-3 col-sm-6 form-group">
+                        <div class="input-group" style="width:100%">
+                            <div class="input-group-addon">
+                                <i class="fa fa-calendar"></i> Date
+                            </div>
+                            @*<input type="text" name="fdate" style="max-width:125px" class="form-control datepicker" value="@Model.FromDate">*@
+                            <input type="text" class="form-control search-input" id="date_search" />
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 col-sm-6 form-group" style="margin-bottom:5px;">
+                        <div class="input-group" style="width:100%">
+                            <div class="input-group-addon" style="width:70px;">
+                                Category
+                                <div class="ico-help" title="Search by category"><i class="fa fa-question-circle"></i></div>
+                            </div>
+                            <select class="form-control select2 search-input" name="CategorySearch" style="width: 100%">
+                                <option value="">All</option>
+                                <option value="Ticket">Ticket</option>
+                                <option value="Order">Order</option>
+                                <option value="SalesLead">Sales Lead</option>
+                                <option value="Task">Task</option>
+                            </select>
+                        </div>
+                        <!-- /.input group -->
+                    </div>
+
+                    <div class="col-md-3 col-sm-6 form-group" style="margin-bottom:5px;">
+                        <div class="input-group" style="width:100%">
+                            <div class="input-group-addon">
+                                Read
+                                <div class="ico-help" title="" data-original-title="Search by read"><i class="fa fa-question-circle"></i></div>
+                            </div>
+                            <select class="form-control search-input" name="ReadSearch" style="width: 100%">
+                                <option value="">All</option>
+                                <option value="true">Read</option>
+                                <option value="false">Unread</option>
+                            </select>
+                        </div>
+                        <!-- /.input group -->
+                    </div>
+
+                    <div class="col-md-3 col-sm-6 form-group" style="margin-bottom:5px;">
+                        <div class="input-group" style="width:100%">
+                            <div class="input-group-addon" style="width:70px;">
+                                Member
+                                <div class="ico-help" title="" data-original-title="Search by member"><i class="fa fa-question-circle"></i></div>
+                            </div>
+                            <select class="form-control search-input select2" name="MemberNumber" style="width: 100%">
+                                <option value="">All</option>
+                                @foreach (var member in ViewBag.AllMember as List<EnrichcousBackOffice.Models.P_Member>)
+                                {
+                                    <option value="@member.MemberNumber">@member.FullName</option>
+                                }
+                            </select>
+                        </div>
+                        <!-- /.input group -->
+                    </div>
+
+                    <div class="col-md-3 col-sm-6 form-group" style="margin-bottom:5px;">
+                        <div class="input-group" style="width:100%">
+                            <div class="input-group-addon" style="width:70px;">
+                                Search By
+                                <div class="ico-help" title="" data-original-title="Search by Name, Id"><i class="fa fa-question-circle"></i></div>
+                            </div>
+                            <input type="text" class="form-control search-input" placeholder="Name | Id" name="SearchText" />
+                        </div>
+                        <!-- /.input group -->
+                    </div>
+
+
+                    <div class="col-md-3 col-sm-4 form-group">
+                        <button type="button" class="btn btn-primary btn-flat" id="search_submit" name="search_submit">
+                            <i class="fa fa-search"></i>
+                            Search
+                            <img id="search_loading" src="/Content/ajax-loaders/ajax-loader-1.gif" style="display:none">
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="text-right">
+        <a style="margin-right:10px;" onclick="reloadNotificationTable(true)"><i class="fa fa-refresh" title="reload notification" aria-hidden="true"></i></a>
+        <button onclick="markAsAllRead()" class="btn btn-sm btn-info" title="mark as all read">Mark as all read</button>
+
+    </div>
+    <table id="notificationTable" class="table table-bordered table-responsive">
+        <thead>
+            <tr>
+                <th></th>
+                <th style="white-space:nowrap">Notification</th>
+                <th style="white-space:nowrap">Update By</th>
+                <th style="white-space:nowrap">Date</th>
+                <th style="white-space:nowrap">Reat At</th>
+                <th style="white-space:nowrap"></th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
+
+</div>
+
+<script src="~/Content/Admin/bower_components/bootstrap-daterangepicker/daterangepicker.js"></script>
+<script>
+    $('#date_search').daterangepicker(
+        {
+            "showDropdowns": true,
+            "minYear": 1950,
+            "maxYear": 2050,
+            "autoApply": true,
+            //"alwaysShowCalendars": true,
+            "ranges": {
+                //'Today': [moment(), moment()],
+                //'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                //'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+                //'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+                'This Month': [moment().startOf('month'), moment().endOf('month')],
+                'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')],
+                'Nearest 3 months': [moment().subtract(3, 'month').startOf('month'), moment()],
+                'This Year': [moment().startOf('year'), moment().endOf('year')],
+                'Last Year': [moment().subtract(1, 'year').startOf('year'), moment().subtract(1, 'year').endOf('year')]
+            },
+            "locale": {
+                "customRangeLabel": "Custom Date",
+                "format": "MMM D, YYYY",
+            },
+            "startDate": moment().subtract(3, 'month').startOf('month'),
+            "endDate": moment(),
+        },
+    )
+</script>
+
+<script type="text/javascript">
+
+    //iCheck for checkbox and radio inputs
+    $('input[type="checkbox"].minimal').iCheck({
+        checkboxClass: 'icheckbox_minimal-blue',
+        radioClass: 'iradio_minimal-blue'
+    });
+    function markAllRead() {
+        $(".icon-view").addClass("fa-eye");
+        $(".icon-view").removeClass("fa-bell-o bell");
+        $("a[id^='btn-mark-read-']").hide();
+        $("a[id^='btn-mark-unread-']").show();
+    }
+    $(".datepicker").datepicker({
+        changeMonth: true,
+        changeYear: true,
+        yearRange: '1950:2050'
+    });
+    $(document).ready(function () {
+        $('.ico-help').tooltip();
+    });
+
+
+
+    var t = $("#notificationTable").DataTable({
+        "language": {
+            "processing": '  <svg class="circular" viewBox="25 25 50 50"><circle class="path" cx="50" cy="50" r="20" fill="none" stroke-width="2" stroke-miterlimit="10"></circle></svg>',
+            "emptyTable": "No notifications to display",
+            "paginate": {
+                "first": '<i class="fa fa-angle-double-left" aria-hidden="true"></i>',
+                "last": '<i class="fa fa-angle-double-right" aria-hidden="true"></i>',
+                "next": '<i class="fa fa-angle-right" aria-hidden="true"></i>',
+                "previous": '<i class="fa fa-angle-left" aria-hidden="true"></i>'
+            },
+        },
+
+        "pageLength": 10,
+        "serverSide": true, // for process server side
+        "processing": true, // for show progress bar
+        'lengthChange': false,
+        //'scrollY': 500,
+        //'scrollCollapse': true,
+        //'scroller': true,
+       // 'deferRender': true,
+        //'scroller': {
+        //    'loadingIndicator': true
+        //},
+        'searching': false,
+        "orderable": true,
+        //'ordering': false,
+        'stateSave': false,
+        'info': false,
+        'autoWidth': false,
+        "order": [],
+        "ajax": {
+            "url": "/TasksMan/LoadNotification",
+            "type": "get",
+            "datatype": "json",
+            'data': function (data) {
+                data.FromDate = $("#date_search").data('daterangepicker').startDate.format('YYYY-MM-DD');
+                data.ToDate = $("#date_search").data('daterangepicker').endDate.format('YYYY-MM-DD');
+                data.Category = $('[name="CategorySearch"]').val();
+                data.Read = $('[name="ReadSearch"]').val();
+                data.MemberNumber = $('[name="MemberNumber"]').val();
+                data.SearchText = $('[name="SearchText"]').val();
+                return data;
+            },
+            "complete": function (json) {
+                CallMoment();
+            }
+            //'dataSrc': function (data) {
+            //    $('#total-record').html('All Total: ' + data.recordsTotal);
+            //    $('#total-lead').html('Leads Total: ' + data.totalLead);
+            //    $('#total-trial').html('Trial Account Total: ' + data.totalTrial);
+            //    $('#total-slice').html('Total Slice Account: ' + data.totalSlice);
+            //    $('#total-merchant').html('Merchant Total: ' + data.totalMerchant);
+            //    return data.data;
+            //}
+        },
+        'fnCreatedRow': function (nRow, aData, iDataIndex) {
+            $(nRow).attr('id', 'tr_' + aData.Id.toString());
+
+            if (aData.IsView) {
+                $(nRow).attr('class', "read-tr tr-data");
+            }
+            else {
+                $(nRow).attr('class', "unread-tr tr-data");
+            }
+
+        },
+
+        "columns": [
+
+            {
+                "name": "Read",
+                'data': "IsView",
+                "render": function (data, type, row) {
+                    var html = '';
+
+                    html += `<i class="fa fa-bell-o bell bell-color icon-bell-table bell-icon-${row['Id']} ${data != true ? "" : "hide"}"></i>`;
+
+                    html += `<i class="fa fa-eye icon-view-table view-icon-${row['Id']} ${data != true ? "hide" : ""}" aria-hidden="true"></i>`;
+
+                    return html;
+                },
+                "orderable": false,
+                "className": 'align-middle text-center',
+            },
+            {
+                "orderable": false,
+                "className": 'description-td',
+                "name": "Description",
+                "render": function (data, type, row) {
+                    var html = '';
+                    html += `<a href="${row['Url']}"  class="notification-container notification-href ${row['IsView'] ? "notification-read" : ""}" onclick="markAsRead(this, '${row['Id']}');">`;
+                    if (row['Category'] == "Ticket") {
+                        html += `<span class="label label-primary"><i class="fa fa-ticket" aria-hidden="true"></i> Ticket</span>`;
+                    }
+                    else if (row['Category'] == "Order") {
+                        html += `  <span class="label label-success"><i class="fa fa-shopping-cart" aria-hidden="true"></i> Order</span>`;
+                    }
+                    else if (row['Category'] == "SalesLead") {
+                        html += ` <span class="label label-info"><i class="fa fa-user" aria-hidden="true"></i> Sales Lead</span>`;
+                    }
+                    else if (row['Category'] == "Task") {
+                        html += ` <span class="label label-warning"><i class="fa fa-pencil-square-o" aria-hidden="true"></i> Task</span>`;
+                    }
+                    html += `<br/>`;
+                    html += `<div class='noti-description-table'>`;
+                    html += row['Description'];
+                    html += `</div>`;
+                    //html += `<p>
+                    //            <span class="text-danger inline-block pt-1">${row['CreateBy'] || "System"}</span>
+                    //            </p>
+                    //            <p>
+                    //            <span class="notification-time">
+                    //            <i class="fa fa-clock-o" aria-hidden="true"></i>`;
+                    //if (row['IsView']) {
+                    //    html += ` <span class="time-noti-read-table">
+                    //              ${row['ViewTime']}
+                    //            </span>`;
+                    //}
+                    //else {
+                    //    html += ` <span class="time-noti-raw-table time-noti">
+                    //                    ${row['CreateAt']}
+                    //                </span>`
+                    //}
+                    html += `</span></p>`;
+                    html += `</div>`;
+                    html += `</a>`;
+                    return html;
+                }
+            },
+            {
+                "name": "CreateBy",
+                'data':"CreateBy"
+                //"render": function (data, type, row) {
+                //    return ``;
+                //}
+
+            },
+            {
+                "name": "CreateAt",
+                'data': "CreateAt",
+                "render": function (data, type, row) {
+                    return data;
+                }
+
+            },
+            {
+                "name": "ViewTime",
+                'data': "ViewTime",
+                "render": function (data, type, row) {
+                    var html = "<span id=view-time" + row['Id']+">";
+                    if (data) {
+                        html+= data;
+                    }
+                    html += "</span>";
+                    return html;
+                  
+                }
+
+            },
+            {
+                "name": "Action",
+                "class": "text-center",
+                "render": function (data, type, row) {
+                    return `<div class="btn-group">
+                                    <div class="dots-menu btn-group">
+                                        <div class="dropdown-dot" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></div>
+                                        <ul class="dropdown-menu dropdown-menu-right">
+                                                <li class="read-button read-button-table read-button-${row['Id']} ${row["IsView"] ? "hide" : ""}"><a href="javascript:void(0)" style="margin-right:5px;" onclick="mark_as_read('${row['Id']}',true)"><i class="fa fa-eye"></i>Mark as read</a></li>
+                                                <li class="unread-button unread-button-table unread-button-${row['Id']} ${row["IsView"] ? "" : "hide"}"><a href="javascript:void(0)" style="margin-right:5px;" onclick="mark_as_read('${row['Id']}',false)"><i class="fa fa-eye-slash"></i>Mark as unread</a></li>
+                                        </ul>
+                                    </div>
+                                </div>`;
+                },
+                "orderable": false,
+
+            },
+
+        ]
+
+    });
+    function CallMoment() {
+        $(".time-noti-raw-table").html(function (index, value) {
+            $(this).removeClass("time-noti-raw-table");
+            return moment(value).fromNow();
+        });
+        $(".time-noti-read-table").html(function (index, value) {
+            $(this).removeClass("time-noti-read-table");
+            return 'Read at: ' + moment(value).format('lll');
+        });
+    }
+    function reloadNotificationTable(notireload = false) {
+        $("#notificationTable").DataTable().ajax.reload();
+        if (notireload) {
+            var reloadNoti = $.parseJSON('{"text":"refresh notification success", "layout":"topRight", "type":"success"}');
+            noty(reloadNoti);
+        }
+    }
+    $(".search-input").change(function () {
+        reloadNotificationTable();
+
+    })
+    $("#search_submit").click(function () {
+        reloadNotificationTable();
+    })
+    function mark_as_read(Id, isread) {
+        if (isread) {
+            $("#notification-container-" + Id).addClass("notification-read");
+            $("#icon-view-" + Id).addClass("fa-eye");
+            $("#icon-view-" + Id).removeClass("fa-bell-o bell");
+            $("#btn-mark-read-" + Id).hide();
+            $("#btn-mark-unread-" + Id).show();
+            //$('.count-notification').html(parseInt($('.count-notification').html()) - 1);
+            $(`.read-button-${Id}`).addClass("hide");
+            $(`.unread-button-${Id}`).removeClass("hide");
+            $(`#tr_${Id}`).addClass("read-tr");
+            $(`.bell-icon-${Id}`).addClass("hide");
+            $(`.view-icon-${Id}`).removeClass("hide");
+            $(`#view-time${Id}`).html(moment().format('lll'));
+        }
+        else {
+            $("#notification-container-" + Id).removeClass("notification-read");
+            $("#icon-view-" + Id).removeClass("fa-eye");
+            $("#icon-view-" + Id).addClass("fa-bell-o bell");
+            $("#btn-mark-read-" + Id).show();
+            $("#btn-mark-unread-" + Id).hide();
+            //$('.count-notification').html(parseInt($('.count-notification').html()) + 1)
+            $(`.read-button-${Id}`).removeClass("hide");
+            $(`.unread-button-${Id}`).addClass("hide");
+            $(`#tr_${Id}`).removeClass("read-tr");
+            $(`.bell-icon-${Id}`).removeClass("hide");
+            $(`.view-icon-${Id}`).addClass("hide");
+            $(`#view-time${Id}`).html('');
+        }
+        $.ajax({
+            method: "get",
+            url: "/Home/MarkReadNoti",
+            data: { Id, isread },
+
+        }).done(function (data) {
+            getCountNotification();
+        })
+    }
+
+    function markAsAllRead() {
+        $(".notification-container").addClass("notification-read");
+        $(".icon-view").addClass("fa-eye");
+        $(".icon-view").removeClass("fa-bell-o bell");
+        $("a[id^='btn-mark-read-']").hide();
+        $("a[id^='btn-mark-unread-']").show();
+        $.ajax({
+            method: "post",
+            url: "/Home/MarkReadAll",
+            dataType: "json"
+        }).done(function (data) {
+            reloadNotificationTable();
+            $(".notification-item").find('a').addClass('notification-read');
+            $(".count-notification").html('0');
+            var reloadNoti = $.parseJSON('{"text":"mark as all read success", "layout":"topRight", "type":"success"}');
+            noty(reloadNoti);
+            $(".time-noti").html(function (index, value) {
+                return 'Read at : ' + moment().format('lll');
+                //return moment().fromNow();
+            });
+
+        })
+            .fail(function () {
+                alert('cannot mark as all read !')
+            })
+    }
+
+</script>
+
+<style>
+    .noti-description-table {
+        padding-top: 10px;
+    }
+    .noti-description-table:hover, .noti-description-table:hover * {
+        color: var(--main-color-1) !important;
+    }
+        .noti-description-table .update-ticket-notification {
+            max-width: 500px;
+        }
+
+        .noti-description-table .update-ticket-notification-wrapper {
+            padding: 0px;
+        }
+
+    .table .even, .table .odd {
+        background-color: white;
+    }
+
+    /* width */
+    .dataTables_scrollBody::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    /* Track */
+    .dataTables_scrollBody::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 5px;
+    }
+
+    /* Handle */
+    .dataTables_scrollBody::-webkit-scrollbar-thumb {
+        background: #adadad;
+        border-radius: 5px;
+    }
+
+    div.dts div.dataTables_scrollBody {
+        background: white;
+    }
+    /* Handle on hover */
+    .dataTables_scrollBody::-webkit-scrollbar-thumb:hover {
+        background: #adadad;
+    }
+
+    .notification-href, .notification-href:hover, .notification-href:focus {
+        color: #444;
+    }
+
+    .read-tr .noti-description-table {
+        color: #777777 !important;
+    }
+
+    .dropdown-menu > li > a {
+        color: #333;
+    }
+
+    p {
+        margin: 0 0 5px;
+    }
+
+    .hide {
+        display: none;
+    }
+
+    div.dts tbody th, div.dts tbody td {
+        white-space: normal;
+    }
+</style>

@@ -1,0 +1,427 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.UploadMoreFile>
+@{
+    bool upload = true;
+    bool.TryParse(ViewData["upload"]?.ToString() ?? "true", out upload);
+    string prefix = "";
+    if (ViewData["prefix"] != null)
+    {
+        prefix = ViewData["prefix"].ToString();
+    }
+}
+<style>
+    .custom-file-upload {
+/*        margin-top: 10px;*/
+        background: #2b97e6;
+        color: white;
+        padding: 3px 10px;
+        font-size: 14px;
+        cursor:pointer;
+    }
+
+    .custom-file-upload i {
+        padding-right: 7px;
+    }
+    .image-upload {
+        max-width: 100%;
+        height: auto;
+        max-height:75px;
+        border-radius: 3px;
+    }
+    .file-avatar {
+        max-height: 75px;
+        border-radius: 3px;
+    }
+    .upload-table td, .upload-table th {
+        /* border: 1px solid #ddd;*/
+        padding: 8px;
+    }
+
+    .upload-table tr:nth-child(even) {
+      /*  background-color: #f2f2f2;*/
+    }
+
+    .upload-table tr:hover {
+       /* background-color: #ddd;*/
+    }
+
+    .upload-table th {
+        padding-top: 12px;
+        padding-bottom: 12px;
+        text-align: left;
+     /*   background-color: #04AA6D;*/
+        color: white;
+    }
+    .files-upload-wrapper {
+        border: 2px dashed #ccc;
+        border-radius: 5px;
+    }
+    .upload-table{
+        width:100%;
+    }
+    .upload-table tr td:first-child{
+        width:30%;
+    }
+</style>
+
+@if (upload)
+{
+    <div id="divmorefiles-@prefix">
+        <div class="uploadfiles-wrapper" style="margin-bottom:5px;">
+                <label class="custom-file-upload">
+                    <input type="file"  name="uploadfiles-@(prefix)[]" multiple style="display:none" onchange="reviewMultipleUpload_@(prefix)(this)" />
+                    <i class="fa fa-upload"></i> Upload Files
+                </label>
+        </div>
+    </div>
+   
+
+    @*<div class="form-group" style="display:block">
+            <label class="col-sm-3 control-label"></label>
+            <div class="col-sm-9">
+                <input type="hidden" id="filescount" name="filescount" value="1" /><br />
+                <button type="button" class="btn btn-sm btn-default" onclick="attach_more_files();">+ Add File</button>
+            </div>
+        </div>*@
+    <div class="clearfix"></div>
+
+}
+<div class="files-upload-wrapper">
+    <table class="upload-table" id="upload-table-@prefix">
+        <tr id="no-file-upload-@prefix" @(Model!=null&&Model.Count()>0?"style=display:none":"")>
+            <td><span style="color:#6c6c6c">No File Uploaded</span></td>
+        </tr>
+       
+        @if (Model != null)
+        {
+
+            foreach (var item in Model)
+            {
+                string filename = "";
+                if (item.FileName.Length > 30)
+                {
+                    filename = "..." + item.FileName.Substring(item.FileName.Length - 30);
+                }
+                else
+                {
+                    filename = item.FileName;
+                }
+
+                if (upload == false)
+                {
+                    <!--khong cho phep update-->
+
+                    var avatar = "";
+                    if (item.FileName.ToLower().LastIndexOf(".pdf") == item.FileName.ToLower().Length - 4)
+                    {
+                        avatar = "/upload/img/pdf.png";
+                    }
+                    else if (item.FileName.ToLower().LastIndexOf(".doc") == item.FileName.ToLower().Length - 4 || item.FileName.ToLower().LastIndexOf(".docx") == item.FileName.Length - 5)
+                    {
+                        avatar = "/upload/img/word.png";
+                    }
+                    else if (item.FileName.ToLower().LastIndexOf(".xls") == item.FileName.ToLower().Length - 4 || item.FileName.ToLower().LastIndexOf(".xlsx") == item.FileName.Length - 5)
+                    {
+                        avatar = "/upload/img/excel.png";
+                    }
+                    else if (item.FileName.ToLower().LastIndexOf(".mp4") == item.FileName.ToLower().Length - 4 || item.FileName.ToLower().LastIndexOf(".webm") == item.FileName.Length - 5)
+                    {
+                        avatar = "/content/img/video-placeholder.png";
+                    }
+
+                    if (string.IsNullOrEmpty(item.FileName) == false)
+                    {
+                        if (item.FileName.Contains("http") == false && item.FileName.Contains("www") == false)
+                        {
+
+                            <tr>
+                                @if (string.IsNullOrEmpty(avatar) == true)
+                                {
+                                    <td><img class="image-upload" src="@item.FileName" onerror="this.onerror=null; this.src='/Upload/Img/no_image.jpg'" /></td>
+                                }
+                                else
+                                {
+                                    <td><img class="file-avatar" src="@avatar" onerror="this.onerror=null; this.src='/Upload/Img/no_image.jpg'" /></td>
+                                }
+
+                                <td>@filename</td>
+                                <td>
+                                    <a style="padding-left:10px" href="@item.FileName" target="_blank" title="" data-original-title="View file">
+                                        <i class="glyphicon glyphicon-zoom-in"></i>
+                                    </a>
+
+                                    <a style="padding-left:10px" href="@Url.Action("downloadfile", "upload", new {area = "", id = item.UploadId })" data-toggle="tooltip" data-original-title="Download">
+                                        <i class="glyphicon glyphicon-download"></i>
+                                    </a>
+
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @*<div class="form-group">
+                                <label class="col-sm-3 control-label"></label>
+                                <div class="col-sm-9">
+                                    <div style="padding-left:0px;" class="col-md-12">
+                                        <p class="col-md-6" style="border:1px dotted red; padding:3px">
+                                            <img style="height:70px;margin-left:0" alt="picture" src="@item.FileName" />
+                                            <i style="padding-left:5px">@filename</i>
+                                            <a href="@item.FileName" target="_blank" data-toggle="tooltip" class="pull-right" title="View file">
+                                                <i class="glyphicon glyphicon-zoom-in"></i>
+                                            </a>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>*@
+                            <tr>
+                                <td><img class="image-upload" alt="" src="@item.FileName" /></td>
+                                <td>@filename</td>
+                                <td>
+                                    <a style="padding-left:10px" href="@item.FileName" target="_blank" title="" data-original-title="View file">
+                                        <i class="glyphicon glyphicon-zoom-in"></i>
+                                    </a>
+
+
+                                </td>
+                            </tr>
+                        }
+                    }
+                }
+                else
+                {
+                    var avatar = "";
+                    if (item.FileName.LastIndexOf(".pdf") == item.FileName.Length - 4)
+                    {
+                        avatar = "/upload/img/pdf.png";
+                    }
+                    else if (item.FileName.LastIndexOf(".doc") == item.FileName.Length - 4 || item.FileName.LastIndexOf(".docx") == item.FileName.Length - 5)
+                    {
+                        avatar = "/upload/img/word.png";
+                    }
+                    else if (item.FileName.LastIndexOf(".xls") == item.FileName.Length - 4 || item.FileName.LastIndexOf(".xlsx") == item.FileName.Length - 5)
+                    {
+                        avatar = "/upload/img/excel.png";
+                    }
+                    else if (item.FileName.ToLower().LastIndexOf(".mp4") == item.FileName.ToLower().Length - 4 || item.FileName.ToLower().LastIndexOf(".webm") == item.FileName.Length - 5)
+                    {
+                        avatar = "/content/img/video-placeholder.png";
+                    }
+                    else if (item.FileName.ToLower().LastIndexOf(".jpeg") == -1 && item.FileName.ToLower().LastIndexOf(".jpg") == -1 &&
+                    item.FileName.ToLower().LastIndexOf(".png") == -1 && item.FileName.ToLower().LastIndexOf(".gif") == -1 &&
+                    item.FileName.ToLower().LastIndexOf(".bmp") == -1)
+                    {
+                        avatar = "/upload/img/no_image.jpg";
+                    }
+
+                    <!--duoc phep update-->
+                    if (item.FileName.Contains("http") == false && item.FileName.Contains("www") == false)
+                    {
+                        
+                        <tr id="f_@item.UploadId">
+                            @if (string.IsNullOrEmpty(avatar) == true)
+                            {
+                                <td><img class="image-upload" src="@item.FileName" onerror="this.onerror=null; this.src='/Upload/Img/no_image.jpg'" /></td>
+                            }
+                            else
+                            {
+                                <td><img class="file-avatar" src="@avatar" onerror="this.onerror=null; this.src='/Upload/Img/no_image.jpg'" /></td>
+                            }
+
+                            <td>@filename</td>
+                            <td>
+                                <a style="padding-left:10px" href="@item.FileName" target="_blank" title="" data-original-title="View file">
+                                    <i class="glyphicon glyphicon-zoom-in"></i>
+                                </a>
+
+                                <a style="padding-left:10px" href="@Url.Action("downloadfile", "upload", new {area = "", id = item.UploadId })" data-toggle="tooltip" data-original-title="Download">
+                                    <i class="glyphicon glyphicon-download"></i>
+                                </a>
+                                <a style="padding-left:10px" onclick="DeleteFileUploaded_@(prefix)('@item.UploadId')" data-toggle="tooltip" title="Delete file">
+                                    <i class="glyphicon glyphicon-trash"></i>
+                                </a>
+                                &nbsp; <img src="~/Content/ajax-loaders/ajax-loader-1.gif" id="floading_@item.UploadId" style="display:none" />
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        <tr>
+                            <td><img class="image-upload" alt="" src="@item.FileName" /></td>
+                            <td>@filename</td>
+                            <td>
+                                <a style="padding-left:10px" href="@item.FileName" target="_blank" title="" data-original-title="View file">
+                                    <i class="glyphicon glyphicon-zoom-in"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+
+                }
+
+            }
+        }
+    </table>
+
+ 
+</div>
+
+
+
+<script type="text/javascript">
+    function reviewMultipleUpload_@(prefix)(input) {
+
+        if (input.files && input.files[0]) {
+                        var fileBuffer = new DataTransfer();
+                        var strCheckImg = new RegExp(/\.(jpe?g|png|gif|bmp|svg)$/i);
+                        var strCheckPdf = new RegExp(/\.pdf$/i);
+                        var strCheckVideo = new RegExp(/\.(mp4|webm|mpeg|avi)$/i);
+                        var strCheckWord = new RegExp(/\.doc?x$/i);
+                        var strCheckExcel = new RegExp(/\.xls$/i);
+                        var strDeniedType = new RegExp(/(\.|\/)(bat|exe|cmd|sh|php([0-9])?|pl|cgi|386|dll|com|torrent|js|app|jar|pif|vb|vbscript|wsf|asp|cer|csr|jsp|drv|sys|ade|adp|bas|chm|cpl|crt|csh|fxp|hlp|hta|inf|ins|isp|jse|htaccess|htpasswd|ksh|lnk|mdb|mde|mdt|mdw|msc|msi|msp|mst|ops|pcd|prg|reg|scr|sct|shb|shs|url|vbe|vbs|wsc|wsf|wsh)$/i);
+                     for (let i = 0; i < input.files.length; i++) {
+                            var fname = input.files[i].name.toLowerCase();
+                        if (input.files[i].size > 104857600) {
+
+                            var MsgError = $.parseJSON('{"text":"File is too large limit size to less than 100 MB", "layout":"topRight", "type":"warning"}');
+                            noty(MsgError);
+                        }
+                        else if (strDeniedType.test(fname)) {
+
+                            var MsgError = $.parseJSON('{"text":"This file type not allowed", "layout":"topRight", "type":"warning"}');
+                            noty(MsgError);
+                        }
+                        else {
+                            fileBuffer.items.add(input.files[i]);
+
+                        }
+            }
+        
+                     input.files = fileBuffer.files;
+                    if (input.files.length) {
+                        $("#no-file-upload-@(prefix)").hide();
+                         let indexInputUploads = $("[name='uploadfiles-@(prefix)[]']").length-1;
+                        for (let i = 0; i < input.files.length; i++) {
+                            let file = input.files[i];
+                            var reader = new FileReader();
+                            reader.onload = function (e) {
+                                //console.log(file);
+                                var fname = file.name.toLowerCase();
+
+                                var previewSrc = e.target.result;
+                                var previewEl = "";
+                                //   alert(imgSrc)
+
+                                if (strCheckImg.test(fname) == false) {
+                                    //default image
+                                    //
+                                    if (strCheckVideo.test(fname)) {
+                                        previewEl = `<video height="75"  src="${previewSrc}" controls></video>`;
+                                    }
+                                   else if (window.FileIcons) {
+                                        //$("#img_" + inputid).hide();
+
+                                    var icons = window.FileIcons;
+                                    var class_name = icons.getClassWithColor(fname);
+                                     previewEl = "<div style='font-size:30px;line-height:30px;height: 30px; color: var(--main-color-1)' class=" + class_name + "></div>";
+                                    } else if (strCheckPdf.test(fname) == true) {
+                                        previewSrc = "/upload/img/pdf.png";
+                                    }
+                                    else if (strCheckWord.test(fname) == true) {
+                                        previewSrc = "/upload/img/word.png";
+                                    }
+                                    else if (strCheckExcel.test(fname) == true) {
+                                        previewSrc = "/upload/img/excel.png";
+                                    }
+                                    else {
+                                        previewSrc = "/upload/img/no_image.jpg";
+                                    }
+                                }
+                                if (previewEl == "") {
+                                    previewEl = `<img class="image-upload"  src="${previewSrc}" />`;
+                                }
+                                var html = `<tr class="upload_preview_@(prefix)_${indexInputUploads}" data-input="${indexInputUploads}" data-index="${i}">
+                                    <td>${previewEl}</td>
+                                    <td>${fname}</td>
+                                    <td>
+                                        <a style="padding-left:10px" onclick="DeleteUpload_@(prefix)(this)" data-toggle="tooltip" title="" data-original-title="Delete file">
+                                            <i class="glyphicon glyphicon-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>`;
+                                $("#upload-table-@(prefix)").append(html);
+                                var success = $.parseJSON('{"text":"upload success", "layout":"topRight", "type":"success"}');
+                                noty(success);
+
+                            }
+                            reader.readAsDataURL(file);
+
+                        }
+                        let newSelectFile = `<div class="uploadfiles-wrapper" style="margin-bottom:5px;">
+                            <label class="custom-file-upload">
+                                <input type="file"  name="uploadfiles-@(prefix)[]" multiple style="display:none" onchange="reviewMultipleUpload_@(prefix)(this)" />
+                                <i class="fa fa-upload"></i> Upload Files
+                            </label>
+                           </div>`;
+                        $("#divmorefiles-@(prefix)").find(".uploadfiles-wrapper").hide();
+                        $("#divmorefiles-@(prefix)").append(newSelectFile);
+                    }
+                }
+
+
+
+    }
+    function DeleteUpload_@(prefix)(el) {
+        var tr = $(el).parents('tr');
+        var indexFile = Number($(tr).attr("data-index"));
+        var indexInput = Number($(tr).attr("data-input"));
+        var attachments = $("[name='uploadfiles-@(prefix)[]']")[indexInput].files; // <-- reference your file input here
+        var fileBuffer = new DataTransfer();
+
+        // append the file list to an array iteratively
+        for (let i = 0; i < attachments.length; i++) {
+            // Exclude file in specified index
+            if (indexFile !== i)
+                fileBuffer.items.add(attachments[i]);
+        }
+        // Assign buffer to file input
+        $("[name='uploadfiles-@(prefix)[]']")[indexInput].files = fileBuffer.files; // <-- according to your file input reference
+        //remove preview
+        $(tr).remove();
+        $(`.upload_preview_@(prefix)_${indexInput}`).each(function (index) {
+            $(this).attr("data-index",index);
+        })
+        if (!($("#upload-table-@(prefix)").find("tr").not("#no-file-upload-@(prefix)").length)) {
+            $("#no-file-upload-@(prefix)").show(500);
+        }
+    }
+    function DeleteFileUploaded_@(prefix)(id) {
+        if (confirm("Are you sure want to delete?")) {
+            $("#floading_" + id).show();
+            var obj = {};
+            obj.url = "/upload/morefiledeletebyid/";
+            obj.type = "post";
+            obj.datatype = "json";
+            obj.contenttype = "application/json";
+            obj.data = { "id": id };
+            obj.success = function (data) {
+                if (data == true) {
+                    $("#f_" + id).remove();
+                    var Success = $.parseJSON('{"text":"Delete successfully!", "layout":"topRight", "type":"success"}');
+                    noty(Success);
+                      if (!($("#upload-table-@(prefix)").find("tr").not("#no-file-upload-@(prefix)").length)) {
+                            $("#no-file-upload-@(prefix)").show();
+                        }
+                }
+            };
+            obj.error = function () {
+                var Error = $.parseJSON('{"text":"Error: can not delete file!", "layout":"topRight", "type":"success"}');
+                noty(Error);
+                $("#floading_" + id).hide();
+            };
+            obj.complete = function () { $("#floading_" + id).hide(); };
+            jQuery.ajax(obj);
+
+
+        }
+    }
+
+</script>

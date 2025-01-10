@@ -1,0 +1,135 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.P_CommLevelSetting>
+@using EnrichcousBackOffice.Models
+
+@{
+    var listEffectiveDate = ViewBag.effectiveDate as List<DateTime?>;
+    var listLevel = ViewBag.levels as List<P_Level>;
+}
+
+@using (Html.BeginForm("SaveCommLevel", "CommSetting", FormMethod.Post))
+{
+
+
+    <div class="col-md-12">
+        <div class="form-inline">
+            <label class="control-label">Effective Date :     </label>
+
+            <select id="effectiveDateSelect" name="effectiveDateSelect" class="form-control" onchange="ChangeEffectiveDate()">
+
+                @if (listEffectiveDate == null)
+                {
+                    <option value="NULL">N/A</option>
+                }
+                else
+                {
+                    foreach (var item in listEffectiveDate)
+                    {
+                        if (item == null)
+                        {
+                            <option value="default">N/A</option>
+                        }
+                        else
+                        {
+                            <option @if (Model?.FirstOrDefault().EffectiveDate == item) { @Html.Raw(@"selected=""selected""") } value="@(item?.ToShortDateString())">@(item?.ToShortDateString())</option>
+                        }
+                    }
+                }
+
+                <option disabled>-----------------</option>
+                <option value="new">NEW EFFECTIVE DATE: </option>
+            </select>
+
+            <!--new effective date-->
+                <input type="text" style="display:none;" name="Opt_EffectiveDate" id="Opt_EffectiveDate" class="form-control datepicker" autocomplete="off" />
+
+
+        </div>
+      
+    </div>
+
+    <br/><br/><br />
+
+    <table class="table table-striped table-bordered bootstrap-datatable">
+        <thead>
+            <tr>
+                <th scope="col">Level</th>
+                <th scope="col">Commission Percent Directly (%)</th>
+                <th scope="col">Override Commission Percent (%)</th>
+                <th scope="col">Commission Percent Management Office (%)</th>
+            </tr>
+        </thead>
+
+        <tbody id ="tbodycomm">
+
+            @{
+                foreach (var item in listLevel)
+                {
+
+
+                    <tr>
+                        @if (Model.Count() > 0)
+                        {
+                            var lv_comm = Model.Where(c => c.LevelNumber == item.Level && c.EffectiveDate == listEffectiveDate.FirstOrDefault()).FirstOrDefault();
+
+                            <td>Level#@item.Level - (<b>@item.LevelName</b>)</td>
+
+                            if (lv_comm != null)
+                            {
+                                <td><input name="CommPercent_Directly_@item.Level" class="smallInput" type="text" value="@(lv_comm.CommPercent_Directly ?? 0)" /></td>
+                                <td><input name="CommPercent_Override_@item.Level" class="smallInput" type="text" value="@(lv_comm.CommPercent_Override ?? 0)" /></td>
+                                <td><input name="CommPercent_ManagementOffice_@item.Level" class="smallInput" type="text" value="@(lv_comm.CommPercent_ManagementOffice ?? 0)" /></td>
+                            }
+                            else
+                            {
+                                <td><input name="CommPercent_Directly_@item.Level" class="smallInput" type="text" value="0" /></td>
+                                <td><input name="CommPercent_Override_@item.Level" class="smallInput" type="text" value="0" /></td>
+                                <td><input name="CommPercent_ManagementOffice_@item.Level" class="smallInput" type="text" value="0" /></td>
+                            }
+                        }
+                        else
+                        {
+                            <td>Level#@item.Level - <b>@item.LevelName</b></td>
+                            <td><input name="CommPercent_Directly_@item.Level" class="smallInput" type="text" value="0" /></td>
+                            <td><input name="CommPercent_Override_@item.Level" class="smallInput" type="text" value="0" /></td>
+                            <td><input name="CommPercent_ManagementOffice_@item.Level" class="smallInput" type="text" value="0" /></td>
+                        }
+
+                    </tr>
+                }
+
+            }
+
+        </tbody>
+
+    </table>
+    <button onclick="return Submit()" type="submit" class="btn btn-primary"><span>Save Changes</span></button>
+}
+
+
+<script type="text/javascript">
+
+    //datepicker
+    $('.datepicker').datepicker({
+        changeMonth: true,
+        changeYear: true,
+        yearRange: '-10:+50'
+    });
+
+    function Submit() {
+
+        var selectedDate = $("#effectiveDateSelect").val();
+        if (selectedDate == "new") {
+            //them moi effective date
+            var newdate = $("#Opt_EffectiveDate").val();
+            if (newdate == "") {
+                alert("Please enter effective date");
+                return false;
+            }
+
+        }
+       
+        return true;
+
+    }
+
+</script>

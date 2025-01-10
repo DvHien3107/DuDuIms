@@ -1,0 +1,238 @@
+﻿@model EnrichcousBackOffice.Models.O_Device
+@using EnrichcousBackOffice.Models
+
+@{
+    var list_Vendor = ViewBag.Vendor as List<Vendor>;
+}
+
+<div class="form-group">
+    <label class="col-sm-3 control-label">Vendor</label>
+    <div class="col-sm-9">
+        <select name="Vendor" class="form-control">
+            <option value="">-- Select vendor --</option>
+
+            @if (list_Vendor != null && list_Vendor.Count() > 0)
+            {
+                foreach (var item in list_Vendor)
+                {
+                    <option @if (Model?.VendorId?.Equals(item.Id) == true) { @Html.Raw("selected") } value="@item.Id">@item.CompanyName</option>
+                }
+            }
+        </select>
+
+        <p class="help-block">
+            <button type="button" class="btn btn-sm" onclick="add_edit_vendor('add')"><i class="fa fa-plus"></i> Add vendor</button>
+            <button type="button" class="btn btn-sm" onclick="add_edit_vendor('edit')"><i class="fa fa-edit"></i> Edit </button>
+        </p>
+    </div>
+</div>
+
+
+
+
+<script>
+
+    
+    //Click button add new vendor or edit vendor
+    function add_edit_vendor(key) {
+
+        if (key == "add") {
+            $("input[name='hd_vendorId']").val(0);
+            $("#modal-vendor-title").html("Add new vendor");
+
+            $("input[name='company_name']").val("");
+            $("input[name='address']").val("");
+            $("#Country").val("");
+
+            $("#txtState").val("");
+            $("#txtState").prop("disabled", false);
+            $("#txtState").css("display", "block");
+            $("#selectState").empty();
+            $("#selectState").css("display", "none");
+
+            $("input[name='City']").val("");
+            $("input[name='ZipCode']").val("");
+            $("input[name='website']").val("");
+            $("input[name='email']").val("");
+            $("input[name='fax']").val("");
+            $("input[name='phone']").val("");
+            $("input[name='first_name']").val("");
+            $("input[name='last_name']").val("");
+            $("input[name='contact_phone']").val("");
+            $("input[name='contact_email']").val("");
+
+            $('#Country').select2(); //cap nhat lai select2
+            $("#modal-vendor").modal("show");
+        }
+
+        if (key == "edit") {
+            var vendorId = $("select[name='Vendor']").val();
+
+            if (vendorId == "") {
+                var optionsErr = $.parseJSON('{"text":"Please choose vendor!","layout":"topRight","type":"error"}');
+                noty(optionsErr);
+            }
+            else {
+
+                $.ajax({
+                    url: "/device/getvendorinfo",
+                    method: "GET",
+                    data: { VendorId: vendorId },
+                    dataType: "json"
+                })
+                    .done(function (data) {
+                        //data = object[] {true/false, type/message}
+
+                        if (data[0] == true) {
+                            $("input[name='hd_vendorId']").val(data[1].Id);
+                            $("#modal-vendor-title").html("Edit vendor");
+
+                            $("input[name='company_name']").val(data[1].CompanyName);
+                            $("input[name='address']").val(data[1].Address);
+
+                            $("#Country").val(data[1].Country);
+                            if (data[1].Country == "United States") {
+                                $("#txtState").val(data[1].State);
+                                loadUSAState();
+                            }
+                            
+                            $("input[name='City']").val(data[1].City);
+                            $("input[name='ZipCode']").val(data[1].Zipcode);
+                            $("input[name='website']").val(data[1].Website);
+                            $("input[name='email']").val(data[1].Email);
+                            $("input[name='fax']").val(data[1].Fax);
+                            $("input[name='phone']").val(data[1].Phone);
+                            $("input[name='first_name']").val(data[1].ContactFirstName);
+                            $("input[name='last_name']").val(data[1].ContactLastName);
+                            $("input[name='contact_phone']").val(data[1].ContactPhone);
+                            $("input[name='contact_email']").val(data[1].ContactEmail);
+
+                            $('#Country').select2(); //cap nhat lai select2
+                            $("#modal-vendor").modal("show");
+                        }
+                        else {
+                            var optionsErr = $.parseJSON('{"text":"' + data[1] + '","layout":"topRight","type":"error"}');
+                            noty(optionsErr);
+                        }
+                    })
+                    .fail(function (jqXHR, textStatus, errorThrown) {
+                        var optionsErr = $.parseJSON('{"text":"There was a problem, please try again later. ' + errorThrown + '","layout":"topRight","type":"error"}');
+                        noty(optionsErr);
+                    });
+
+            }
+        }
+    }
+
+
+
+    //Save vendor
+    function save_vendor() {
+        var vendorId = $("input[name='hd_vendorId']").val();
+        var companyName = $("input[name='company_name']").val();
+        var address = $("input[name='address']").val();
+        var country = $("#Country").val();
+
+        var state = $("#txtState").val();
+        if (country == "United States") {
+            state = $("#selectState").val();
+        }
+
+        var city = $("input[name='City']").val();
+        var zipCode = $("input[name='ZipCode']").val();
+        var website = $("input[name='website']").val();
+        var email = $("input[name='email']").val();
+        var fax = $("input[name='fax']").val();
+        var phone = $("input[name='phone']").val();
+        var firstName = $("input[name='first_name']").val();
+        var lastName = $("input[name='last_name']").val();
+        var contactPhone = $("input[name='contact_phone']").val();
+        var contactEmail = $("input[name='contact_email']").val();
+
+        if (companyName == "") {
+            var optionsErr = $.parseJSON('{"text":"Company name is required.","layout":"topRight","type":"error"}');
+            noty(optionsErr);
+        }
+        else if (address == "") {
+            var optionsErr = $.parseJSON('{"text":"Company address is required.","layout":"topRight","type":"error"}');
+            noty(optionsErr);
+        }
+        else if (firstName == "") {
+            var optionsErr = $.parseJSON('{"text":"Contact first name is required.","layout":"topRight","type":"error"}');
+            noty(optionsErr);
+        }
+        else if (lastName == "") {
+            var optionsErr = $.parseJSON('{"text":"Contact last name is required.","layout":"topRight","type":"error"}');
+            noty(optionsErr);
+        }
+        else {
+
+            $.ajax({
+                url: "/device/savevendor",
+                method: "POST",
+                data: {
+                    VendorId: vendorId,
+                    CompanyName: companyName,
+                    Address: address,
+                    Country: country,
+                    State: state,
+                    City: city,
+                    ZipCode: zipCode,
+                    Website: website,
+                    Email: email,
+                    Fax: fax,
+                    Phone: phone,
+                    FirstName: firstName,
+                    LastName: lastName,
+                    ContactPhone: contactPhone,
+                    ContactEmail: contactEmail
+                },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    //data = object[] {true/false, list_Vendor/message, VendorId/null}
+
+                    if (data[0] == true) {
+
+                        $("select[name='Vendor']").empty();
+                        var _option = "<option value=''>-- Select vendor --</option>";
+
+                        for (var i = 0; i < data[1].length; i++) {
+                            if (data[1][i].Id == data[2]) {
+                                _option = _option + "<option selected value='" + data[1][i].Id + "'>" + data[1][i].CompanyName + "</option>";
+                            }
+                            else {
+                                _option = _option + "<option value='" + data[1][i].Id + "'>" + data[1][i].CompanyName + "</option>";
+                            }
+                        }
+                        $("select[name='Vendor']").append(_option);
+
+
+                        if (vendorId == 0) {
+                            var optionsSuccess = $.parseJSON('{"text":"Add new vendor success!","layout":"topRight","type":"success"}');
+                            noty(optionsSuccess);
+                        }
+                        else {
+                            var optionsSuccess = $.parseJSON('{"text":"Edit vendor success!","layout":"topRight","type":"success"}');
+                            noty(optionsSuccess);
+                        }
+
+                        $("#modal-vendor").modal("hide");
+                    }
+                    else {
+                        var optionsErr = $.parseJSON('{"text":"' + data[1] + '","layout":"topRight","type":"error"}');
+                        noty(optionsErr);
+                    }
+                })
+                .fail(function (jqXHR, textStatus, errorThrown) {
+                    var optionsErr = $.parseJSON('{"text":"There was a problem, please try again later. ' + errorThrown + '","layout":"topRight","type":"error"}');
+                    noty(optionsErr);
+                });
+
+             }
+    }
+
+
+
+
+</script>

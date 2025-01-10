@@ -1,0 +1,387 @@
+﻿@using EnrichcousBackOffice.Models
+@using EnrichcousBackOffice.AppLB
+@{
+    var cMem = Authority.GetCurrentMember();
+    var Partners = ViewBag.Partners as List<C_Partner> ?? new List<C_Partner>() { };
+    var host = $"{HttpContext.Current.Request.Url.Scheme}://{HttpContext.Current.Request.Url.Authority}";
+}
+
+<style>
+    .input-group-addon {
+        background-color: #d9edf7 !important;
+        color: black;
+    }
+</style>
+<div class="row">
+    <div class="col-md-4 col-sm-6 form-group">
+        <div class="input-group" style="width:100%">
+            <div class="input-group-addon">
+                Cancel days
+            </div>
+            <select class="form-control" name="s_canceldays" id="s_canceldays" onchange="$('#cancel-table').DataTable().ajax.reload()">
+                <option value="0">All</option>
+                <option value="14">About 15 days</option>
+                <option value="60">About 60 days</option>
+                <option value="61">After 60 days</option>
+            </select>
+        </div>
+        <!-- /.input group -->
+    </div>
+    @if (string.IsNullOrEmpty(cMem.BelongToPartner))
+    {
+        <div class="col-md-4 col-sm-6 form-group">
+            <div class="input-group" style="width:100%">
+                <div class="input-group-addon">
+                    Partner/Company
+                </div>
+                <select class="form-control" name="s_partner" id="s_partner" onchange="$('#cancel-table').DataTable().ajax.reload()">
+                    <option value="">All</option>
+                    <option value="mango">@ViewBag.ProductName</option>
+                    @foreach (var item in Partners.OrderBy(c => c.Code))
+                    {
+                        <option value="@item.Code">#@item.Code - @item.Name</option>
+                    }
+                </select>
+            </div>
+            <!-- /.input group -->
+        </div>
+    }
+    <div class="col-md-4 col-sm-6 form-group">
+        <div class="input-group" style="width:100%">
+            <div class="input-group-addon">
+                Refund status
+            </div>
+            <select class="form-control" name="s_refund_status" id="s_refund_status" onchange="$('#cancel-table').DataTable().ajax.reload()">
+                <option value="" style="font-weight:bolder">All</option>
+                <option value="1" style="color: green;font-weight:bolder">Refunded</option>
+                <option value="0" style="color: darkred; font-weight: bolder">Not yet refund</option>
+            </select>
+        </div>
+        <!-- /.input group -->
+    </div>
+</div>
+<hr />
+<div class="render-table">
+    @*<div class="btn-group grp_btn_recurring pull-right">
+            <button type="button" class="btn btn-success btn-sm pull-right" id="btn-mask-refund" onclick="clickRefund()" style="width:100%" disabled>
+                Mask as refund
+            </button>
+        </div>*@
+    <h4 style="position:relative;float:right;display:inline-block">Number of invoice: <b id="numof_invoice"></b> @*- Grand total: <b class="text-primary" id="grand_total"></b>*@ - Total estimate: <b class="text-danger" id="total_estimate"></b> - Total refunds: <b class="text-success" id="total_refund"></b></h4>
+    <table class="table table-bordered table-hover" id="cancel-table" style="width:100%">
+        <thead>
+            <tr class="bg-info">
+                <th>Invoice #</th>
+                <th>Salon Name</th>
+                <th>Cancel At</th>
+                <th>Used Time</th>
+                <th>Total</th>
+                <th>Estimate Refund</th>
+                <th>Refund Status</th>
+                <th>Note</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+        <tfoot>
+            @*<tr>
+                    <th colspan="5"><span style="font-weight:normal" class="pull-right">Grand total: <b id="grand_total">2</b></span></th>
+                    <th colspan="4"><span style="font-weight:normal">Total estimate: <b id="total_estimate">2</b></span></th>
+                </tr>*@
+        </tfoot>
+    </table>
+</div>
+
+<div class="modal fade" id="Invoice" role="dialog" style="display: none;">
+    <div class="modal-dialog modal-content" style="min-width:900px">
+        <div class="modal-header">
+            <div class="modal-title pull-left"><h3 style="margin:0">View Invoice</h3></div>
+            <button type="button" class="btn btn-sm btn-warning" style="float:left; margin-left:20px" onclick="document.getElementById('invoice-view').contentWindow.print()"><i class="fa fa-print"></i> Print</button>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">×</span>
+            </button>
+        </div>
+        <div class="modal-body" style="padding:1px;height: 77vh;">
+            <iframe width="100%" height="100%" style="border: none;" id="invoice-view" data-src="@host/order/ImportInvoiceToPDF?_code=%code%&amp;flag=Invoice"></iframe>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modal-mask-refund" role="dialog">
+    <div class="modal-dialog modal-content">
+        <form action="/storereport/maskasrefund" method="post" id="form-mask-refund">
+            <div class="modal-header">
+                <div class="modal-title pull-left"><h4 style="margin:0">Refund note</h4></div>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group grp_cardinfo">
+                    <p><span class="text-danger">*</span> Invoice has been payment with credit card, you can refund to merchant credit card.</p>
+                    <label class="control-label" style="">
+                        <input id="checking-Card" type="checkbox" style="width:20px;height:20px" checked /> <span style="margin-left: 10px;position:relative;top:-5px">Refund to merchant card</span>
+                    </label>
+                    <input id="CheckedCard" type="hidden" style="width:20px;height:20px" name="CheckedCard" value="true" />
+                </div>
+                <div class="form-group">
+                    @*<label class="control-label">Refund amount</label>
+                    <input type="number" min="0" class="form-control" name="Amount" id="Amount" />*@
+
+                    <label>Refund amount</label>
+                    <div class="input-group">
+                        <span class="input-group-addon">$</span>
+                        <input type="number" min="0" step="0.01" class="form-control" name="Amount" id="Amount" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="control-label">Message</label>
+                    <textarea type="text" class="form-control" style="min-height:100px;resize:vertical;" name="MessageText" id="MessageText"></textarea>
+                </div>
+                <input name="Id" id="trans_id" value="" hidden />
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal" aria-label="Close">Close</button>
+                <button type="button" class="btn btn-primary" onclick="maskAsRefund()" id="btn-refund-action">Refund now</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        var t = $("#cancel-table").DataTable({
+            "language": {
+                "processing": '<img src="/Content/ajax-loaders/loading2.gif" width="60px" />',
+                "paginate": {
+                    "first": '<i class="fa fa-angle-double-left" aria-hidden="true"></i>',
+                    "last": '<i class="fa fa-angle-double-right" aria-hidden="true"></i>',
+                    "next": '<i class="fa fa-angle-right" aria-hidden="true"></i>',
+                    "previous": '<i class="fa fa-angle-left" aria-hidden="true"></i>'
+                },
+            },
+            columnDefs: [
+                { orderable: false, targets: 8 }
+            ],
+            //"columnDefs": [{
+            //    "targets": 'no-sort',
+            //    "orderable": false,
+            //}],
+            'paging': true,
+            "pageLength": 10,
+            "serverSide": true, // for process server side
+            "processing": true, // for show progress bar
+            'lengthChange': true,
+            'searching': false,
+            //'ordering': false,
+            'stateSave': false,
+            'info': false,
+            "scrollX": true,
+            'autoWidth': true,
+            "order": [[0, "desc"]],
+            "ajax": {
+                "url": "/storereport/getcancelinvoice",
+                "type": "POST",
+                "datatype": "json",
+                data: function (data) {
+                    data.s_canceldays = $("[name='s_canceldays']").val();
+                    data.s_refund_status = $("[name='s_refund_status']").val();
+                    data.s_partner = $("[name='s_partner']").val();
+                    return data;
+                },
+                'dataSrc': function (data) {
+                    //let totalAmount = data.totalAmount.toLocaleString('en-US', {
+                    //    style: 'currency',
+                    //    currency: 'USD',
+                    //});
+                    let totalEstimate = Math.abs(data.totalEstimate).toLocaleString('en-US', {
+                        style: 'currency',
+                        currency: 'USD',
+                    })
+                    let totalRefund = Math.abs(data.totalRefund).toLocaleString('en-US', {
+                        style: 'currency',
+                        currency: 'USD',
+                    })
+                    //$('#grand_total').html(totalAmount);
+                    $('#total_estimate').html(totalEstimate);
+                    $('#total_refund').html(totalRefund);
+                    $('#numof_invoice').html(data.recordsTotal);
+                    return data.data;
+                }
+            },
+            "columns": [
+                {
+                    name: 'InvoiceNumber',
+                    render: function (data, type, row, meta) {
+                        return `<b>#${row['od'].InvoiceNumber}</b><br /><a class="label label-primary" onclick="show_invoice('${row['od'].OrdersCode}')"><i class="fa fa-search" aria-hidden="true"></i> View receipt</a>`;
+                    },
+                    width: '100px'
+                },
+                {
+                    name: 'CreateOn',
+                    render: function (data, type, row, meta) {
+                        let html = '';
+                        html += `<a target="_blank" href="/merchantman/detail/${row['cm']?.Id}"><b class="text-success">${row['cm'].BusinessName} </b></a>`;
+                        if (row['cm']?.PartnerCode != null && row['cm']?.PartnerCode != '')
+                            html += `<span class="label label-default"> #${row['cm']?.PartnerCode}</span>`;
+                        html += `<br/><i>Owner: ${row['cm']?.OwnerName ?? 'N/A'}</i>`;
+                        html += `<br/><i>Phone: ${row['cm']?.SalonPhone ?? 'N/A'}</i>`;
+                        html += `<br/><i>Email: ${row['cm']?.SalonEmail ?? 'N/A'}</i><br/>`;
+                        return html;
+                    },
+                },
+                {
+                    name: 'Cancel',
+                    render: function (data, type, row, meta) {
+                        let html = '';
+                        //let offset = moment().utcOffset();
+                        //let history = row['od'].StatusHistory?.split('|').filter(c => c.indexOf('Canceled') >= 0).shift().replace(" - At: ", "$").split('$');
+                        //if (history) {
+                        //    let name = history[0].replace('Canceled  - Update by:', '');
+                        //    let date = history[1];
+                        //    let local = moment.utc(date).utcOffset(offset).format("MMM DD, YYYY");
+                        //    html += `${local}<br/><i>by: ${name}</i>`
+                        //}
+
+                        let local = row['createAtStr'];
+                        html += `${local}<br/><i>by: ${row['tr'].CreateBy}</i>`
+                        return html;
+                    },
+                },
+                {
+                    name: 'UsedTime',
+                    render: function (data, type, row, meta) {
+                        let html = '';
+                        let used = row['usedTime'];
+                        html += `<b>${row['lp'].Name}</b> (<i>${row['lp'].Type}</i>)<br/>`;
+                        html += `<span class="label label-primary">${used} day${used == 1 ? '' : 's'}</span>`;
+
+                        //moment().diff(moment(row["Customer"].CreateAt), 'days')
+                        //html += `<b>${row['Store']?.Productname} </b>`;
+
+                        //if (row["RemainingDate"] > 3650) {
+                        //    html += `<label class="label" style="background-color: #00CC00"> Lifetime </label>`
+                        //}
+                        //else if (row["RemainingDate"] >= 0 && row["RemainingDate"] != null) {
+                        //    html += `<label class="label" style="background-color: #00CC00"> ${row["RemainingDate"]} days</label>`
+                        //}
+                        //else if (row["RemainingDate"] < 0 && row["RemainingDate"] != null) {
+                        //    html += `<label class="label" style="background-color: #EE0000"> Expires</label>`
+                        //}
+                        //else {
+                        //    html += `<label class="label label-default"> N/A</label>`
+                        //}
+                        //if (row['Subcription']?.DiscountPercent > 0 && row['Subcription']?.ApplyDiscountAsRecurring == true) {
+                        //    html += `<br/><span class="badge"> Discount as recuring: ${row['Subcription']?.DiscountPercent} % </span>`;
+                        //}
+                        //else if (row['Subcription']?.Discount > 0 && row['Subcription']?.ApplyDiscountAsRecurring == true) {
+                        //    html += `<br/><span class="badge"> Discount as recuring: $ ${row['Subcription']?.Discount} </span>`;
+                        //}
+                        return html;
+                    },
+                },
+                {
+                    name: 'TotalAmout',
+                    render: function (data, type, row, meta) {
+                        let html = '';
+                        html += row['od'].GrandTotal.toLocaleString('en-US', {
+                            style: 'currency',
+                            currency: 'USD',
+                        });
+                        return html;
+                    },
+                },
+                {
+                    name: 'Refund',
+                    render: function (data, type, row, meta) {
+                        let html = '';
+                        html += Math.abs(row['tr'].Amount).toLocaleString('en-US', {
+                            style: 'currency',
+                            currency: 'USD',
+                        });
+                        return html;
+                    },
+                },
+                {
+                    name: 'RefundStatus',
+                    render: function (data, type, row, meta) {
+                        let html = '';
+                        if (row['tr'].PaymentStatus == "Approved" || row['tr'].PaymentStatus == "Success") {
+                            html += `<span class="label label-success">Refund</span>`
+                        }
+                        else {
+                            html += `<span class="label label-danger">Not yet refund</span>`
+                        }
+                        return html;
+                    },
+                },
+                {
+                    name: 'Note',
+                    render: function (data, type, row, meta) {
+                        let html = '';
+                        html += row['tr'].ResponseText ?? '';
+                        return html;
+                    },
+                },
+                {
+                    name: 'Action',
+                    width: "20px",
+                    render: function (data, type, row, meta) {
+                        let html = '';
+                        if (row['tr'].PaymentStatus != "Approved" && row['tr'].PaymentStatus != "Success") {
+                            //html = `<input id="ip_refund" type="checkbox" style="width:20px;height:20px" name="ip_refund" data-storecode="" data-trans="" value="${row['tr'].Id}" onclick="checkRefund()" />`
+                            html += `<button type="button" class="btn btn-warning btn-sm pull-right" onclick="actionRefund('${row['tr'].Id}', '${row['tr'].Card ?? null}', ${Math.abs(row['tr'].Amount ?? 0)})"> Mask as refund</button>`;
+                        }
+                        return html;
+                    },
+                },
+            ]
+        });
+
+        $('#checking-Card').change(function () {
+            if ($(this).is(":checked")) $('#btn-refund-action').html("Refund now");
+            else $('#btn-refund-action').html("Mask as refund");
+            $('#CheckedCard').val($(this).is(":checked"));
+        });
+    });
+
+    function show_invoice(code) {
+        let src = $("#invoice-view").data("src").replace("%code%", code);
+        $("#invoice-view").attr("src", src);
+        $('#Invoice').modal('show');
+    }
+
+    function actionRefund(trans_id, card_id, amount) {
+        $('#checking-Card').prop("checked", true);
+        $('#CheckedCard').val(true);
+        $('#MessageText').val('');
+        $('#Amount').val(amount ?? 0);
+        if (card_id == 'null' || card_id == '') $('.grp_cardinfo').hide();
+        else $('.grp_cardinfo').show();
+        $('#trans_id').val(trans_id);
+        $('#modal-mask-refund').modal();
+    }
+
+    function maskAsRefund() {
+        let confirmtxt = 'Are you want to mask as refund this subscription?';
+        if ($(this).is(":checked")) confirmtxt = 'Are you want to refund now?';
+        if (confirm(confirmtxt)) {
+            overlayOn();
+            $('#form-mask-refund').submit();
+        }
+    }
+
+    $('#form-mask-refund').ajaxForm(function (data) {
+        if (data[0]) {
+            var mess = $.parseJSON('{"text":"' + data[1] + '", "layout":"top", "type":"success"}');
+            noty(mess);
+        } else {
+            var mess = $.parseJSON('{"text":"' + data[1] + '", "layout":"top", "type":"error"}');
+            noty(mess);
+        }
+        overlayOff();
+        $("#cancel-table").DataTable().ajax.reload();
+        $('#modal-mask-refund').modal('hide');
+    })
+</script>

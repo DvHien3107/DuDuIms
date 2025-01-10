@@ -1,0 +1,148 @@
+﻿
+@{
+    Layout = "";
+}
+
+
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title> </title>
+    <!-- Tell the browser to be responsive to screen width width=device-width -->
+    <meta content="initial-scale=1, maximum-scale=1, user-scalable=yes" name="viewport">
+    <!-- Bootstrap 3.3.7 -->
+    <link rel="stylesheet" href="/content/admin/bower_components/bootstrap/dist/css/bootstrap.min.css">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="/content/admin/bower_components/font-awesome/css/font-awesome.min.css">
+
+
+    <!-- Google Font -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700,300italic,400italic,600italic">
+
+    <!-- jQuery 3 -->
+    <script src="~/Content/Admin/bower_components/jquery/dist/jquery.min.js"></script>
+    <style>
+
+        .footer-area {
+            background: #272626;
+            color: #fff;
+            position: relative;
+            padding: 25px 0 15px;
+        }
+        .social i {
+            font-size: 30px;
+            padding: 0 10px;
+        }
+
+        .social i {
+            color: #fff;
+        }
+
+        .social .fa-facebook:hover {
+            color: #3b5998;
+        }
+
+        .social .fa-twitter:hover {
+            color: #55acee;
+        }
+
+        .social .fa-youtube:hover {
+            color: #ed302f;
+        }
+        .custom-html-widget i {
+            width:20px;
+        }
+    </style>
+
+</head>
+<body>
+    <!-- Static navbar -->
+    <nav class="navbar navbar-default navbar-static-top">
+        <div class="container">
+            <div class="navbar-header">
+                <img class="navbar-brand" style="padding:0px" src="~/Upload/Img/logo_enrichcous.png" />
+            </div>
+            <div id="navbar" class="navbar-collapse collapse">
+               
+                <ul class="nav navbar-nav navbar-right">
+                    <li><span style="line-height:50px;">Hi, <b>@ViewBag.MemberName</b></span></li>
+                </ul>
+            </div><!--/.nav-collapse -->
+        </div>
+    </nav>
+
+
+    <div class="container">
+
+      
+        <div class="jumbotron">
+            @if (ViewBag.Page == "Verification")
+            {
+                <h1 style="font-size:30px;text-align:center;">GOOGLE AUTH</h1>
+                <p>To make sure you're still using organizational email for your work.</p>
+                <p>We need you to confirm by clicking the button below and login with enrich's email account.</p>
+                <p>Thank you for your cooperation !</p>
+                <p style="text-align:center;">
+                    <button class="btn btn-default" onclick="javascript:location.href='/'" style="background:#5f5f5f;color:white;"><i class="fa fa-angle-double-left" aria-hidden="true"></i> BACK TO HOME </button>
+                    <button onclick="javascript:location.href='/MemberMan/VerifyGoogleAuthUserConfirm?key=@ViewBag.Key'" type="button" class="btn btn-primary">VERIFICATION <i class="fa fa-angle-double-right" aria-hidden="true"></i></button>
+                </p>
+            }
+            else
+            {
+                 <h1 class="text text-success"  style="color:#3c763d !important;font-size:30px;text-align:center;text-transform:uppercase;"><i class="fa fa-check" aria-hidden="true"></i> authorized google</h1>
+                <p style="color:#3c763d !important;">Your account has been verified by google authorization. Thank you for your cooperation!</p>
+                <p style="text-align:center;">
+                    <button class="btn btn-default" onclick="javascript:location.href='/'" style="background:#5f5f5f;color:white;"><i class="fa fa-angle-double-left" aria-hidden="true"></i> BACK TO HOME </button>
+
+                </p>
+            }
+        </div>
+
+    </div> 
+
+    <footer class="footer-area">
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-12 col-xs-12">
+                    <div class="col-md-4">
+                        <div class="widget_text forms-logo">
+                            <img style="max-width: 100%;" src="~/Areas/Page/Content/img/logo-light.png">
+                            <div id="black-studio-tinymce-2" class="widget widget_black_studio_tinymce">
+                                <div class="textwidget">
+                                    <p style="line-height: 30px;">Atlanta, GA</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-5 post-right">
+                        <div class="widget_text about">
+                            <h4>GET IN TOUCH</h4>
+                            <div class="textwidget custom-html-widget">
+                                <p>Enrich & Co</p>
+                                <p><i class="fa fa-map-marker"></i> 855 Metropolian Pkwy 30310 United States.</p>
+                                <p><i class="fa fa-envelope"></i> contact@enrichcous.com</p>
+                                <p><i class="fa fa-phone"></i> +1-8000-7425-877</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="widget_text social">
+                            <h4>FOLLOW US</h4>
+                            <a href="#"><i class="fa fa-facebook"></i></a>
+                            <a href="#"><i class="fa fa-twitter"></i></a>
+                            <a href="#"><i class="fa fa-youtube"></i></a>
+                          
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+    </footer>
+
+
+</body>
+</html>

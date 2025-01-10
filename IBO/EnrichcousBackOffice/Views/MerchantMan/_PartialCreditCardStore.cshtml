@@ -1,0 +1,176 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.C_CustomerCard>
+<table id="list_creditcard" class="table table-striped table-bordered">
+    <thead>
+        <tr>
+            <th>No.</th>
+            <th>Card Reference</th>
+            <th>Merchant Ref</th>
+            <th>Date Registion</th>
+            <th class="col-md-1">Default</th>
+        </tr>
+    </thead>
+    <tbody>
+        @{ int i = 1; }
+        @foreach (var CreditCard in Model)
+        {
+            <tr>
+                <td>@(i++)</td>
+                <td>@CreditCard.CardReference</td>
+                <td>@CreditCard.MerchantReference</td>
+                <td>
+                    <span id="localtime-@CreditCard.Id">
+                        <script>convertLocalTime("@CreditCard.Id", "@CreditCard.CreateAt")</script>
+                    </span>
+                </td>
+                <td>
+                    <label class="radio_container">
+                        <input type="radio" value="@CreditCard.Id" name="default_creditcard" onclick="radio_default_click(this)" @if (CreditCard.IsDefault == true) { @Html.Raw("checked") }>
+                        <i class="radio_checkmark"></i>
+                    </label>
+                </td>
+            </tr>
+        }
+
+    </tbody>
+</table>
+<a class="btn btn-success" onclick="$('#Modal_save_creditcard').modal('show')">
+    <i class="fa fa-plus"></i> Add new credit card
+</a>
+
+<div class="modal" id="Modal_save_creditcard" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Credit card registration</h2>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="SaveCreditCardForm">
+                <div class="modal-body">
+                    <input type="hidden" name="CustomerCode" value="@ViewBag.CustomerCode" />
+                    <div class="row form-group">
+                        <div class="col-md-6">
+                            <label>MERCHANTREF <span style="color: red">*</span></label>
+                            <input name="MERCHANTREF" required class="form-control" />
+                        </div>
+                        <div class="col-md-6">
+                            <label>CARDEXPIRY <span style="color: red">*</span></label>
+                            <input name="CARDEXPIRY" required class="form-control" />
+                        </div>
+                    </div>
+                    <div class="row form-group">
+                        <div class="col-md-6">
+                            @{ List<string> cardTypes = new List<string>(new string[] {
+                                                                                               "Visa", "MasterCard", "Laser", "Maestro", "UK Domestic Maestro",
+                                                                                               "Electron", "Visa Debit", "Debit MasterCard", "American Express", "JCB", "Diners", "Solo"});}
+                            <label>CARDTYPE <span style="color: red">*</span></label>
+                            <select name="CARDTYPE" class="form-control">
+                                @foreach (var card in cardTypes)
+                                {
+                                    <option>@card</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label>CARDNUMBER <span style="color: red">*</span></label>
+                            <input name="CARDNUMBER" required class="form-control" />
+                        </div>
+
+                    </div>
+                    <div class="row form-group">
+                        <div class="col-md-6">
+                            <label>CARDHOLDERNAME <span style="color: red">*</span></label>
+                            <input name="CARDHOLDERNAME" required class="form-control" />
+                        </div>
+                    </div>
+                    <div class="row form-group">
+                        <div class="col-md-6">
+                            <label>CVV</label>
+                            <input name="CVV" class="form-control" />
+                        </div>
+                        <div class="col-md-6">
+                            <label>ISSUENO</label>
+                            <input name="ISSUENO" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="row form-group">
+                        <div class="col-md-6">
+                            <label>EMAIL</label>
+                            <input name="EMAIL" class="form-control" />
+                        </div>
+                        <div class="col-md-6">
+                            <label>PHONE</label>
+                            <input name="PHONE" class="form-control" />
+                        </div>
+                    </div>
+                    <div id="result"> </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<link href="~/Content/Admin/dist/css/Radio.css" rel="stylesheet" />
+<script src="http://malsup.github.com/jquery.form.js"></script>
+<script type="text/javascript">
+    $(function () {
+        $('#list_creditcard').DataTable();
+        $('#SaveCreditCardForm').submit(function () {
+            $(this).ajaxSubmit({ url: '/Merchantman/SaveCreditCard', type: 'post', success: ShowResponse });
+            return false;
+        });
+
+
+
+    })
+
+    function ShowResponse(data) {
+        if (data[0] == false) {
+            var Error = $.parseJSON('{"text":"' + data[1] + '", "layout":"top", "type":"error"}');
+            noty(Error);
+        }
+        else {
+            var n = parseInt($("#list_creditcard tr:last-child td:first-child").text() || 0) + 1;
+            $("#list_creditcard tbody").append(
+                "<tr><td>" + n + "</td>" +
+                "<td>" + data[1]["NuveiResponse_CARDREFERENCE"] + "</td>" +
+                "<td>" + data[1]["MERCHANTREF"] + "</td>" +
+                "<td>" + data[2] + "</td>" +
+                "<td><label class='radio_container'>" +
+                "<input type='radio' value='" + data[1]["Id"] + "' name='default_creditcard' onclick='radio_default_click(this)'>" +
+                "<i class='radio_checkmark'></i>" +
+                "</label></td></tr>");
+            var Success = $.parseJSON('{"text":"Credit card registration successful!", "layout":"top", "type":"success"}');
+            noty(Success);
+        }
+    }
+
+    function radio_default_click(radio) {
+        var Id = $(radio).val();
+        $.ajax({
+            method: "POST",
+            url: "/Merchantman/SetDefaultCreditCard",
+            data: { Id },
+            dataType: "json"
+        })
+            .done(function (data) {
+                if (data[0] == true) {
+                    var Success = $.parseJSON('{"text":"' + data[1] + '", "layout":"top", "type":"success"}');
+                    noty(Success);
+                }
+                else {
+                    var Error = $.parseJSON('{"text":"' + data[1] + '", "layout":"top", "type":"error"}');
+                    noty(Error);
+                }
+            })
+            .fail(function () {
+            })
+
+
+    };
+
+</script>

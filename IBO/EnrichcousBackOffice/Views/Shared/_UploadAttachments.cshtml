@@ -1,0 +1,148 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.UploadMoreFile>
+@{
+    bool upload = true;
+    bool.TryParse(ViewData["upload"]?.ToString() ?? "true", out upload);
+    int type = 1;
+    var unique = ViewData["unique"]?.ToString() ?? Guid.NewGuid().ToString("N");
+}
+<style>
+    .custom-file-upload {
+        background-color: #eee;
+        border:1px solid #ccc;
+        color: #333;
+        padding: 1px 5px;
+        margin-top: 5px;
+        border-radius: 5px;
+        cursor: pointer !important;
+        float: right !important;
+    }
+
+        .custom-file-upload i {
+            padding-right: 7px;
+        }
+
+        .custom-file-upload:hover {
+            background: #ddd;
+            border: 1px solid #aaa;
+        }
+</style>
+<div id="morefiles_@unique" style="contain: content;">
+    <div id="list_morefiles_@unique" class="list_morefiles" style="margin: 0 -5px">
+        @if (Model != null)
+        {
+            foreach (var item in Model)
+            {
+                <div class='upload_item'>
+                    <input id="@item.UploadId" name="@item.UploadId" type="hidden" value="@item.FileName " />
+                    <input type="hidden" name="upload_id_@unique" value="@item.UploadId" />
+                    <div style="padding:5px;padding-bottom:0" class="col-md-4 " id="review_@item.UploadId">
+                        <div class="col-md-12" style="border: 1px dotted #2b97e6; padding: 3px; border-radius: 5px">
+                            <table class="col-md-12" style="">
+                                <tr>
+                                    <td style="width:1px">
+                                        <div style="overflow-x:hidden; max-width:100px">
+                                            <img id="img_@item.UploadId" style="height:30px;margin-left:0" alt="xem trước" src="@item.FileName" />
+                                        </div>
+                                    </td>
+                                    <td style="text-align:right">
+                                        <a style="padding-left:5px" id="fname_@item.UploadId" class="upload_name" title="Download this file" href="/Upload/DownloadFile/@item.UploadId">@item.FileName.Split('/').LastOrDefault()</a>
+                                    </td>
+                                    <td style="width:1px">
+                                        @if (upload)
+                                        {
+                                            <a onclick="upload_remove_@(unique)('@item.UploadId')" href="javascript:void(0)" data-toggle="tooltip" class="pull-right" title="Delete" style="color:red">
+                                                <i class="glyphicon glyphicon-trash"></i>
+                                            </a>
+                                        }
+
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+    @if (upload)
+    {
+        <div class='upload_item template'>
+            <input type="file" id="{{id}}" name="{{id}}" style="display:none" onchange="reviewUpload(this);" />
+            <input type="hidden" name="upload_id_@unique" value="{{id}}" />
+            <div style="display: none; padding:5px; padding-bottom:0" class="col-md-4" id="review_{{id}}">
+                <div class="col-md-12" style="border: 1px dotted #2b97e6; padding: 3px; border-radius: 5px">
+
+                    <table class="col-md-12" style="">
+                        <tr>
+                            <td style="width:1px"><div style="overflow-x:hidden; max-width:100px"><img id="img_{{id}}" style="height:30px;margin-left:0" alt="xem trước" /></div></td>
+                            <td style="text-align:right">
+                                <span style="padding-left:5px" id="fname_{{id}}" class="upload_name"></span>
+                            </td>
+                            <td style="width:1px">
+                                <a onclick="upload_remove_@(unique)('{{id}}')" href="javascript:void(0)" data-toggle="tooltip" class="pull-right" title="Delete" style="color:red">
+                                    <i class="glyphicon glyphicon-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    </table>
+
+                </div>
+            </div>
+        </div>
+        <div style="">
+            <span class="custom-file-upload" onclick="attach_more_files_@(unique)();">
+                <span class="fa fa-paperclip"></span> +Add file
+            </span>
+        </div>
+        <div class="clearfix"></div>
+
+    }
+</div>
+
+<script type="text/javascript">
+    $(function () {
+        var icons = window.FileIcons;
+        $("#list_morefiles_@unique img").each(function (i, v) {
+            var strCheckImg = new RegExp(/\.(jpe?g|png|gif|bmp|svg)$/i);
+            var fname = $(v).attr("src").toLowerCase();
+            if (strCheckImg.test(fname) == false) {
+                var class_name = icons.getClassWithColor(fname);
+                $(v).replaceWith($("<div style='font-size:30px;line-height:30px;height: 30px; color: var(--main-color-1)' class=" + class_name + "></div>"));
+            }
+        });
+        const previews = new ImgPreviewer('#list_morefiles_@unique', {
+            scrollbar: true
+        });
+
+    })
+    function attach_more_files_@(unique)() {
+            var id = uuidv4();
+            var content = $($('<div>').append($("#morefiles_@unique .template").clone().removeClass("template")).html().replace(/{{id}}/g, id));
+            content.find("#" + id).trigger("click");
+        $("#list_morefiles_@unique").append(content);
+        const previews = new ImgPreviewer('#list_morefiles_@unique', {
+            scrollbar: true
+        });
+    }
+    function upload_remove_@(unique)(id) {
+        $("#"+id).closest(".upload_item").remove();
+        const previews = new ImgPreviewer('#list_morefiles_@unique', {
+            scrollbar: true
+        });
+    }
+</script>
+<style>
+    .template {
+        display: none;
+    }
+
+    .upload_name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-inline-box;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;
+        text-align: center;
+        word-break: break-all;
+    }
+</style>

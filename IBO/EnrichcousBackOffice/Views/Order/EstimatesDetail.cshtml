@@ -1,0 +1,1480 @@
+﻿@model EnrichcousBackOffice.Models.O_Orders
+@using EnrichcousBackOffice.Models;
+@using EnrichcousBackOffice.AppLB;
+@using EnrichcousBackOffice.Utils.IEnums
+@using Inner.Libs.Helpful
+@{
+    WebDataModel db = new WebDataModel();
+    string url_back = ViewBag.Url_Back;//["/order" || "/order/estimates"]
+    ViewBag.Title = "Invoice Detail";
+    string _type = "Invoices";
+    //var list_status = new List<string>();
+    //var is_estimate = url_back.Contains("estimates");
+    Dictionary<string, bool> p = ViewBag.p;
+
+    P_Member cMem = Authority.GetCurrentMember();
+    var checkActivated = db.Store_Services.Where(s => s.OrderCode == Model.OrdersCode && s.Active == 1).Count() > 0;
+    var customer = db.C_Customer.FirstOrDefault(c => c.CustomerCode == Model.CustomerCode);
+
+    var detectIframe = Request.Params["mode"] == "iframe";
+    if (detectIframe)
+    {
+        Layout = "~/Views/Shared/_LayoutIframe.cshtml";
+    }
+    else
+    {
+        Layout = "~/Views/Shared/_Layout.cshtml";
+    }
+
+    //if (!is_estimate && Model.Status != UserContent.ORDER_STATUS.Completed.ToString())
+    //{
+    //    list_status = new List<string> { UserContent.ORDER_STATUS.Submitted.ToString(), UserContent.ORDER_STATUS.Payment_cleared.ToString().Replace("_", " "), UserContent.ORDER_STATUS.Completed.ToString() };
+    //}
+    //if (is_estimate && Model.Status != UserContent.ORDER_STATUS.Submitted.ToString() && Model.Status != UserContent.ORDER_STATUS.Closed.ToString() && Model.Status != UserContent.ORDER_STATUS.Completed.ToString() && Model.Status.Replace(" ", "_") != UserContent.ORDER_STATUS.Payment_cleared.ToString())
+    //{
+    //    list_status = new List<string> { UserContent.ORDER_STATUS.Lead.ToString(), UserContent.ORDER_STATUS.Lost.ToString(), UserContent.ORDER_STATUS.Closed.ToString() };
+    //}
+}
+<style>
+    .select2 {
+        width: 100% !important;
+    }
+</style>
+<section class="content-header">
+    <h1>
+        @ViewBag.Title
+        <small>@("Invoice")</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Dashboard</a></li>
+        <li><a href="@url_back"><i class="fa fa-files-o"></i> @(url_back.Contains("estimates") ? "Estimate" : "Invoice")</a></li>
+        <li><i class="fa fa-file-o"></i> @ViewBag.Title</li>
+    </ol>
+</section>
+<link href="~/Content/switch.css" rel="stylesheet" />
+<!-- Main content -->
+<section class="content">
+    <div class="row">
+
+        @if (TempData["e"] != null)
+        {
+            <div class="alert alert-warning alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+            </div>
+        }
+        else if (TempData["s"] != null)
+        {
+            <div class="alert alert-success alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+            </div>
+        }
+
+        <div class="col-md-9">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <div class="pull-left">
+                        <input type="hidden" name="hd_orderid" value="@Model.Id" />
+                        <input type="hidden" name="hd_ordercode" value="@Model.OrdersCode" />
+                        <input type="hidden" name="hd_urlback" value="@url_back" />
+                        <input type="hidden" name="cusid" value="@ViewBag.customerId" />
+                        <input type="hidden" name="is_estimete" value="0" />
+                        <h3 class="box-title">
+                            Detail: #@(Model.OrdersCode)&nbsp;&nbsp;&nbsp;
+                        </h3>
+                        <span class="label label-default">@(string.IsNullOrEmpty(Model.PartnerCode) ? "" : Model.PartnerCode)</span>
+                        @*<span id="status_show">*@
+                        @*@if (_type == "Estimates")
+                            {
+                                if (Model.Status == "Lead" || Model.Status == "Lost")
+                                {
+                                    <span class="label @(Model.Status == "Lead" ? Html.Raw("label-primary") : Html.Raw("label-warning"))">@(Model.Status)</span>
+                                }
+                                else if (Model.Status == "Submitted")
+                                {
+                                    <span class="label label-success">Submited</span>
+                                }
+                                else
+                                {
+                                    <span class="label label-default">Closed</span>
+                                }
+                            }
+                            else
+                            {*@
+                        @{ var label = "danger";
+                            switch (Ext.EnumParse<InvoiceStatus>(Model.Status))
+                            {
+                                case InvoiceStatus.Open: label = "default"; break;
+                                case InvoiceStatus.Paid_Wait: label = "warning"; break;
+                                case InvoiceStatus.Closed: label = "success"; break;
+                                case InvoiceStatus.PaymentLater: label = Model.DueDate > DateTime.UtcNow ? "primary" : "danger"; break;
+                            }
+                        }
+                        @if (Model.Status == InvoiceStatus.PaymentLater.ToString())
+                        {
+                            @*<span class="label label-@(label)" style="cursor:pointer" @(Model.DueDate.HasValue ? "onclick=payment_later('" + Model.OrdersCode + "')" : "")>
+                                    @(Ext.EnumParse<InvoiceStatus>(Model.Status).Code<string>()) - @Model.DueDate.Value.ToString("MMM dd, yyyy")
+                                    <i class="fa fa-pencil" aria-hidden="true"></i>
+                                </span>*@
+
+                            <div class="dropdown" style="display:inline-block">
+                                <span class="label label-@(label) dropdown-toggle" type="button" data-toggle="dropdown" style="cursor:pointer">
+                                    @(Ext.EnumParse<InvoiceStatus>(Model.Status).Code<string>()) - @Model.DueDate.Value.ToString("MMM dd, yyyy")
+                                    <span class="caret"></span>
+                                </span>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a href="#" @*onclick="payment_later('@Model.OrdersCode')"*@
+                                           data-toggle="modal" data-target="#modal-set-payment-later" class="btn btn-sm bg-aqua-active"><i class="fa fa-hourglass-start"></i> Set payment later</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        }
+                        else if (Model.Status != InvoiceStatus.Open.ToString())
+                        {
+                            <span class="label label-@(label)" style="cursor:pointer">
+                                @(Ext.EnumParse<InvoiceStatus>(Model.Status).Code<string>())
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="label label-@(label)">@(Ext.EnumParse<InvoiceStatus>(Model.Status).Code<string>())</span>
+                        }
+
+                        @if (string.IsNullOrEmpty(Model.UpdatedHistory))
+                        {
+                            <i style="color:grey;font-size:0.85em;margin:5px">
+                                @EnrichcousBackOffice.AppLB.CommonFunc.DateTimeRemain(Model.CreatedAt ?? DateTime.UtcNow)
+                            </i>
+                        }
+                        else
+                        {
+                            try
+                            {
+                                string dateRemain = string.Empty;
+                                var lastupdate = Model.UpdatedHistory.Split('|').Last().Split('-').First();
+                                dateRemain = EnrichcousBackOffice.AppLB.CommonFunc.DateTimeRemain(DateTime.Parse(lastupdate));
+                                <i style="color:grey;font-size:0.85em;margin:5px">@dateRemain</i>
+                            }
+                            catch (Exception)
+                            {
+                                <i style="color:grey;font-size:0.85em;margin:5px">
+                                    @EnrichcousBackOffice.AppLB.CommonFunc.DateTimeRemain(Model.CreatedAt ?? DateTime.UtcNow)
+                                </i>
+                            }
+                        }
+
+
+                        @*</span>*@
+                    </div>
+
+                    <style type="text/css">
+                        #status_change_btn > .dropdown-menu {
+                            left: 50px;
+                            border-radius: 10px;
+                            border-color: lightgray;
+                        }
+
+                            #status_change_btn > .dropdown-menu > li:not(.disabled) > a {
+                                padding: 10px;
+                                margin: 2px 5px;
+                                border: 1px solid #e0e0e0;
+                                border-radius: 5px;
+                            }
+
+                                #status_change_btn > .dropdown-menu > li:not(.disabled) > a:hover {
+                                    border: 2px solid deepskyblue;
+                                    padding: 9px;
+                                    background-color: #fff;
+                                    color: deepskyblue;
+                                }
+
+                            #status_change_btn > .dropdown-menu > li.disabled > a {
+                                background-color: #fcfcfc;
+                                padding: 10px;
+                                margin: 2px 5px;
+                                border-radius: 5px;
+                            }
+
+                                #status_change_btn > .dropdown-menu > li.disabled > a:hover {
+                                    background-color: #fcfcfc;
+                                }
+
+                        .dropdown-submenu {
+                            position: relative;
+                        }
+
+                            .dropdown-submenu .dropdown-menu {
+                                top: 0;
+                                left: -110% !important;
+                                margin-top: -1px;
+                                width: 175px;
+                            }
+
+                        .dropdown button, .dropdown a {
+                            width: 100%;
+                            display: block;
+                            text-align: left;
+                        }
+
+                        .dropdown-menu > li:not(:last-child) {
+                            padding-bottom: 3px;
+                        }
+
+                        .dropdown-menu > i {
+                            width: 15px;
+                        }
+
+                        .icon-dropdown {
+                            width: 15px;
+                            margin-right: 0px !important;
+                        }
+
+                        .dropdown-menu .disabled {
+                            background: #eee;
+                        }
+                    </style>
+                    <div class="pull-right box-tools">
+                        <a href="@ViewBag.Url_Back" class="btn btn-sm btn-default" onclick="overlayOn()"><i class="fa fa-arrow-left"></i> Go back</a>
+
+                        <div class="btn-group" style="margin-left: 5px">
+                            <div class="dropdown" id="dropdown-action" style="display: inline-block; background: #eee">
+                                <button class="btn btn-sm btn-info dropdown-toggle" type="button" data-toggle="dropdown">
+                                    Action
+                                    <span class="caret"></span>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <button type="button" class="btn btn-sm bg-olive" onclick="showPopupSalesPerson('@Model.OrdersCode')">
+                                            <i class="icon-dropdown fa fa-refresh"></i> Change Sales Person
+                                            <img id="change_salesperson" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                                        </button>
+                                    </li>
+                                    <li>
+                                        <button type="button" class="btn btn-sm btn-primary" onclick="importPDF('@Model.OrdersCode', '@_type')">
+                                            <i class="icon-dropdown fa fa-file-pdf-o"></i> Export to PDF
+                                            <img id="import_loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                                        </button>
+                                    </li>
+                                    @if ((Model.Status != InvoiceStatus.Canceled.ToString() && Model.Status != InvoiceStatus.Closed.ToString()) || (Model.Status == InvoiceStatus.Closed.ToString() && p.Any(k => k.Key.Equals("orders_updateclose")) == true && p["orders_updateclose"] == true))
+                                    {
+                                        <li>
+                                            @if (ViewBag.actived_store == true && Model.Status == InvoiceStatus.Closed.ToString())
+                                            {
+                                                <button type="button" class="btn btn-sm btn-danger" id="cancel-selected">
+                                                    <i class="icon-dropdown fa fa-ban"></i> Cancel
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button type="button" class="btn btn-sm btn-danger" onclick="change_status('Canceled')">
+                                                    <i class="icon-dropdown fa fa-ban"></i> Cancel
+                                                </button>
+                                            }
+                                        </li>
+                                    }
+                                    @if (Model.Status != InvoiceStatus.Closed.ToString() && Model.IsDelete != true)
+                                    {
+
+
+                                        @*<li class="dropdown-submenu">
+                                                <button href="#" tabindex="-1" class="btn btn-warning submenu btn-sm" style="padding: 4px 10px;color:white;">
+                                                    <i class="icon-dropdown fa fa-gear"></i>
+                                                    Change Status
+                                                    <img style="display:none" class="img_loader" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                                                    <span class="caret"></span>
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    @foreach (var status in Enum.GetValues(typeof(InvoiceStatus)).Cast<InvoiceStatus>().ToList())
+                                                    {
+                                                        var curS = Ext.EnumParse<InvoiceStatus>(Model.Status);
+                                                        <li class="@status.ToString() @(curS >= status && !(curS == InvoiceStatus.Canceled && status < InvoiceStatus.Closed) ? "disabled" : "")">
+                                                            <a data-status="@status.ToString()" onclick="@((curS < status||(curS == InvoiceStatus.Canceled && status < InvoiceStatus.Closed ))?"change_status('" + status.ToString() + "')":"event.stopPropagation()")" data-toggle="tooltip" title="@status.Text()">@(status.Code<string>())</a>
+                                                        </li>
+                                                    }
+                                                </ul>
+                                            </li>*@
+
+                                        <li>
+                                            <a class="btn btn-sm btn-warning" href="/order/sendetimatesinvoice?_code=@Model.OrdersCode&flag=@_type" target="_blank" style="padding:5px 10px; width:100%; color:white !important">
+                                                <i class="icon-dropdown fa  fa-file"></i> Email to merchant
+                                            </a>
+                                        </li>
+
+                                        if (Model.Status == InvoiceStatus.Open.ToString() || Model.Status == InvoiceStatus.PaymentLater.ToString())
+                                        {
+                                            <li class="dropdown-submenu">
+                                                <button type="button" class="btn btn-info btn-sm submenu dropdown-toggle" data-toggle="dropdown" aria-expanded="true">
+                                                    <i class="icon-dropdown fa fa-usd"></i> Payment
+                                                    <span class="caret"></span>
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    @if (string.IsNullOrEmpty(Model.PartnerCode))
+                                                    {
+                                                        <li><a href="#" onclick="resend_payment_email('@Model.OrdersCode')"><i class="fa fa-envelope"></i>Email payment link</a></li>
+                                                        <li><a href="#" onclick="resend_payment_sms('@Model.OrdersCode')"><i class="fa fa-comment"></i>SMS payment link</a></li>
+                                                    }
+                                                    <li><a href="#" data-toggle="modal" data-target="#view_payment_link"><i class="fa fa-link"></i>Get payment link</a></li>
+                                                    @if (p.Any(k => k.Key.Equals("orders_payment_later")) == true && p["orders_payment_later"] == true)
+                                                    {
+                                                        <li><a href="#" @*onclick="payment_later('@Model.OrdersCode')"*@ data-toggle="modal" data-target="#modal-set-payment-later"><i class="fa fa-hourglass-start"></i>Payment later</a></li>
+                                                    }
+                                                    @if (p.Any(k => k.Key.Equals("orders_payment_foc")) == true && p["orders_payment_foc"] == true)
+                                                    {
+                                                        <li><a href="#" onclick="FOC('@Model.OrdersCode')"><i class="fa fa-check-circle"></i>FOC</a></li>
+                                                    }
+                                                    <li><a href="#" onclick="$('#iframe_payment').attr('src', '@ViewBag.paymentLink')" data-toggle="modal" data-target="#pay_with_card"><i class="fa fa-credit-card-alt"></i>Pay with card</a></li>
+                                                    @if (!string.IsNullOrEmpty(Model.PartnerCode))
+                                                    {
+                                                        <li><a href="#" onclick="$('#iframe_payment').attr('src', '@ViewBag.paymentLinkPartner')" data-toggle="modal" data-target="#pay_with_card"><i class="fa fa-credit-card-alt"></i>@Model.PartnerCode pay with card</a></li>
+                                                        <li><a href="#" onclick="paymentbyMAC()"><i class="fa fa-money"></i>@Model.PartnerCode PAY</a></li>
+                                                    }
+                                                    <li><a href="#" data-toggle="modal" data-target="#payment_other"><i class="fa fa-money"></i>Other payment</a></li>
+                                                </ul>
+
+                                                <!--<div class="dropdown" style="display: inline-block; background: #eee">-->
+                                                <!--</div>-->
+
+                                            </li>
+                                        }
+                                    }
+                                    <li>
+                                        @if (p.Any(k => k.Key.Equals("orders_delete")) == true && p["orders_delete"] == true && (((Model.Status == InvoiceStatus.Canceled.ToString()) && Model.IsDelete != true)))
+                                        {
+                                            //{
+                                            <a href="/order/delete/@Model.Id" class="btn btn-danger btn-sm" style="display: inline-block; margin-right: 10px; color: white !important; padding: 5px 12px;"
+                                               onclick="return confirm('Do you want to delete this invoice?')"><i class="fa fa-trash"></i> Delete</a>
+                                            //}
+                                        }
+                                        @if (p.Any(k => k.Key.Equals("orders_delete")) == true && p["orders_delete"] == true && Model.Status != InvoiceStatus.Paid_Wait.ToString() && Model.Status != InvoiceStatus.Closed.ToString() && Model.IsDelete == true)
+                                        {
+                                            <a href="/order/recovery/@Model.Id" class="btn btn-warning btn-sm" style="display: inline-block; margin-right: 10px; color: white !important; padding: 5px 12px;"
+                                               onclick="return confirm('Do you want to recovery this invoice?')"><i class="fa fa-reply"></i> Recovery</a>
+                                        }
+
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        @if (((Model.Status != InvoiceStatus.Closed.ToString()
+                            && Model.Status != InvoiceStatus.Paid_Wait.ToString())
+                            || p.Any(k => k.Key.Equals("orders_updateclose")) == true && p["orders_updateclose"] == true)
+                            && Model.Status != InvoiceStatus.Canceled.ToString()
+                            && Model.IsDelete != true
+                            && p.Any(k => k.Key.Equals("orders_update")) == true && p["orders_update"] == true)
+                        {
+                            if (cMem.RoleCode.Contains("admin") && Model.Status != InvoiceStatus.Open.ToString())
+                            {
+                                <a @*href="/order/save/@Model.Id?url_back=@(Request["url_back"]?.Replace("'", ""))"*@
+                                   class="btn btn-sm btn-warning" style="margin-left: 5px"
+                                   onclick="editInvoieClosed()">
+                                    <i class="fa fa-edit"></i> Edit
+                                </a>
+                            }
+                            else if (ViewBag.actived_store)
+                            {
+                                <a class="btn btn-warning disabled btn-sm" style="display: inline-block; pointer-events:auto; margin-left: 5px"
+                                   onclick="warning('This order is available with an active plan. You can\'t edit this order.')"><i class="fa fa-edit"></i> Edit</a>
+                            }
+                            else
+                            {
+                                <a href="/order/save/@Model.Id?url_back=@(Request["url_back"]?.Replace("'", ""))"
+                                   class="btn btn-sm btn-warning" style="margin-left: 5px" onclick="overlayOn()">
+                                    <i class="fa fa-edit"></i> Edit
+                                </a>
+                            }
+                        }
+
+
+                        @if (Model.Status == InvoiceStatus.Closed.ToString() || Model.Status == InvoiceStatus.Paid_Wait.ToString() || Model.Status == InvoiceStatus.PaymentLater.ToString())
+                        {
+                            <a href="/merchantman/detail/@ViewBag.customerId" class="btn btn-sm btn-primary" style="margin-left: 5px" onclick="overlayOn()"><i class="fa fa-user" aria-hidden="true"></i> Dashboard</a>
+                        }
+
+                    </div>
+                </div>
+                <!-- /.box-header -->
+                <div class="box-body">
+                    <div class="col-md-12">
+                        @if (ViewBag.subscription == true)
+                        {
+                            <form>
+                                <div class="form-group" style="background-color:lightsalmon;border-radius:3px;box-shadow:grey 3px 3px;padding:5px 5px">
+                                    <label style="vertical-align:top;font-weight:normal;padding:5px;font-weight:800;margin-right:20px">MANGO POS</label>
+                                    <div class="switch">
+                                        <input type="radio" class="switch-input" name="pos" value="off" id="posOff" onclick="switch_mango('OFF')" checked>
+                                        <label for="posOff" class="switch-label switch-label-off">OFF</label>
+                                        <input type="radio" class="switch-input" name="pos" value="on" id="posOn" onClick="switch_mango('ON')">
+                                        <label for="posOn" class="switch-label switch-label-on">ON</label>
+                                        <span class="switch-selection">OFF</span>
+                                    </div>
+
+                                    <img src="~/Content/ajax-loaders/ajax-loader-1.gif" width="20" style="display:none;vertical-align:top;margin-top:10px" id="switch_loading" />
+                                </div>
+                            </form>
+                        }
+                        <div class="panel panel-default">
+                            <input type="hidden" id="CusCode" value="@Model.CustomerCode" />
+                            <div id="div_invoice_detail_partial" style="position: relative;">
+                                <!--Append _InvoceDetailPartial-->
+                                <center id="invoice_loading"><img src="~/Content/ajax-loaders/loading-partial.gif" /></center>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- /.box-body -->
+            </div>
+            <!-- /.box -->
+        </div>
+
+        <div class="col-md-3" style="padding-left: 0">
+            <div class="col-md-12" style="padding:0px">
+                <div class="box box-warning">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Other Infomation</h3>
+                    </div>
+                    <!-- /.box-header -->
+                    <div class="box-body">
+                        <div class="col-md-12">
+                            <p>
+                                <i class="fa fa-user" style="color:#258e4f"></i> <b>Sale person:</b> <span>@(string.IsNullOrEmpty(Model.SalesName) ? "N/A" : Model.SalesName) @(string.IsNullOrEmpty(Model.SalesMemberNumber) ? "" : " (#" + Model.SalesMemberNumber + ")")</span>
+                            </p>
+                            <p>
+                                <i class="fa fa-circle-o" style="color:#258e4f"></i> <b>Create Date:</b>
+                                @*<span id="localtime-@Model.Id">
+                                    <script>convertLocalTime("@Model.Id", "@Model.CreatedAt")</script>
+                                </span>*@
+                                <span>@Model.CreatedAt.Value.UtcToIMSDateTime().ToString("MMM dd, yyyy hh:mm tt")</span>
+                                - By: @(Model.CreatedBy)
+                            </p>
+                            @{
+                                var lastUpdate = CommonFunc.GetLastRowString(Model.UpdatedHistory ?? "", '|');
+                                string dateU = "";
+                                string personU = "";
+                                if (!string.IsNullOrEmpty(lastUpdate))
+                                {
+                                    dateU = Convert.ToDateTime(lastUpdate.Substring(0, lastUpdate.IndexOf("-") - 1)).UtcToIMSDateTime().ToString("MMM dd, yyyy hh:mm tt");
+                                    personU = lastUpdate.Substring(lastUpdate.IndexOf("-"));
+                                }
+                            }
+                            <p>
+                                <i class="fa fa-circle-o" style="color:red"></i> <b>Last Update:</b>
+                                @*<span id="localtime-dateU-@Model.Id">
+                                    <script>convertLocalTime("dateU-" +"@Model.Id", "@dateU")</script>
+                                </span>*@
+                                <span>@dateU</span>
+                                @personU
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-12" style="padding:0px">
+                <div class="box box-success">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Update History</h3>
+                    </div>
+                    <!-- /.box-header -->
+                    <div class="box-body" style="height:320px; overflow:auto">
+                        <div class="col-md-12">
+                            @if (string.IsNullOrEmpty(Model?.UpdatedHistory) == false)
+                            {
+                                var _update = Model.UpdatedHistory?.Split('|');
+                                for (int x = (_update.Length - 1); x > 0; x--)
+                                {
+                                    var date = Convert.ToDateTime(_update[x].Substring(0, _update[x].IndexOf("-") - 1)).UtcToIMSDateTime().ToString("MMM dd, yyyy hh:mm tt");
+                                    <p>
+                                        <i class="fa fa-circle-o" style="color:#00a65a"></i>
+                                        @*<span id="localtime-date-@x">
+                                            <script>convertLocalTime("date-" +"@x", "@date")</script>
+                                        </span>*@
+                                        <span>@date</span>
+                                        @_update[x].Substring(_update[x].IndexOf("-"))
+                                    </p>
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-12" style="padding:0px">
+                <div class="box box-danger">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Status History</h3>
+                    </div>
+                    <!-- /.box-header -->
+                    <div class="box-body" style="height:320px; overflow:auto">
+                        <div class="col-md-12">
+                            @if (string.IsNullOrEmpty(Model?.StatusHistory) == false)
+                            {
+                                var _update = Model.StatusHistory?.Split('|');
+                                for (int x = (_update.Length - 1); x > 0; x--)
+                                {
+                                    var date = Convert.ToDateTime(_update[x].Substring(_update[x].LastIndexOf("-") + 5)).UtcToIMSDateTime().ToString("MMM dd, yyyy hh:mm tt");
+                                    <p>
+                                        <i class="fa fa-circle-o" style="color:red"></i> @_update[x].Substring(0, _update[x].LastIndexOf("-") + 5)
+                                        @*<span id="localtime-history-@x">
+                                            <script>convertLocalTime("history-" + "@x", "@date")</script>
+                                        </span>*@
+                                        <span>@date</span>
+                                    </p>
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!--View PDF modal-->
+<div class="modal fade" id="modal_PDF">
+    <div class="modal-dialog" style="width:80%; max-width:1000px;">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div>
+                    <iframe id="PDFfile" style="width:100%; height: 700px"></iframe>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!--/End-->
+<!--View PDF modal-->
+<div class="modal fade" id="FOC">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                <h3 class="pull-left" style="padding:0">FOC Reason</h3>
+                <button type="button" class="close pull-right" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <div>
+                    <textarea id="FOC_reason" rows="5" class="form-control"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="FOC_Submit('@Model.InvoiceNumber')">FOC Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!--/End-->
+<!--Update data payment-->
+<div class="modal fade in" id="update-payment" style="display: none;">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <h4 id="modal-department-title" class="modal-title">
+                    Update payment
+                </h4>
+            </div>
+            <div class="modal-body">
+                <div class="col-12">
+                    <div class="form-group col-12">
+                        <label class="control-label">Payment Date</label>
+                        <input type="date" class="form-control" name="PaymentDate" id="PaymentDate" maxlength="50" style="max-width: 100%">
+                    </div>
+                    <div class="form-group col-12">
+                        <label class="control-label">Payment method</label>
+                        <select class="form-control" name="PaymentMethod" id="PaymentMethod" onchange="change_method()">
+                            <option value="Payment note with Wire transfer">Wire transfer</option>
+                            <option value="Payment note with Deposit">Deposit</option>
+                            <option value="Payment note with Checkin">Checkin</option>
+                            <option value="Payment note with Paypal">Paypal</option>
+                            <option value="Payment note with Cash">Cash</option>
+                            <option value="Payment note with ACH">ACH</option>
+                            <option value="Pay by Partner">Pay by Partner</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-12" id="form-bank-name">
+                        <label class="control-label">Bank</label>
+                        <input type="text" class="form-control" name="BankName" id="BankName" maxlength="50" style="max-width: 100%">
+                    </div>
+                    <div class="form-group col-12" id="form-card-number">
+                        <label class="control-label">Card number (4 last digits)</label>
+                        <input type="text" class="form-control" name="CardNumber" id="CardNumber" maxlength="4" style="max-width: 100%">
+                    </div>
+                    <div class="form-group col-12">
+                        <label class="control-label">Descriptions</label>
+                        <textarea type="text" class="form-control" name="PaymentNote" id="PaymentNote" maxlength="200" style="max-width: 100%"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="col-12">
+                    <button class="btn btn-info" onclick="updatePayment()">
+                        Update
+                        <img id="loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none">
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!---->
+<div class="modal fade" id="change-sales-person-modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title"></h4>
+            </div>
+            <div class="modal-body">
+                <p>
+                    <input type="hidden" class="OrderCode" id="OrderCode" name="OrderCode" value="" />
+                    <label>Sales Person</label>
+                    <select class="form-control" name="SalesPerson" id="SalesPerson">
+                        <option value="">N/A</option>
+                        @foreach (var item in ViewBag.ListMember as List<SelectListItem>)
+                        {
+                            <option value="@item.Value">@item.Text</option>
+                        }
+                    </select>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Cancel</button>
+                <button type="button" onclick="changeSalesPerson()" class="btn btn-primary">Save</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+
+
+<div class="modal fade" role="dialog" aria-hidden="true" id="view_payment_link">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Payment link</h4>
+            </div>
+            <div class="modal-body">
+                <div class="box" style="box-shadow: 0px 0 0; border: 0px; margin-bottom: 0">
+                    <div class="box-body">
+                        <div class="col-md-12 input-group pull-left">
+                            <div class="input-group-addon" style="width: 40px"><i class="fa fa-link"></i></div>
+                            <input id="payment_link_text" type="text" class="form-control" value="@ViewBag.paymentLink" disabled />
+                            <div class="input-group-addon" id="btn_copy_clipboard" style="width: 40px; cursor: pointer" data-toggle="tooltip" onclick="copyPaymentLink('#payment_link_text')" title="Copy to clipboard" data-placement="bottom"><i class="fa fa-clone"></i></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-right" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+
+<!--Update data payment-->
+<div class="modal fade in" id="payment_other" style="display: none;">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="form_other_payment" method="post" action="/order/UpdatePayment" onsubmit="overlayOn()">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                    <h4 id="modal-department-title" class="modal-title">
+                        Payment note
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    <div class="col-12">
+                        <div class="form-group col-12">
+                            <label class="control-label">Payment method <span class="text-red">*</span></label>
+                            <select class="form-control" name="paymentMethod" id="PaymentMethod" onchange="change_method()">
+                                <option value="Payment note with Wire transfer">Wire transfer</option>
+                                <option value="Payment note with Deposit">Deposit</option>
+                                <option value="Payment note with Checkin">Checkin</option>
+                                <option value="Payment note with Paypal">Paypal</option>
+                                <option value="Payment note with Cash">Cash</option>
+                                <option value="Payment note with ACH">ACH</option>
+                                <option value="Pay by @Model.PartnerCode">@Model.PartnerCode PAY</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-12">
+                            <label class="control-label">Descriptions <span class="text-red">*</span></label>
+                            <textarea type="text" class="form-control" name="paymentNote" id="PaymentNote" maxlength="200" style="max-width: 100%" required></textarea>
+                        </div>
+                        <input name="invoiceCode" value="@Model.OrdersCode" type="hidden" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">
+                            Save
+                            <img id="loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none">
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!--Update bank information-->
+<div class="modal fade in" id="bank_information_update" style="display: none;">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form id="form_other_payment" method="post" action="/order/UpdateBankInformation" onsubmit="overlayOn()">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                    <h4 id="modal-department-title" class="modal-title">
+                        Bank Infomation
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    <div class="col-12">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label class="control-label">Bank Name <span style="color:red">*</span></label>
+                                    <input tabindex="14" type="text" class="form-control" name="DepositBankName" value="@customer.DepositBankName" required />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label>Bank DDA / Account Number <span style="color:red">*</span></label>
+                                    <input tabindex="15" type="text" class="form-control" name="DepositAccountNumber" value="@customer.DepositAccountNumber" required />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label class="control-label">Bank Routing <span style="color:red">*</span></label>
+                                    <input tabindex="16" type="text" class="form-control" name="DepositRoutingNumber" value="@customer.DepositRoutingNumber" required />
+                                </div>
+                            </div>
+                        </div>
+
+                        <input name="CustomerCode" value="@Model.CustomerCode" type="hidden" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">
+                            Update & Pay with ACH
+                            <img id="loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none">
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!--Update data payment-->
+<div class="modal fade in" id="pay_with_card" style="display: none;" data-toggle="modal" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-xl" style="width: 90%;">
+        <div class="modal-content">
+
+            <div class="modal-body">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="margin-bottom: 15px">
+                    <span aria-hidden="true"><i class="fa fa-remove"></i></span>
+                </button>
+                <iframe id="iframe_payment" src="" style="width: 100%; height: 1020px"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="cancel-selected-action-confirmation" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="cancel-selected-action-confirmation-title">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" style="display:inline-block;" id="cancel-selected-action-confirmation-title">Are you sure?</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+                This invoice have license is being activated on the mango POS System. We won't deactivate automatic so you can do from the merchant dashboard.
+            </div>
+            <div class="modal-footer">
+                <button type="submit" id="cancel-selected-action-confirmation-submit-button" class="btn btn-primary pull-left">
+                    Yes & Go to merchant dashboard
+                </button>
+                <span class="btn btn-default float-right margin-r-5" data-dismiss="modal">No, cancel</span>
+            </div>
+        </div>
+    </div>
+    <script>
+        $(document).ready(function () {
+            $('#cancel-selected').attr("data-toggle", "modal").attr("data-target", "#cancel-selected-action-confirmation");
+            $('#cancel-selected-action-confirmation-submit-button').attr("name", $("#cancel-selected").attr("name"));
+            $("#cancel-selected").attr("name", "");
+            if ($("#cancel-selected").attr("type") == "submit")
+                $("#cancel-selected").attr("type", "button");
+        });
+    </script>
+</div>
+
+@*<div id="create-deployment-ticket-confirmation" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="cancel-selected-action-confirmation-title" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" style="display:inline-block;" id="cancel-selected-action-confirmation-title">Confirmation</h4>
+                <button onclick="createDeliveryTicket(false)" type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+                Do you want to create deployment ticket for this invoice ?
+            </div>
+            <div class="modal-footer">
+                <button onclick="createDeliveryTicket(true)" type="button" id="cancel-selected-action-confirmation-submit-button" data-dismiss="modal" class="btn btn-primary">
+                    Yes
+                </button>
+                <button onclick="createDeliveryTicket(false)" class="btn btn-default float-right margin-r-5" data-dismiss="modal">No</button>
+            </div>
+        </div>
+    </div>
+
+</div>*@
+
+<div class="modal fade" id="modal-set-payment-later" role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-content">
+        <form action="/order/paymentlaterinvoice" method="post" id="form-set-payment-later" onsubmit="overlayOn()">
+            <div class="modal-header">
+                <div class="modal-title pull-left"><h4 style="margin:0">Set payment later</h4></div>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="control-label">Pay after how many days?</label>
+                    <input type="number" id="days_number" class="form-control" style="width:200px;display:inline-block" name="days" placeholder="0" step="1" min="0" required />
+                    <input class="form-control datepicker" id="payment_days" readonly disabled style="width:150px;display:inline-block" value="@DateTime.UtcNow.ToString("MMM dd, yyyy")" />
+                    @*<textarea type="text" class="form-control" style="min-height:100px;resize:vertical;" name="BusinessDescription" id="BusinessDescription"></textarea>*@
+                </div>
+                <input name="code" value="@Model.OrdersCode" hidden />
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="loading" style="display:none;position: fixed;top: 50%;left: 50%;transform: translate(-50%, -50%);"><img src="/Content/ajax-loaders/loading2.gif" width="60"></div>
+<link href="~/Content/progress-tracker.css" rel="stylesheet" />
+
+<!--Convert HTML to PDF-->
+<!--<script src="~/Scripts/jsPDF/jspdf_1-3-3.min.js"></script>
+<script src="~/Scripts/jsPDF/html2canvas.js"></script>
+<script src="~/Scripts/convertHTMLtoPDF.js"></script>-->
+<!--/End-->
+
+<script type="text/javascript">
+    var statusSelected = null;
+    load_invoice();
+    function load_invoice() {
+        var code = $("input[name=hd_ordercode]").val();
+        $("#div_invoice_detail_partial").html('<iframe id="invoice-view" style="width:100%;" frameborder="0" onload="max_height_Iframe(this)" src=\'/order/ImportInvoiceToPDF?_code=' + code + '\'></iframe>');
+    }
+    /**
+     * button đổi status invoice
+     * @@param code OrderCode
+     * @@param status New status
+     */
+    function change_status(status) {
+        if (!confirm("Change status of this Invoice to " + status + "?")) {
+            return false;
+        };
+        statusSelected = status;
+        $("#status_change_btn").find(".img_loader").show();
+        $("#status_change_btn").find("button").attr("disabled", true);
+        var code = $("input[name=hd_ordercode]").val();
+        $.ajax({
+            method: "POST",
+            url: "/order/ChangeInvoiceSatus",
+            data: {
+                code,
+                status
+            },
+            dataType: "json"
+        })
+            .done(function (data) {
+                if (data[0]) {
+                    location.reload();
+                    //noty({ "text": "Change status completed", "layout": "topRight", "type": "success" });
+
+                    //var label = "danger";
+                    //switch (data[1]) {
+                    //    case "Open": label = "default"; break;
+                    //    case "Paid_Wait": label = "warning"; break;
+                    //    case "Closed": label = "success"; break;
+                    //}
+                    //$("#status_show").html(`<span class="label label-${label}">${data[2]}</span>`);
+
+                } else {
+                    if (data[1] == 'payment') {
+                        $('#update-payment').modal();
+                    }
+                    else {
+                        noty({ "text": data[1], "layout": "topRight", "type": "warning" });
+                    }
+                }
+                $("#status_change_btn").find(".img_loader").hide();
+                $("#status_change_btn").find("button").removeAttr("disabled");
+            })
+            .fail(function () {
+                alert("Oops! Something went wrong. PDF renders failure");
+                $("#status_change_btn").find(".img_loader").hide();
+                $("#status_change_btn").find("button").removeAttr("disabled");
+            })
+    }
+
+    function change_method() {
+        if ($("select[name=PaymentMethod]").val() != 'Cash') {
+            $('#form-bank-name').fadeIn();
+            $('#form-card-number').fadeIn();
+        }
+        else {
+            $('#form-bank-name').fadeOut();
+            $('#form-card-number').fadeOut();
+        }
+    }
+
+    //function updatePayment() {
+    //    $('#update-payment').find('#loading').show();
+    //    var invoiceCode = $("input[name=hd_ordercode]").val();
+    //    var paymentMethod = $("select[name=PaymentMethod]").val();
+    //    var paymentNote = $("textarea[name=PaymentNote]").val();
+    //    var status = statusSelected;
+    //    var bankName = $("input[name=BankName]").val();
+    //    var cardNumber = $("input[name=CardNumber]").val();
+    //    var paymentDate = $("input[name=PaymentDate]").val();
+
+    //    $.ajax({
+    //        method: "POST",
+    //        url: "/order/UpdatePayment",
+    //        data: {
+    //            invoiceCode,
+    //            paymentMethod,
+    //            paymentNote,
+    //            bankName,
+    //            cardNumber,
+    //            paymentDate,
+    //            status
+    //        },
+    //        dataType: "json"
+    //    }).done(function (data) {
+    //        $('#update-payment').modal('hide');
+    //        if (data[0]) {
+    //            location.reload();
+    //            //noty({ "text": "Update payment infor success", "layout": "topRight", "type": "success" });
+    //            //load_invoice();
+    //            //var label = "danger";
+    //            //switch (data[1]) {
+    //            //    case "Open": label = "default"; break;
+    //            //    case "Paid_Wait": label = "warning"; break;
+    //            //    case "Closed": label = "success"; break;
+    //            //}
+    //            //$("#status_show").html(`<span class="label label-${label}">${data[2]}</span>`);
+    //            //if (data[1] != "Closed") {
+    //            //    $("#status_change_btn ." + data[1]).addClass("disabled");
+    //            //} else { $("#status_change_btn").hide() };
+    //        } else {
+    //            $('#update-payment').find('#loading').hide();
+    //            noty({ "text": data[1], "layout": "topRight", "type": "warning" });
+    //        }
+    //    }).fail(function () {
+    //        $('#update-payment').find('#loading').hide();
+    //        $('#update-payment').modal('hide');
+    //        noty({ "text": "Update payment infor fail", "layout": "topRight", "type": "warning" });
+    //    })
+    //}
+
+    function importPDF(_order_code, _flag) {
+        $("#import_loading").show();
+        //alert(_order_code + '|' + _flag);
+
+        $.ajax({
+            method: "POST",
+            url: "/order/ConvertHtmlToPdf",
+            data: {
+                Flag: _flag,
+                _Code: _order_code
+            },
+            dataType: "json"
+        })
+            .done(function (data) {
+                $("#import_loading").hide();
+
+                if (data[0] == true) {
+                    $('#PDFfile').prop("src", data[1]);
+                    $("#modal_PDF").modal("show");
+                }
+                else {
+                    var MsgError = $.parseJSON('{"text":"Fail: ' + data[1] + '", "layout":"topRight", "type":"error"}');
+                    noty(MsgError);
+                }
+            })
+            .fail(function () {
+                $("#import_loading").hide();
+                alert("Oops! Something went wrong. PDF renders failure");
+            })
+    }
+    $(function () {
+
+        if ($("#CusStoreStatus").val() == true || $("#CusStoreStatus").val() == 'true') {
+            $("#posOn").attr("checked", true);
+            $(".switch-selection").first().html("ON");
+        }
+        else {
+            $("#posOff").attr("checked", true);
+            $(".switch-selection").first().html("OFF");
+        }
+        $(".datepicker").datepicker({
+            changeMonth: true,
+            changeYear: true,
+            yearRange: '1950:2050'
+        });
+        $('#pay_with_card').on('hidden.bs.modal', function () {
+            window.location.reload();
+        })
+
+        $('#days_number').on('input', function () {
+            $('#payment_days').val(moment.utc().add($(this).val(), 'days').format("MMM DD, YYYY"));
+        });
+    });
+
+    function switch_mango(status) {
+        $(".switch-selection").first().html(status);
+        $("#switch_loading").show();
+        var cuscode = $("#CusCode").val();
+
+        // alert(cusid);
+        $.post("/merchantman/mangoswitch", { code: cuscode, status: status }, function (data) {
+            //{true/false,msg}
+
+            if (data[0]) {
+                var Error = $.parseJSON('{"text":"' + data[1] + '", "layout":"top", "type":"success"}');
+                noty(Error);
+            }
+            else {
+                var Error = $.parseJSON('{"text":"' + data[1] + '", "layout":"top", "type":"error"}');
+                noty(Error);
+
+                if (status == "OFF") {
+
+                    $(".switch-selection").first().html("ON");
+                    $("#posOn").attr("checked", true);
+                    $(".switch-selection").css("left", "60px");
+                }
+                else {
+                    $(".switch-selection").first().html("OFF");
+                    $("#posOff").attr("checked", true);
+                    $(".switch-selection").css("left", "0px");
+                }
+            }
+
+            $("#switch_loading").hide();
+        });
+
+    };
+    function resend_payment_email(order_code) {
+        if (confirm("Do you want to resend payment email?")) {
+            overlayOn();
+            $.ajax({
+                url: "/order/ResendPaymentEmail",
+                dataType: "json",
+                method: "post",
+                data: { order_code }
+            })
+                .done(function (data) {
+                    if (data[0]) {
+                        success(data[1], "topRight");
+                    } else {
+                        error(data[1]);
+                    }
+                })
+                .fail(function () {
+                })
+                .always(function () {
+                    overlayOff();
+                });
+        }
+    }
+    function resend_payment_sms(order_code) {
+        if (confirm("Do you want to send payment SMS?")) {
+            overlayOn();
+            $.ajax({
+                url: "/order/ResendPaymentSMS",
+                dataType: "json",
+                method: "post",
+                data: { order_code }
+            })
+                .done(function (data) {
+                    if (data[0]) {
+                        success(data[1], "topRight");
+                    } else {
+                        error(data[1]);
+                    }
+                })
+                .fail(function () {
+                })
+                .always(function () {
+                    overlayOff();
+                });
+        }
+    }
+    function FOC() {
+        $("#FOC_reason").val("");
+        $("#FOC").modal("show");
+    }
+    function FOC_Submit(order_code) {
+        var desc = $("#FOC_reason").val();
+        if (!desc) {
+            warning("Please enter the FOC reason!");
+            return;
+        }
+        if (confirm("Are you sure to set FOC for this Invoice?")) {
+            overlayOn();
+            $.ajax({
+                url: "/order/FOC",
+                dataType: "json",
+                method: "post",
+                data: { order_code, desc }
+            })
+                .done(function (data) {
+                    location.reload();
+                })
+                .fail(function () {
+                })
+                .always(function () {
+                    overlayOff();
+                });
+        }
+    }
+
+    //function showPopupCreateDeliveryTicket() {
+    //    $("#create-deployment-ticket-confirmation").modal('show');
+    //}
+
+   @*function createDeliveryTicket(createDelivery) {
+
+       if (createDelivery) {
+           overlayOn();
+            $.ajax({
+                url: "/order/createDeliveryTicket",
+                dataType: "json",
+                method: "post",
+                data: { 'orderCode':@Model.OrdersCode}
+                    })
+                .done(function (data) {
+                    //  success("create delivery ticket success");
+                // location.reload();
+                    if (data.status) {
+                        success(data.message);
+                } else {
+                    error(data.message);
+                }
+            })
+                .fail(function () {
+            })
+                .always(function () {
+                overlayOff();
+            });
+            }
+            else
+            {
+                    $("#create-deployment-ticket-confirmation").modal('hide');
+            }
+    }*@
+    function payment_ach(ordercode) {
+        overlayOn();
+        $.ajax({
+            url: "/order/PaymentACH",
+            dataType: "json",
+            method: "post",
+            data: { ordercode }
+        })
+            .done(function (data) {
+        if (data[0]) {
+            location.reload();
+        } else {
+            noty({ "text": data[2], "layout": "top", "type": "warning" });
+        }
+    })
+            .fail(function () {
+    })
+            .always(function () {
+        overlayOff();
+    });
+    }
+
+    $("#bank_information_update").ajaxForm(function (data) {
+        if (data[0]) {
+            //location.reload();
+            //$("#bank_information_update").modal('hide');
+            //noty({ "text": data[1], "layout": "topRight", "type": "success" });
+            payment_ach('@Model.OrdersCode');
+        } else {
+            overlayOff();
+            noty({ "text": data[1], "layout": "topRight", "type": "error" });
+        }
+    });
+
+    function copyPaymentLink(element) {
+        var $temp = $("<input>");
+        $("body").append($temp);
+        $temp.val($(element).val()).select();
+        document.execCommand("copy");
+        $temp.remove();
+        $('#btn_copy_clipboard').attr('data-original-title', "Copied!").tooltip('show');
+        $('#btn_copy_clipboard').attr('data-original-title', "Copy to clipboard");
+    }
+
+    function showPopupSalesPerson(orderCode) {
+        $(".loading").show();
+        var modal = $("#change-sales-person-modal");
+        modal.find(".modal-title").text("Invoice:#" + orderCode)
+        modal.find("#OrderCode").val(orderCode);
+        $.ajax({
+            type: "Get",
+            url: "/Order/GetSalesPerson",
+            data: { "orderCode": orderCode }, // serializes the form's elements.
+            success: function (data) {
+                var ListSalesPerson = modal.find("#SalesPerson");
+                ListSalesPerson.val(data.SalesMemberNumber);
+                ListSalesPerson.select2();
+                modal.modal("show");
+            },
+            complete: function () {
+                $(".loading").hide();
+            },
+        });
+    }
+
+    function changeSalesPerson() {
+        $(".loading").show();
+        var modal = $("#change-sales-person-modal");
+        var orderCode = modal.find("#OrderCode").val();
+        var salesPerson = modal.find("#SalesPerson").val();
+        var salesPersonName = modal.find("#SalesPerson option:selected").text();
+        $.ajax({
+            type: "POST",
+            url: "/Order/ChangeSalesPerson",
+            data: { "orderCode": orderCode, "salesPerson": salesPerson }, // serializes the form's elements.
+            success: function (data) {
+                if (data.status) {
+                    noty({ "text": data.message, "layout": "topRight", "type": "success" });
+                    modal.modal('hide');
+                    var htmlUpdateSalePerson = '';
+                    if (salesPerson != '') {
+                        htmlUpdateSalePerson += '<div class="sales-person-' + orderCode + '">'
+                        htmlUpdateSalePerson += '<span><b>' + salesPersonName + '</b></span><br />'
+                        htmlUpdateSalePerson += '<span><i>Member number: #' + salesPerson + '</i></span>'
+                    }
+                    else {
+                        htmlUpdateSalePerson += '<span><b>--N/A--</b></span>'
+                    }
+                    $('.sales-person-' + orderCode).html(htmlUpdateSalePerson);
+                    location.reload();
+                }
+                else {
+                    noty({ "text": data.message, "layout": "topRight", "type": "warning" });
+                }
+            },
+            complete: function () {
+                $(".loading").hide();
+
+            },
+        });
+    }
+
+    $(document).ready(function () {
+        $('.dropdown-submenu button.submenu').on("click", function (e) {
+            $(".dropdown-submenu").not(this).find('.dropdown-menu').hide();
+            $(this).next('ul').toggle();
+            e.stopPropagation();
+            e.preventDefault();
+        });
+    });
+
+    $(document).click(function () {
+        $("#dropdown-action").removeClass("open");
+        $("#dropdown-action  .dropdown-submenu .dropdown-menu").hide();
+
+    });
+
+    function payment_later(order_code) {
+        while (true) {
+            let input = prompt("Pay after how many days?");
+            if (input == null) {
+                return;
+            } else {
+                if (input.length <= 0 || isNaN(input)) {
+                    // user pressed OK, but input invalid or does not input anything
+                    alert("Invalid input. Please input number.");
+                } else {
+                    // user typed something valid and hit OK
+                    var _days = parseInt(input);
+                    if (_days <= 0) return;
+                    overlayOn();
+                    $.ajax({
+                        method: "POST",
+                        url: "/order/paymentlaterinvoice",
+                        data: { code: order_code, days: _days },
+                        dataType: "json"
+                    })
+                        .done(function (data) {
+                            location.reload();
+                        })
+                        .fail(function () {
+
+                            alert("Payment later failure");
+                        })
+                        .always(function () {
+                            overlayOff();
+                        });
+                    return;
+                }
+            }
+        }
+    }
+
+    function editInvoieClosed() {
+        if ('@checkActivated' == 'True') {
+            if (confirm('License has been activated with the mango pos system. If there are any changes related to the license please reactivate')) {
+                overlayOn();
+                window.location.href = "/order/save/@Model.Id?url_back=@(Request["url_back"]?.Replace("'", ""))";
+            }
+        }
+        else {
+            overlayOn();
+                window.location.href = "/order/save/@Model.Id?url_back=@(Request["url_back"]?.Replace("'", ""))";
+        }
+    }
+
+    function paymentbyMAC() {
+        $('#payment_other').modal();
+        $('#payment_other #PaymentMethod').val('Pay by @Model.PartnerCode').trigger('change');
+    }
+
+    function payment_other(order_code) {
+        overlayOn();
+        var invoiceCode = '@Model.OrdersCode';
+        var paymentMethod = $("select[name=oPaymentMethod]").val();
+        var paymentNote = $("textarea[name=oPaymentNote]").val();
+        $.ajax({
+            method: "POST",
+            url: "/order/UpdatePayment",
+            data: {
+                invoiceCode,
+                paymentMethod,
+                paymentNote
+            },
+            dataType: "json"
+        }).done(function (data) {
+            location.reload();
+            //if (data[0]) {
+            //    location.reload();
+            //} else {
+            //    overlayOff();
+            //    noty({ "text": data[1], "layout": "topRight", "type": "error" });
+            //}
+        }).fail(function () {
+            overlayOff();
+            noty({ "text": "Update payment infor fail", "layout": "topRight", "type": "error" });
+        })
+    }
+
+    $("#form_other_payment").ajaxForm(function (data) {
+        overlayOff();
+        location.reload();
+        //$("#payment_other").modal("hide");
+        //$("#create-deployment-ticket-confirmation").modal('show');
+        //if (data[0]) {
+        //    location.reload();
+        //} else {
+        //    overlayOff();
+        //    noty({ "text": data[1], "layout": "topRight", "type": "error" });
+        //}
+    });
+
+    $("#form-set-payment-later").ajaxForm(function (data) {
+        overlayOff();
+        location.reload();
+    });
+
+    $(document).ready(function () {
+        $('#cancel-selected-action-confirmation-submit-button').bind('click', function () {
+            var status = "Canceled";
+            $("#status_change_btn").find(".img_loader").show();
+            $("#status_change_btn").find("button").attr("disabled", true);
+            var code = $("input[name=hd_ordercode]").val();
+            var cusid = $("input[name=cusid]").val();
+            $.ajax({
+                method: "POST",
+                url: "/order/ChangeInvoiceSatus",
+                data: {
+                    code,
+                    status
+                },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    if (data[0])
+                    {
+                        location.href = '/merchantman/detail/' + cusid;
+                    }
+                    else
+                    {
+                    if (data[1] == 'payment')
+                    {
+                        $('#update-payment').modal();
+                    }
+                    else
+                    {
+                        noty({ "text": data[1], "layout": "topRight", "type": "warning" });
+                    }
+                    }
+                    $("#status_change_btn").find(".img_loader").hide();
+                    $("#status_change_btn").find("button").removeAttr("disabled");
+                })
+                .fail(function () {
+                    alert("Oops! Something went wrong. PDF renders failure");
+                    $("#status_change_btn").find(".img_loader").hide();
+                    $("#status_change_btn").find("button").removeAttr("disabled");
+                })
+            $('#cancel-selected-action-confirmation').modal('toggle');
+            return false;
+        });
+    });
+</script>
+@*@if (TempData["ShowCreateTicketDelivery"] != null)
+{
+    <script>
+        $(document).ready(function () {
+            $("#create-deployment-ticket-confirmation").modal('show');
+        });
+
+    </script>
+}*@

@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+	<customer>
+		<word_determine>
+			<subscription>K</subscription>
+			<processing>H</processing>
+			<both>Q</both>
+			<trial>Trial</trial>
+			<slice>Slice</slice>
+			<note>
+				and for client ID's. I need to be able to specify if a customer is subscription only, terminal only, or both.  Im thikning
+				Client ID - a letter
+				Example, K- subscription, H- Processing (Terminal Only), Q- Both subscription &#38; processing
+				A1234-K
+				A1234-H
+				A1234-Q
+				A1234-Trial(Thanh Son)
+				A1234-Slice (Sean) free version life-time
+				So when we run reports we know H &#38; Q count towards our minimim requirements
+			</note>
+		</word_determine>
+	</customer>
+	<!--Cau hinh SMS template -->
+	<sms_template>
+		<!--
+    <new_ticket>
+      [Enrich]You have a new ticket #{ticket_number}. Please login IMS Enrich to follow.
+    </new_ticket>
+    -->
+		<questionare_notice_merchant>[Enrich]Please help us to configure the complete salon pos system and be ready to work, Please complete the questionnaire following the link : {url}</questionare_notice_merchant>
+		<questionare_complete>[Enrich]Customer security questions form already completed. Please check your ticket #{ticket_number}.</questionare_complete>
+		<shipping_ready>[Enrich]Your order has been prepared and is ready for delivery. Please call +180007425877 if you need help.</shipping_ready>
+		<!--
+    <shipping>
+      [Enrich]Your packages are shipping. Please call +180007425877 if you need help.
+    </shipping>
+    <shipping_complete>
+      [Enrich]Your package has been delivered. Please call +180007425877 if you need help.
+    </shipping_complete>
+    -->
+	</sms_template>
+	<!--Cau hinh email template tu sendgrid-->
+	<sendgrid_template>
+		<shipping_email>
+			<from>fulfilment@enrichcous.com</from>
+			<name>Enrich fulfilment</name>
+			<template_id>d-0f526b9538444a76bb033f9fa9185fff</template_id>
+			<note>Gui email thong bao giao hang</note>
+		</shipping_email>
+		<questionare_email>
+			<from>info@enrichcous.com</from>
+			<name>IMS Enrich</name>
+			<template_id>d-c41bb57f9490414e93857a0d928dc291</template_id>
+			<note>Gui email link questionare form cho khach hang</note>
+		</questionare_email>
+		<questionnaire_email_notice>
+			<from>info@enrichcous.com</from>
+			<name>Enrichcous</name>
+			<template_id>d-23ab7264a153456cb5a6f97fd064106d</template_id>
+			<note>Gui email link questionare form va ticket cho nhan vien khi khach hang submit questionnaire form</note>
+		</questionnaire_email_notice>
+		<giftcards_ordering_form_email>
+		  <from>info@enrichcous.com</from>
+		  <name>Enrichcous</name>
+		  <template_id>d-1d5cf27d83c241149cfd2c8631177786</template_id>
+		  <note>Gui email link gift card ordering form</note>
+		</giftcards_ordering_form_email>
+		<notify_sales_giftcards>
+		  <from>info@enrichcous.com</from>
+		  <name>Enrichcous</name>
+		  <template_id>d-9cda85d380a84c11b87915e6c72470f2</template_id>
+		  <note>Gui thong bao cho sales khi customer submit gift cards ordering form</note>
+		</notify_sales_giftcards>
+		<notify_reset_password>
+			<from>info@enrichcous.com</from>
+			<name>Enrichcous</name>
+			<template_id>d-e31de748fb764229a4858be876db6739</template_id>
+			<note>Gửi tài khoản và mật khẩu đăng nhập mới cho salon</note>
+		</notify_reset_password>
+		<notify_installation_complete>
+			<from>info@enrichcous.com</from>
+			<name>Enrichcous</name>
+			<template_id>d-d1a1048a4d8744af8007174436363422</template_id>
+			<note>Gửi email thông báo khi installation complete </note>
+		</notify_installation_complete>
+		<verify_demo_register>
+			<from>info@enrichcous.com</from>
+			<name>Enrichcous</name>
+			<template_id>d-a96df3ca519c4837a4bb27f84591d2ec</template_id>
+			<note>Gửi email verify  </note>
+		</verify_demo_register>
+		<salon_forgot_password>
+			<from>info@enrichcous.com</from>
+			<name>Enrichcous</name>
+			<template_id>d-0203b2856881459c98483a9cc21fb88c</template_id>
+			<note>Gửi email forgot password cho merchant </note>
+		</salon_forgot_password>
+		<salon_payment_confirm_and_pay>
+			<from>info@enrichcous.com</from>
+			<name>Enrichcous</name>
+			<template_id>d-c60e532f39c54f71924dc59809316011</template_id>
+			<note>Gửi email confirm thanh toán cho merchant </note>
+		</salon_payment_confirm_and_pay>
+		<receipt_payment>
+			<from>info@enrichcous.com</from>
+			<name>Enrichcous</name>
+			<template_id>d-e7d826ee3cbf474eac40650b75e58e71</template_id>
+			<note>Gửi hóa đơn thanh toán cho merchant </note>
+		</receipt_payment>
+		<notification_assigned>
+			<from>info@enrichcous.com</from>
+			<name>Enrichcous</name>
+			<template_id>d-8bf0dc54b8d04dd688f6da2f3f403f96</template_id>
+			<note>Thông báo có khach hang moi(assigned) trong sales lead.</note>
+		</notification_assigned>
+		<boss_create>
+			<from>info@enrichcous.com</from>
+			<name>Enrichcous</name>
+			<template_id>d-efe6d540e049470f938d972ad6ca0e76</template_id>
+			<note>Create new boss.</note>
+		</boss_create>
+		<boss_changepassword>
+			<from>info@enrichcous.com</from>
+			<name>Enrichcous</name>
+			<template_id>d-19c437ac90f14a919d2c0ee62f81a7a0</template_id>
+			<note>Change password BOSS.</note>
+		</boss_changepassword>
+		<customer_outgoing>
+			<from>info@enrichcous.com</from>
+			<name>Enrichcous</name>
+			<template_id>d-48ab6a08f8644885b087a27d55a183f2</template_id>
+			<note>email to customer outgoing.</note>
+		</customer_outgoing>
+		   <merchant_subscribe>
+      <from>info@enrichcous.com</from>
+      <name>Enrichcous</name>
+      <template_id>d-fee6f810101c4fc0969504abd246484e</template_id>
+      <note>Gửi thông báo cho Saler khi khách hàng yêu cầu đăng ký MangoPos</note>
+    </merchant_subscribe>
+	  <merchant_subscribe_us>
+		  <from>info@enrichcous.com</from>
+		  <name>Enrichcous</name>
+		  <template_id>d-bbef96c118b74034b6be2e2a09f23ece</template_id>
+		  <note>Gửi thông báo cho Saler khi khách hàng yêu cầu đăng ký MangoPos</note>
+	  </merchant_subscribe_us>
+	</sendgrid_template>
+	<store-url>
+		<VER1 store-profile="http://api.enrichpos/StoreProfile/?id="
+			  store-change="http://api.enrichpos/api/RCPStore/StoreChange"/>
+		<VER2
+			domain="http://10.142.0.32:8087"
+			store-profile="/StoreProfile/?id="
+			store-change="/api/RCPStore/StoreChange"
+			define-feature="/api/DefineFeatures/DefineFeatures"
+			add-feature="/api/DefineFeatures/AddEditDefineFeatures"
+			remove-feature="/api/DefineFeatures/DeleteDefineFeatures"
+			get-feature="/api/DefineFeatures/GetDefineFeaturesByStore?IDIMS="
+			saloncenter_link="https://manage2.mangoforsalon.com//"
+			checkin_link="https://checkin.mangoforsalon.com/"
+			saloncenter_slice_link="https://slice.enrichcous.com/"
+			hard-reset="/api/ControlSystem/HardReset?IDIMS="
+			soft-reset="/api/ControlSystem/SoftReset?IDIMS="
+			DelPairingCode="/api/ApiPosManager/DelPairingCodeWithStoreID?storeId="
+			OrderGiftCard="/api/ControlSystem/OrderGiftCard?"
+		/>
+	</store-url>
+	<boss-manage>
+		<url add_edit="http://10.142.0.32:8087/api/BossManage/AddEditBossManage" 
+			 add_store="http://10.142.0.32:8087/api/BossManage/AddStoreManage" 
+			 get_store="http://10.142.0.32:8087/api/BossManage/GetStoreManage?IDBossManage=" 
+			 del_store="http://10.142.0.32:8087/api/BossManage/DelStoreManage?IDBossManage=" 
+			 leave_boss="http://10.142.0.32:8087/api/BossManage/ResetStore?IDIMS=" 
+			 change_pass="http://10.142.0.32:8087/api/BossManage/ChangePassWord"/>
+	</boss-manage>
+	<mango-pos>
+		<features-update>http://10.142.0.32:8087/api/DefineFeatures/DefineFeatures</features-update>
+		<timezone-url>https://manage.enrichcous.com/admin/salon/getLstTimeZoneAPI</timezone-url>
+	</mango-pos>
+	<mango-demo-trial>
+		<trial-duration-days>30</trial-duration-days>
+	</mango-demo-trial>
+</root>

@@ -1,0 +1,176 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.P_Level>
+@using EnrichcousBackOffice.Models
+
+@{
+    ViewBag.Title = "Level setting";
+}
+
+<section class="content-header">
+    <h1>
+        Level setting
+        <small>Setting</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Dashboard</a></li>
+        <li><i class="fa fa-cogs"></i> Setting</li>
+        <li class="active">Level setting</li>
+    </ol>
+</section>
+
+<!-- Main content -->
+<section class="content">
+    <div class="row">
+
+        @if (TempData["e"] != null)
+        {
+            <div class="alert alert-warning alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+            </div>
+        }
+        else if (TempData["s"] != null)
+        {
+            <div class="alert alert-success alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+            </div>
+        }
+
+        <div class="col-md-12">
+            <div class="box box-primary">
+                <div class="box-header ">
+                    <h3 class="box-title">@ViewBag.Title</h3>
+                        <div class="pull-right box-tools">
+                            <a href="/levelsetting/save" class="btn btn-primary">
+                                <i class="fa fa-plus"> Add new level</i>
+                            </a>
+                        </div>
+                </div>
+
+                <!-- /.box-header -->
+
+                <div class="box-body">
+                    <table id="example1" class="table table-bordered table-striped">
+                        @*data-order='[[ 0, "desc" ]]'*@
+                        <thead>
+                            <tr>
+                                <th>#Level No</th>
+                                <th>Level name</th>
+                                <th>Promote condition</th>
+                                <th>Status</th>
+                                <th style="width:100px"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.ToList())
+                            {
+                                <tr>
+                                    <td>@item.Level</td>
+                                    <td class="center"> @item.LevelName</td>
+
+                                    <td>
+                                        @if (item.OptionPromote1_RequirementLevel >= 0)
+                                        {
+                                            <span style="font-weight:bold">Option 1: </span>
+                                            <span> Successfully Build & Train <b style="font-size:1.5em;color:blue"> @item.OptionPromote1_RequirementLevel_Qty </b> <b style="color:red">level# @item.OptionPromote1_RequirementLevel</b>  in his(her) team</span>
+                                            if (item.OptionPromote1_RequirementLevel_RequimentEveryLevel_QtyContract > 0)
+                                            {
+                                                <br /><i>(Each level should reach <b style="font-size:1.5em;color:blue"> @item.OptionPromote1_RequirementLevel_RequimentEveryLevel_QtyContract </b> contract)</i>
+                                            }
+                                            <br />
+                                        }
+
+                                        @if (item.OptionPromote2_RequimentQtyContractReached > 0)
+                                        {
+                                            <span style="font-weight:bold">Option 2: </span>
+                                            <span>Personally brought in at least <b style="font-size:1.5em;color:blue"> @item.OptionPromote2_RequimentQtyContractReached </b> CONTRACTS</span>
+                                            <br />
+                                        }
+                                    </td>
+                                    <td class="center">
+                                        @if (item.IsActive == true)
+                                        {
+                                            <span class="label label-success">Active</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="label label-default">Inactive</span>
+                                        }
+                                        <br /><span style="color:grey"> Update by: @item.UpdateBy</span>
+                                        <br /><span style="color:grey"> Update at: @(item.UpdateAt?.ToShortDateString())</span>
+                                    </td>
+                                    <td class="center">
+                                            <a class="btn btn-xs btn-warning" href="/levelsetting/save/@item.Level">
+                                                <i class="glyphicon glyphicon-edit"></i> Edit
+                                            </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th>#Level No</th>
+                                <th>Level name</th>
+                                <th>Promote condition</th>
+                                <th>Status</th>
+                                <th style="width:100px"></th>
+                            </tr>
+                        </tfoot>
+
+                    </table>
+                </div>
+                <!-- /.box-body -->
+            </div>
+            <!-- /.box -->
+        </div>
+    </div>
+</section>
+
+
+
+
+@section style
+{
+    <!--DataTables-->
+    <link rel="stylesheet" href="~/content/admin/bower_components/datatables.net-bs/css/dataTables.bootstrap.min.css">
+    <!--icheck-->
+    <link rel="stylesheet" href="/content/admin/plugins/iCheck/all.css" />
+    <!--noty-->
+    <link href="~/Content/noty/jquery.noty.css" rel="stylesheet" />
+    <link href="~/Content/noty/noty_theme_default.css" rel="stylesheet" />
+}
+
+@section script
+{
+    <!-- DataTables -->
+    <script src="~/content/admin/bower_components/datatables.net/js/jquery.dataTables.min.js"></script>
+    <script src="~/content/admin/bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js"></script>
+    <!--icheck-->
+    <script src="/content/admin/plugins/iCheck/icheck.min.js"></script>
+    <!--noty-->
+    <script src="~/Content/noty/jquery.noty.js"></script>
+
+
+    <script type="text/javascript">
+        $(function () {
+            //$('#example1').DataTable()
+            $('#example1').DataTable({
+                'paging': true,
+                'lengthChange': true,
+                'searching': true,
+                'ordering': true,
+                'info': false,
+                'autoWidth': true
+            })
+
+            //iCheck for checkbox and radio inputs
+            $('input[type="checkbox"].minimal').iCheck({
+                checkboxClass: 'icheckbox_minimal-blue'
+            })
+        })
+
+
+    </script>
+
+}
+

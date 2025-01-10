@@ -1,0 +1,103 @@
+﻿@{
+    var ListMethod = ViewBag.ListMethod as List<EnrichcousBackOffice.Models.P_BankSupport>;
+}
+<form class="modal fade" id="modal-set-as-paid-multi-emp" role="dialog">
+    <div class="modal-dialog modal-content">
+        <div class="modal-header">
+            <div class="modal-title pull-left"><h4 style="margin:0" id="title-setaspaid-modal">Set As Paid</h4></div>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">×</span>
+            </button>
+        </div>
+        <div class="modal-body" style="padding:1rem">
+            <div class="loading" style="display:none;position: fixed;top: 50%;left: 50%;transform: translate(-50%, -50%);"><i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i></div>
+            <div class="col-12">
+                <div class="form-group col-12">
+                    <label class="control-label" style="width:100%">
+                        <span class="pull-left">
+                            Payment Method
+                        </span>
+                        <span class="pull-right">
+                            <i class="fa fa-plus" onclick="insertBank()" style="font-weight:bold; color:var(--main-color-1); cursor:pointer;" title="Add new"></i>&nbsp;&nbsp;&nbsp;
+                            <i class="fa fa-edit" onclick="updateBank()" style="font-weight:bold; color:var(--main-color-1); cursor:pointer;" title="Edit"></i>&nbsp;&nbsp;&nbsp;
+                        </span>
+                    </label>
+                    <select class="form-control PaymentMethod" id="PaymentMethod" name="PaymentMethod" required>
+                        <option value="">N/A</option>
+                        @foreach (var item in ListMethod)
+                        {
+                            <option value="@item.Code">@item.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-group col-12" id="form-card-number">
+                    <label class="control-label">Payment Date</label>
+                    <input type="date" class="form-control" name="PaymentDate" id="PaymentDate" maxlength="50" style="max-width: 100%" required>
+                </div>
+                @*<div class="form-group col-12" id="form-card-number">
+                        <label class="control-label">Card number (4 last digits)</label>
+                        <input type="text" class="form-control" name="CardNumber" maxlength="4" style="max-width: 100%">
+                    </div>*@
+                <div class="form-group col-12">
+                    <label class="control-label">Descriptions</label>
+                    <textarea type="text" class="form-control" name="Comment" maxlength="200" style="max-width: 100%"></textarea>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <span class="btn btn-default pull-left margin-r-5" data-dismiss="modal">Close</span>
+            <button class="btn btn-success pull-right margin-r-5" type="submit">Submit</button>
+            @*@if (ViewBag.Type == "ByEmpIds")
+                {
+                    <button class="btn btn-success pull-right margin-r-5" type="submit">Submit</button>
+                }
+                else
+                {
+                    <button class="btn btn-success pull-right margin-r-5" onclick="" type="button">Submit</button>
+                }*@
+
+        </div>
+    </div>
+</form>
+<!--Xem chi tiet thong tin nhan vien-->
+<script>
+        var ByEmpIds = '@ViewBag.Type' == 'ByEmpIds';
+        console.log(ByEmpIds)
+        $('#modal-set-as-paid-multi-emp').submit(function (e) {
+            if (!ByEmpIds) {
+                setaspaid_by_empPayrollId('@ViewBag.EmpId');
+                return;
+            }
+            e.preventDefault();
+            var listEmp = [];
+            var Date = $("#Date").val();
+            $(".SelectEmployee[type=checkbox]:checked").each(function () {
+                listEmp.push($(this).val());
+            });
+            $.ajax({
+                method: "Post",
+                url: "/Payroll/SetAsPaidMultiEmp",
+                data: $("#modal-set-as-paid-multi-emp").serialize() + "&ListMemberNumber=" + listEmp + "&Date=" + Date,
+            })
+                .done(function (data) {
+
+                    if (data) {
+                        noty({ "text": "set as paid success", "layout": "topRight", "type": "success" });
+
+                    }
+                    else {
+                        noty({ "text": "set as paid error", "layout": "topRight", "type": "warning" });
+                    }
+                })
+                .fail(function () {
+                    start = -1;
+                    alert("fail");
+                })
+                .always(function () {
+                    $(".dataTable").DataTable().ajax.reload(null, false);
+                    $("#calculate-payroll").prop("disabled", true);
+                    $("#set-as-paid-payroll").prop("disabled", true);
+                    $("#modal-set-as-paid-multi-emp").modal("hide");
+                });
+        })
+</script>

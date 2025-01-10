@@ -1,0 +1,25 @@
+﻿@using EnrichcousBackOffice.Areas.Page.Models.Customize.Ticket
+@model TicketProgressModel
+<div class="header-progress">
+    <div class="progress-title">
+        <h2>@Model.ProgressTitle</h2>
+    </div>
+    <div class="ticket-progress">
+
+        <ul>
+            <li class="active-step">
+                <a href="/quick-ticket?update=true">Contact Information</a>
+            </li>
+            <li class="@(Model.TicketProgressStep == TicketProgressStep.TicketInformation||Model.TicketProgressStep == TicketProgressStep.Type||Model.TicketProgressStep == TicketProgressStep.Complete?"active-step":"inactive-step")">
+                <a @(Model.TicketProgressStep == TicketProgressStep.TicketInformation||Model.TicketProgressStep == TicketProgressStep.Type||Model.TicketProgressStep == TicketProgressStep.Complete?"href=/quick-ticket/selecttype":"")> Ticket Type</a>
+            </li>
+            <li class="@(Model.TicketProgressStep == TicketProgressStep.TicketInformation||Model.TicketProgressStep == TicketProgressStep.Complete?"active-step":"inactive-step")">
+                <a @(Model.TicketProgressStep == TicketProgressStep.TicketInformation||Model.TicketProgressStep == TicketProgressStep.Complete?"href=/quick-ticket/ticketinformation":"")>Ticket Information</a>
+            </li>
+            <li class="@(Model.TicketProgressStep == TicketProgressStep.Complete?"active-step":"inactive-step")">
+                <a @(Model.TicketProgressStep == TicketProgressStep.Complete?"href=/quick-ticket/complete":"")>Complete</a>
+            </li>
+        </ul>
+    </div>
+
+</div>

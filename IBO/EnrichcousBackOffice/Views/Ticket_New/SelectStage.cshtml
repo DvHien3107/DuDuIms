@@ -1,0 +1,7 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.T_Project_Stage>
+@{
+    Layout = "~/Views/Ticket_New/_TicketLayout.cshtml";
+    ViewBag.Page = "19120002";
+    ViewBag.Title = "Developments Ticket | Select Stage";
+}
+@Html.Partial("_Partial_SelectStage", Model)

@@ -1,0 +1,463 @@
+﻿@using EnrichcousBackOffice.Models
+@using EnrichcousBackOffice.AppLB
+@{
+    ViewBag.Title = "SMS Report";
+
+}
+<link href="~/Content/Admin/plugins/jqueryconfirm/jquery-confirm.min.css" rel="stylesheet" />
+<style>
+    .ico-help {
+        display: inline-block;
+        transform: translateY(1px);
+        color: var(--main-color-1);
+        font-size: 1em;
+        padding-left: 1px;
+    }
+
+    .total-div {
+        display: inline-block;
+        border: 1px dotted green;
+        padding: 5px 10px;
+        margin-right: 3px;
+    }
+
+    .dt-buttons {
+        text-align: right;
+    }
+
+    .circular {
+        animation: rotate 2s linear infinite;
+        height: 50px;
+        transform-origin: center center;
+        width: 50px;
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        margin: auto;
+    }
+
+    .path {
+        stroke-dasharray: 1, 200;
+        stroke-dashoffset: 0;
+        animation: dash 1.5s ease-in-out infinite, color 6s ease-in-out infinite;
+        stroke-linecap: round;
+    }
+
+    @@keyframes rotate {
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    @@keyframes dash {
+        0% {
+            stroke-dasharray: 1, 200;
+            stroke-dashoffset: 0;
+        }
+
+        50% {
+            stroke-dasharray: 89, 200;
+            stroke-dashoffset: -35px;
+        }
+
+        100% {
+            stroke-dasharray: 89, 200;
+            stroke-dashoffset: -124px;
+        }
+    }
+
+    @@keyframes color {
+        100%, 0% {
+            stroke: #d62d20;
+        }
+
+        40% {
+            stroke: #0057e7;
+        }
+
+        66% {
+            stroke: #008744;
+        }
+
+        80%, 90% {
+            stroke: #ffa700;
+        }
+    }
+
+    div.dataTables_wrapper div.dataTables_processing {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 100%;
+        height: 100%;
+        margin-left: 0;
+        margin-top: 0;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        padding: 1em 0;
+        border: none;
+        background-color: #fffdfd80;
+    }
+</style>
+
+
+<section class="content">
+    @if (TempData["e"] != null)
+    {
+        <div class="alert alert-warning alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+        </div>
+    }
+    else if (TempData["s"] != null)
+    {
+        <div class="alert alert-success alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+        </div>
+    }
+
+
+    <div class="nav-tabs-custom-ticket nav-tabs-custom">
+        <ul class="nav nav-tabs">
+            <li class="tab-nav-item active">
+                <a href="/otherreport/smsreport">
+                    SMS REPORT
+                </a>
+            </li>
+            <li class="tab-nav-item">
+                <a href="/otherreport/SMSUsedReport">
+                    SMS POS REPORT
+                </a>
+            </li>
+            <li class="tab-nav-item">
+                <a href="/otherreport/smsexport">
+                    SMS EXPORT FILES
+                </a>
+            </li>
+        </ul>
+        <div class="tab-content">
+            <div>
+                <div class="row">
+                    <h1 class="text-center" style="font-size:19px;padding-bottom:15px;">Twilio SMS Report</h1>
+                    @*<div class="row col-md-12" style="padding-bottom:20px">
+            <a class="btn btn-primary pull-right" onclick="open_request()"><i class="fa fa-plus"></i> New request</a>
+        </div>*@
+                    <div id="search_select_group">
+                        <form id="report_form">
+
+                            <div class="col-lg-3 col-md-6 col-sm-6 form-group" style="padding: 0 5px">
+                                <div class="input-group">
+                                    <div class="input-group-addon">
+                                        From Date
+                                        <div class="ico-help" title="The from date for the search."><i class="fa fa-question-circle"></i></div>
+                                    </div>
+                                    <input type="text" class="form-control  datepicker" name="DateSentAfter" value="@DateTime.UtcNow.UtcToIMSDateTime().ToString("MM/dd/yyyy")" />
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3 col-md-6 col-sm-6 form-group" style="padding: 0 5px">
+                                <div class="input-group">
+                                    <div class="input-group-addon">
+                                        To Date
+                                        <div class="ico-help" title="The to date for the search."><i class="fa fa-question-circle"></i></div>
+                                    </div>
+                                    <input type="text" class="form-control  datepicker" name="DateSentBefore" value="@DateTime.UtcNow.UtcToIMSDateTime().ToString("MM/dd/yyyy")" />
+                                </div>
+                            </div>
+
+
+                            <div class="col-lg-3 col-md-6 col-sm-6 form-group" style="padding: 0 5px">
+                                <div class="input-group">
+                                    <div class="input-group-addon">
+                                        From Phone
+                                        <div class="ico-help" title="filter by from phone"><i class="fa fa-question-circle"></i></div>
+                                    </div>
+                                    <input type="text" class="form-control" name="FromPhone" value="" />
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3 col-md-6 col-sm-6 form-group" style="padding: 0 5px">
+                                <div class="input-group">
+                                    <div class="input-group-addon">
+                                        To Phone
+                                        <div class="ico-help" title="filter by to phone"><i class="fa fa-question-circle"></i></div>
+                                    </div>
+                                    <input type="text" class="form-control" name="ToPhone" value="" />
+                                </div>
+                            </div>
+
+                            @*<div class="col-lg-3 col-md-6 col-sm-6 form-group" style="padding: 0 5px">
+                    <div class="input-group">
+                        <div class="input-group-addon">
+                            Number Segments
+                            <div class="ico-help" title="filter by to phone"><i class="fa fa-question-circle"></i></div>
+                        </div>
+                        <input class="form-control" type="number" name="NumSegments" />
+                    </div>
+                </div>*@
+
+
+                            @*<div class="col-lg-3 col-md-6 col-sm-6 form-group" style="padding: 0 5px">
+                    <div class="input-group">
+                        <div class="input-group-addon">
+                            Status
+                            <div class="ico-help" title="Search by sent status ."><i class="fa fa-question-circle"></i></div>
+                        </div>
+                        <select class="form-control  select2" name="Status" style="width: 100%">
+                            <option value="">All</option>
+                            <option value="success">Success</option>
+                            <option value="failed">Failed</option>
+                        </select>
+                    </div>
+                </div>*@
+
+
+                            @*<div class="col-lg-3 col-md-6 col-sm-6 form-group" style="padding: 0 5px">
+                    <div class="input-group">
+                        <div class="input-group-addon">
+                            Body
+                            <div class="ico-help" title="filter by body message"><i class="fa fa-question-circle"></i></div>
+                        </div>
+                        <input type="text" name="Body" class="form-control" placeholder="Body" />
+                    </div>
+                </div>*@
+                            <div class="col-md-12 form-group text-center" style="padding: 0 5px">
+                                <button class="btn btn-primary btn-flat" type="submit" id="SearchSMS" name="SearchSMS"><i class="fa fa-search"></i> Search</button>
+
+                            </div>
+                        </form>
+
+                        <img id="search_loading" style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                    </div>
+                </div>
+                <hr />
+                <div>
+                    <span>
+                        <i><i class="fa fa-info-circle"></i> We can only search fewer than 1000 records.<a href="https://support.twilio.com/hc/en-us/articles/223183588-Exporting-SMS-and-Call-Logs" target="_blank">detail</a></i>
+                    </span>
+
+                    <button class="btn btn-success btn-flat pull-right" type="submit" id="ExportSMS" name="ExportSMS"><i class="fa fa-file-excel-o"></i> Export</button>
+                </div>
+
+                <table id="tableSMS" class="display table table-bordered" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>Body</th>
+                            <th>#Segments</th>
+                            <th>Date Sent</th>
+                            <th>From</th>
+                            <th>To</th>
+                            <th>Status</th>
+                            <th>Price</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+                <div class="text-right w-full">
+                    <div class="btn-group">
+                        <button type="button" id="firstPage" class="btn btn-default changePage" disabled>First</button>
+                        <button type="button" id="prevPage" class="btn btn-default changePage" disabled>Prev</button>
+                        <button type="button" id="pageNumber" class="btn btn-primary">1</button>
+                        <button type="button" id="nextPage" class="btn btn-default changePage" disabled>Next</button>
+                    </div>
+                </div>
+              
+
+            </div>
+        </div>
+        <!-- /.tab-content -->
+    </div>
+
+
+
+
+</section>
+
+<script src="~/Content/Admin/plugins/jqueryconfirm/jquery-confirm.min.js"></script>
+
+
+@section script{
+    <script>
+        $('#ExportSMS').on('click', function () {
+            $.confirm({
+                title: 'Confirmation !',
+                content: 'The process can take a few minutes ',
+                buttons: {
+                    Continue: {
+                        text: 'Continue',
+                        btnClass: 'btn-success',
+                        action: function () {
+                            debugger;
+                            $.ajax({
+                                type: "Post",
+                                url: "/OtherReport/ExportFile",
+                                data: $("#report_form").serialize(),
+                                success: function (data) {
+                                    if (data.status) {
+                                        location.href = "/otherreport/smsexport";
+                                    }
+                                    else
+                                    {
+                                        Error(data.message);
+                                    }
+                                },
+                                error: function (xhr, ajaxOptions, thrownError) {
+                                    alert('fail');
+                                }
+                            });
+                        }
+                    },
+                    Cancel: function () {
+                        // do nothing.
+                    }
+                }
+            });
+        });
+
+        let Url = "";
+        $(".changePage").on("click", function () {
+            Url = $(this).attr("data-href");
+            $("#tableSMS").DataTable().ajax.reload();
+            $(".changePage").attr("disabled", true);
+        });
+        $('.datepicker').datepicker({
+            changeMonth: true,
+            changeYear: true,
+            yearRange: '1950:2050'
+        });
+
+        $(document).ready(function () {
+            $('.ico-help').tooltip();
+        });
+        // this is the id of the form
+        $("#report_form").submit(function (e) {
+            e.preventDefault(); // avoid to execute the actual submit of the form.
+            var form = $(this);
+            var actionUrl = form.attr('action');
+            $.ajax({
+                type: "POST",
+                url: actionUrl,
+                data: form.serialize(), // serializes the form's elements.
+                success: function (data) {
+
+                }
+            });
+        });
+
+        $("#SearchSMS").click(function () {
+            $("#tableSMS").DataTable().ajax.reload();
+        })
+        var t = $("#tableSMS").DataTable({
+            "scrollY": '400px',
+            //'dom': 'Bfrtip',
+            //'buttons': [
+            //    {
+            //        extend: 'excelHtml5',
+            //        text: 'Export Excel',
+            //        className:"btn btn-success"
+
+            //    }
+            //],
+            "scrollCollapse": true,
+            "paging": false,
+            "language": {
+                "processing": '<svg class="circular" viewBox="25 25 50 50"><circle class="path" cx="50" cy="50" r="20" fill="none" stroke-width="2" stroke-miterlimit="10"></circle></svg>'
+            },
+            "serverSide": true, // for process server side
+            "processing": true, // for show progress bar
+            'searching': false,
+            "orderable": true,
+            "ajax": {
+                "url": "/OtherReport/LoadDataSMSReport",
+                "type": "Post",
+                "datatype": "json",
+                'data': function (data) {
+                    data.Body = $('#report_form [name="Body"]').val();
+                    data.DateSentBefore = $('#report_form [name="DateSentBefore"]').val();
+                    data.DateSentAfter = $('#report_form [name="DateSentAfter"]').val();
+                    data.ToPhone = $('#report_form [name="ToPhone"]').val();
+                    data.FromPhone = $('#report_form [name="FromPhone"]').val();
+                    data.Status = $('#report_form [name="Status"]').val();
+                    data.NumSegments = $('#report_form [name="NumSegments"]').val();
+                    data.Url = Url;
+                    return data;
+                },
+                'dataSrc': function (data) {
+
+                    if (data.page > 1) {
+                        $("#firstPage").attr("disabled", false);
+                        $("#firstPage").attr("data-href", data.firstPage);
+
+                        $("#prevPage").attr("disabled", false);
+                        $("#prevPage").attr("data-href", data.prevPage);
+                    }
+                    else {
+                        $("#firstPage").attr("disabled", true);
+                        $("#firstPage").attr("data-href", "");
+                        $("#prevPage").attr("disabled", true);
+                        $("#prevPage").attr("data-href", "");
+                    }
+
+                    if (data.hasNextPage) {
+                        $("#nextPage").attr("disabled", false);
+                        $("#nextPage").attr("data-href", data.nextPage);
+                    }
+                    else {
+                        $("#nextPage").attr("disabled", true);
+                        $("#nextPage").attr("data-href", "");
+                    }
+
+                    $("#pageNumber").html(data.page);
+
+                    return data.data;
+                }
+
+            },
+
+            "columns": [
+                {
+                    "name": "Body",
+                    'data': "Body",
+                    "orderable": false,
+                },
+                {
+                    "name": "NumSegments",
+                    'data': "NumSegments",
+
+                    "orderable": true,
+                },
+                {
+                    "name": "DateSent",
+                    'data': "DateSent",
+                    "orderable": true,
+                },
+                {
+                    "name": "From",
+                    'data': "From",
+                    "orderable": true,
+                },
+                {
+                    "name": "To",
+                    'data': "To",
+                    "orderable": true,
+                },
+                {
+                    "name": "Status",
+                    'data': "Status",
+                    "orderable": true,
+                },
+                {
+                    "name": "Price",
+                    'data': "Price",
+
+                    "orderable": true,
+                },
+            ]
+
+        });
+    </script>
+}

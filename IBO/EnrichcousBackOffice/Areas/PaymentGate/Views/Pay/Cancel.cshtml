@@ -1,0 +1,35 @@
+﻿
+@model EnrichcousBackOffice.Areas.PaymentGate.ModelsView.OrderRequest
+@using Newtonsoft.Json;
+@using EnrichcousBackOffice.Areas.PaymentGate.ModelsView
+
+@{
+    ViewBag.Title = "Hủy thanh toán";
+    Layout = "~/Areas/PaymentGate/Views/Shared/_Layout.cshtml";
+}
+@{
+    var products = ViewBag.Products;
+}
+
+@section content_header{
+    @if (Model == null)
+    {
+        <text>
+            <div class="alert alert-warning alert-dismissible" style="margin: 0">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-warning"></i> Thanh toán đã huỷ</span>
+            </div>
+        </text>
+        return;
+    }
+}
+
+@section content_left {
+    <div style="margin-top: 15px">
+        <button class="btn btn-default selected-action-btn btn-sm" onclick="window.history.back()">Thanh toán lại</button>
+    </div>
+}
+
+@section content_right {
+
+}

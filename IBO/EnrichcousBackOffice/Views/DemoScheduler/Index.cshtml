@@ -1,0 +1,882 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.PO_Request>
+@using EnrichcousBackOffice.Models;
+@section style{
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar-scheduler@5.8.0/main.min.css' rel='stylesheet' />
+    <link href="~/Content/Admin/bower_components/bootstrap-datepicker/dist/css/bootstrap-datepicker.min.css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.min.css" rel="stylesheet" />
+    <style>
+        .open-detail {
+            cursor: pointer;
+        }
+
+        .popper,
+        .tooltip {
+            position: absolute;
+            z-index: 9999;
+            background: #FFC107;
+            color: black;
+            width: 150px;
+            border-radius: 3px;
+            box-shadow: 0 0 2px rgba(0,0,0,0.5);
+            padding: 10px;
+            text-align: center;
+            opacity: 1;
+        }
+
+        .fc .fc-col-header-cell-cushion {
+            display: flex;
+        }
+
+        .style5 .tooltip {
+            background: #1E252B;
+            color: #FFFFFF;
+            max-width: 200px;
+            width: auto;
+            font-size: .8rem;
+            padding: .5em 1em;
+        }
+
+        .popper .popper__arrow,
+        .tooltip .tooltip-arrow {
+            width: 0;
+            height: 0;
+            border-style: solid;
+            position: absolute;
+            margin: 5px;
+        }
+
+        .tooltip .tooltip-arrow,
+        .popper .popper__arrow {
+            border-color: #FFC107;
+        }
+
+        .style5 .tooltip .tooltip-arrow {
+            border-color: #1E252B;
+        }
+
+        .popper[x-placement^="top"],
+        .tooltip[x-placement^="top"] {
+            margin-bottom: 5px;
+        }
+
+            .popper[x-placement^="top"] .popper__arrow,
+            .tooltip[x-placement^="top"] .tooltip-arrow {
+                border-width: 5px 5px 0 5px;
+                border-left-color: transparent;
+                border-right-color: transparent;
+                border-bottom-color: transparent;
+                bottom: -5px;
+                left: calc(50% - 5px);
+                margin-top: 0;
+                margin-bottom: 0;
+            }
+
+        .popper[x-placement^="bottom"],
+        .tooltip[x-placement^="bottom"] {
+            margin-top: 5px;
+        }
+
+            .tooltip[x-placement^="bottom"] .tooltip-arrow,
+            .popper[x-placement^="bottom"] .popper__arrow {
+                border-width: 0 5px 5px 5px;
+                border-left-color: transparent;
+                border-right-color: transparent;
+                border-top-color: transparent;
+                top: -5px;
+                left: calc(50% - 5px);
+                margin-top: 0;
+                margin-bottom: 0;
+            }
+
+        .tooltip[x-placement^="right"],
+        .popper[x-placement^="right"] {
+            margin-left: 5px;
+        }
+
+            .popper[x-placement^="right"] .popper__arrow,
+            .tooltip[x-placement^="right"] .tooltip-arrow {
+                border-width: 5px 5px 5px 0;
+                border-left-color: transparent;
+                border-top-color: transparent;
+                border-bottom-color: transparent;
+                left: -5px;
+                top: calc(50% - 5px);
+                margin-left: 0;
+                margin-right: 0;
+            }
+
+        .popper[x-placement^="left"],
+        .tooltip[x-placement^="left"] {
+            margin-right: 5px;
+        }
+
+            .popper[x-placement^="left"] .popper__arrow,
+            .tooltip[x-placement^="left"] .tooltip-arrow {
+                border-width: 5px 0 5px 5px;
+                border-top-color: transparent;
+                border-right-color: transparent;
+                border-bottom-color: transparent;
+                right: -5px;
+                top: calc(50% - 5px);
+                margin-left: 0;
+                margin-right: 0;
+            }
+
+        .is-opening {
+            transform: rotate(90deg);
+        }
+
+        .icon-detail {
+            transition: all .2s linear;
+        }
+
+        .dropdown-submenu {
+            position: relative;
+        }
+
+            .dropdown-submenu .dropdown-menu {
+                top: 0;
+                left: 100% !important;
+                margin-top: -1px;
+            }
+
+        .dropdown button, .dropdown a {
+            width: 100%;
+            display: block;
+            text-align: left;
+        }
+
+        .dropdown-menu button i, .dropdown-menu a i {
+            width: 25px;
+            margin-right: 0px !important;
+        }
+
+        .dropdown-menu > li:not(:last-child) {
+            padding-bottom: 0px;
+        }
+
+        .dropdown-menu > i {
+            width: 15px;
+        }
+
+        .icon-dropdown {
+            width: 15px;
+            margin-right: 0px !important;
+        }
+
+        .dropdown-menu .disabled {
+            background: #eee;
+        }
+
+        .dropdown-action .dropdown-menu {
+            padding: 0px;
+            box-shadow: 0 1px 5px 0 rgb(0 0 0 / 30%);
+        }
+
+        .dropdown-menu > li > button {
+            margin: 1px;
+        }
+
+        .btn-status.active {
+            background-color: #1e7e34 !important;
+        }
+
+        .table-striped-custom > tbody:not(.tr-detail) > tr.odd {
+            background-color: #f9f9f9;
+        }
+
+        .circular {
+            animation: rotate 2s linear infinite;
+            height: 50px;
+            transform-origin: center center;
+            width: 50px;
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            margin: auto;
+        }
+
+        .path {
+            stroke-dasharray: 1, 200;
+            stroke-dashoffset: 0;
+            animation: dash 1.5s ease-in-out infinite, color 6s ease-in-out infinite;
+            stroke-linecap: round;
+        }
+
+        @@keyframes rotate {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @@keyframes dash {
+            0% {
+                stroke-dasharray: 1, 200;
+                stroke-dashoffset: 0;
+            }
+
+            50% {
+                stroke-dasharray: 89, 200;
+                stroke-dashoffset: -35px;
+            }
+
+            100% {
+                stroke-dasharray: 89, 200;
+                stroke-dashoffset: -124px;
+            }
+        }
+
+        @@keyframes color {
+            100%, 0% {
+                stroke: #d62d20;
+            }
+
+            40% {
+                stroke: #0057e7;
+            }
+
+            66% {
+                stroke: #008744;
+            }
+
+            80%, 90% {
+                stroke: #ffa700;
+            }
+        }
+
+        .nav-tabs-custom > .nav-tabs > li.active > a {
+            border-right: 1px solid #f4f4f4 !important;
+            border-left: 1px solid #f4f4f4 !important;
+        }
+
+        .nav-tabs-custom > .nav-tabs {
+            border-bottom-color: #f4f4f4 !important;
+        }
+
+            .nav-tabs-custom > .nav-tabs > li > a {
+                color: #444;
+                border-radius: 0;
+                line-height: 1.42857143;
+                padding: 10px 30px;
+            }
+
+        .nav-tabs li {
+            font-size: 1.3em;
+        }
+
+        .fc-license-message {
+            display: none;
+        }
+    </style>
+}
+<section class="content-header">
+    <h1>
+        Demo Scheduler
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li><i class="fa fa-credit-card"></i> Sales</li>
+        <li class="active">Demo Scheduler</li>
+    </ol>
+</section>
+<style>
+    .vertical-middle {
+        vertical-align: middle !important;
+    }
+</style>
+<section class="content">
+    @if (TempData["e"] != null)
+    {
+        <div class="alert alert-warning alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+        </div>
+    }
+    else if (TempData["s"] != null)
+    {
+        <div class="alert alert-success alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+        </div>
+    }
+    <div class="row">
+        <div class="col-md-12">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title"> Demo Scheduler</h3>
+                </div>
+                <div class="box-body">
+                    <div class="nav-tabs-custom">
+                        <ul class="nav nav-tabs" id="main_tab" style="margin:10px 0px">
+                            <li id="scheduler"><a style="cursor: pointer;" class="tabs" data-toggle="tab" data-tab='scheduler'>Scheduler</a></li>
+                            <li id="completed"><a style="cursor: pointer;" class="tabs" data-toggle="tab" data-tab='completed'>Completed</a></li>
+                            <li id="cancel"><a style="cursor: pointer;" class="tabs" data-toggle="tab" data-tab='cancel'>Cancel</a></li>
+
+                        </ul>
+                        <div class="tab-content">
+                            <div class="tab-pane active">
+                                <div style="text-align:center">
+                                    <svg id="load_partial_tab" style="display:none" class="circular" viewBox="25 25 50 50"><circle class="path" cx="50" cy="50" r="20" fill="none" stroke-width="2" stroke-miterlimit="10"></circle></svg>
+                                </div>
+                                <div class="content-tab-load" style="min-height:300px;position:relative">
+                                    <div id="partial_tab">
+
+                                    </div>
+                                    <div class="loadding-tab" style="position: absolute; right: 50%;top: 50%;transform: translate(50%, -50%) ;display:none">
+                                        <svg class="circular" viewBox="25 25 50 50"><circle class="path" cx="50" cy="50" r="20" fill="none" stroke-width="2" stroke-miterlimit="10"></circle></svg>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div id="render-popup-cru">
+
+</div>
+<div id="render-popup-assign">
+
+</div>
+<div id="render-popup-calendar">
+
+</div>
+<div id="render-modal-event-calendar">
+
+</div>
+<div id="merchant_popup">
+
+</div>
+<div class="modal fade" id="modal-change-status" role="dialog">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <form id="form-change-status" action="/demoscheduler/updatestatus" method="post">
+                <div class="modal-header">
+                    <button style="font-size:19px" type="button" class="close" data-dismiss="modal"><i class="fa fa-close"></i></button>
+                    <h4 class="modal-title" style="margin-right:50px"><i class="fa fa-pencil-square-o"></i>&nbsp;Update Status Demo Scheduler</h4>
+                </div>
+                <input type="hidden" name="DemoSchedulerId" value="">
+                <input type="hidden" name="Status" value="">
+
+                <div class="modal-body">
+                    <div class="row">
+
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label>Note :</label>
+                                <textarea id="desc" class="form-control" wrap="soft" name="Note" rows="5"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button name="btnsubmit" value="save" type="submit" class="btn btn-sm btn-primary">Save <img class="loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none"></button>
+                    <button data-dismiss="modal" class="btn btn-sm btn-default">Close</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="modal-delete-demo-scheduler">
+    <div class="modal-dialog modal-md" style="max-width:800px;">
+        <div class="modal-content">
+            <form id="form-delete-demo-scheduler" method="post" action="/DemoScheduler/DeleteDemoscheduler">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                    <h4 id="modal-department-title" class="modal-title">
+                        Are you sure?
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="Id" value="" />
+                    <div class="col-12">
+                        <div class="row">
+                            <div class="col-md-12">
+                                Are you sure you want to perform this action?
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="col-12">
+                        <button type="button" class="btn btn-default" data-dismiss="modal" aria-label="Close">
+                            No, cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            Yes
+                            <img class="loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none">
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="loading-page" style="display:none;position: fixed;top: 50%;left: 50%;transform: translate(-50%, -50%);z-index:99999;"><img src="/Content/ajax-loaders/loading2.gif" width="60"></div>
+@section script{
+
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar-scheduler@5.8.0/main.min.js'></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"></script>
+
+    <script>
+        function updateStatus(id, status) {
+            $.get("/Demoscheduler/GetDemoScheduler?DemoSchedulerId=" + id, function (data) {
+                $("#form-change-status").find("[name='Status']").val(status);
+                $("#form-change-status").find("[name='DemoSchedulerId']").val(id);
+                $("#form-change-status").find("[name='Note']").val(data.Note);
+                $("#modal-change-status").modal('show');
+            });
+           
+        }
+        $("#form-change-status").submit(function (e) {
+            e.preventDefault(); // avoid to execute the actual submit of the form.
+            var form = $(this);
+            var url = form.attr('action');
+            var loading = form.find('.loading');
+            $(loading).show();
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: form.serialize(), // serializes the form's elements.
+                success: function (data) {
+                    if (data.status) {
+                        $("#modal-change-status").modal("hide");
+                        let MsgSuccess = $.parseJSON('{"text":"' + data.message + '", "layout":"topRight", "type":"success"}');
+                        noty(MsgSuccess);
+                        UpdateRow($(form).find('[name="DemoSchedulerId"]').val());
+                    }
+                    else {
+                            let MsgError = $.parseJSON('{"text":"' + data.message + '", "layout":"topRight", "type":"error"}');
+                            noty(MsgError);
+                    }
+                },
+
+                complete: function () {
+                    $(loading).hide();
+                },
+            });
+
+
+        });
+        $('#main_tab>li>a').on("click", function (e) {
+            var TabName = $(this).attr('data-tab');
+            var CurrentTab = localStorage.getItem('lastTab-demoscheduler');
+            if (TabName !== CurrentTab) {
+                localStorage.setItem('lastTab-demoscheduler', TabName);
+                LoadTabContent();
+            }
+        })
+
+        $(document).on("click", "table.demo-scheduler .open-detail", function (e) {
+            e.preventDefault();
+            if ($(e.target).closest(".on_rows").length == 0) {
+                var Id = $(this).parent("tr").data("id");
+                if ($(".tr-detail-" + Id).length) {
+                    showDetail(Id, false);
+                }
+                else {
+                    showDetail(Id);
+                }
+            }
+        });
+
+        localStorage.removeItem('Demoscheduler-SetAppointment');
+        localStorage.removeItem('Demoscheduler-OpenDetailId');
+        localStorage.removeItem('Demoscheduler-ChangeDataDetail');
+
+        function FetchReloadData() {
+            var isSetAppointment = localStorage.getItem('Demoscheduler-SetAppointment');
+            if (isSetAppointment) {
+                $('.demo-scheduler').DataTable().ajax.reload();
+                localStorage.removeItem('Demoscheduler-SetAppointment');
+            }
+            else {
+                var OpenDetailId = localStorage.getItem('Demoscheduler-OpenDetailId');
+                var ChangeDataDetail = localStorage.getItem('Demoscheduler-ChangeDataDetail');
+                if (OpenDetailId.length && ChangeDataDetail) {
+                    UpdateRow(OpenDetailId);
+
+                    localStorage.removeItem('Demoscheduler-OpenDetailId');
+                    localStorage.removeItem('Demoscheduler-ChangeDataDetail');
+                }
+            }
+
+        }
+
+        function LoadTabContent() {
+            $("#partial_tab").html('')
+            $('.loadding-tab').show();
+            var CurrentTab = localStorage.getItem('lastTab-demoscheduler');
+            if (!($('#main_tab').find('#' + CurrentTab)[0])) {
+                CurrentTab = $('#main_tab').find('li').first().attr('id');
+                localStorage.setItem('lastTab-demoscheduler', CurrentTab);
+            }
+            $('#' + CurrentTab).tab('show');
+            $.ajax({
+                url: '/DemoScheduler/ChangeTab',
+                type: 'POST',
+                dataType: 'html',
+                data: { "TabName": CurrentTab },
+                success: function (data) {
+                    $("#partial_tab").html('')
+                    $("#partial_tab").html(data)
+                },
+                error: function (data) {
+                    console.log(data.text);
+                },
+                complete: function () {
+                    $('.loadding-tab').hide();
+                }
+            });
+        }
+        LoadTabContent();
+
+
+
+        function ViewCalendarPopup(DemoSchedulerId, MemberNumber = "", DefaultDate = "") {
+            PopupCenter('/DemoScheduler/Calendar?DemoSchedulerId=' + DemoSchedulerId + '&MemberNumber=' + MemberNumber + '&DefaultDate=' + DefaultDate, '');
+        }
+
+        //function setAppointment(el, DemoSchedulerId) {
+        //    $.ajax({
+        //        type: "POST",
+        //        url: '/DemoScheduler/AssignDemoScheduler',
+        //        data: { DemoSchedulerId, MemberNumber }, // serializes the form's elements.
+        //        success: function (data) {
+        //            //if (data.status === 1) {
+        //            $("#modal-assign-demo-scheduler").modal("hide");
+        //            $("#render-popup-calendar").html(data.message);
+        //            $("#modal-calendar-demo-scheduler").modal({ backdrop: 'static', keyboard: false });
+        //            //}
+        //            //else if (data.status === 0) {
+        //            //    $("#modal-assign-demo-scheduler").modal("hide");
+        //            //    $("#modal-send-email-authorize").modal({ backdrop: 'static', keyboard: false });
+        //            //    $("#form-send-email-authorize").find('[name="Email"]').val(data.message);
+        //            //}
+
+        //        },
+        //        complete: function () {
+        //            $(loading).hide();
+        //        },
+        //    });
+        //    //var loading = $(el).parents(".dropdown-action").find(".loading");
+        //    //$(loading).show();
+        //    //$.ajax({
+        //    //    type: "get",
+        //    //    url: "/DemoScheduler/ShowPopupAssign?DemoSchedulerId=" + DemoSchedulerId,
+        //    //    success: function (data) {
+        //    //        $("#render-popup-assign").html(data);
+        //    //        $("#modal-assign-demo-scheduler").modal("show");
+        //    //    },
+        //    //    error: function (xhr, ajaxOptions, thrownError) {
+        //    //        alert('fail');
+        //    //    },
+        //    //    complete: function () {
+        //    //        $(loading).hide();
+        //    //    },
+        //    //});
+        //}
+
+
+        function setUpdate(el, DemoSchedulerId) {
+            var loading = $(el).parents('.dropdown-action').find(".loading");
+            $(loading).show();
+            $.ajax({
+                type: "Post",
+                url: "/DemoScheduler/ShowPopUpCreateOrUpdate",
+                data: { "Id": DemoSchedulerId },
+                success: function (data) {
+                    $("#render-popup-cru").html(data);
+                    $("#modal-cru-demo-scheduler").modal("show");
+
+                },
+                error: function (xhr, ajaxOptions, thrownError) {
+                    alert('fail');
+                },
+                complete: function () {
+                    $(loading).hide();
+                },
+            });
+        }
+        function setDelete(DemoSchedulerId) {
+            $("#form-delete-demo-scheduler").find("[name='Id']").val(DemoSchedulerId);
+            $("#modal-delete-demo-scheduler").modal("show");
+        }
+        function showDetail(DemoSchedulerId, show = true) {
+            var loadingrow = $("#tr_" + DemoSchedulerId).find('img.loading');
+            $('.btn-group>button>i').removeClass('fa-minus');
+            var arrowicon = $("#tr_" + DemoSchedulerId).find('.btn-group>button>i');
+            $(loadingrow).show();
+            if ($(".tr-detail-" + DemoSchedulerId).length) {
+                if (show == false) {
+                    $(".div-detail-" + DemoSchedulerId).slideUp(function () {
+                        $(".tr-detail-" + DemoSchedulerId).remove();
+                    });
+                    $(arrowicon).removeClass('fa-minus');
+                    $(loadingrow).hide();
+                    localStorage.removeItem('Demoscheduler-OpenDetailId');
+                    return;
+                }
+            }
+
+            //if ($(".tr-detail-" + DemoSchedulerId).length) {
+            //    if (show == false) {
+            //        $(".div-detail-" + DemoSchedulerId).slideUp(function () {
+            //            $(".tr-detail-" + DemoSchedulerId).hide();
+            //        });
+            //        $(arrowicon).removeClass('is-opening');
+            //    }
+            //    else {
+            //        $(".tr-detail").hide();
+            //        $(".tr-detail-" + DemoSchedulerId).show();
+            //        $(arrowicon).addClass('is-opening');
+            //        $(".div-detail-" + DemoSchedulerId).slideDown(function () {
+            //        });
+            //    }
+            //    $(loadingrow).hide();
+            //    return;
+            //}
+            $.ajax({
+                type: "Post",
+                url: "/DemoScheduler/ShowDetailCalendarDemo",
+                data: { DemoSchedulerId },
+                success: function (data) {
+                    $(".tr-detail").not("#tr_" + DemoSchedulerId).remove();
+                    $("#tr_" + DemoSchedulerId).after(data);
+                    $(".div-detail-" + DemoSchedulerId).slideDown();
+                    localStorage.setItem('Demoscheduler-OpenDetailId', DemoSchedulerId);
+                    $(arrowicon).addClass('fa-minus');
+                },
+                error: function (xhr, ajaxOptions, thrownError) {
+                    alert('fail');
+                },
+                complete: function () {
+                    $(loadingrow).hide();
+                },
+            });
+        }
+        //update row
+        function UpdateRow(DemoSchedulerId, showdetail = true) {
+            $.ajax({
+                method: "Post",
+                url: "/DemoScheduler/UpdateRowDataTable",
+                data: { DemoSchedulerId },
+                dataType: "json"
+            }).done(async function (data) {
+                debugger;
+                var numberrow = t.row('#tr_' + DemoSchedulerId).index();
+                var CurrentTab = localStorage.getItem('lastTab-demoscheduler');
+                if (data.Status == 1 && CurrentTab !== "completed") {
+                    t.row(numberrow).remove().draw();
+                }
+                else if (data.Status == 0 && CurrentTab !== "cancel") {
+                    t.row(numberrow).remove().draw();
+                }
+                else if ((data.Status == null || data.Status === '') && CurrentTab !== "scheduler") {
+                    await t.row(numberrow).remove().draw();
+
+                }
+                else {
+                    await t.row(numberrow).data(data);
+                }
+                showDetail(DemoSchedulerId);
+            })
+                .fail(function () {
+                    alert("update row fail");
+                });
+
+        }
+
+
+        //search salon
+        function search_salon() {
+            var _name = $("input[name='salon_search']").val();
+            $("#search_loading").show();
+            if (_name == "" || _name == null) {
+                var MsgError = $.parseJSON('{"text":"Please enter a keyword to search", "layout":"topRight", "type":"warning"}');
+                noty(MsgError);
+                $("#search_loading").hide();
+                $("#list_salon").empty();
+                $("#div_list_salon").hide('500');
+                return;
+            }
+            if (_name.length < 3) {
+                var MsgError = $.parseJSON('{"text":"Please enter a keyword more than 3 character to search", "layout":"topRight", "type":"warning"}');
+                noty(MsgError);
+                $("#search_loading").hide();
+                $("#list_salon").empty();
+                $("#div_list_salon").hide('500');
+                return;
+            }
+            $.ajax({
+                method: "POST",
+                url: "/DemoScheduler/SearchSalon",
+                data: { NameSearch: _name },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    if (data[0] == true) {
+                        if (data[1] > 0) {
+                            let MsgSuccess = $.parseJSON('{"text":"Found ' + data[1] + ' salon", "layout":"topRight", "type":"success"}');
+                            noty(MsgSuccess);
+
+                            $("#list_salon").empty();
+                            var _option = "";
+                            for (var i = 0; i < data[2].length; i++) {
+                                var contact_name = data[2][i].OwnerName;
+                                if (contact_name == null || contact_name == "") {
+                                    contact_name = data[2][i].ContactName;
+                                }
+                                var contact_phone = data[2][i].OwnerMobile;
+                                if (contact_phone == null || contact_phone == "") {
+                                    contact_phone = data[2][i].BusinessPhone;
+                                }
+                                var zipCode = data[2][i].BusinessZipCode;
+                                if (zipCode == null || zipCode == 'null') { zipCode = ""; }
+
+                                _option = _option + "<tr><td><b>" + data[2][i].CustomerCode + "</b></td>" +
+                                    "<td><span><b style='color:var(--main-color-1)'>" + (data[2][i].BusinessName || "") + "</b></span><br/>" +
+                                    "<span>" + (data[2][i].SalonAddress1 || "") + ", " + (data[2][i].SalonCity || "") + ", " + (data[2][i].SalonState || "") + " " + (zipCode || "") + ", " + (data[2][i].BusinessCountry || "") + "</span></td>" +
+                                    "<td><i>Name: </i>" + (contact_name || "") + "<br/><i>Phone: </i>" + (contact_phone || "") + "<br/><i>Email: </i>" + (data[2][i].Email || "") + "</td>" +
+                                    "<td><button type='button' class='btn btn-sm btn-success' onclick='select_salon(\"" + (data[2][i].CustomerCode || "") + "\")'>Select <i class='fa fa-thumbs-o-up'></i></button></td></tr>";
+                            }
+
+                            $("#list_salon").append(_option);
+                            $("#div_list_salon").show('500');
+                        }
+                        else {
+                            let MsgSuccess = $.parseJSON('{"text":"Found ' + data[1] + ' salon", "layout":"topRight", "type":"success"}');
+                            noty(MsgSuccess);
+                            $("#list_salon").empty();
+                            $("#div_list_salon").hide('500');
+                        }
+                    }
+                    else {
+                        var MsgError = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"error"}');
+                        noty(MsgError);
+                    }
+                })
+                .fail(function () {
+                    alert("Oops! Something went wrong. Salon can't load");
+                }).always(function () {
+                    $("#search_loading").hide();
+                    $("#searchall_loading").hide();
+                });
+
+        }
+
+        //select merchant
+        function select_salon(_code) {
+            $.ajax({
+                method: "POST",
+                url: "/DemoScheduler/SelectMerchant",
+                data: { cus_code: _code },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    //data: object[] {[true/false], [merchant/msg_error]}
+                    if (data.status == true) {
+                        $("#form-cru-demo-scheduler").find("input[name='CustomerCode']").val(_code);
+                        $("#list_salon").empty();
+                        $("#div_list_salon").hide('500');
+
+                        var zipCode = data.cus.BusinessZipCode;
+                        if (zipCode == null || zipCode == "null") { zipCode = ""; };
+                        var _merchant_address = (data.cus.SalonAddress1 || "---") + ", " + (data.cus.SalonCity || "---") + ", " + (data.cus.SalonState || "---") + ", " + (zipCode || "---") + ", " + (data.cus.BusinessCountry || "---");
+
+                        $("#form-cru-demo-scheduler").find("#m_name").html(data.cus.BusinessName);
+                        $("#form-cru-demo-scheduler").find("#m_address").html(_merchant_address);
+                        $("#form-cru-demo-scheduler").find("#c_email").html(data.cus.Email);
+
+                        if (data.cus.OwnerName == null || data.cus.OwnerName == "") {
+                            $("#form-cru-demo-scheduler").find("#c_name").html(data.cus.ContactName);
+                        }
+                        else {
+                            $("#form-cru-demo-scheduler").find("#c_name").html(data.cus.OwnerName);
+                        }
+
+                        if (data.cus.OwnerMobile == null || data.cus.OwnerMobile == "") {
+                            $("#form-cru-demo-scheduler").find("#c_phone").html(data.cus.BusinessPhone);
+                        }
+                        else {
+                            $("#form-cru-demo-scheduler").find("#c_phone").html(data.cus.OwnerMobile);
+                        }
+
+                        var MsgSuccess = $.parseJSON('{"text":"Select salon success!", "layout":"topRight", "type":"success"}');
+                        noty(MsgSuccess);
+                        $("#div_salon_info").show('500');
+                    }
+                    else {
+                        $("#div_salon_info").hide('500');
+                        var MsgError = $.parseJSON('{"text":"Select fail! ' + data.message + '", "layout":"topRight", "type":"error"}');
+                        noty(MsgError);
+                    }
+                })
+                .fail(function () {
+                    alert("Oops! Something went wrong");
+                });
+        }
+        function update_merchant(el, _id, code) {
+            //    alert(_id + "|" + _update);
+            if (code === "" || code == null) {
+                return;
+            }
+            var loading = $(el).find(".loading-view-merchant");
+            $(loading).show();
+            $.ajax({
+                method: "POST",
+                url: "/merchantman/GetMerchantInfo",
+                data: { id: _id, update: false, cuscode: code },
+                dataType: "html"
+            })
+                .done(function (data) {
+                    $("#merchant_popup").html(data);
+                    $("#modal-merchant").modal('show');
+                })
+                .fail(function () {
+                    alert("Oops! Something went wrong. Merchant update failure");
+                    $("#modal-merchant").modal('hide');
+                })
+                .always(function () {
+                    $(loading).hide();
+                });
+        }
+        function PopupCenter(url, title) {
+            // Fixes dual-screen position                         Most browsers      Firefox
+            var dualScreenLeft = window.screenLeft != undefined ? window.screenLeft : screen.left;
+            var dualScreenTop = window.screenTop != undefined ? window.screenTop : screen.top;
+
+            width = window.innerWidth ? window.innerWidth : document.documentElement.clientWidth ? document.documentElement.clientWidth : screen.width;
+            height = window.innerHeight ? window.innerHeight : document.documentElement.clientHeight ? document.documentElement.clientHeight : screen.height;
+            let w = width * 0.9;
+            let h = height * 0.9;
+            var left = ((width / 2) - (w / 2)) + dualScreenLeft;
+            var top = ((height / 2) - (h / 2)) + dualScreenTop;
+            var newWindow = window.open(url, title, 'scrollbars=yes, width=' + w + ', height=' + h + ', top=' + top + ', left=' + left);
+
+            // Puts focus on the newWindow
+            if (window.focus) {
+                newWindow.focus();
+            }
+            var timer = setInterval(function () {
+                if (newWindow.closed) {
+                    clearInterval(timer);
+                    FetchReloadData();
+                }
+            }, 500)
+        }
+    </script>
+
+}

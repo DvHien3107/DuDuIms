@@ -1,0 +1,102 @@
+﻿@using EnrichcousBackOffice.Models
+<div class="modal fade" id="create-account-popup" role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-content">
+        <form action="/TwilioManage/CreateSubAccount" method="post" id="create-twilio-account-form">
+            <div class="modal-header">
+                <div class="modal-title pull-left">Create Twilio Account</div>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div style="">
+                    <div class="form-group">
+                        <label>Merchant</label>
+                        <select class="form-control select2" name="StoreCode" id="StoreCode" style="width: 100%;">
+                            <option value="">N/A</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="exampleInputEmail1">Account Name</label>
+                        <input type="text" class="form-control" id="Name" name="Name" placeholder="Enter Name">
+
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary" onsubmit="overlayOn()">Create</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    $('#StoreCode').select2({
+        ajax: {
+            url: '/twiliomanage/SearchMerchant',
+            data: function (params) {
+                var query = {
+                    search: params.term,
+                    page: params.page || 1
+                }
+                // Query parameters will be ?search=[term]&page=[page]
+                return query;
+            },
+            processResults: function (data) {
+                return {
+                    results: $.map(data, function (item) {
+                        return {
+                            text: `${item.BusinessName} (#${item.StoreCode})`,
+                            id: item.StoreCode
+                        }
+                    })
+                };
+            },
+            delay: 250 // wait 250 milliseconds before triggering the request
+        }
+    });
+
+    $(document).ready(function () {
+        // Get references to the select and input elements
+        const $selectElement = $("#StoreCode");
+        const $nameInputElement = $("#Name");
+
+        // Add an event listener to the select element
+        $selectElement.on("change", function () {
+            // Get the selected option's text
+            const selectedOptionText = $selectElement.find(":selected").text();
+
+            // Set the Account Name input field to the selected option's text
+            $nameInputElement.val(selectedOptionText);
+        });
+    });
+
+    $("#create-twilio-account-form").on('submit', function (e) {
+        e.preventDefault();
+        overlayOn();
+        var form = $(this);
+        var actionUrl = form.attr('action');
+        $.ajax({
+            type: "post",
+            url: actionUrl,
+            data: form.serialize(),
+            success: function (data) {
+                if (data.status) {
+                    $("#create-account-popup").modal("hide");
+                    $('#main-table').DataTable().ajax.reload();
+                    success(data.message)
+                }
+                else {
+                    error(data.message)
+                }
+            },
+            error: function (data) {
+                Error('An error occurred.')
+            },
+            complete: function (data) {
+                overlayOff();
+            }
+        });
+    });
+
+
+</script>

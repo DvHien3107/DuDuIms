@@ -1,0 +1,69 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Controllers.Device_Service_ModelCustomize>
+@using EnrichcousBackOffice.Models
+
+
+@if (ViewBag.GetBundleError != null)
+{
+    <span><i class="icon fa fa-warning"></i> @ViewBag.GetBundleError</span>
+}
+else
+{
+    <div>
+        <hr />
+        <div class="scrollbar scroll-style-1" style="border:1px solid lightgray; padding: 5px 5px 0px 5px; background-color:lightgray; max-height:320px">
+            @if (Model.Count() > 0)
+            {
+                <p class="pull-left" style="font-weight:bold; color:#3366CC; font-size:18px; width:45%">PACKAGE: @(ViewBag.BundleName != null ? ViewBag.BundleName : "")</p>
+                <p class="pull-right" style="text-align:right;font-weight:bold; color:#3366CC; font-size:18px; width:45%">Total amount: @(ViewBag.BundleTotalAmount != null ? ViewBag.BundleTotalAmount : "$0")</p>
+                <div class="clearfix"></div>
+                @*<input type="hidden" name="out_stock_model" value="@(string.Join(", ",ViewBag.out_stock as List<string>))" />*@
+                foreach (var item in Model)
+                {
+                    <div style="border:1px solid white; padding:5px; margin-bottom:5px; background-color: whitesmoke">
+                        <div class="col-md-2" style="padding-left:0px">
+                            <img class="img-thumbnail" src="@(string.IsNullOrEmpty(item.Picture) == true ? "/Upload/Img/no_image.jpg" : item.Picture)" style="max-height:100px" />
+                        </div>
+                        <div class="col-md-10" style="padding-right:0px">
+                            <span style="color:#258e4f; font-size:18px"><b>@(item.ProductName?.ToUpper())</b></span><br />
+                            <div class="col-md-6" style="padding-left:0px">
+                                @*<span><b>Vendor:</b> @(item.VendorName)</span><br />*@
+                                <span><b>Model:</b> @(item.ModelName)</span><br />
+                                <span><b>Color:</b> @(item.Feature)</span><br />
+                                <span><b>Remaining amount:</b> @(item.Remaining_amount)</span><br />
+                                <span>@if (item.Remaining_amount < item.Quantity)
+                                {<b class="label label-warning animate-flicker">Out of stock</b>}</span>
+                            </div>
+                            <div class="col-md-6">
+                                <span><b>Quantity:</b> @(item.Quantity)</span><br />
+                                <span><b>Unit price:</b> @(item.Price?.ToString("#,##0 đ"))</span><br />
+                                <span><b>Subtotal:</b> @((item.Price * item.Quantity ?? 0).ToString("#,##0 đ"))</span>
+                            </div>
+                        </div>
+                        <div class="clearfix"></div>
+                    </div>
+                }
+            }
+        </div>
+        <br />
+        <div class="col-md-12" style="padding-right:0px">
+            <div class="pull-right">
+                <button type="button" class="btn btn-primary btn-flat" onclick="ConfirmBeforeAddBundle()">
+                    <i class="fa fa-check"></i><span> Select</span>
+                    <img id="add_bundle_loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                </button>&nbsp;&nbsp;
+                <button type="button" class="btn btn-default btn-flat" onclick="close_div_bundle()">
+                    <i class="fa fa-close"></i><span> Close</span>
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+<script type="text/javascript">
+    function close_div_bundle() {
+        $("#div_bundle_select").hide('alow');
+        $("#bundle_id").val("");
+        $("#bundle_id").prop("disabled", false);
+        $("#_option_select").prop("disabled", false);
+    }
+</script>

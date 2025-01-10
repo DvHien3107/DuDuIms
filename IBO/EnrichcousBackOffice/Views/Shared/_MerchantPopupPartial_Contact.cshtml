@@ -1,0 +1,399 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.C_CustomerContact>
+@{
+    Dictionary<string, bool> p = ViewBag.p;
+}
+<input type="hidden" id="E_CT_CustomerId" value="@ViewBag.Id" />
+<table class="table table-hover table-striped">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Relationship</th>
+            <th>Authorization</th>
+            <th>Preferred language</th>
+            <th width="150px"></th>
+        </tr>
+    </thead>
+    <tbody id="tbody_ct">
+        @foreach (var contact in Model)
+        {
+            <tr id="tb_ctTr_@contact.Id">
+                <td id="tb_ctName_@contact.Id" style="vertical-align: middle">
+                    <span class="text-primary">@contact.Name.ToUpper()</span><br />
+                    @if (!string.IsNullOrEmpty(contact.PhoneNumber))
+                    {
+                        <span class="text-success">Phone number: @contact.PhoneNumber</span><br />
+                    }
+                    @if (!string.IsNullOrEmpty(contact.Email))
+                    {
+                        <span class="text-success">Email: @contact.Email</span><br />
+                    }
+                    @if (!string.IsNullOrEmpty(contact.Address))
+                    {
+                        <span class="text-success" data-toggle="tooltip" data-placement="bottom" title="@contact.Address">Address: @(contact.Address.Length > 33 ? contact.Address.Substring(0, 33) + "..." : contact.Address)</span><br />
+                    }
+                </td>
+                <td id="tb_ctRelationship_@contact.Id" style="vertical-align: middle">@contact.Relationship</td>
+                <td id="tb_ctAuthorization_@contact.Id" style="vertical-align: middle">
+                    @foreach (var au in contact.Authorization.Split(','))
+                    {
+                        <label class="label label-default">@au</label><br />
+                    }
+                </td>
+                <td id="tb_ctPreferredLanguage_@contact.Id" style="vertical-align: middle">
+                    @if ("Vietnamese".Equals(contact.PreferredLanguage))
+                    {
+                        <img src="~/Content/flag/vn.png" width="20" />
+                    }
+                    else
+                    {
+                        <img src="~/Content/flag/usa.png" width="20" />
+                    }
+                </td>
+                <td style="vertical-align: middle">
+                    @if (p?.Any(k => k.Key.Equals("customer_update")) == true && p?["customer_update"] == true)
+                    {
+                        <a class="btn btn-primary btn-flat" onclick="ContactEdit('@contact.Id')">Edit</a>
+                    }
+                    @if (p?.Any(k => k.Key.Equals("customer_delete")) == true && p?["customer_delete"] == true)
+                    {
+                        <a class="btn btn-danger btn-flat" onclick="ContactDelete('@contact.Id')">Delete</a>
+                    }
+                    <a class="btn btn-info view_merchant" style="display:none" onclick="ContactView('@contact.Id')">View info</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+@if (p?.Any(k => k.Key.Equals("customer_update")) == true && p?["customer_update"] == true)
+{
+    <a class="btn btn-success btn-flat center-block" style="width:200px"
+       onclick="ContactEdit()">
+        <span class="fa fa-plus"></span> New contact process
+    </a>
+}
+<div class="clearfix"></div>
+
+<!-- InputMask -->
+<script src="~/Content/Admin/plugins/input-mask/jquery.inputmask.js"></script>
+<script src="~/Content/Admin/plugins/input-mask/jquery.inputmask.date.extensions.js"></script>
+<script src="~/Content/Admin/plugins/input-mask/jquery.inputmask.extensions.js"></script>
+
+<script>
+    //Phone inputmask
+    $('[data-mask]').inputmask();
+    //view contact
+    $('input[type="checkbox"].flat-red, input[type="radio"].flat-red').iCheck({
+        checkboxClass: 'icheckbox_flat-blue',
+        radioClass: 'iradio_flat-blue'
+    })
+
+    function ContactView(Id) {
+        $.ajax({
+            method: "POST",
+            url: "/merchantMan/getContactInfo",
+            data: { Id },
+            dataType: "json"
+        })
+            .done(function (data) {
+                if (data[0] == true) {
+                    $('#ECtId').val(data[1]['Id']);
+                    $('#ECtName').html(data[1]['Name'] || "---");
+                    $('#ECtPreferredLanguage').html(data[1]['PreferredLanguage'] || "---");
+                    $('#ECtRelationship').html(data[1]['Relationship'] || "---");
+                    $('#ECtPreferredContact').html(data[1]['PreferredContact'] || "---");
+                    $('#ECtPhoneNumber').html(data[1]['PhoneNumber'] || "---");
+                    $('#ECtAuthorization').html(data[1]['Authorization'].split(',').join('<br/>') || "---");
+                    $('#modal-contact').modal('show');
+                }
+            })
+            .fail(function () {
+                alert("Fail");
+            })
+    }
+    //load modal contact
+    function ContactEdit(Id = null) {
+        $("#modal-contact input[type=text]").val('');
+        $("#modal-contact input[type=checkbox]").prop('checked', false);
+        $("#modal-contact select option").prop('selected', false);
+        $("input[type=checkbox][name=ECtAuthorization]").iCheck('uncheck').iCheck('update');
+        $('#ECtAddress').val('');
+        $('#ECtEmail').val('');
+
+        if (Id != null) {
+            $('#modal-contact .modal-title').html('Update contact')
+            $.ajax({
+                method: "POST",
+                url: "/merchantMan/getContactInfo",
+                data: { Id },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    if (data[0] == true) {
+                        $('#ECtId').val(data[1]['Id']);
+                        $('#ECtName').val(data[1]['Name']);
+                        $('#ECtPreferredLanguage').val(data[1]['PreferredLanguage']);
+                        $('#ECtRelationship').val(data[1]['Relationship']);
+                        $('#ECtPreferredContact').val(data[1]['PreferredContact']);
+                        $('#ECtPhoneNumber').val(data[1]['PhoneNumber']);
+                        $('#ECtAddress').val(data[1]['Address']);
+                        $('#ECtEmail').val(data[1]['Email']);
+
+                        var Authorization = data[1]["Authorization"].split(',');
+                        for (var i = 0; i < Authorization.length; i++) {
+                            $("input[type=checkbox][name=ECtAuthorization][value='" + Authorization[i] + "']").iCheck('check').iCheck('update');
+                        }
+                        $('#modal-contact').modal('show');
+                    }
+                })
+                .fail(function () {
+                    alert("Fail");
+                })
+        }
+        else {
+            $('#modal-contact .modal-title').html('Add contact');
+            $('#ECtId').val('');
+            $('#modal-contact').modal('show');
+        }
+    }
+    //save edited contact
+    function SaveContact() {
+        var Id = $('#ECtId').val();
+        var Name = $('#ECtName').val();
+        if (!Name) {
+            return alert('please input contact name');
+        }
+        var PreferredLanguage = $('#ECtPreferredLanguage').val();
+        var Relationship = $('#ECtRelationship').val();
+        var PreferredContact = $('#ECtPreferredContact').val();
+        var PhoneNumber = $('#ECtPhoneNumber').val();
+        var CustomerId = $("#E_CT_CustomerId").val();
+        var Authorization = [];
+        var Address = $('#ECtAddress').val();
+        var Email = $('#ECtEmail').val();
+        $.each($("input[name='ECtAuthorization']:checked"), function () {
+            Authorization.push($(this).val());
+        });
+        $.ajax({
+            method: "POST",
+            url: "/merchantMan/SaveContact",
+            data: {
+                Id,
+                CustomerId,
+                Name,
+                "Authorization": Authorization.join(","),
+                PreferredLanguage,
+                PreferredContact,
+                PhoneNumber,
+                Relationship,
+                Address,
+                Email
+            },
+            dataType: "json"
+        })
+            .done(function (data) {
+                if (data[0] == true) {
+                    if (Id != "") {
+                        //udate Name
+                        var htmlName = `<tr id="tb_ctTr_${Id}">
+                                        <td id="tb_ctName_${Id}" style="vertical-align: middle">
+                                            <span class="text-primary">${Name.toUpperCase()}</span><br />`;
+                        if (PhoneNumber != null && PhoneNumber != '') htmlName += `<span class="text-success">Phone number: ${PhoneNumber}</span><br />`;
+                        if (Email != null && Email != '') htmlName += `<span class="text-success">Email: ${Email}</span><br />`;
+                        if (Address != null && Address != '') htmlName += `<span class="text-success" data-toggle="tooltip" data-placement="bottom" title="${Address}">Address: ${Address.length > 33 ? Address.substring(0, 33) + "..." : Address}</span><br />`;
+                        $('#tb_ctName_' + Id).html(htmlName);
+                        //update rela
+                        $('#tb_ctRelationship_' + Id).html(Relationship);
+                        //update language
+                        if ("Vietnamese" == PreferredLanguage) {
+                            var htmlLan= `<img src="/Content/flag/vn.png" width="20" />`;
+                        }
+                        else {
+                            var htmlLan = `<img src="/Content/flag/usa.png" width="20" />`;
+                        }
+                        $('#tb_ctPreferredLanguage_' + Id).html(htmlLan);
+                        var htmlAu = '';
+                        Authorization.forEach(function (au) {
+                            htmlAu += `<label class="label label-default">${au}</label></br>`;
+                        });
+                        $('#tb_ctAuthorization_' + Id).html(htmlAu);
+                    }
+                    else {
+                        Id = data[2];
+                        var html = `<tr id="tb_ctTr_${Id}">
+                                        <td id="tb_ctName_${Id}" style="vertical-align: middle">
+                                            <span class="text-primary">${Name.toUpperCase()}</span><br />`;
+                        if (PhoneNumber != null && PhoneNumber != '') html += `<span class="text-success">Phone number: ${PhoneNumber}</span><br />`;
+                        if (Email != null && Email != '') html += `<span class="text-success">Email: ${Email}</span><br />`;
+                        if (Address != null && Address != '') htmlName += `<span class="text-success" data-toggle="tooltip" data-placement="bottom" title="${Address}">Address: ${Address.length > 33 ? Address.substring(0, 33) + "..." : Address}</span><br />`;
+                        html += `</td>
+                                <td id="tb_ctRelationship_${Id}" style="vertical-align: middle">${Relationship}</td>
+                                <td id="tb_ctAuthorization_${Id}" style="vertical-align: middle">`;
+                        Authorization.forEach(function (au) {
+                            html += `<label class="label label-default">${au}</label></br>`;
+                        });
+                        html += `</td>
+                                <td id="tb_ctPreferredLanguage_${Id}" style="vertical-align: middle">`;
+                        if ("Vietnamese" == PreferredLanguage) {
+                            html += `<img src="/Content/flag/vn.png" width="20" />`;
+                        }
+                        else {
+                            html += `<img src="/Content/flag/usa.png" width="20" />`;
+                        }
+                        html += `</td>
+                                <td style="vertical-align: middle">
+                                @if (p?.Any(k => k.Key.Equals("customer_update")) == true && p?["customer_update"] == true)
+                                {
+                                    <a class="btn btn-primary btn-flat" onclick="ContactEdit('${Id}')">Edit</a>
+                                }
+                                @if (p?.Any(k => k.Key.Equals("customer_delete")) == true && p?["customer_delete"] == true)
+                                {
+                                    <a class="btn btn-danger btn-flat" onclick="ContactDelete('${Id}')">Delete</a>
+                                }
+                                <a class="btn btn-info view_merchant" style="display:none" onclick="ContactView('${Id}')">View info</a>
+                                </td>
+                            </tr>`;
+                        $('#tbody_ct').append(html);
+                    }
+                    $('#modal-contact').modal("hide");
+                    $('#tb_ctTr_' + Id).css("background", "lightgreen");
+                    setTimeout(function () {
+                        $('#tb_ctTr_' + Id).css("transition", "background-color 0.5s ease");
+                        $('#tb_ctTr_' + Id).css("background", "");
+                    }, 1000);
+
+
+                    var Success = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"success"}');
+                    noty(Success);
+                }
+                else {
+                    var Error = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"error"}');
+                    noty(Error);
+                }
+            });
+    }
+    //Delete contact
+    function ContactDelete(Id) {
+        var result = confirm("Do you wan't to delete this contact?");
+        if (result) {
+            $.ajax({
+                method: "POST",
+                url: "/merchantMan/DeleteContact",
+                data: {
+                    Id
+                },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    if (data[0] == true) {
+                        $('#tb_ctTr_' + Id).css("background-color", "red");
+                        $('#tb_ctTr_' + Id).hide(300, function () { $(this).remove(); });
+                        var Success = $.parseJSON('{"text":"Contact deleted!", "layout":"topRight", "type":"success"}');
+                        noty(Success);
+                    }
+                    else {
+                        var Error = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"error"}');
+                        noty(Error);
+                    }
+                });
+        }
+
+    }
+</script>
+<div class="modal fade" id="modal-contact" role="dialog" data-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close view_merchant" onclick="$('#modal-contact').modal('hide')" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Edit contact</h4>
+            </div>
+            <div class="modal-body">
+                <input id="ECtId" type="hidden" />
+                <div class="row">
+                    <div class="col-md-6 form-group">
+                        <label class="control-label">Name<i style="color:red"> *</i></label>
+                        <div class="">
+                            <input class="form-control" type="text" id="ECtName" />
+                        </div>
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label class="control-label">Preferred Contact</label>
+                        <div class="">
+                            <select class="form-control" id="ECtPreferredContact">
+                                <option value="Salon">Salon</option>
+                                <option value="Mobile">Mobile</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12 form-group">
+                        <label class="control-label">Authorization</label><br />
+                        <label style="font-weight:unset; margin-right: 20px">
+                            <input type="checkbox" name="ECtAuthorization" value="Owner" class="flat-red department"> Owner
+                        </label>
+                        <label style="font-weight:unset; margin-right: 20px">
+                            <input type="checkbox" name="ECtAuthorization" value="Technical Issues" class="flat-red department"> Technical Issues
+                        </label>
+                        <label style="font-weight:unset; margin-right: 20px">
+                            <input type="checkbox" name="ECtAuthorization" value="Billing Inquiries" class="flat-red department"> Billing Inquiries
+                        </label>
+                        <label style="font-weight:unset; margin-right: 20px">
+                            <input type="checkbox" name="ECtAuthorization" value="Subscription Plans" class="flat-red department"> Subscription Plans
+                        </label>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 form-group">
+                        <label class="control-label">Phone Number</label>
+                        <div class="">
+                            <input class="form-control" type="text" id="ECtPhoneNumber" data-inputmask="'mask': '(999) 999-9999'" data-mask="" pattern="[^_]*" autocomplete="off" />
+                        </div>
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label class="control-label">Email</label>
+                        <div class="">
+                            <input class="form-control" type="email" id="ECtEmail" />
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12 form-group">
+                        <label class="control-label">Address</label>
+                        <div class="">
+                            <textarea rows="2" style="resize: vertical;" resize class="form-control" type="text" id="ECtAddress" />
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 form-group">
+                        <label class="control-label">Preferred Language</label>
+                        <div class="">
+                            <select class="form-control" id="ECtPreferredLanguage">
+                                <option>Vietnamese</option>
+                                <option>English</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label class="control-label">Relationship</label>
+                        <div class="">
+                            <input class="form-control" type="text" id="ECtRelationship" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default view_merchant" onclick="$('#modal-contact').modal('hide')">Close</button>
+                <a class="btn btn-primary" onclick="SaveContact()">Save</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    tr td {
+        vertical-align: middle;
+    }
+</style>

@@ -1,0 +1,883 @@
+﻿
+@using System.Web.Script.Serialization
+@using System.Web.Optimization
+@using EnrichcousBackOffice.AppLB
+@{
+    if (User.Identity.IsAuthenticated == false)
+    {
+        Response.Redirect("/account/login");
+    }
+    var member = EnrichcousBackOffice.AppLB.Authority.GetCurrentMember();
+    var access = EnrichcousBackOffice.AppLB.Authority.GetAccessAuthority();
+    var ApiUniversalUrl = System.Web.Configuration.WebConfigurationManager.AppSettings["ApiUniversalUrl"];
+    var UniversalBasicKey = System.Configuration.ConfigurationManager.AppSettings["UniversalBasicKey"];
+    var POSNextGenApi = System.Configuration.ConfigurationManager.AppSettings["POSNextGenApi"];
+    TempData["url_back"] = Request.Url.PathAndQuery;
+
+    var _auth = string.Empty;
+    var AccssToken = HttpContext.Current?.Session["ACCESS_TOKEN"] as string;
+    if (string.IsNullOrEmpty(AccssToken))
+    {
+        _auth = $"Basic {UniversalBasicKey}";
+    }
+    else
+    {
+        _auth = $"Bearer {AccssToken}";
+    }
+
+}
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>
+        @ViewBag.Title -  @RenderSection("title", false) -  Simply Pos
+    </title>
+    <!-- Tell the browser to be responsive to screen width width=device-width -->
+    <meta content="initial-scale=1, maximum-scale=1, user-scalable=yes" name="viewport">
+    <!-- Bootstrap 3.3.7 -->
+    <link rel="stylesheet" href="/content/admin/bower_components/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/Content/css/rewrite.css">
+    <link href="/Content/css/color.css" rel="stylesheet" />
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="/content/admin/bower_components/font-awesome/css/font-awesome.min.css">
+    <!-- Ionicons -->
+    <link rel="stylesheet" href="/content/admin/bower_components/Ionicons/css/ionicons.min.css">
+    <!-- Select2 -->
+    @*<link rel="stylesheet" href="/content/admin/bower_components/select2/dist/css/select2.min.css">*@
+    <!-- Theme style -->
+    @*@Styles.Render("~/bundles/css")*@
+    <link rel="stylesheet" href="/content/admin/bower_components/select2/dist/css/select2.min.css" />
+    <link rel="stylesheet" href="/content/admin/dist/css/AdminLTE.css" />
+    <link rel="stylesheet" href="/content/admin/dist/css/skins/_all-skins.css" />
+    <link rel="stylesheet" href="/Content/noty/jquery.noty.css" />
+    <link rel="stylesheet" href="/Content/noty/noty_theme_default.css" />
+    <link rel="stylesheet" href="/Content/css/SansProFont.css" />
+    @*<link rel="stylesheet" href="/content/admin/dist/css/AdminLTE.css">*@
+    <!-- AdminLTE Skins. Choose a skin from the css/skins
+     folder instead of downloading all of them to reduce the load. -->
+    @*<link rel="stylesheet" href="/content/admin/dist/css/skins/_all-skins.css">*@
+
+    <!-- datepicker jquery -->
+    @*<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.min.css">*@
+    <link href="~/Content/css/jquery-ui.css" rel="stylesheet" />
+    @*<link href="~/Content/css/jquery-ui.css" rel="stylesheet" />*@
+    <!--datatable-->
+    <link rel="stylesheet" href="~/content/admin/bower_components/datatables.net-bs/css/dataTables.bootstrap.min.css" />
+
+    <!--icheck-->
+    <link rel="stylesheet" href="/content/admin/plugins/iCheck/all.css" />
+    <link rel="icon" href="~/Content/Img/favico.ico" />
+    <!-- Noty -->
+    @*<link href="~/Content/noty/jquery.noty.css" rel="stylesheet" />*@
+    @*<link href="~/Content/noty/noty_theme_default.css" rel="stylesheet" />*@
+
+    <!-- Datatable -->
+    <link href="https://cdn.datatables.net/1.10.19/css/dataTables.bootstrap4.min.css" rel="stylesheet" />
+    <!-- Google Font -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700,300italic,400italic,600italic">
+
+    <!-- jQuery 3 -->
+    <script src="~/Content/Admin/bower_components/jquery/dist/jquery.min.js"></script>
+    <!--Ajaxform-->
+    <script src="~/Scripts/jquery.form.min.js"></script>
+    <!-- Select2 -->
+    <script src="/content/admin/bower_components/select2/dist/js/select2.full.min.js"></script>
+
+    <!--Asp ajax form & task-->
+    <script src="~/Scripts/jquery.unobtrusive-ajax.min.js"></script>
+    <script src="~/Scripts/task_popup.js"></script>
+    <!---->
+    <!-- datepicker jquery -->
+    <!--<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>-->
+    <script src="~/Scripts/jquery-ui.min.js"></script>
+
+    <!--datatable-->
+    <script src="~/content/admin/bower_components/datatables.net/js/jquery.dataTables.min.js"></script>
+    <script src="~/content/admin/bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.6/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.23/moment-timezone-with-data-2012-2022.min.js"></script>
+    <script src="~/Content/Toastify/toastify-js.js"></script>
+    <link href="~/Content/Toastify/toastify.min.css" rel="stylesheet" />
+    <script src="~/Scripts/Toast/ToastConsole.js"></script>
+    <script src="~/Scripts/Axios/axios.min.js"></script>
+    <link href="~/Content/css/ThemeColor.css" rel="stylesheet" />
+    <script>
+        @{ string x = new JavaScriptSerializer().Serialize(member);}
+        const memberStr = '@x.Replace("\"", "\\\"")';
+        const urlParams = new URLSearchParams(window.location.search);
+                const getMember = () => {
+                    try {
+                        return JSON.parse(memberStr.replaceAll('&quot;', `"`))
+                    } catch {
+                        return new Object();
+                    }
+                }
+
+        const axiosUniversal = axios.create({
+            baseURL: '@ApiUniversalUrl',
+            headers: {
+                'Authorization': '@_auth',
+                'Content-Type': 'application/json',
+            },
+        });
+        const POSNextGenApi = '@POSNextGenApi';
+
+        const axiosNextGen = axios.create({
+            baseURL: '@POSNextGenApi/v1/api',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+    </script>
+    <script src="~/Scripts/Axios/axios.console.js"></script>
+    <script src="~/Scripts/Axios/Cache/cacheControl.js"></script>
+
+    <!-- InputMask -->
+    <script src="~/Content/Admin/plugins/input-mask/jquery.inputmask.js"></script>
+    <script src="~/Content/Admin/plugins/input-mask/jquery.inputmask.date.extensions.js"></script>
+    <script src="~/Content/Admin/plugins/input-mask/jquery.inputmask.extensions.js"></script>
+    <!--icheck-->
+    <script src="/content/admin/plugins/iCheck/icheck.min.js"></script>
+    @*main js*@
+    <script src="~/Scripts/main.js"></script>
+    <script>
+      var IMSTimezone = '@TimezoneHelper.IMSTimezoneIanaId()';
+      moment.tz.setDefault(IMSTimezone);
+    </script>
+    @RenderSection("style", false)
+    @RenderSection("headscript", false)
+    <link rel="stylesheet" href="/content/Scrollbar/chatbar.css" />
+
+    <style>
+        .logo-lg {
+            display: flex !important;
+            width: 230px;
+            align-items: center;
+            height: 100%;
+            justify-content: center;
+            padding: 5px;
+        }
+
+        .c-notification-fixed .content-wrapper, .c-notification-fixed .main-footer {
+            margin-right: 256px;
+        }
+
+        #pin-notification-main-wrapper {
+            visibility: hidden;
+        }
+
+        .c-notification-fixed #pin-notification-main-wrapper {
+            visibility: visible;
+        }
+
+        tr.strikeout {
+            text-decoration: line-through;
+        }
+
+        a {
+            cursor: pointer;
+        }
+
+        .ui-autocomplete {
+            max-height: 300px;
+            overflow-y: auto; /* prevent horizontal scrollbar */
+            overflow-x: hidden; /* add padding to account for vertical scrollbar */
+            z-index: 9999 !important;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 30px;
+            height: 17px;
+        }
+
+            .switch input {
+                opacity: 0;
+                width: 0;
+                height: 0;
+            }
+        /*.mode-iframe-body{
+            overflow-y:hidden;
+        }*/
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            -webkit-transition: .4s;
+            transition: .4s;
+        }
+
+            .slider:before {
+                position: absolute;
+                content: "";
+                height: 13px;
+                width: 13px;
+                left: 2px;
+                bottom: 2px;
+                background-color: white;
+                -webkit-transition: .4s;
+                transition: .4s;
+            }
+
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+
+        .switch.disabled > .slider {
+            background-color: lightgray !important;
+            cursor: not-allowed;
+        }
+
+            .switch.disabled > .slider:before {
+                left: 15px;
+            }
+
+        input:focus + .slider {
+            box-shadow: 0 0 1px #2196F3;
+        }
+
+        input:checked + .slider:before {
+            /*-webkit-transform: translateX(13px);
+            -ms-transform: translateX(13px);
+            transform: translateX(13px);*/
+            left: 15px;
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 10px;
+        }
+
+            .slider.round:before {
+                border-radius: 50%;
+            }
+
+        @@keyframes flickerAnimation {
+            30% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0;
+            }
+
+            70% {
+                opacity: 1;
+            }
+        }
+
+        @@-o-keyframes flickerAnimation {
+            30% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0;
+            }
+
+            70% {
+                opacity: 1;
+            }
+        }
+
+        @@-moz-keyframes flickerAnimation {
+            30% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0;
+            }
+
+            70% {
+                opacity: 1;
+            }
+        }
+
+        @@-webkit-keyframes flickerAnimation {
+            30% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0;
+            }
+
+            70% {
+                opacity: 1;
+            }
+        }
+
+        .animate-flicker {
+            -webkit-animation: flickerAnimation 1s infinite;
+            -moz-animation: flickerAnimation 1s infinite;
+            -o-animation: flickerAnimation 1s infinite;
+            animation: flickerAnimation 1s infinite;
+        }
+
+        .select2-search__field {
+            z-index: 9999 !important;
+        }
+    </style>
+    <script type="text/javascript">
+
+
+        /*
+        * overlay len page khi submit
+        */
+        function overlayOn() {
+            $("div#wait_overlay").show().css("opacity", 0.3);
+            $("div#wait_overlay_loading").show();
+        }
+
+        /*
+         * off overlay len page khi submit that bai
+         */
+        function overlayOff() {
+            $("div#wait_overlay").hide().css("opacity", 0);
+            $("div#wait_overlay_loading").hide();
+        }
+
+        //fade out alert success
+        //$('.alert-success.alert-dismissible').delay(2000).hide(500);
+        window.setTimeout(function () {
+            $(".alert-success").fadeTo(500, 0).slideUp(800, function () {
+                $(this).remove();
+            });
+        }, 3000);
+        function refresh_localTime() {
+            $(".UTC-LOCAL").html(function (index, value) {
+                return moment(value).format("MMM DD YYYY, h:mm:ss A");
+            }).removeClass("UTC-LOCAL");
+        }
+        function convertLocalTime(id, datetime, format, fff) {
+            document.getElementById('localtime-' + id).innerHTML = convert_local_time(datetime, format, fff);
+        }
+        function convert_local_time(datetime, format, fff) {
+            var result = "";
+            if (datetime == null || datetime.toString().trim() == "")
+                return result;
+            var localTime = new Date(datetime + "Z");
+            if (localTime == "Invalid Date") {
+                datetime = datetime.toString().replace(/-/g, " ");
+                var localTime = new Date(datetime + " GMT");
+                if (localTime == "Invalid Date") {
+                    //alert(datetime + " is Invalid");
+                    return '';
+                }
+            }
+            //localTime = new Date(Date.UTC(localTime.getFullYear(), localTime.getMonth(), localTime.getDate(), localTime.getHours(), localTime.getMinutes(), localTime.getSeconds()));
+            if (datetime.length != 0) {
+                let options = null;
+                let locales = null;
+                switch (format) {
+                    case "yyyy-mm-dd":
+                        locales = 'en-CA';
+                        options = { year: "numeric", month: "2-digit", day: "2-digit" };
+                        break;
+                    case "MMMddyyyy":
+                        locales = 'en-US';
+                        options = { dateStyle: 'medium' };
+                        break;
+                    case "logs":
+                        locales = 'en-CA';
+                        options = { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false };
+                        break;
+                    default:
+                        locales = 'en-US';
+                        //firefox: khong the set hour khi đã set dateStyle, minute cũng tương tự
+                        options = { dateStyle: 'medium', timeStyle: 'short'/*, hour: "2-digit"*//*, minute: "2-digit"*/ };
+                }
+
+
+                localTime = localTime.toLocaleString(locales, options);
+                result = (localTime != "Invalid Date") ? localTime + (fff ? "." + fff.padStart(3, '0') : "") : "";
+            }
+            //console.log(result);
+            return result;
+
+        }
+
+        function max_height_Iframe(obj) {
+            obj.style.height = (obj.contentWindow.document.documentElement.scrollHeight + 4) + 'px';
+            console.log(obj.style);
+            obj.style.border = 1;
+        }
+    </script>
+
+</head>
+<body id="_body" class="hold-transition skin-blue sidebar-mini nb-theme-gauzy-light" style="min-width:1024px">
+    <input type="hidden" id="memberNo" value="@(member?.MemberNumber)" />
+
+    @*<a class="btn btn-danger" href="/home/testnotice">TEST NOTICE</a>*@
+
+    <!--loading overlay-->
+    <div id="wait_overlay" style="height: 100%; width: 100%; background-color: grey; position: fixed; left: 0px; top: 0px; z-index: 1051; display: none; transition: opacity .5s; opacity: 0"> </div>
+    <div id="wait_overlay_loading" style="position: fixed; top: 30%; left: 50%; margin-left: -50px;text-align: center; padding-top: 10px;z-index:9999;display:none">
+        <img src="~/Content/ajax-loaders/loading2.gif" style="width: 100px" />
+    </div>
+
+    <div class="wrapper">
+        <div class="main-container main-container-fixed">
+            <div class="scrollable">
+                <div class="chatable lst-chat">
+                    <div class="ng-star-inserted">
+                        <div _ngcontent-ng-c3549294041="" class="selected">
+                            <div _ngcontent-ng-c3549294041="" class="img-container">
+                                <img _ngcontent-ng-c3549294041="" alt="" src="https://dummyimage.com/330x300/ffaf26/ffffff.jpg&amp;text=E">
+                                <div _ngcontent-ng-c3549294041="" class="ng-star-inserted"></div><!---->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="profile-img">
+                    <div class="pull-left">
+                        <img src="/Upload/Img/Female.png" class="img-circle" width="35" height="35">
+                    </div>
+                </div>
+            </div>
+            
+           
+        </div>
+
+        <header class="main-header">
+            <!-- Logo -->
+            <a href="/" class="logo" style="padding: 0;">
+                <!-- mini logo for sidebar mini 50x50 pixels -->
+                <span class="logo-mini">
+                </span>
+                <!-- logo for regular state and mobile devices -->
+                <span class="logo-lg">
+                    <img class="img img-responsive eshop-logo" style="width:45%" src="@EnrichcousBackOffice.AppLB.UserContent.GetWebInfomation().Logo" />
+                </span>
+
+            </a>
+            <!-- Header Navbar: style can be found in header.less -->
+            <nav class="navbar navbar-static-top">
+                <!-- Sidebar toggle button-->
+                <a href="#" class="sidebar-toggle" data-toggle="push-menu" role="button">
+                    <div class="sr-only">Toggle navigation</div>
+                </a>
+                @*<img class="img img-responsive  eshop-logo" src="~/Upload/logo-phukhang.png" style="height:50px;width:auto" />*@
+
+                <div style="overflow:auto;margin-top:8px;display:inline-block">
+
+                </div>
+
+                <div class="navbar-custom-menu">
+                    @*<div class="dropdown-eshop">
+                            <div class="dropdown-eshop-main">
+                                <select name="">
+                                    <option value="1">Chi nhánh Phan thiết</option>
+                                    <option value="2">Chi nhánh Lagi</option>
+                                    <option value="3">Chi nhánh Hàm thuận nam</option>
+                                    <option value="4">Chi nhánh Hàm thuận bắc</option>
+                                </select>
+                            </div>
+                        </div>*@
+                    <ul class="nav navbar-nav">
+
+                        @Html.Partial("_Notification", member)
+
+
+                        <!-- User Account Menu -->
+                        @Html.Partial("_UserPanelPartial", member)
+                        @*
+                            <li>
+                                <a href="#" data-toggle="control-sidebar"><i class="fa fa-gears"></i></a>
+                            </li>*@
+
+                    </ul>
+                </div>
+            </nav>
+        </header>
+
+
+
+        <!-- Left side column. contains the logo and sidebar -->
+        <aside class="main-sidebar">
+            <!-- sidebar: style can be found in sidebar.less -->
+            <section class="sidebar" id="sidebar">
+
+                <!-- Sidebar user panel -->
+                <div class="user-panel">
+                    <div class="pull-left">
+                        @if (string.IsNullOrEmpty(member?.Picture) == true)
+                        {
+                            if (member?.Gender == "Male")
+                            {
+                                <img src="~/Upload/Img/Male.png" class="img-circle" width="35" height="35">
+                            }
+                            else
+                            {
+                                <img src="~/Upload/Img/Female.png" class="img-circle" width="35" height="35">
+                            }
+                        }
+                        else
+                        {
+                            <img src="@(member?.Picture)" class="img-circle" width="35" height="35">
+                        }
+                    </div>
+                    <div class="pull-left info">
+                        <p>@(member?.FullName)</p>
+                        <a href="#"><i class="fa fa-circle text-success"></i> Online</a>
+                    </div>
+                </div>
+
+                <!-- sidebar menu: : style can be found in sidebar.less -->
+                @*@if (EnrichcousBackOffice.AppLB.UserContent.TicketSystem == true)
+                    {
+                        @Html.Partial("_TicketSystemMenuPartial")
+                    }
+                    else
+                    {}*@
+
+                @Html.Partial("_AdminMenuPartial")
+
+
+
+
+            </section>
+            <!-- /.sidebar -->
+        </aside>
+
+
+
+        <!-- Content Wrapper. Contains page content -->
+        <div class="content-wrapper">
+
+            @RenderBody()
+
+        </div>
+        @if (member.PinNotification == true)
+        {
+            @Html.Partial("_PinNotification")
+        }
+        <!-- /.content-wrapper -->
+        <footer class="main-footer">
+            <div class="pull-right hidden-xs">
+                <span id="datetime-now-footer"></span>
+            </div>
+            <strong>Copyright &copy; 2019 <a href="https://sposus.co/" target="_blank">www.sposus.co</a>.</strong> All rights reserved. Ver @System.Configuration.ConfigurationManager.AppSettings["IMSVersion"] @if (access.Any(k => k.Key.Equals("log_viewall")) == true && access["log_viewall"] == true)
+            {<a href="/IMSLogs">Show logs</a>}
+
+            <!-- _Ticket_Task Notifications -->
+            @*@Html.Partial("_NotificationPartial")*@
+
+        </footer>
+        <!-- Control Sidebar -->
+        @RenderSection("control_sidebar", false)
+
+    </div>
+
+    <div id="exception_show" style="display:none">
+        @if (TempData["es"] != null)
+        {@Html.Raw(TempData["es"].ToString())}
+    </div>
+
+    @RenderSection("modals", false)
+
+    <!--Task popup-->
+    <div class="modal fade" id="modal-task">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div style="text-align:center;height:100px;padding-top:40px" id="task_popup_loading">
+                    <img src="~/Content/ajax-loaders/ajax-loader-1.gif" style="width:24px" />
+                    <br /><span>Please wait a moment...</span>
+                </div>
+                <div id="task_popup">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="survey_load">
+
+    </div>
+
+    <div id="jira_verify_load">
+
+    </div>
+    <!-- Bootstrap 3.3.7 -->
+    <script src="/content/admin/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+    <!-- ./wrapper -->
+    <!-- Resolve conflict in jQuery UI tooltip with Bootstrap tooltip -->
+    <script>$.widget.bridge('uibutton', $.ui.button);</script>
+
+
+
+    @*@Scripts.Render("~/bundles/js")*@
+    <script src="~/Scripts/date.format.js"></script>
+    <script src="~/content/admin/bower_components/fastclick/lib/fastclick.js"></script>
+    <script src="~/Content/noty/jquery.noty.js"></script>
+    <script src="~/Content/Scrollbar/sticky-kit.min.js"></script>
+    @*<script src="~/Scripts/date.format.js"></script>*@
+
+    <!-- Sparkline -->
+    <script src="/content/admin/bower_components/jquery-sparkline/dist/jquery.sparkline.min.js"></script>
+
+    <!-- Slimscroll -->
+    <script src="/content/admin/bower_components/jquery-slimscroll/jquery.slimscroll.min.js"></script>
+
+    <link href="~/Content/img-previewer/img-previewer.css" rel="stylesheet" />
+    <link href="~/Content/FileIconsJS/css/style.css" rel="stylesheet" />
+    <script src="~/Content/img-previewer/img-previewer.min.js"></script>
+    <script src="~/Content/FileIconsJS/dist/file-icons.js"></script>
+
+    <!-- AdminLTE App -->
+    <script src="/content/admin/dist/js/adminlte.min.js"></script>
+
+    <!-- noty -->
+    <script src="~/Scripts/noty-cfg.js"></script>
+
+    <!-- matchHeight -->
+    <script src="~/Scripts/jquery.matchHeight-min.js"></script>
+    <script type="text/javascript">
+
+
+    function loadSurvey(Id) {
+        $.ajax({
+            method: "post",
+            url: "/Home/LoadSurvey",
+            data: { Id },
+            dataType: "html"
+        })
+            .done(function (data) {
+                $("#survey_load").html(data);
+                $("#surveyModal").modal("show");
+            })
+            .fail(function () {
+            })
+            .always(function () {
+            });
+    }
+
+        $(function () {
+            //anchor menu bar
+            $("#sidebar").stick_in_parent();
+
+        });
+
+        $('.select2').select2();
+        $('[data-toggle="tooltip"]').tooltip();
+        $('[data-toggle="control-sidebar"]').controlSidebar();
+
+        function closeControlSidebar() {
+            $('.control-sidebar').removeClass('control-sidebar-open')
+        }
+
+
+        function confirmRedirect(message, url) {
+            if (confirm(message) == true) {
+                overlayOn();
+                location.href = url;
+            }
+        }
+
+        /**
+           * kiem tra tinh hop le kieu tien te
+           * @@param name input name
+           */
+        function checkMoney(name) {
+
+            var n = $("input[name='" + name + "']").val();
+            var regex = new RegExp(/[$,]/igm);
+            n = n.replace(regex, "");
+
+            if (isNaN(n) == false) {
+                $("input[name='" + name + "']").val(toMoney(Number(n)));
+            }
+            else {
+                alert("Money is invalid");
+                $("input[name='" + name + "']").val('');
+            }
+        }
+
+        /*
+        * money format
+        */
+        function toMoney(m) {
+            return m.toFixed(2).replace(/./g, function (c, i, a) {
+                return i && c !== "." && !((a.length - i) % 3) ? ',' + c : c;
+            });
+
+        }
+
+        function toMoney2(m) {
+            return m.toFixed(0).replace(/./g, function (c, i, a) {
+                return i && c !== "." && !((a.length - i) % 3) ? ',' + c : c;
+            });
+
+        }
+
+
+        /* convert number to string USD money */
+        function numberToMoney_USD(money_number) {
+            return (money_number || 0).toLocaleString("en-US", { style: "currency", currency: "USD" });
+        }
+
+        function update_tabHistory(a_id, name) {
+            event.preventDefault();
+            event.stopPropagation();
+            $("#" + a_id).toggle();
+            $.ajax({
+                url: "/home/remove_tabhistory",
+                data: { name: name },
+                dataType: "json",
+                method: "post"
+            }).done(function (data) { console.log(data); });
+
+        }
+        function autocomplete_state_country(state_class = ".state", country_class = ".country") {
+            $.ajax({
+                method: "POST",
+                url: "/Merchantman/LoadListState",
+                dataType: "json"
+            })
+                .done(function (data) {
+                    state = data[0];
+                    country = data[1];
+                    $(state_class).autocomplete({
+                        source: data[0],
+                        minLength: 0
+                    }).focus(function () {
+                        $(this).autocomplete('search', $(this).val())
+                    });
+
+                    $(country_class).autocomplete({
+                        source: data[1],
+                        minLength: 0
+                    }).focus(function () {
+                        $(this).autocomplete('search', $(this).val())
+                    });
+                })
+                .fail(function () {
+                })
+                .always(function () {
+                });
+        }
+
+
+
+
+        /* #region task */
+
+        /**
+         * Task popup -- Add new/Edit/View detail
+         * @@param _action _action(true / false)-- true: co quyen thao tac tat ca cac task
+         * @@param _id _id la TaskId
+         * @@param _update _update == 'true' --- la Add New or Edit/'false' -- la View Detail
+         * @@param ticket_id truyen vao ticket_id va ticket_name neu Add Task tu Ticket
+         * @@param ticket_name
+         */
+        function update_task(_action, _id, _update, ticket_id, ticket_name) {
+            $("#task_popup_loading").show();
+            $("#modal-task").modal('show');
+            $("#task_popup").empty();
+            $.ajax({
+                method: "POST",
+                url: "/tasksman/GetInfoTask",
+                data: {
+                    action: _action,
+                    id: _id,
+                    update: _update,
+                    tk_id: ticket_id,
+                    tk_name: ticket_name
+                },
+                dataType: "html"
+            })
+                .done(function (data) {
+                    $("#task_popup").html(data);
+                })
+                .fail(function () {
+                    console.log("Oops! Something went wrong. Task update failure");
+                    $("#modal-task").modal('hide');
+                })
+                .always(function () {
+                    $("#task_popup_loading").hide();
+                });
+        }
+
+        function TaskSaveComplete() {
+            success("Save success!");
+            $("#modal-task").modal('hide');
+            overlayOff();
+            if (window.location.href.search(/ticket|development/ig) > 0) {
+                GetTaskStatusList();
+                Gettimeline();
+            }
+            else {
+                $("#taskTable").DataTable().ajax.reload();
+            }
+            //else if ($("input[name='hd_task_url_notice']").val().search(/tasksman/ig) >= 0) {
+            //    setTimeout(function () { window.location.href = $("input[name='hd_task_url_notice']").val(); }, 1000);
+            //}
+
+        }
+        function TaskSaveError(result) {
+            error(result.responseText);
+            // console.log("Oops! Something went wrong.Error: TaskSaveError");
+            //window.location.href = $("input[name='hd_task_url_notice']").val();
+        }
+        function gotoback(_default = null) {
+            var back_host = document.referrer ? document.referrer.split('/')[2] : "";
+            if (back_host == window.location.host) {
+                window.location = document.referrer;
+            } else if (_default) {
+                window.location = _default
+            } else {
+                window.location = "/";
+            }
+        }
+        // disable enter form
+        $('.disable-enter').on('keyup keypress', function (e) {
+            var keyCode = e.keyCode || e.which;
+            if (keyCode === 13) {
+                e.preventDefault();
+                return false;
+            }
+        });
+        /* #endregion */
+        function uuidv4() {
+            return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
+                (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+            );
+        }
+        var updateDateTimeNow = function () {
+            document.getElementById("datetime-now-footer")
+                .innerHTML = '<b>@(TimezoneHelper.IMSAbbreviation().Standard): </b>' + moment().format('ddd, MMM DD, YYYY, h:mm:ss A');
+        }
+        setInterval(updateDateTimeNow, 1000);
+    </script>
+    @*<script src="~/Scripts/jquery.signalR-2.4.1.min.js"></script>
+        <script src="~/signalr/hubs"></script>*@
+    <script src="~/Scripts/Notification/Notification.js?ver=2.1.2202u1"></script>
+    @RenderSection("script", false)
+    <script>
+        @if (TempData["success"] != null) {
+            <text>
+             success("@TempData["success"]")
+          </text>
+
+        }
+        @if (TempData["warning"] != null) {
+          <text>
+           warning("@TempData["warning"]")
+          </text>
+        }
+        @if (TempData["error"] != null) {
+          <text>
+          error("@TempData["error"]")
+          </text>
+        }
+    </script>
+</body>
+</html>

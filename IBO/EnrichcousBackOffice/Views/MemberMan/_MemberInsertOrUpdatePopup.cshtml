@@ -1,0 +1,680 @@
+﻿@model EnrichcousBackOffice.Models.P_Member
+@using EnrichcousBackOffice.Models
+@using EnrichcousBackOffice.AppLB;
+@{
+    var listDistributor = ViewBag.ListEmployees as List<P_Member>;
+    var Sites = ViewBag.Sites as List<Site>;
+    var cMem = Authority.GetCurrentMember();
+    string picture;
+    if (string.IsNullOrWhiteSpace(Model.Picture))
+    {
+        if (Model.Gender?.Equals("Male", StringComparison.InvariantCultureIgnoreCase) == true)
+        {
+            picture = "/Upload/Img/Male.png";
+        }
+        else
+        {
+            picture = "/Upload/Img/Female.png";
+        }
+    }
+    else
+    {
+        picture = Model.Picture;
+    }
+
+    string identity_card_image_before;
+    if (string.IsNullOrWhiteSpace(Model.IdentityCardImageBefore))
+    {
+        identity_card_image_before = "/Upload/Img/no_image.jpg";
+    }
+    else
+    {
+        identity_card_image_before = Model.IdentityCardImageBefore;
+    }
+
+
+    string identity_card_image_after;
+    if (string.IsNullOrWhiteSpace(Model.IdentityCardImageAfter))
+    {
+        identity_card_image_after = "/Upload/Img/no_image.jpg";
+    }
+    else
+    {
+        identity_card_image_after = Model.IdentityCardImageAfter;
+    }
+}
+<!-- Start Modal edit information -->
+<div class="modal fade" id="editInfor" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+
+                <h5 class="modal-title">@(Model.Id> 0 ?"Edit Employees":"Add Employees")</h5>
+
+            </div>
+            <form id="form_save_member" role="form" action="/memberman/updatemember" method="post" class="form-horizontal"
+                  enctype="multipart/form-data">
+                @Html.HiddenFor(m => m.Id)
+                <div class="modal-body">
+
+                    <div class="row">
+                        <div class="col-md-6 ">
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    Enrich Infomation
+                                </div>
+                                <div class="panel-body">
+
+
+                                    <div class="form-group">
+                                        <label class=" col-sm-3 control-label">Employee Id</label>
+                                        <div class="col-sm-9">
+                                            <input value="@Model.EmployeeId" class="form-control" type="text" name="EmployeeId" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">First Name <span style="color:red">*</span></label>
+                                        <div class="col-sm-9">
+                                            <input type="text" name="FirstName" class="form-control" value="@Model.FirstName" required />
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Last Name <span style="color:red">*</span></label>
+                                        <div class="col-sm-9">
+                                            <input type="text" name="LastName" class="form-control" value="@Model.LastName" required />
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Office Email <span style="color:red">*</span></label>
+                                        <div class="col-sm-9">
+                                            <input type="text" name="PersonalEmail" class="form-control" data-cur="@Model.PersonalEmail"
+                                                   value="@Model.PersonalEmail" required />
+                                        </div>
+                                    </div>
+                                    @if (cMem.SiteId==1)
+                                    {
+                                        <div class="form-group">
+                                            <label class="col-sm-3 control-label">Partner</label>
+                                            <div class="col-sm-9">
+                                                <select class="form-control" name="SiteId" id="SiteId" style="width:100%">
+                                                    @foreach (var item in Sites)
+                                                    {
+                                                        <option @if (Model.SiteId == item.Id){ @Html.Raw("selected") }
+                                                                value="@item.Id">
+                                                             @item.Name
+                                                        </option>
+                                                    }
+                                                </select>
+                                            </div>
+                                        </div>
+                                    }
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Member type</label>
+                                        <div class="col-sm-9">
+                                            <select class="form-control" id="MemberType" name="MemberType" data-cur="@Model.MemberType"
+                                                    onchange="change_memtype()">
+                                                @foreach (var item in ViewBag.ListMemberType as List<P_MemberType>)
+                                                {
+                                                    <option @if (Model.MemberType?.Equals(item.MemberType) == true) { @Html.Raw("selected") }
+                                                            value="@item.MemberType">
+                                                        @(item.Name)
+                                                    </option>
+                                                }
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Department</label>
+                                        <div class="col-sm-9">
+                                            <select class="form-control" id="DepartmentId" name="DepartmentId" multiple="multiple">
+                                                <option value="">-- N/A --</option>
+                                                @foreach (var item in ViewBag.ListDepartment as List<P_Department>)
+                                                {
+                                                    <option @if (Model.DepartmentId?.Contains(item.Id.ToString()) == true) { @Html.Raw("selected") }
+                                                            value="@item.Id">
+                                                        @(item.Name)
+                                                    </option>
+                                                }
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-group" id="ReferedBy" @if (Model.MemberType != "distributor") { @Html.Raw("style='display:none'") }>
+                                        <label class=" col-sm-3 control-label">Refered by</label>
+                                        <div class="col-sm-9">
+                                            <select class="form-control" id="ReferedByMemberNumber" name="ReferedByMemberNumber" style="width:100%">
+                                                <option value="">-- N/A --</option>
+                                                @if (listDistributor.Count() > 0)
+                                                {
+                                                    foreach (var item in listDistributor)
+                                                    {
+                                                        <option @if (Model.ReferedByNumber?.Equals(item.MemberNumber) == true) { @Html.Raw("selected") }
+                                                                value="@item.MemberNumber">
+                                                            @(item.FullName + " - " + item.MemberNumber)
+                                                        </option>
+                                                    }
+
+                                                }
+
+                                            </select>
+                                        </div>
+                                    </div>
+
+
+                                    <div class="form-group" id="SalaryType" @if (Model.MemberType == "distributor") { @Html.Raw("style='display:none'") }>
+                                        <label class=" col-sm-3 control-label">Salary Type</label>
+                                        <div class="col-sm-9">
+                                            <select class="form-control" name="SalaryType">
+                                                <option value="Monthly">Monthly</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-group" id="BaseSalary" @if (Model.MemberType == "distributor") { @Html.Raw("style='display:none'") }>
+                                        <label class=" col-sm-3 control-label">Base Salary</label>
+                                        <div class="col-sm-9">
+                                            <input type="number" class="form-control" name="BaseSalary" value="@(Model.BaseSalary ?? 0)" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Status</label>
+                                        <div class="col-sm-9">
+                                            <select class="form-control select2" name="EmployeeStatus">
+                                                <option value="@EnrichcousBackOffice.Utils.IEnums.EmployeesStatus.Working">@EnrichcousBackOffice.Utils.IEnums.EmployeesStatus.Working</option>
+                                                <option value="@EnrichcousBackOffice.Utils.IEnums.EmployeesStatus.Resigned">@EnrichcousBackOffice.Utils.IEnums.EmployeesStatus.Resigned</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Job Position</label>
+                                        <div class="col-sm-9">
+                                            <input type="text" name="JobPosition" class="form-control" value="@Model.JobPosition" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Probation Date</label>
+                                        <div class="col-sm-9">
+                                            <input type="text" class="form-control datepicker" name="ProbationDate" value="@string.Format("{0:MM/dd/yyyy}", Model.ProbationDate)" />
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Official Date</label>
+                                        <div class="col-sm-9">
+                                            <input type="text" class="form-control datepicker" name="EmploymentContractDate" value="@string.Format("{0:MM/dd/yyyy}", Model.EmploymentContractDate)" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">End Date</label>
+                                        <div class="col-sm-9">
+                                            <input type="text" class="form-control datepicker" name="TerminateContractDate" value="@string.Format("{0:MM/dd/yyyy}", Model.TerminateContractDate)" />
+                                        </div>
+                                    </div>
+
+
+                                </div>
+                            </div>
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    Account Infomation
+                                </div>
+                                <div class="panel-body">
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Access Roles</label>
+                                        <div class="col-sm-9">
+                                            <select class="form-control" id="AccessRoles" multiple="multiple" name="AccessRoles" style="width:100%">
+                                                @foreach (var item in ViewBag.ListRole as List<A_Role>)
+                                                {
+                                                    <option @if (Model.RoleCode?.Contains(item.RoleCode) == true) { @Html.Raw("selected") }
+                                                            value="@item.RoleCode">
+                                                        @(item.RoleName)
+                                                    </option>
+                                                }
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-2 control-label">Active</label>
+                                        <div class="col-sm-9">
+                                            <input type="checkbox" class="minimal" name="Active" value="1" @if (Model.Active == true) { @Html.Raw("checked") } />
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="col-md-6">
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    Personal Infomation
+                                </div>
+                                <div class="panel-body">
+
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Avatar</label>
+                                        <div class="col-sm-9">
+                                            <label class="custom-file-upload" style="margin-top:0px;">
+                                                <input type="file" id="avatar-upload" onchange="uploadAvatar(this)" class="upload-input" name="avatar_upload" value="@Model.Picture" style="display:none" />
+                                                <i class="fas fa-file-upload"></i> Select file
+                                            </label>
+                                            <div id="avatar-display" class="avatar-display" style="margin-top:5px;">
+                                                <img class="type_img" src="@picture" width="50" />
+                                                <span class="type_file" style="display:none">
+                                                    <i class="fas fa-file" style="font-size:30px;color:#6c6c6c;vertical-align:sub;"></i>
+                                                </span>
+                                                @if (!string.IsNullOrEmpty(Model.Picture))
+                                                {
+                                                    <div id="avatar_filename" style="display:inline-block">
+                                                        @(!string.IsNullOrEmpty(Model.Picture) ? Model.Picture.Substring(Model.Picture.LastIndexOf('/')+1):"")
+                                                    </div>
+                                                    <a class="download-avatar" href="/Upload/DownloadFile_?file=@identity_card_image_before"><i class="fa fa-download"></i> </a>
+                                                }
+                                                else
+                                                {
+                                                    <div id="avatar_filename" style="display:inline-block">
+                                                    </div>
+
+                                                }
+                                            </div>
+                                        </div>
+
+                                        <script>
+                                            function uploadAvatar(el) {
+                                                $('#avatar_filename').html(el.files && el.files.length ? el.files[0].name : '');
+                                                var file = el.files[0];
+                                                var fileType = file["type"];
+                                                var validImageTypes = ["image/gif", "image/jpeg", "image/png"];
+                                                if ($.inArray(fileType, validImageTypes) < 0) {
+
+                                                    $('#avatar-display').find('.type_file').show();
+                                                    $('#avatar-display').find('.type_img').hide();
+                                                }
+                                                else {
+                                                    $('#avatar-display').find('.type_file').hide();
+                                                    var FR = new FileReader();
+                                                    FR.addEventListener("load", function (e) {
+                                                        $('#avatar-display').find('img').attr("src", e.target.result);
+                                                    });
+                                                    FR.readAsDataURL(el.files[0]);
+                                                    $('#avatar-display').find('.type_img').show();
+                                                    $(".download-avatar").remove();
+                                                }
+
+                                            }
+                                        </script>
+                                    </div>
+
+
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Personal Email</label>
+                                        <div class="col-sm-9">
+                                            <input type="text" name="Email1" class="form-control" value="@Model.Email1" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Cell Phone</label>
+                                        <div class="col-sm-9">
+                                            <input type="text" name="CellPhone" class="form-control" value="@Model.CellPhone" />
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Gender</label>
+                                        <div class="col-sm-9">
+                                            <select class="form-control" name="Gender" style="width:100%">
+                                                <option value="Female">Female</option>
+                                                <option @if (Model.Gender?.Equals("Male") == true) { @Html.Raw("selected") } value="Male">Male</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <!--Country - State - City - ZipCode-->
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Country</label>
+                                        <div class="col-sm-9">
+                                            @Html.DropDownListFor(m => m.Country, ViewBag.Countries as SelectList, new
+                                            {
+                                                @id = "Country",
+                                                @class =
+                                            "form-control select2 "
+                                            })
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">State/Province</label>
+                                        <div class="col-sm-9">
+                                            @Html.DropDownListFor(m => m.State, ViewBag.Provinces as SelectList, "N/A", new
+                                       {
+                                           @id = "Province",
+                                           @class =
+                                               "form-control select2 "
+                                       })
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">City/District</label>
+                                        <div class="col-sm-9">
+                                            <input type="text" name="City" class="form-control" value="@Model.City" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Address</label>
+                                        <div class="col-sm-9">
+                                            <input type="text" name="Address" class="form-control" value="@Model.Address" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Zip Code</label>
+                                        <div class="col-sm-9">
+                                            <input type="text" name="ZipCode" class="form-control" maxlength="5" value="@Model.ZipCode" />
+                                        </div>
+                                    </div>
+                                    <!--/.End-->
+
+
+
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Birthday</label>
+                                        <div class="col-sm-9">
+                                            <input type="text" id="datepicker" name="Birthday" class="form-control datepicker"
+                                                   value="@(Model.Birthday?.ToString("MM/dd/yyyy"))" autocomplete="off" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Identity Card</label>
+                                        <div class="col-sm-9">
+                                            <input type="text" name="IdentityCardNumber" class="form-control" value="@Model.IdentityCardNumber" />
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label"></label>
+                                        <div class="col-sm-9">
+                                            <div class="row">
+                                                <div class="col-sm-6">
+                                                    <label for="identity-before-upload" style="display:block;padding-bottom:5px;">Front </label>
+                                                    <label class="custom-file-upload" style="margin-top:0px;">
+                                                        <input type="file" id="identity-before-upload" onchange="uploadIdentityImageBefore(this)" class="upload-input" name="IdentityCardImageBefore" value="@Model.Picture" style="display:none" />
+                                                        <i class="fas fa-file-upload"></i> Select file
+                                                    </label>
+                                                    <div id="identity-before-display" style="margin-top:5px;">
+                                                        <img class="type_img" src="@identity_card_image_before" width="125" />
+                                                        <span class="type_file" style="display:none">
+                                                            <i class="fas fa-file" style="font-size:30px;color:#6c6c6c;vertical-align:sub;"></i>
+                                                        </span>
+                                                        @if (!string.IsNullOrEmpty(Model.IdentityCardImageBefore))
+                                                        {
+                                                            <div id="identity-before-filename" style="display:inline-block">
+                                                                @(!string.IsNullOrEmpty(Model.IdentityCardImageBefore) ? Model.IdentityCardImageBefore.Substring(Model.IdentityCardImageBefore.LastIndexOf('/')+1):"")
+                                                            </div>
+                                                            <a class="download-front-identity" href="/Upload/DownloadFile_?file=@identity_card_image_before"><i class="fa fa-download"></i> </a>
+                                                        }
+                                                        else
+                                                        {
+                                                            <div id="identity-before-filename" style="display:inline-block">
+                                                            </div>
+                                                        }
+
+                                                    </div>
+                                                    <script>
+                                                        function uploadIdentityImageBefore(el) {
+                                                            $('#identity-before-filename').html(el.files && el.files.length ? el.files[0].name : '');
+                                                            var file = el.files[0];
+                                                            var fileType = file["type"];
+                                                            var validImageTypes = ["image/gif", "image/jpeg", "image/png"];
+                                                            if ($.inArray(fileType, validImageTypes) < 0) {
+
+                                                                $('#identity-before-display').find('.type_file').show();
+                                                                $('#identity-before-display').find('.type_img').hide();
+                                                            }
+                                                            else {
+                                                                $('#identity-before-display').find('.type_file').hide();
+                                                                var FR = new FileReader();
+                                                                FR.addEventListener("load", function (e) {
+                                                                    $('#identity-before-display').find('img').attr("src", e.target.result);
+                                                                });
+                                                                FR.readAsDataURL(el.files[0]);
+                                                                $('#identity-before-display').find('.type_img').show();
+                                                            }
+                                                            $(".download-front-identity").remove();
+
+                                                        }
+                                                    </script>
+                                                </div>
+                                                <div class="col-sm-6">
+                                                    <label for="identity-back-upload" style="display:block;padding-bottom:5px;">Back</label>
+                                                    <label class="custom-file-upload" style="margin-top:0px;">
+                                                        <input type="file" id="identity-after-upload" onchange="uploadIdentityImageAfter(this)" class="upload-input" name="IdentityCardImageAfter" value="@Model.Picture" style="display:none" />
+                                                        <i class="fas fa-file-upload"></i> Select file
+                                                    </label>
+                                                    <div id="identity-after-display" style="margin-top:5px;">
+                                                        <img class="type_img" src="@identity_card_image_after" width="125" />
+                                                        <span class="type_file" style="display:none">
+                                                            <i class="fas fa-file" style="font-size:30px;color:#6c6c6c;vertical-align:sub;"></i>
+                                                        </span>
+                                                        @if (!string.IsNullOrEmpty(Model.IdentityCardImageAfter))
+                                                        {
+                                                            <div id="identity-after-filename" style="display:inline-block">
+                                                                @(!string.IsNullOrEmpty(Model.IdentityCardImageAfter) ? Model.IdentityCardImageAfter.Substring(Model.IdentityCardImageAfter.LastIndexOf('/')+1):"")
+                                                            </div>
+                                                            <a class="download-back-identity" href="/Upload/DownloadFile_?file=@identity_card_image_after"><i class="fa fa-download"></i> </a>
+                                                        }
+                                                        else
+                                                        {
+                                                            <div id="identity-after-filename" style="display:inline-block">
+
+                                                            </div>
+
+
+                                                        }
+
+                                                    </div>
+                                                    <script>
+                                                        function uploadIdentityImageAfter(el) {
+                                                            $('#identity-after-filename').html(el.files && el.files.length ? el.files[0].name : '');
+                                                            var file = el.files[0];
+                                                            var fileType = file["type"];
+                                                            var validImageTypes = ["image/gif", "image/jpeg", "image/png"];
+                                                            if ($.inArray(fileType, validImageTypes) < 0) {
+
+                                                                $('#identity-after-display').find('.type_file').show();
+                                                                $('#identity-after-display').find('.type_img').hide();
+                                                            }
+                                                            else {
+                                                                $('#identity-after-display').find('.type_file').hide();
+                                                                var FR = new FileReader();
+                                                                FR.addEventListener("load", function (e) {
+                                                                    $('#identity-after-display').find('img').attr("src", e.target.result);
+                                                                });
+                                                                FR.readAsDataURL(el.files[0]);
+                                                                $('#identity-after-display').find('.type_img').show();
+                                                            }
+                                                            $(".download-back-identity").remove();
+                                                        }
+                                                    </script>
+
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Personal Income Tax </label>
+                                        <div class="col-sm-9">
+                                            <input type="text" name="PersonalIncomeTax" class="form-control" value="@Model.PersonalIncomeTax" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Social Insurance Code </label>
+                                        <div class="col-sm-9">
+                                            <input type="text" name="SocialInsuranceCode" class="form-control" value="@Model.SocialInsuranceCode" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Profile Color </label>
+                                        <div class="col-sm-9">
+                                            <input type="color" class="form-control" name="ProfileDefinedColor" data-toggle="tooltip"
+                                                   title="Click here to changes color" data-placement="bottom" id="ProfileDefinedColor"
+                                                   onchange="pickerColor()" value="@(Model.ProfileDefinedColor == null ? " #ffffff" :
+                                                 Model.ProfileDefinedColor)" style="width: 68px; cursor: pointer" />
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+
+
+                    </div>
+
+
+
+
+                    <!-- /.box-body -->
+
+
+
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="changeCommand('save')" class="btn btn-secondary pull-left" data-dismiss="modal">Close</button>
+                    <button type="submit" onclick="changeCommand('save_and_sendemail')" id="save_and_send_email_form" class="btn btn-success">Save & Send Email Update</button>
+                    <button type="submit" class="btn btn-primary btn-submit" style="float:right">Save</button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    //Select2
+    $('.select2').select2();
+    $('#ReferedByMemberNumber').select2();
+    $('#AccessRoles').select2();
+    $("#DepartmentId").select2();
+    $("#BelongToPartner").select2();
+
+    //Datepicker
+    $(".datepicker").datepicker({
+        changeMonth: true,
+        changeYear: true,
+        yearRange: '1950:2050'
+    });
+
+    //load provines
+    $("#Country").on('change', function () {
+        var currentCountryId = $(this).val();
+        if (!currentCountryId) {
+            $("#Province").html("<option value=''>N/A</option>").trigger('change');
+            return;
+        }
+        $.ajax({
+            type: "get",
+            url: "/memberman/GetProvincesByCountryId",
+            data: { 'CountryId': currentCountryId}, // serializes the form's elements.
+            success: function (data) {
+
+                $("#Province").html("<option value=''>N/A</option>").trigger('change');
+                $.each(data, function (i, item) {
+                    $('#Province').append($('<option>', {
+                        value: item.Code,
+                        text: item.Name
+                    }));
+                });
+                $("#Province").trigger('change');
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                alert('fail');
+            },
+            complete: function () {
+                overlayOff();
+            }
+        });
+    })
+
+    //reload role
+    $("#SiteId").on('change', function () {
+        var SiteId = $(this).val();
+        $.ajax({
+            type: "get",
+            url: "/memberman/LoadAcessRoleBySiteId",
+            data: { SiteId }, // serializes the form's elements.
+            success: function (data) {
+                $("#AccessRoles").html("");
+                $.each(data, function (i, item) {
+                    $('#AccessRoles').append($('<option>', {
+                        value: item.RoleCode,
+                        text: item.RoleName
+                    }));
+                });
+                $("#AccessRoles").trigger('change');
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                alert('fail');
+            },
+            complete: function () {
+                overlayOff();
+            }
+        });
+    })
+    //iCheck for checkbox and radio inputs
+    $('input[type="checkbox"].minimal').iCheck({
+        checkboxClass: 'icheckbox_minimal-blue'
+    });
+
+    var command = 'save';
+    function changeCommand(value) {
+        command = value;
+    }
+    $("#form_save_member").submit(async function (e) {
+                        overlayOn();
+                        e.preventDefault(); // avoid to execute the actual submit of the form.
+                        let data = new FormData(document.getElementById("form_save_member"));
+                        data.append("command", command);
+                        $.ajax({
+                            type: "POST",
+                            url: "/memberman/updatemember",
+                            contentType: false,
+                            processData: false,
+                            data: data, // serializes the form's elements.
+                            success: async function (data) {
+                                if (data.status) {
+
+                                    var success = $.parseJSON('{"text":"'+data.message+'","layout":"topRight","type":"success"}');
+                                    noty(success);
+                                    @if (Model.Id > 0)
+                                    {
+                                        <text>
+                                        $("#editInfor").modal("hide");
+                                        LoadTab('information');
+                                        ReloadOverView();
+                                    </text>
+
+                                    }
+                                    else
+                                    {
+                                         <text>
+                                        $("#editInfor").modal("hide");
+                                         var options = $.parseJSON('{"text":"send email welcome to employees success","layout":"topRight","type":"success"}');
+                                         noty(options);
+                                         $("#mytable").DataTable().ajax.reload();
+                                         </text>
+                                    }
+
+                                }
+                                else {
+                                    error(data.message)
+                                }
+                            },
+                            error: function (xhr, ajaxOptions, thrownError) {
+                                alert('fail');
+                            },
+                            complete: function () {
+                                overlayOff();
+                            }
+                        });
+            });
+
+</script>

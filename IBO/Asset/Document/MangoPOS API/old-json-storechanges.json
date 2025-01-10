@@ -1,0 +1,81 @@
+{
+    "timeZone": "+07:00",
+    "timeZoneName": "SE Asia Standard Time",
+    "StoreId": "S00775",
+    "StoreName": "HUY  2603",
+    "ContactName": "HUY  2603",
+    "LastUpdate": "04/06/2021",
+    "UpdateBy": "Ngoc Bau",
+    "Email": "huytest2603@gmail.com",
+    "Password": "f5bb0c8de146c67b44babbf4e6584cc0",
+    "RequirePassChange": "off",
+    "CellPhone": "1283184184",
+    "CreateBy": "IMS System",
+    "CreateAt": "03/26/2021",
+    "Status": "Activated",
+    "BusinessName": "HUY  2603",
+    "BusinessPhone": "1283184184",
+    "BusinessEmail": "huytest2603@gmail.com",
+    "BusinessAddress": "11 long, HCM, CA, 22122 United States",
+    "NewLicense": "0",
+    "Licenses": [
+        {
+            "LicenseCode": "SMS",
+            "LicenseType": "COUNT",
+            "Subscription_warning_date": "",
+            "Subscription_warning_msg": "",
+            "Count_warning_value": "0",
+            "Count_limit": "2",
+            "Start_period": "04/07/2021",
+            "End_period": "04/25/2021",
+            "Status": "active",
+            "Link": ""
+        },
+        {
+            "LicenseCode": "EMAIL",
+            "LicenseType": "COUNT",
+            "Subscription_warning_date": "",
+            "Subscription_warning_msg": "",
+            "Count_warning_value": "0",
+            "Count_limit": "1",
+            "Start_period": "03/26/2021",
+            "End_period": "04/25/2021",
+            "Status": "active",
+            "Link": ""
+        },
+        {
+            "LicenseCode": "CHECKIN",
+            "LicenseType": "COUNT",
+            "Subscription_warning_date": "",
+            "Subscription_warning_msg": "",
+            "Count_warning_value": "0",
+            "Count_limit": "10",
+            "Start_period": "03/26/2021",
+            "End_period": "04/25/2021",
+            "Status": "active",
+            "Link": "https://dev-checkin.enrichcous.com/"
+        },
+        {
+            "LicenseCode": "SALONCENTER",
+            "LicenseType": "COUNT",
+            "Subscription_warning_date": "",
+            "Subscription_warning_msg": "",
+            "Count_warning_value": "0",
+            "Count_limit": "10",
+            "Start_period": "03/26/2021",
+            "End_period": "04/25/2021",
+            "Status": "active",
+            "Link": "https://dev-manage.enrichcous.com/"
+        }
+    ],
+    "activeProducts": [
+        {
+            "Code": "MANGOONE",
+            "Name": "Queen Version "
+        }
+    ]
+}
+
+
+
+

@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+ <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <!-- Diagram content (shape and connector positions) -->
+    <edmx:Diagrams>
+      <Diagram DiagramId="040310eceb4a4081b57dc499a11ca752" Name="Diagram1">
+        <EntityTypeShape EntityType="EnrichcousBOModel.A_FunctionInPage" Width="1.5" PointX="5.75" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.A_GrandAccess" Width="1.5" PointX="5.75" PointY="12.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.A_Page" Width="1.5" PointX="13.75" PointY="5.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.A_Role" Width="1.5" PointX="13.75" PointY="8.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.Ad_Country" Width="1.5" PointX="13.75" PointY="11.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.Ad_USAState" Width="1.5" PointX="13.75" PointY="14.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.C_BossStore" Width="1.5" PointX="15.75" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.C_Customer" Width="1.5" PointX="15.75" PointY="5.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.C_CustomerAdditionalInfo" Width="1.5" PointX="5.75" PointY="15.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.C_CustomerCard" Width="1.5" PointX="7.75" PointY="15.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.C_CustomerContact" Width="1.5" PointX="9.75" PointY="15.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.C_CustomerGiftcard" Width="1.5" PointX="17.75" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.C_CustomerSupportingInfo" Width="1.5" PointX="17.75" PointY="4.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.C_CustomerTransaction" Width="1.5" PointX="17.75" PointY="8.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.C_DemoScheduler" Width="1.5" PointX="17.75" PointY="15.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.C_GiftCardsOrderingForm" Width="1.5" PointX="19.75" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.C_MerchantProcess" Width="1.5" PointX="0.75" PointY="19.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.C_MerchantProcessing" Width="1.5" PointX="2.75" PointY="19.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.C_MerchantSubscribe" Width="1.5" PointX="4.75" PointY="19.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.C_OutgoingEmail" Width="1.5" PointX="19.75" PointY="5.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.C_Partner" Width="1.5" PointX="9.75" PointY="19.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.C_PartnerCard" Width="1.5" PointX="19.75" PointY="10.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.C_Questionare" Width="1.5" PointX="11.75" PointY="19.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.C_Questionare_NonTechnician" Width="1.5" PointX="19.75" PointY="17.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.C_Questionare_Technician" Width="1.5" PointX="21.75" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.C_SalesLead" Width="1.5" PointX="21.75" PointY="4.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.C_SalesLead_Interaction_Status" Width="1.5" PointX="21.75" PointY="15.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.C_SalesLead_Status" Width="1.5" PointX="17.75" PointY="21.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.Calendar_Event" Width="1.5" PointX="21.75" PointY="19.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.Dejavo_Datasheet" Width="1.5" PointX="23.75" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.Device_Features" Width="1.5" PointX="5.75" PointY="3.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.Document_Category" Width="1.5" PointX="0.75" PointY="23.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.Document_File" Width="1.5" PointX="6.75" PointY="23.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.External_Embed" Width="1.5" PointX="23.75" PointY="9.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.Form_CustomizeItems" Width="1.5" PointX="23.75" PointY="13.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.Form_CustomizeRequest" Width="1.5" PointX="23.75" PointY="16.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.I_Bundle" Width="1.5" PointX="23.75" PointY="19.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.I_Bundle_Device" Width="1.5" PointX="23.75" PointY="23.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.I_ProcessSetting" Width="1.5" PointX="13.75" PointY="24.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.I_ProgressFill" Width="1.5" PointX="15.75" PointY="24.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.ImportExcelHistory" Width="1.5" PointX="17.75" PointY="24.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.IMSLog" Width="1.5" PointX="25.75" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.License_Item" Width="1.5" PointX="25.75" PointY="5.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.License_Item_Group" Width="1.5" PointX="25.75" PointY="9.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.License_Product" Width="1.5" PointX="25.75" PointY="12.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.License_Product_Item" Width="1.5" PointX="25.75" PointY="20.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.Location" Width="1.5" PointX="25.75" PointY="23.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.M_Ads" Width="1.5" PointX="2.75" PointY="26.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.M_Campaign" Width="1.5" PointX="23.75" PointY="26.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.O_Device" Width="1.5" PointX="25.75" PointY="26.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.O_MerchantForm" Width="1.5" PointX="27.75" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.O_Order_Refund" Width="1.5" PointX="4.75" PointY="27.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.O_Orders" Width="1.5" PointX="27.75" PointY="6.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.O_Orders_Service_Renewal" Width="1.5" PointX="6.75" PointY="27.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.O_Product" Width="1.5" PointX="8.75" PointY="27.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.O_Product_Line" Width="1.5" PointX="13.75" PointY="27.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.O_Product_Model" Width="1.5" PointX="15.75" PointY="27.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.Option_Config" Width="1.5" PointX="27.75" PointY="17.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.Order_Carrier" Width="1.5" PointX="17.75" PointY="27.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.Order_Products" Width="1.5" PointX="27.75" PointY="20.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.Order_Subcription" Width="1.5" PointX="27.75" PointY="26.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.Order_UPSPackage" Width="1.5" PointX="19.75" PointY="28.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.Order_UPSTracking" Width="1.5" PointX="29.75" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.P_BankSupport" Width="1.5" PointX="29.75" PointY="5.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.P_BonusStrategySetting" Width="1.5" PointX="29.75" PointY="10.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.P_CommEmployeeSetting" Width="1.5" PointX="10.75" PointY="29.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.P_CommLevelSetting" Width="1.5" PointX="29.75" PointY="15.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.P_Department" Width="1.5" PointX="29.75" PointY="19.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.P_EmployeePayroll" Width="1.5" PointX="29.75" PointY="25.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.P_EmployeePayrollPayment" Width="1.5" PointX="12.75" PointY="30.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.P_Level" Width="1.5" PointX="21.75" PointY="30.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.P_Member" Width="1.5" PointX="31.75" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.P_MemberAvailableTime" Width="1.5" PointX="31.75" PointY="14.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.P_MemberLevel" Width="1.5" PointX="17.75" PointY="31.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.P_MemberSubscription" Width="1.5" PointX="31.75" PointY="19.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.P_MemberType" Width="1.5" PointX="31.75" PointY="25.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.P_Notification" Width="1.5" PointX="11" PointY="1" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.P_NotificationMapping" Width="1.5" PointX="13.25" PointY="1.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.P_NotificationTemplate" Width="1.5" PointX="8.75" PointY="1.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.P_PayrollFiles" Width="1.5" PointX="31.75" PointY="28.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.PO" Width="1.5" PointX="0.75" PointY="32.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.PO_Detail" Width="1.5" PointX="2.75" PointY="32.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.PO_Detail_Checkin" Width="1.5" PointX="14.75" PointY="32.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.PO_Request" Width="1.5" PointX="33.75" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.S_AddonSchedulerActivation" Width="1.5" PointX="4.75" PointY="33.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.Store_Services" Width="1.5" PointX="33.75" PointY="6.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.sysdiagram" Width="1.5" PointX="6.75" PointY="33.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.SystemConfiguration" Width="1.5" PointX="8.75" PointY="33.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.T_EmailTemplate" Width="1.5" PointX="33.75" PointY="14.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.T_EmailTemplateGroup" Width="1.5" PointX="33.75" PointY="17.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.T_FileRelated" Width="1.5" PointX="3" PointY="6.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.T_Priority" Width="1.5" PointX="33.75" PointY="20.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.T_Project_Milestone" Width="1.5" PointX="8.75" PointY="11" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.T_Project_Milestone_Member" Width="1.5" PointX="11" PointY="11.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.T_Project_Milestone_Notes" Width="1.5" PointX="23.75" PointY="33.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.T_Project_Stage" Width="1.5" PointX="33.75" PointY="25.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.T_Project_Stage_Members" Width="1.5" PointX="33.75" PointY="29.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.T_RemindersTicket" Width="1.5" PointX="3" PointY="9.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.T_SupportTicket" Width="1.5" PointX="0.75" PointY="1.625" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.T_Tags" Width="1.5" PointX="29.75" PointY="33.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.T_TicketAttribute" Width="1.5" PointX="31.75" PointY="33.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.T_TicketFeedback" Width="1.5" PointX="33.75" PointY="33.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.T_TicketSeverity" Width="1.5" PointX="19.75" PointY="34.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.T_TicketStage_Status" Width="1.5" PointX="25.75" PointY="34.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.T_TicketStatus" Width="1.5" PointX="3.75" PointY="15" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.T_TicketStatusMapping" Width="1.5" PointX="6" PointY="8.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.T_TicketTranferMapping" Width="1.5" PointX="35.75" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.T_TicketType" Width="1.5" PointX="3.75" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.T_TicketTypeMapping" Width="1.5" PointX="6" PointY="5.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.T_TicketUpdateLog" Width="1.5" PointX="35.75" PointY="4.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.Ts_Task" Width="1.5" PointX="35.75" PointY="8.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.Ts_TaskTemplateCategory" Width="1.5" PointX="8.75" PointY="6" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.Ts_TaskTemplateField" Width="1.5" PointX="11" PointY="6.125" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.UploadMoreFile" Width="1.5" PointX="10.75" PointY="35.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EnrichcousBOModel.Vendor" Width="1.5" PointX="35.75" PointY="15.75" IsExpanded="true" />
+        <AssociationConnector Association="EnrichcousBOModel.FK_Notification_NotificationTemplate" ManuallyRouted="false" />
+        <AssociationConnector Association="EnrichcousBOModel.FK_NotificationMapping_Notification" ManuallyRouted="false" />
+        <AssociationConnector Association="EnrichcousBOModel.FK_T_FileRelated_T_SupportTicket" ManuallyRouted="false" />
+        <AssociationConnector Association="EnrichcousBOModel.FK_T_Project_Milestone_Member_T_Project_Milestone" ManuallyRouted="false" />
+        <AssociationConnector Association="EnrichcousBOModel.FK_RemindersTicket_T_SupportTicket" ManuallyRouted="false" />
+        <AssociationConnector Association="EnrichcousBOModel.FK_T_TicketStatusMapping_T_SupportTicket" ManuallyRouted="false" />
+        <AssociationConnector Association="EnrichcousBOModel.FK_T_TicketTypeMapping_T_SupportTicket" ManuallyRouted="false" />
+        <AssociationConnector Association="EnrichcousBOModel.FK_T_TicketStatusMapping_T_TicketStatus" ManuallyRouted="false" />
+        <AssociationConnector Association="EnrichcousBOModel.FK_T_TicketTypeMapping_T_TicketType" ManuallyRouted="false" />
+        <AssociationConnector Association="EnrichcousBOModel.FK_Ts_TaskTemplateField_Ts_TaskTemplateCategory" ManuallyRouted="false" />
+      </Diagram>
+    </edmx:Diagrams>
+  </edmx:Designer>
+</edmx:Edmx>

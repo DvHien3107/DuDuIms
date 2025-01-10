@@ -1,0 +1,123 @@
+﻿@model EnrichcousBackOffice.Models.C_Customer
+
+<h3>Bussiness Info</h3>
+<input type="hidden" name="update_cus" value="1" />
+<div class="col-md-6 col-md-pull-6  col-md-offset-6 form-group">
+    <label class="control-label">legal Name <span style="color:darkblue">*</span></label>
+    <input required type="text" class="form-control" name="LegalName" value="@Model.LegalName" />
+</div>
+<div class="col-md-6 form-group">
+    <label class="control-label">Business Description <span style="color:darkblue">*</span></label>
+    <input required type="text" class="form-control" name="BusinessDescription" value="@Model.BusinessDescription" />
+</div>
+
+<div class="col-md-6 form-group">
+    <label class="control-label">Current Processor Name <span style="color:darkblue">*</span></label>
+    <select required name="CurrentProcessorName" class="form-control">
+        <option value="false">No</option>
+        <option value="true" @if (Model.CurrentProcessorName == "true") { @Html.Raw("selected") }>Yes</option>
+    </select>
+
+</div>
+
+<div class="col-md-6 form-group">
+    <label class="control-label">Business phone<span style="color:darkblue">*</span></label>
+    <input required type="text" class="form-control" name="BusinessPhone" value="@Model.BusinessPhone" />
+</div>
+<div class="col-md-6 form-group">
+    <label class="control-label">Business email <span style="color:darkblue">*</span></label>
+    <input required type="email" class="form-control" name="BusinessEmail" value="@Model.BusinessEmail" />
+</div>
+
+<div class="col-md-12 form-group">
+    <label class="control-label">Address <span style="color:darkblue">*</span></label>
+    <input required type="text" pattern="[0-9]+ .+" class="form-control" placeholder="Address" name="BusinessAddressStreet" value="@Model.BusinessAddressStreet" />
+    <input required type="text" name="BusinessCity" placeholder="City" class="form-control pull-left" style="width:50%" value="@Model.BusinessCity" />
+    <input required type="text" value="@Model.BusinessState" placeholder="State" class="state form-control State pull-right" style="width:50%" name="BusinessState" />
+    <input required type="text" name="BusinessZipCode" placeholder="Zipcode" class="form-control pull-left" pattern="[0-9]{5}" style="width:50%" value="@Model.BusinessZipCode" />
+    <input required type="text" class="country form-control pull-right" placeholder="Country" name="BusinessCountry" style="width:50%" value="@Model.BusinessCountry" />
+</div>
+<div class="col-md-6 form-group">
+
+    <label class="control-label">Federal Tax Id <span style="color:darkblue">*</span> <i class="fa fa-info-circle" data-toggle="tooltip" data-placement="top" title="Employer identification number (EIN) or federal tax ID is a unique nine-digit number that identifies your business with the IRS."></i></label>
+    <input required type="text" class="form-control" name="FederalTaxId" value="@Model.FederalTaxId" pattern="[0-9-]{10}"/>
+</div>
+<div class="col-md-6 form-group">
+    <label class="control-label">Start up date  <span style="color:darkblue">*</span></label>
+    <input required type="datetime" readonly style="background-color:white" name="BusinessStartDate" class="form-control datepicker" value="@(Model.BusinessStartDate?.ToString("MM/dd/yyyy"))" />
+</div>
+
+
+<h3>Owner Info</h3>
+<div class="col-md-6 form-group">
+    <label class="control-label">Owner Email <span style="color:darkblue">*</span></label>
+    <input required type="email" class="form-control" name="Email" value="@Model.Email" />
+</div>
+<div class="col-md-6 form-group">
+    <label class="control-label">Birthday <span style="color:darkblue">*</span></label>
+    <input required type="datetime" class="form-control datepicker" name="Birthday" value="@(Model.Birthday?.ToString("MM/dd/yyyy"))" />
+</div>
+
+<div class="col-md-12 form-group">
+    <label class="control-label">
+        Address  <span style="color:darkblue">*</span>
+
+    </label>
+    <div class="pull-right"><input id="same_address" name="same_address" value="1" type="checkbox" /><label for="same_address"> Same as business address</label></div>
+    <div id="owner_address">
+        <input required type="text" pattern="[0-9]+ .+" name="OwnerAddressStreet" placeholder="Address number & street" class="form-control" value="@Model.OwnerAddressStreet" />
+        <input required type="text" name="City" placeholder="City" class="form-control pull-left" style="width:50%" value="@Model.City" />
+        <input required type="text" name="State" placeholder="state" value="@Model.State" class="state form-control State pull-right" style="width:50%" />
+        <input required type="text" name="Zipcode" placeholder="zipcode" class="form-control pull-left" pattern="[0-9]{5}" style="width:50%" value="@Model.Zipcode" />
+        <input required type="text" name="Country" placeholder="country" class="country form-control pull-right" style="width:50%" value="@Model.Country" />
+    </div>
+</div>
+@if (string.IsNullOrEmpty(Model.SocialSecurity))
+{
+    <div class="col-md-6 form-group">
+        <label class="control-label">Social number (9 digits)<span style="color:darkblue">*</span></label>
+        <input required type="password" class="form-control" name="SocialSecurity" pattern="[0-9]{9}" value="@Model.SocialSecurity" />
+    </div>
+}
+<script src="/Content/Admin/plugins/input-mask/jquery.inputmask.js"></script>
+<script>
+    $(function () {
+        $('[name=FederalTaxId]').inputmask('99-9999999', { showMaskOnHover: false });
+        $('#same_address').on('click', function () {
+            if ($(this).is(":checked")) {
+                $("#owner_address").hide();
+                $("#owner_address input").attr("disabled", true);
+            }
+            else {
+                $("#owner_address").show();
+                $("#owner_address input").removeAttr("disabled");
+            }
+        });
+        $('[data-toggle="tooltip"]').tooltip();
+    });
+    auto_complete_state_country();
+    //cai ten noi len tat ca OK!
+    function auto_complete_state_country() {
+        $.ajax({
+            method: "POST",
+            url: "/Merchantman/LoadListState",
+            dataType: "json"
+        })
+            .done(function (data) {
+                $(".state").autocomplete({
+                    source: data[0]
+                });
+                $(".country").autocomplete({
+                    source: data[1]
+                });
+            })
+            .fail(function () {
+                console.log("[auto_complete_state_country] Oops! Something went wrong");
+            })
+    }
+    $(".datepicker").datepicker({
+        changeMonth: true,
+        changeYear: true,
+        yearRange: '1950:2050'
+    });
+</script>

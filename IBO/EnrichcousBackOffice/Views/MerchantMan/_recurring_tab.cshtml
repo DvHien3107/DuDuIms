@@ -1,0 +1,79 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.Store_Services>
+@using EnrichcousBackOffice.Utils.IEnums
+@using Inner.Libs.Helpful
+@{
+    bool control_allow = ViewBag.control_allow ?? false;
+}
+<table class="table datatable table-bordered table-hover table-striped">
+    <thead>
+        <tr>
+            <th>License</th>
+            <th>Status</th>
+            <th>Date Recurring</th>
+            <th style="width:100px">Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+        <tr>
+            <td>
+                <strong>@item.Productname</strong>
+                @if (item.Type == "license")
+                {
+                    if (item.StoreApply == Store_Apply_Status.Trial.ToString())
+                    {
+                        <label class="label label-default">Trial</label>
+                    }
+                    else if (item.StoreApply == Store_Apply_Status.Promotional.ToString())
+                    {
+                        <label class="label label-info">Promo</label>
+                    }
+                    else
+                    {
+                        <label class="label label-primary">Real</label>
+                    }
+                }
+
+                <br /><i>@item.Type product</i>
+            </td>
+            <td align="center">
+                @if (!string.IsNullOrEmpty(item.Period) && item.Period == "MONTHLY" && item.StoreApply != Store_Apply_Status.Trial.ToString())
+                {
+
+                    if (item.AutoRenew == true)
+                    {
+                        <span class="label label-success">Active</span>
+                    }
+                    else
+                    {
+                        <span class="label label-danger">Inactive</span>
+                    }
+                }
+            </td>
+            <td>
+                <span>
+                    @item.RenewDate.Value.AddDays(-4).ToString("MMM dd, yyyy")
+                </span>
+            </td>
+            <td>
+                @if (control_allow)
+                {
+                    if (item.MxMerchant_SubscriptionStatus != "Active")
+                    {
+                        <a class="btn btn-success btn-sm" onclick="changeRecurring('@item.Id',true)">Active</a>
+                    }
+                    else
+                    {
+                        <a class="btn btn-danger btn-sm" onclick="changeRecurring('@item.Id',false)">Inactive</a>
+                    }
+
+                }
+            </td>
+        </tr>
+        }
+    </tbody>
+</table>
+
+
+

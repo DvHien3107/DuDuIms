@@ -1,0 +1,192 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.Location>
+<div id="location_model" class="modal fade" role="dialog">
+    <div class="modal-dialog" style="width:800px">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Location Management</h4>
+            </div>
+            <div class="modal-body clearfix" style="max-height:80vh; overflow-y:auto">
+                <div class="col-md-12" style="display:block">
+                    <table id="list_location" class="table_detail striped2 table">
+                        <thead style="background-color:#ddd">
+                            <tr>
+                                <th>Location #</th>
+                                <th>Name</th>
+                                <th>Address</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var l in Model)
+                            {
+                                <tr id="location_@l.Id" class="hover" onclick="location_edit('@l.Id')">
+                                    <td><b style="color:green">#@l.Id</b></td>
+                                    <td>@l.Name</td>
+                                    <td>@(l.Address?.Replace("|", ", "))</td>
+                                </tr>
+                                <tr>
+                                    <td id="location_edit_@l.Id" colspan="3" style="padding:0"></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                    <a id="newlocation_btn_0" class="btn btn-success btn-flat fa fa-plus" style="width:100%" onclick="new_location()"> New location</a>
+                    <a id="newlocation_btn_1" class="btn btn-default btn-flat fa fa-close" style="width:100%; display:none" onclick="new_location()"> Close</a>
+                    <div id="new_location" class="col-md-12" style="padding:0">
+                        <form id="form_edit_location" action="/device/SaveLocation" method="post" onsubmit="$('#save_location_load').show()" class="col-md-12" style="display:none;border:1px solid #ddd; background-color: #fff">
+
+                            <div class="col-md-12">
+                                <h3 style="margin-bottom:0" id="location_form_title">Edit Location</h3><img class="pull-left" id="img_load_edit_location" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                                <a class="pull-right fa fa-close" style="margin-top:-20px; padding:10px" onclick="new_location()"></a>
+                            </div>
+                            <div class="col-md-12"><hr style="margin-top:0" /></div>
+                            <input type="hidden" name="code" />
+                            <div class="col-md-12 form-group">
+                                <label>Location Name <span style="color:red">*</span></label>
+                                <input name="Name" class="form-control" required/>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label>Location <span style="color:red">*</span></label>
+                                    <input class="form-control" name="Street" placeholder="street" />
+                                    <div class="row">
+                                        <div class="col-md-6" style="padding-right:0px; margin-top:-1px">
+                                            <input class="form-control" name="City" placeholder="City/Town" required />
+                                        </div>
+                                        <div class="col-md-6" style="padding-left:0px; margin-top:-1px;">
+                                            <input class="form-control state" name="State" placeholder="State/Province" style="border-left:none" required />
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6" style="padding-right:0px; margin-top:-1px">
+                                            <input class="form-control" name="ZipCode" placeholder="ZIP code" pattern="[0-9]+" required />
+                                        </div>
+                                        <div class="col-md-6" style="padding-left:0px; margin-top:-1px">
+                                            <input class="form-control country" name="Country" placeholder="Country" style="border-left:none" required />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12" style="margin-bottom:10px">
+                                <button type="submit" class="btn btn-primary pull-right fa fa-check" id="form_edit_location_submit"> Save <img id="save_location_load" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" /></button>
+                                <a class="btn btn-default pull-left fa fa-close" onclick="new_location()"> close</a>
+                            </div>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    $("#form_edit_location").ajaxForm(function (data) {
+        if (data[0]) {
+            noty({ "text": data[1], "layout": "topRight", "type": "success" });
+            $("#save_location_load").hide();
+
+            var tr = '<td><b style="color:green">#' + data[2].Id + '</b></td><td>' + data[2].Name + '</td><td>' + data[2].Address.replace(/\|/g, ', ') + '</td>';
+            if (!$("#location_" + data[2].Id).length) {
+                var new_row = '<tr id="location_' + data[2].Id + '" class="hover" onclick="location_edit(\'' + data[2].Id + '\')"></tr>'
+                    + '<tr><td id="location_edit_' + data[2].Id + '" colspan="3" style="padding:0"></td></tr>';
+                $("#list_location tbody").append(new_row);
+                $("#newlocation_btn_0").show();
+                $("#newlocation_btn_1").hide();
+            }
+            $('#location_' + data[2].Id).html(tr);
+            $('#form_edit_location').hide(300);
+        } else {
+            noty({ "text": data[1], "layout": "topRight", "type": "error" });
+        }
+    });
+    function show_form(code = null) {
+        var e_form = $("#form_edit_location").resetForm().hide();
+        e_form.find('input[name="code"]').val('');
+        
+        //$("#form_edit_location").hide(300, function () { $(this).remove(); });
+        if (code) {
+            e_form.appendTo($("#location_edit_" + code));
+        }
+        else {
+            e_form.appendTo($("#new_location"));
+            e_form.find('input[name="Country"]').val("United States");
+            $("#newlocation_btn_0").hide();
+            $("#newlocation_btn_1").show();
+        }
+        e_form.show(300);
+    }
+    function new_location() {
+        $("#newlocation_btn_0").show();
+        $("#newlocation_btn_1").hide();
+        if ($("#new_location").find("#form_edit_location").not(":hidden").length == 0) {
+            show_form();
+
+        } else {
+            $("#form_edit_location").hide(300);
+        }
+        $("#location_form_title").html("New location");
+    }
+    function location_edit(code) {
+        $("#newlocation_btn_0").show();
+        $("#newlocation_btn_1").hide();
+        if ($("#location_edit_" + code).find("#form_edit_location").not(":hidden").length == 0) {
+            show_form(code);
+            $("#location_form_title").html("Edit location");
+            $("#img_load_edit_location").show();
+            $.ajax({
+                method: "POST",
+                url: "/device/getLocation",
+                data: { code },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    if (data[0]) {
+                        $("#location_form_title").html("Edit location <span style='color:green'>#" + data[1].Id+"</span>");
+                        var e_form = $("#form_edit_location");
+                        e_form.find('input[name="Name"]').val(data[1].Name);
+                        e_form.find('input[name="code"]').val(data[1].Id);
+                        if (data[1].Address) {
+                            var address = data[1].Address.split("|");
+                            e_form.find('input[name="Street"]').val(address[0]);
+                            e_form.find('input[name="City"]').val(address[1]);
+                            e_form.find('input[name="State"]').val(address[2]);
+                            e_form.find('input[name="ZipCode"]').val(address[3]);
+                            e_form.find('input[name="Country"]').val(address[4]);
+                        }
+                    }
+                })
+                .fail(function () {
+                    alert("getLocation fail");
+                })
+                .always(function () {
+                    $("#img_load_edit_location").hide();
+                });
+        } else {
+            $("#form_edit_location").hide(300);
+        }
+
+    }
+</script>
+<style>
+    .table_detail tr td, .table_detail tr th {
+        border: solid 1px #f9f9f9;
+        padding: 10px;
+        cursor: pointer;
+    }
+
+    tr.hover:hover {
+        background-color: #ddd !important;
+    }
+
+    .striped2 > tbody > tr:nth-of-type(4n+3) {
+        background-color: #eee;
+    }
+
+    .striped2 > tbody > tr:nth-of-type(4n+4) {
+        background-color: #eee;
+    }
+</style>

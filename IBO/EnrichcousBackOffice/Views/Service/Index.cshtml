@@ -1,0 +1,268 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.O_Service>
+@using EnrichcousBackOffice.Models
+
+@{
+    ViewBag.Title = "Service";
+    Dictionary<string, bool> p = ViewBag.p;
+}
+
+<section class="content-header">
+    <h1>
+        Service
+        <small>Products</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Dashboard</a></li>
+        <li><i class="fa fa-television"></i> Products</li>
+        <li class="active">Service</li>
+    </ol>
+</section>
+
+<!-- Main content -->
+<section class="content">
+    <div class="row">
+
+        @if (TempData["error"] != null)
+        {
+            <div class="alert alert-warning alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-warning"></i> @TempData["error"]</span>
+            </div>
+        }
+        else if (TempData["success"] != null)
+        {
+            <div class="alert alert-success alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-check"></i> @TempData["success"]</span>
+            </div>
+        }
+
+        <div class="col-md-12">
+            <div class="box box-primary">
+                <div class="box-header ">
+                    <h3 class="box-title">List services</h3>
+
+                    @if (p["products_addnewservice"] == true)
+                    {
+                        <div class="pull-right box-tools">
+                            <button type="button" onclick="location.href='/service/save'" class="btn btn-primary btn-sm" data-toggle="tooltip" title="Add new" data-original-title="Add new">
+                                <i class="fa fa-plus"> Add new service</i>
+                            </button>
+                        </div>
+                    }
+                </div>
+                <!-- /.box-header -->
+
+                <div class="box-body">
+
+                    <b>Filter: </b>
+                    <p>
+                        Service type: <span class="label label-default" id="s_type"></span>
+                        | Name: <span class="label label-default" id="s_name"></span>
+                        | Status: <span class="label label-default" id="s_status"></span>
+                        &nbsp; <a href="#" data-toggle="control-sidebar" class="btn btn-xs btn-primary"><i class="fa fa-search"></i>Search</a>
+                    </p>
+                    <br /><br />
+
+                    <table id="example1" class="table table-bordered table-striped">
+                        @*data-order='[[ 0, "desc" ]]'*@
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th style="max-width: 350px">Name</th>
+                                <th>Term</th>
+                                <th>Setup Fee</th>
+                                <th>Monthly Fee</th>
+                                <th>SMS/Emails</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Count() > 0)
+                            {
+                                var i = 1;
+                                foreach (var item in Model)
+                                {
+                                    <tr>
+                                        <td>@i</td>
+                                        <td>
+                                            <b class="text-primary">@item.Name</b>
+                                            <br />
+                                            <i><u>Type:</u> @(item.ServiceTypeName)</i>
+                                            <br />
+                                            <p>@Html.Raw(item.Description)</p>
+
+                                        </td>
+                                        <td>@(item.Term)</td>
+                                        <td>
+                                            @if (item.SetupFee > 0)
+                                            {
+                                                <b style="color:#00a65a">@(item.SetupFee?.ToString("$#,##0.##"))</b>
+                                            }
+                                            else
+                                            {
+                                                <b class="text-danger">N/A</b>
+                                            }
+                                        </td>
+                                        <td>
+                                            <b style="color:#00a65a">@((item.SalesPrice ?? 0).ToString("$#,##0.##"))</b><br />
+                                        </td>
+                                        <td>
+                                            <b>@(item.Quantity_SMS_Email ?? 0)</b><br />
+                                        </td>
+
+                                        <td>
+                                            @if (p["products_updateservice"] == true)
+                                            {
+                                                <button onclick="location.href='/service/save?servicecode=@item.ServiceCode'" type="button" class="btn btn-warning btn-xs" data-toggle="tooltip" title="Edit info"><i class="fa fa-edit"></i> Edit</button>
+                                            }
+
+                                            @if (p["products_deleteservice"] == true)
+                                            {
+                                                <a href="/service/deletedevice?servicecode=@item.ServiceCode" onclick="confirm('You want to delete this service?')" class="btn btn-danger btn-xs" data-toggle="tooltip" title="Delete service"><i class="fa fa-trash"></i> Delete</a>
+                                            }
+
+                                            @*<a href="@Request.Url.Authority/thiet-bi-ban-hang/@CommonFunc.ConvertNonUnicodeURL(item.DeviceName)-@item.DeviceId" target="_blank" class="btn btn-success btn-sm" data-toggle="tooltip" title="Xem thử"><i class="fa fa-search"></i></a>*@
+
+
+                                            <br />
+
+                                            <span><b>Created by: </b></span>@item.CreateBy<br />
+                                            <span><b>At: </b></span>
+                                            <span id="localtime-@item.ServiceCode">
+                                                <script>convertLocalTime("@item.ServiceCode", "@item.CreateAt")</script>
+                                            </span><br />
+
+                                            @if (item.UpdateAt != null)
+                                            {
+                                                <span><b>Last updated: </b></span>@item.UpdateBy <br />
+                                                <span><b>At: </b></span>
+                                                <span id="localtime-update-@item.ServiceCode">
+                                                    <script>convertLocalTime("update-" + "@item.ServiceCode", "@item.UpdateAt")</script>
+                                                </span><br />
+                                            }
+                                            @if (item.Active != true)
+                                            {
+                                                <span class="label label-danger">Inactive</span>
+                                            }
+
+                                        </td>
+                                    </tr>
+                                    i++;
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="6">
+                                        <center><span>No service found</span></center>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th>#</th>
+                                <th>Name</th>
+                                <th>Term</th>
+                                <th>Setup Fee</th>
+                                <th>Monthly Fee</th>
+                                <th>SMS/Emails</th>
+                                <th></th>
+                            </tr>
+                        </tfoot>
+
+                    </table>
+                </div>
+                <!-- /.box-body -->
+            </div>
+            <!-- /.box -->
+        </div>
+    </div>
+</section>
+
+@section control_sidebar
+{
+    <!-- Control Sidebar -->
+    <aside class="control-sidebar control-sidebar-dark">
+        <!-- Create the tabs -->
+        <ul class="nav nav-tabs nav-justified control-sidebar-tabs">
+            <li><a href="#control-sidebar-home-tab" data-toggle="tab"><i class="fa fa-search"></i> Search</a></li>
+        </ul>
+        <!-- Tab panes -->
+        <div class="tab-content">
+            <!-- Home tab content -->
+            <div class="tab-pane active" id="control-sidebar-home-tab">
+                @*<h3 class="control-sidebar-heading"></h3>*@
+                <form role="form" action="/service">
+                    <div class="form-group">
+                        <label>Service type</label>
+                        <select class="form-control" name="Type">
+                            <option value="">All</option>
+                            @foreach (var item in ViewBag.ServiceType as List<O_ServiceType>)
+                            {
+                                <option @if (TempData["type"]?.ToString().Equals(item.TypeCode.ToString()) == true) { @Html.Raw("selected") } value="@item.TypeCode">@item.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Service name</label>
+                        <input type="text" name="Name" class="form-control" value="@TempData["Name"]" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select class="form-control" name="Status">
+                            <option @if (TempData["Status"]?.ToString() == "1") { @Html.Raw("selected") } value="1">Active</option>
+                            <option @if (TempData["Status"]?.ToString() == "0") { @Html.Raw("selected") } value="0">Inactive</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" name="Search" class="btn btn-primary">Search</button>
+                    <a style="margin-left:10px" href="#" onclick="closeControlSidebar()"><i class="fa fa-close"></i> Close</a>
+                </form>
+            </div>
+        </div>
+    </aside>
+    <!-- /.control-sidebar -->
+    <!-- Add the sidebar's background. This div must be placed
+         immediately after the control sidebar if>
+    <div class="control-sidebar-bg"></div>-->
+
+
+}
+
+@section style
+{
+    <!-- DataTables -->
+    <link rel="stylesheet" href="~/content/admin/bower_components/datatables.net-bs/css/dataTables.bootstrap.min.css">
+}
+
+@section script
+{
+    <!-- DataTables -->
+    <script src="~/content/admin/bower_components/datatables.net/js/jquery.dataTables.min.js"></script>
+    <script src="~/content/admin/bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            //$('#example1').DataTable()
+            $('#example1').DataTable({
+                'paging': true,
+                'lengthChange': true,
+                'searching': true,
+                'ordering': true,
+                'info': false,
+                'autoWidth': true
+            })
+
+
+            //thong tin bo loc
+            $("#s_type").html($("select[name='Type'] option:selected").text());
+            $("#s_name").html($("input[name='Name']").val());
+            $("#s_status").html($("select[name='Status'] option:selected").text());
+        })
+
+
+    </script>
+
+}

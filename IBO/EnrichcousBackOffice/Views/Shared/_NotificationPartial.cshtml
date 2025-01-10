@@ -1,0 +1,274 @@
+﻿<style>
+    .blink_me {
+        animation: blinker 1.5s linear infinite;
+    }
+
+    @@keyframes blinker {
+        50% {
+            opacity: 0.5;
+        }
+    }
+
+
+    #notificationContaner {
+        position: fixed;
+        bottom: 15px;
+        right: 20px;
+        font-size: 15px;
+        max-width: 400px;
+        z-index: 9999;
+    }
+
+    .notificationContaner .panel-group .panel-collapse ul li a {
+        text-overflow: ellipsis;
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+    }
+
+    .notificationContaner .panel-group .panel-collapse ul li:hover {
+        background-color: bisque;
+    }
+
+    .notificationContaner .panel-group .panel-collapse .item-title {
+        font-weight: 700;
+    }
+
+    .notificationContaner .panel-group .panel-collapse .item-des p {
+        color: darkgray;
+        margin-left: 17px;
+    }
+
+</style>
+
+<input type="hidden" name="hd_task_url_notice" value="@Request.Url.PathAndQuery" />
+
+
+<!--notice popup-->
+<div class="modal fade" id="modal-notice">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div>
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 id="modal-notice-title" class="modal-title"></h4>
+                </div>
+                <div class="modal-body" id="modal-notice-body">
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <a id="openNotice" href="#" target="_self" class="btn btn-warning"> <i class="glyphicon glyphicon-open"></i> Open </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Bottom anchor popup notification -->
+<div id="notificationContaner" class="notificationContaner" style="display:none">
+    <div class="panel-group">
+        <div class="panel panel-primary">
+            <div class="panel-heading">
+                <a data-toggle="collapse" href="#collapse1">
+                    <h4 class="panel-title" style="color: #fff;" id="noticeTitle">
+                        @*<i class="fa fa-exclamation-circle text-yellow"></i>*@
+                        <!--title-->
+
+                        <i class="fa fa-bars" style="float: right; margin-left: 10px;"></i>
+                    </h4>
+                </a>
+            </div>
+            <div id="collapse1" class="panel-collapse collapse" style="max-height: 300px; overflow: auto;">
+                <ul class="list-group" id="_notification">
+
+                    @*<li class="list-group-item">
+                            <a href="#">
+                                <span class="item-title">
+                                    <i class="fa fa-ticket text-yellow"></i> Very long description here that may not fit into the
+                                    page and may cause design problems
+                                </span>
+                                <span class="item-des">
+                                    <p>
+                                        Very long description here that may not fit into the
+                                        page and may cause design problems
+                                    </p>
+                                </span>
+                            </a>
+                        </li>*@
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End Popup Notification -->
+
+
+
+
+
+<script src="~/Scripts/jquery.signalR-2.4.1.min.js"></script>
+<script src="~/signalr/hubs"></script>
+<script type="text/javascript">
+
+   
+    //$(function () {
+    //    //// Proxy created on the fly
+    //    var notice = $.connection.broadcastHub;
+
+    //    // so luong task or ticket cua member co su thay doi
+    //    notice.client.displayTicketTask = function () {
+    //        //alert("displayTicketTask");
+    //        getData();
+    //    };
+        
+    //    //nhan notice broadcast
+    //    notice.client.broadcastNotice = function (name, message, url) {
+    //        //show notice
+    //        // var memberNo = $("#memberNo").val();
+    //        //if (to.search("/" + memberNo + "/i") >= 0) {
+    //        //alert(name + "| message: " + message + " | url: " + url);
+
+    //        $("#modal-notice-title").html(name);
+    //        $("#modal-notice-body").html(message);
+    //        $("#openNotice").attr("href",url);
+
+    //        //if (confirm(name + "\n" + message)
+
+    //        $("#modal-notice").modal("show");
+    //        //}
+    //    };
+
+
+    //    //nhan notice specify
+    //    notice.client.specifyNotice = function (name, message, url) {
+    //        //alert("To: " + $("#memberNo").val() + " | " + name + "| message: " + message + "|" + url);
+    //        $("#modal-notice-title").html(name);
+    //        $("#modal-notice-body").html(message);
+            
+    //        if(url.includes("tasksman") == true){
+    //            //url = /tasksman/detail/task_id
+    //            $("#openNotice").attr("href", "#");
+    //            $("#openNotice").unbind("click");//huy bo su kien click cua lan truoc
+    //            $("#openNotice").click(function(){
+    //                //alert(url.split("/")[3]);
+    //                $("#modal-notice").modal("hide");
+    //                update_task("true", url.split("/")[3], "true");
+    //            });
+    //        }
+    //        else{
+    //            $("#openNotice").attr("href", url);
+    //        }
+
+    //        $("#modal-notice").modal("show");
+    //    };
+
+
+    //     // Start the connection.
+    //    $.connection.hub.start().done(function () {
+    //        var jsondata = localStorage.getItem("ticket_task_data");
+    //        if (JSON.parse(jsondata) === null) {
+    //            //alert("start hub subscriber");
+
+    //            notice.server.notifySubcribe($("#memberNo").val(), $.connection.hub.id);
+    //            getData();
+    //        }
+    //        else {
+    //            //alert("render data");
+    //            //console.log(JSON.parse(jsondata));
+    //            renderData(JSON.parse(jsondata));
+    //        }
+           
+           
+
+           
+    //    });
+
+    //});
+
+    //function getData() {
+    //    $.ajax({
+    //        method: "GET",
+    //        url: "/api/ticket_task_changes",
+    //        data: { memberNo: $("#memberNo").val() },
+    //        dataType: "json"
+    //    })
+    //        .done(function (data) {
+    //            //data: list_ticket_task
+
+    //            localStorage.setItem("ticket_task_data", JSON.stringify(data));
+    //            renderData(data);
+                
+    //        })
+    //        .fail(function () {
+    //            console.log("Oops! Something went wrong | Error:GetData()");
+    //        })
+    //}
+
+    function renderData(data) {
+
+        var numTask = 0, numTicket = 0;
+        $("#notificationContaner").hide();
+        $('#_notification').empty();
+
+        var _content = "";
+
+        for (var i = 0; i < data.length; i++) {
+            if (data[i].Type == "Ticket") {
+                numTicket += 1;
+                //_content += '<a href="/ticket/detail/' + data[i].Id + '?urlback=/home/" title="' + data[i].Name + '" onclick="overlayOn()"><i class="fa fa-ticket text-aqua"></i> ' + data[i].Name + '</a>';
+
+                var link_detail = "/ticket/detail/" + data[i].Id;
+                if (data[i].TicketTypeId >= 2000 && data[i].TicketTypeId < 3000) {
+                    link_detail = "/development_new/detail/" + data[i].Id;
+                }
+
+                _content += '<li class="list-group-item"><a href="' + link_detail + '" onclick="overlayOn()"><i class="fa fa-ticket text-yellow"></i><span class="item-title"> ' + data[i].Name + ' </span><span class="item-des"><p>Ticket#' + data[i].Id + '</p></span></a></li>';
+
+            }
+            else {
+                numTask += 1;
+                //_content += '<a href="#" title="' + data[i].Name + '" onclick="update_task(\'true\' ,\'' + data[i].Id + '\', \'true\')"><i class="fa fa-tasks text-aqua"></i> ' + data[i].Name + '</a>';
+                _content += '<li class="list-group-item"><a href="#" onclick="update_task(\'true\' ,\'' + data[i].Id + '\', \'true\')" ><i class="fa fa-tasks text-aqua"></i><span class="item-title"> ' + data[i].Name + ' </span><span class="item-des"><p>Task#' + data[i].Id + ' </p></span></a></li>';
+            }
+        }
+
+        if (numTask == 0 && numTicket == 0) {
+            $("#notificationContaner").hide();
+        }
+        else {
+            $('#_notification').append(_content);
+
+
+            var nTitle1 = '<span style="font-size:1em" class="label label-primary blink_me">' + numTask + '</span> Task';
+            var nTitle2 = '<span style="font-size:1em" class="label label-warning blink_me">' + numTicket + '</span> Ticket';
+            var nTitle = "You have ";
+            if (numTask > 0) {
+                nTitle += nTitle1;
+            }
+            if (numTicket > 0) {
+                if (numTask > 0) {
+                    nTitle += " and ";
+                }
+                nTitle += nTitle2;
+            }
+            if (numTask > 1) {
+                nTitle = nTitle.replace("Task", "Tasks");
+            }
+            if (numTicket > 1) {
+                nTitle = nTitle.replace("Ticket", "Tickets");
+            }
+            $("#noticeTitle").children('i').prevAll().remove();
+            $("#noticeTitle").children('i').before("<span>" + nTitle + "<span>");
+
+            $("#notificationContaner").show();
+
+        }
+
+    }
+
+</script>

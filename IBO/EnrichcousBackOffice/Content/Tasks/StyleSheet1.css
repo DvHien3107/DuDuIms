@@ -1,0 +1,58 @@
+﻿
+.bell {
+    -webkit-animation: ring 4s .7s ease-in-out infinite;
+    -webkit-transform-origin: 50% 4px;
+    -moz-animation: ring 4s .7s ease-in-out infinite;
+    -moz-transform-origin: 50% 4px;
+    animation: ring 4s .7s ease-in-out infinite;
+    color: red
+}
+.modal-dialog {
+    width: 800px;
+    margin: 0 auto 30px;
+    transform: none !important;
+    top: 30px;
+}
+    /*.circle {
+    position: absolute;
+    left: 0;
+    top: 0;
+    -webkit-animation: pulse 2s infinite ease-out;
+    font-size: 20px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,0,0,0);
+}
+
+    .circle span {
+        position: absolute;
+        left: 50%;
+        margin-left: 15px;
+        color: #999;
+        top: 50%;
+        margin-top:15px;
+    }
+@-webkit-keyframes pulse {
+    0% {
+        width: 0px;
+        height: 0px;*/
+    /* left: $left;
+        top: $top;*/
+    /*border-color: #fff;
+    }
+
+    10% {
+        border-color: rgba(0,170,255,.3);
+    }
+
+    30% {
+        border-color: rgba(0, 170,255,.7);
+    }
+
+    100% {
+        width: 70px;
+        height:70px;
+        left:  35px;
+        top:35px;
+        borer-color: rgba(255,255,255,1);
+    }
+}*/

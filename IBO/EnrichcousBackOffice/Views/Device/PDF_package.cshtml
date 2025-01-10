@@ -1,0 +1,112 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.CustomizeModel.Bundle_view>
+@using EnrichcousBackOffice.Models
+@{
+    Layout = null;
+    string name_created = ViewBag.NameCreated;
+}
+
+<!DOCTYPE html>
+
+<html style="max-width:1123px">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>@ViewBag.Title</title>
+    <!-- Tell the browser to be responsive to screen width -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <!-- Bootstrap 3.3.7 -->
+    <link rel="stylesheet" href="/content/admin/bower_components/bootstrap/dist/css/bootstrap.min.css">
+    <!-- Noty -->
+    <link href="~/Content/noty/jquery.noty.css" rel="stylesheet" />
+    <link href="~/Content/noty/noty_theme_default.css" rel="stylesheet" />
+
+    <style type="text/css">
+        .text_right {
+            text-align: right;
+        }
+    </style>
+
+
+    <!-- jQuery 3 -->
+    <script src="~/Content/Admin/bower_components/jquery/dist/jquery.min.js"></script>
+    <!-- Noty -->
+    <script src="~/Content/noty/jquery.noty.js"></script>
+</head>
+<body style="padding:0 60px;padding-bottom:0;max-width:1123px">
+    <div id="page_detail" @*style="margin:15px 0px"*@>
+        <div id="Invoice_Detail" @*style="max-width:210mm; min-height:297mm; margin:auto; padding: 20px; border:1px solid grey"*@>
+            <div style="font-size:16px">
+
+
+                <table style="width:100%; padding:8px;">
+                    <tbody>
+                        <tr>
+                            <td style="text-align:left" width="50%">
+                                <img class="img img-responsive eshop-logo" src="@System.Configuration.ConfigurationManager.AppSettings["LogoImg"]" style="height:50px;width:auto; margin-left:-15px">
+                                <br />855 Metropolitan Pkwy
+                                <br />Atlanta, GA 30310
+                                <br /><a href="#">www.enrichcous.com</a>
+                                <br />0123.456.789
+                            </td>
+                            <td style="text-align:right; vertical-align:top">
+                                <b style="font-size:25px">PACKAGES LIST</b>
+                                <br /> Created: @name_created
+                                <br /> @DateTime.Now.ToString("MMM dd,yyyy hh:mm:ss tt")
+                            </td>
+                        </tr>
+
+                    </tbody>
+                </table>
+                <br /><br />
+
+                <table class="table table-bordered print-friendly" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>Model #</th>
+                            <th>Image</th>
+                            <th>Product</th>
+                            @*<th>Vendor</th>*@
+                            <th>Color</th>
+                            <th>Price <br />(Retail price)</th>
+                            <th>Qty</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var pack in Model)
+                        {
+                            <tr style="background-color: #f3f1f1">
+                                <td colspan="5"><b style="color:darkgreen">Package: @pack.Bundle.Name (#@pack.Bundle.BundleCode)</b></td>
+                                <td><b>@pack.Detail.Sum(d => d.BundleDevice.Quantity)</b></td>
+                                <td><b>$@pack.Bundle.Price</b></td>
+                            </tr>
+                            foreach (var item in pack.Detail)
+                            {
+                                <tr>
+                                    <td>#<b>@item.BundleDevice.ModelName</b></td>
+                                    <td><img src="@item.Model.Picture" style="height:50px;padding:5px"/></td>
+                                    <td>@item.Model.ProductName</td>
+                                    @*<td>@item.Model.VendorName</td>*@
+                                    <td>@item.Model.Color</td>
+                                    <td>
+                                        $@item.BundleDevice.Price<br />
+                                        ($@item.Model.Price)
+                                    </td>
+                                    <td>@item.BundleDevice.Quantity</td>
+                                    <td>$@(item.BundleDevice.Price * item.BundleDevice.Quantity)</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+<style>
+    table.print-friendly tr td, table.print-friendly tr th {
+        page-break-inside: avoid;
+        border: 1px solid #ddd !important;
+    }
+</style>

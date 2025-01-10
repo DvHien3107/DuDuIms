@@ -1,0 +1,1 @@
+{"Email":"phamngocbau19951995@gmail.com","Password":"ngocbau123","FName":"Bau","LName":"Pham","PhoneNumber":"0865252031","InfoSalon":null,"CreatedDate":"2020-10-02T13:30:28.4048662+07:00","Verify":false,"ErrorMessage":null}

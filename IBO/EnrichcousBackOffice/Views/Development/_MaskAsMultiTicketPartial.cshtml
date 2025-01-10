@@ -1,0 +1,246 @@
+<div class="jumbotron" style="padding:10px;display:none" id="markas_div">
+    <h4>4 select(s)</h4>
+    <div style="font-size:13px">
+        <div style="display:inline-block;padding-left:0;margin-right:15px">
+            <label>Mark as</label><br />
+            <select id="markas_status" class="form-control">
+                <option value="-1">NO CHANGES</option>
+                <option>Requested</option>
+                <option>Approved- Ready to work on</option>
+                <option>Ready for testing</option>
+                <option>Launched</option>
+                <option>Closed</option>
+                <option>Closed-NR</option>
+            </select>
+        </div>
+
+        <div style="display:inline-block;padding-left:0px;margin-right:15px">
+            <label>Label</label><br />
+            <select id="maskas_label" class="selectpicker form-control" multiple>
+            </select>
+        </div>
+
+        <div style="display:inline-block;padding-left:0px;margin-right:15px">
+            <label>Category</label><br />
+            <select id="maskas_project" class="form-control" onchange="loadVersionByProject(this)">
+            </select>
+        </div>
+
+        <div style="display:inline-block;padding-left:0px;margin-right:15px">
+            <label>Version</label><br />
+            <select id="maskas_version" class="form-control">
+                <option value="-1">NO CHANGES</option>
+                <option value="0">NON SET</option>
+            </select>
+        </div>
+
+        <div style="display: inline-block; padding-left: 0; margin-right: 15px">
+            <label>Group</label><br />
+            <select id="maskas_group" class="form-control" onchange="loadMemberByGroup(this)">
+            </select>
+        </div>
+
+        <div style="display:inline-block;padding-left:0;margin-right:15px">
+            <label>Assign</label><br />
+            <select id="maskas_assign" class="form-control selectpicker" multiple>
+                <option value="-1">NO CHANGES</option>
+            </select>
+        </div>
+
+
+    </div>
+    <div style="margin-top:10px">
+        <button onclick="cancelMarkas()" class="btn btn-default btn-sm" type="button">Cancel</button>
+        <button id="markas_submit" onclick="markasSubmit()" style="margin-left:20px" class="btn btn-danger btn-sm" type="button">Apply</button>
+
+    </div>
+</div>
+
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/css/bootstrap-select.min.css">
+<!-- Latest compiled and minified JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/js/bootstrap-select.min.js"></script>
+
+<script type="text/javascript">
+
+    let PROJECT_INDEX = 4;
+    let GROUP_INDEX = 6;
+    
+    $('.selectpicker').selectpicker();
+    var projectArr = [];
+
+    function cancelMarkas() {
+        //clear check
+        $("input[name=checkticket]").each(function () {
+            $(this).prop("checked", false);
+        })
+        $("input[name=checkall]").prop("checked", false);
+        //hide jumboton
+        $("#markas_div").fadeOut(250);
+    }
+
+    function markasSubmit() {
+        $("#markas_submit").attr("disabled", true);
+        $("#markas_submit").append(' &nbsp;&nbsp;<img src="/Content/ajax-loaders/ajax-loader-1.gif" style="width:20px" />');
+
+        var dataArr = [];
+        dataArr.push($("#markas_status").val());
+        dataArr.push(JSON.stringify($("#maskas_label").val()));
+        dataArr.push($("#maskas_project").val());
+        dataArr.push($("#maskas_version").val());
+        dataArr.push($("#maskas_group").val());
+        dataArr.push(JSON.stringify($("#maskas_assign").val()));
+        var findcheck = $("input[name=checkticket]:checked").map(function () { return $(this).val(); }).toArray();
+        dataArr.push(JSON.stringify(findcheck));
+
+        $.ajax({
+            method: "POST",
+            url: "/development/maskas",
+            data: {
+                data: JSON.stringify(dataArr)
+            },
+            dataType: "json"
+        })
+            .done(function (data) {
+                console.log(data);
+                if (data == true) {
+                    //if (window.location.toString().search(/development/ig) > -1) {
+                    location.href = "/development";
+                    //}
+                    //else {
+                    //    location.href = "/ticket";
+                    //}
+                }
+                else {
+                    var optionsErr = $.parseJSON('{"text":"Save failure. Please try again later","layout":"top","type":"error"}');
+                    noty(optionsErr);
+                }
+
+
+            })
+            .fail(function () {
+                var optionsErr = $.parseJSON('{"text":"Save failure. Please try again later","layout":"top","type":"error"}');
+                noty(optionsErr);
+            })
+            .always(function () {
+                $("#markassubmit").removeAttr("disabled");
+                $("#markas_submit").html("Apply");
+                $("#markas_loading").hide();
+            });
+
+    }
+
+
+    function getGroupLabelProject() {
+
+        if (!$("#markas_div").is(":visible")) {
+            //dang an => load data
+            //alert("load");
+            $("#markas_div").fadeIn(250);
+            //get group
+            let dev_filter = localStorage.getItem("dev_filter");
+            let data = JSON.parse(dev_filter);
+            let groups = data[GROUP_INDEX];
+            $("#maskas_group").empty();
+            let selectG = "<option value='-1'>NO CHANGES</option>"
+            for (var i = 0; i < groups.length; i++) {
+                selectG += "<option value='" + groups[i].Id + "'>" + (groups[i].Name).toUpperCase(); + "</option>"
+            }
+            $("#maskas_group").append(selectG);
+
+            //get list tags
+            var urltags = "/development/LoadListTags";
+
+            $.post(urltags, { type: "data" }, function (_data) {
+                //console.log(_data);
+                let data = JSON.parse(_data);
+                //console.log(data);
+
+                $("#maskas_label").empty();
+                var tags = "<option value='0'>NO LABEL</option>";
+                for (var i = 0; i < data.length; i++) {
+                    tags += "<option value='" + data[i].Name + '::' + data[i].Color + "'>" + (data[i].Name.toString().replace(/\[|\]/g, "")).toUpperCase() + "</option>"
+                }
+                $("#maskas_label").append(tags);
+                $("#maskas_label").selectpicker("refresh");
+            });
+
+            //GetProjectMilestone
+            //var urlproject = "/development/GetProjectMilestone";
+            //if (window.location.toString().search(/ticket/ig) > -1) {
+            //    urlproject = "/ticket/GetProjectMilestone";
+            //}
+            //$.post(urlproject, function (data) {
+
+
+            projectArr = data[PROJECT_INDEX];
+            //console.log(projectArr);
+
+            $("#maskas_project").empty();
+            var project = "<option value='-1'>NO CHANGES</option><option value='0'>NON SET</option>";
+            for (const groupId in projectArr) {
+                let group = projectArr[groupId];
+                let optGroup = `<optgroup label='${group.Name}' data-value='${group.Id}'>`;
+                for (const category of group["Categories"]) {
+                    optGroup += `<option value='${category.Id}'>${category.Name}</option>`;
+                }
+                project += optGroup + "</optgroup>";
+            }
+            //console.log(project);
+            $("#maskas_project").append(project);
+
+            //});
+        }
+        else {
+            //avalibel
+            //boqua
+        }
+
+
+    }
+
+    function loadVersionByProject(select) {
+        const group = $("#maskas_project :selected").parent().data('value');
+
+        $("#maskas_version").empty();
+        var version = "<option value='-1'>NO CHANGES</option><option value='0'>NON SET</option>";
+/*        for (var i = 0; i < projectArr.length; i++) {
+            //console.log(projectArr[i].ParentId + "|" + id);
+            if (projectArr[i].ParentId == id) {
+                version += "<option value='" + projectArr[i].Id + "'>" + projectArr[i].Name + "</option>"
+            }
+        }*/
+        if (group !== null && group !== undefined) {
+            for (const _version of projectArr[group]["Versions"]) {
+                version += `<option value='${_version.Id}'>${_version.Name}</option>`;
+            }
+        }
+        $("#maskas_version").append(version);
+    }
+
+    function loadMemberByGroup(select) {
+        //console.log($(select).val());
+        if ($(select).val() == "-1") {
+            $("#maskas_assign").empty();
+            $("#maskas_assign").selectpicker("refresh");
+        }
+        else {
+            //get list tags
+            $.post("/development/LoadMemberInGroup", { deptid: $(select).val() }, function (data) {
+                //console.log(data);
+
+                $("#maskas_assign").empty();
+                var mem = "<option value='0'>Unassigned</option>";
+                for (var i = 0; i < data.length; i++) {
+                    mem += "<option value='" + data[i].MemberNumber + "'>" + data[i].FullName + "</option>"
+                }
+                $("#maskas_assign").append(mem);
+                $("#maskas_assign").selectpicker("refresh");
+
+            });
+        }
+
+
+    }
+
+</script>

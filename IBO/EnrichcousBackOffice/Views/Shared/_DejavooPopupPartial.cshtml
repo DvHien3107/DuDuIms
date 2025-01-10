@@ -1,0 +1,210 @@
+﻿@model EnrichcousBackOffice.Models.Dejavo_Datasheet
+
+
+<div class="modal fade" id="modal-dejavoo">
+    <div class="modal-dialog" style="width:80%; max-width:1000px; margin-top:10px; margin-bottom:10px">
+        <div class="modal-content">
+            @using (Ajax.BeginForm("CreateDejavoo", "MerchantFormManage", new AjaxOptions
+            {
+                HttpMethod = "POST",
+                OnSuccess = "CreatePDFComplete",
+                OnFailure = "CreatePDFError"
+            }))
+            {
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 id="modal-dejavoo-title" class="modal-title">Update DEJAVOO</h4>
+                </div>
+                <div class="modal-body col-md-12">
+                    <div class="col-md-12" style="padding:50px 70px; background-color: #525659; height:70vh; overflow:auto;border: 2px inset lightgray">
+                        <div class="col-md-12 box-shadow" style="padding:100px; background-color: white; color:#000">
+                            <input type="hidden" name="Id" value="@Model.Id" />
+                            <input type="hidden" name="OrdersCode" value="@Model.OrdersCode" />
+                            <p style="font-size: 28px; font-weight: 900"><b>TSYS/TSYS Parameter Worksheet</b></p>
+                            <label style="font-size: 20px; font-weight: 900" class="control-label">Merchant Infomation</label>
+                            <table border="1" style="width:100%">
+                                <tr>
+                                    <td style="width:50%">Name</td>
+                                    <td><input type="text" style="width:100%" name="M_Name" value="@Model.M_Name" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Address</td>
+                                    <td><input type="text" style="width:100%" name="M_Address" value="@Model.M_Address" /></td>
+                                </tr>
+                                <tr>
+                                    <td>City, State, Zip</td>
+                                    <td><input type="text" style="width:100%" name="c_s_z" value="@(Model.M_City != null ? Model.M_City + ", " : "") @(Model.M_State != null ? Model.M_State + ", " : "") @(Model.M_ZipCode != null ? Model.M_ZipCode : "")" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Telephone</td>
+                                    <td><input type="text" style="width:100%" name="M_Telephone" value="@Model.M_Telephone" /></td>
+                                </tr>
+                            </table>
+                            <br />
+                            <label style="font-size: 20px; font-weight: 900" class="control-label">Terminal Infomation</label>
+                            <table border="1" style="width:100%">
+                                <tr>
+                                    <td style="width:50%">Software</td>
+                                    <td><input type="text" style="width:100%" name="Software" value="@Model.Software" /></td>
+                                </tr>
+                            </table>
+                            <br />
+                            <label style="font-size: 20px; font-weight: 900" class="control-label">TSYS Parameters (Hierarchy)</label>
+                            <table border="1" style="width:100%">
+                                <tr>
+                                    <td style="width:50%">Acquirer Bin (6 digits)</td>
+                                    <td><input type="text" style="width:100%" name="AcquirerBin" value="@Model.AcquirerBin" /></td>
+                                </tr>
+                                <tr>
+                                    <td>POS Merchant Number (12 digits) </td>
+                                    <td><input type="text" style="width:100%" name="POS_MerchantNumber" value="@Model.POS_MerchantNumber" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Terminal ID (V#) (8 digits, V is replaced with a 7)</td>
+                                    <td><input type="text" style="width:100%" name="TerminalID" value="@Model.TerminalID" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Store Number (4 digits)</td>
+                                    <td><input type="text" style="width:100%" name="StoreNumber" value="@Model.StoreNumber" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Terminal Number (4 digits)</td>
+                                    <td><input type="text" style="width:100%" name="TerminalNumber" value="@Model.TerminalNumber" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Merchant Location Number (5 digits)</td>
+                                    <td><input type="text" style="width:100%" name="M_LocationNumber" value="@Model.M_LocationNumber" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Merchant Category Code (SIC Code - 4 digits)</td>
+                                    <td><input type="text" style="width:100%" name="M_CategoryCode" value="@Model.M_CategoryCode" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Agent Number (6 digits) </td>
+                                    <td><input type="text" style="width:100%" name="AgentNumber" value="@Model.AgentNumber" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Chain Number (6 digits)</td>
+                                    <td><input type="text" style="width:100%" name="ChainNumber" value="@Model.ChainNumber" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Merchant City Code (Merchant Zip Code)</td>
+                                    <td><input type="text" style="width:100%" name="M_ZipCode" value="@Model.M_ZipCode" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Merchant Name (DBA) </td>
+                                    <td><input type="text" style="width:100%" name="M_Name_2" value="@Model.M_Name" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Merchant Location (City) </td>
+                                    <td><input type="text" style="width:100%" name="M_City" value="@Model.M_City" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Merchant State (Abbreviation) </td>
+                                    <td><input type="text" style="width:100%" name="M_State" value="@Model.M_State" /></td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        Time Zone Difference<br />(East=705, Central=706, Mountain=707, Pacific=708)
+                                    </td>
+                                    <td><input type="text" style="width:100%" name="TimeZoneDifference" value="@Model.TimeZoneDifference" /></td>
+                                </tr>
+                            </table>
+                            <br />
+                            <label style="font-size: 20px; font-weight: 900" class="control-label">TSYS Debit Parameters (Hierarchy)</label>
+                            <table border="1" style="width:100%">
+                                <tr>
+                                    <td style="width:50%">Acquirer Bin</td>
+                                    <td><input type="text" style="width:100%" name="AcquirerBin_2" value="@Model.AcquirerBin" /></td>
+                                </tr>
+                                <tr>
+                                    <td>ABA #</td>
+                                    <td><input type="text" style="width:100%" name="ABA" value="@Model.ABA" /></td>
+                                </tr>
+                                <tr>
+                                    <td>FIID #</td>
+                                    <td><input type="text" style="width:100%" name="FIID" value="@Model.FIID" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Sharing Group</td>
+                                    <td><input type="text" style="width:100%" name="SharingGroup" value="@Model.SharingGroup" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Reimbursement Attribute</td>
+                                    <td><input type="text" style="width:100%" name="RemibursementAttribute" value="@Model.RemibursementAttribute" /></td>
+                                </tr>
+                            </table>
+                            <br />
+                            <label style="font-size: 20px; font-weight: 900" class="control-label">TSYS Phone Numbers</label>
+                            <table border="1" style="width:100%">
+                                <tr>
+                                    <td style="width:50%">Authorization</td>
+                                    <td><input type="text" style="width:100%" name="Authorization" value="@Model.Authorization" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Settlement</td>
+                                    <td><input type="text" style="width:100%" name="Settlement" value="@Model.Settlement" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Voice Authorization</td>
+                                    <td><input type="text" style="width:100%" name="Voice_Authorization" value="@Model.Voice_Authorization" /></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2" style="text-align:center">TSYS Highspeed Connectivity</td>
+                                </tr>
+                                <tr>
+                                    <td>URL</td>
+                                    <td><input type="text" style="width:100%" name="URL" value="@Model.URL" /></td>
+                                </tr>
+                                <tr>
+                                    <td>PORT</td>
+                                    <td><input type="text" style="width:100%" name="PORT" value="@Model.PORT" /></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    @if (Model.Id > 0)
+                    {
+                        <button type="submit" class="btn btn-primary" onclick="return submitPDF('update_dejavoo_loading')">
+                            Update PDF <img id="update_dejavoo_loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                        </button>
+                    }
+                    else
+                    {
+                        <button type="submit" class="btn btn-primary" onclick="return submitPDF('create_dejavoo_loading')">
+                            Create PDF <img id="create_dejavoo_loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                        </button>
+                    }
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Cancel</button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<script>
+    function submitPDF(key) {
+        $("#" + key).show();
+        return true;
+    }
+</script>
+<style type="text/css">
+    .box-shadow {
+        -webkit-box-shadow: 0px 0px 5px 2px rgba(51,51,51,1);
+        -moz-box-shadow: 0px 0px 5px 2px rgba(51,51,51,1);
+        box-shadow: 0px 0px 5px 2px rgba(51,51,51,1);
+    }
+
+    td {
+        padding: 0 10px;
+        font-weight:600;
+    }
+
+        td > input {
+            margin: 5px 0;
+        }
+</style>

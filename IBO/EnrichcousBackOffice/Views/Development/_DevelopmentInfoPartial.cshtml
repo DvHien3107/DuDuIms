@@ -1,0 +1,634 @@
+﻿@model EnrichcousBackOffice.Models.T_SupportTicket
+@using System.Text.RegularExpressions
+@using EnrichcousBackOffice.Models
+@using EnrichcousBackOffice.Models.CustomizeModel
+
+@{
+    var severity = ViewBag.Severity as List<EnrichcousBackOffice.Models.T_TicketSeverity>;
+    var access = EnrichcousBackOffice.AppLB.Authority.GetAccessAuthority();
+    var cMem_FullName = EnrichcousBackOffice.AppLB.Authority.GetCurrentMember()?.FullName;
+    List<EnrichcousBackOffice.Models.T_SupportTicket> ticketRelated = ViewBag.ticketRelated == null ? new List<EnrichcousBackOffice.Models.T_SupportTicket>() : ViewBag.ticketRelated;
+    List<T_Project_Stage> stages = ViewBag.list_stages ?? new List<T_Project_Stage>();
+    stages = stages.OrderBy(s => s.Name).ToList();
+    List<T_TicketStatus> status = ViewBag.status ?? new List<T_TicketStatus>();
+    List<T_Project_Milestone> versions = ViewBag.versions ?? new List<T_Project_Milestone>();
+    List<P_Member> stage_members = ViewBag.stage_members ?? new List<P_Member>();
+    T_TicketStage_Status ts_status = ViewBag.ts_status ?? new T_TicketStage_Status();
+    List<ForwardStage_view> list_forwardStages = ViewBag.list_forwardStage ?? new List<ForwardStage_view>();
+}
+
+<style type="text/css">
+    #divSubcribeUser span {
+        background-color: var(--main-color-1);
+        border: 1px solid var(--main-color-1);
+        padding: 3px 10px;
+        color: #FFF;
+        border-radius: 4px;
+        margin-top: 7px;
+        margin-left: 7px;
+        display: inline-block;
+    }
+
+    .form-group span.select2-container {
+        width: 100% !important;
+    }
+</style>
+
+<div ng-app="ngTicketInfoApp" ng-controller="ngTicketInfoController">
+
+    <!--ktra member/product da load complete hay chua-->
+    <input type="hidden" id="load_member" value="0" />
+    <input type="hidden" id="load_member_group" value="0" />
+    <input type="hidden" id="load_product" value="0" />
+
+    @Html.HiddenFor(m => m.Id)
+
+
+    <div class="box box-info" id="ticket_info_partial">
+        <div class="box-header with-border" style="z-index:100; background-color:#fff">
+            @*<h3 class="box-title">Ticket infomation</h3>*@
+            @if (ViewContext.RouteData.Values["action"].ToString().ToLower() != "update")
+            {
+                <button id="save_change_btn" type="submit" class="btn btn-primary btn-block">Save changes &nbsp; <img id="loading_info" style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" /></button>
+            }
+        </div>
+
+        <div class="box-body">
+            <fieldset style="border: 1px #ccc solid; padding:10px; margin-bottom: 20px">
+                <div class="form-group">
+                    <label>Affected Version</label>
+                    <span class="pull-right">
+                        <a><i class="fa fa-plus-square-o" style="font-size: 1.2em; font-weight:bold; padding:3px" onclick="new_stage_verson()"></i></a>
+                        <a><i class="fa fa-pencil-square-o" style="font-size: 1.2em; font-weight:bold; padding:3px" onclick="rename_stage_verson()"></i></a>
+                    </span>
+                    <select id="available_versions" name="AffectedVersion" class="form-control">
+                        <option value="">Unselect</option>
+                        @foreach (var v in versions)
+                        {
+                            <option value="@v.Id" @(ts_status.AffectedVersion == v.Id ? "selected" : "")>@v.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Fixed Version</label>
+                    <span class="pull-right">
+                        <a><i class="fa fa-plus-square-o" style="font-size: 1.2em; font-weight:bold; padding:3px" onclick="new_stage_verson(true)"></i></a>
+                        <a><i class="fa fa-pencil-square-o" style="font-size: 1.2em; font-weight:bold; padding:3px" onclick="rename_stage_verson(true)"></i></a>
+                    </span>
+                    <select id="fixed_versions" name="FixedVersion" class="form-control">
+                        <option value="">Unselect</option>
+                        @foreach (var v in versions)
+                        {
+                            <option value="@v.Id" @(ts_status.FixedVersion == v.Id ? "selected" : "")>@v.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Assigned member</label>
+                    <select name="AssignedMember_Numbers" class="form-control select2" multiple>
+                        @foreach (var m in stage_members)
+                        {
+                            <option value="@m.MemberNumber" @((ts_status.AssignedMember_Numbers ?? "").Split('|').Contains(m.MemberNumber.ToString()) == true ? "selected" : "")>@m.FullName</option>
+                        }
+                    </select>
+                </div>
+                <!--Tags-->
+                <div class="form-group">
+                    <label>
+                        <span class="pull-left">
+                            Label <img id="choose_tags_loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                        </span>
+
+                    </label>
+                    <i class="fa fa-edit pull-right" onclick="ChooseTags()" style="font-weight:bold; color:var(--main-color-1); cursor:pointer;" title="Select label"></i>
+                    <div onclick="ChooseTags()" style="cursor:pointer" title="Select label">
+                        @Html.Partial("_divTagsPartial", Model)
+                    </div>
+                </div>
+                <!--/end Tags-->
+                <div class="form-group">
+                    <label>Status</label>
+                    <span class="pull-right">
+                        <a><i class="fa fa-plus-square-o" style="font-size: 1.2em; font-weight:bold; padding:3px" onclick="new_stage_status()"></i></a>
+                        <a><i class="fa fa-pencil-square-o" style="font-size: 1.2em; font-weight:bold; padding:3px" onclick="edit_stage_status()"></i></a>
+                    </span>
+                    <select id="status" class="form-control" name="StatusId">
+                        <option value="">N/A</option>
+                        @foreach (var s in status)
+                        {
+                            <option value="@s.Id" @(ts_status?.StatusId == s.Id ? "selected" : "")>@s.Name</option>
+                        }
+                    </select>
+                </div>
+
+
+
+                @*<a onclick="new_attribute()"><i class="fa fa-plus"></i> New Attribute</a>*@
+            </fieldset>
+            <fieldset style="border: 1px #ccc solid; padding:10px">
+
+                <legend style="border: 1px #ccc solid; width:auto; padding:0 10px; margin:0 5px; background-color:#fff; font-size:16px"><b>Ticket Option</b></legend>
+                <div class="form-group">
+                    <label>Type</label>
+                    <input type="hidden" name="hdtype" value="@Model.TypeId" />
+                    <img ng-show="loading_type" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="width:20px" />
+                    <select name="type" class="form-control" ng-change="type_onchange()" ng-model="type_selected">
+                        <option ng-repeat="t in types" value="{{t.Id}}">{{t.TypeName}}</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Priority</label>
+                    <select name="Priority" class="form-control">
+                        <option value="">Unassigned</option>
+                        <option style="font-weight:bold; color:#ff1e16" @if (Model.PriorityName == "Urgent") { @Html.Raw("selected") } value="Urgent">Urgent</option>
+                        <option style="font-weight:bold; color:#ff8616" @if (Model.PriorityName == "High") { @Html.Raw("selected") } value="High">High</option>
+                        <option style="font-weight:bold; color:#00acd6" @if (Model.PriorityName == "Medium") { @Html.Raw("selected") } value="Medium">Medium</option>
+                        <option style="font-weight:bold; color:#cfcfcf" @if (Model.PriorityName == "Low") { @Html.Raw("selected") } value="Low">Low</option>
+                    </select>
+                </div>
+
+
+                <div class="form-group">
+                        <label>Merchant</label>
+
+                        <div class="pull-right">
+                            @*@if (access.Any(k => k.Key.Equals("ticket_merchant_update")) == true && access["ticket_merchant_update"] == true)
+                    {
+                        <a style="cursor:pointer;margin-right:10px" onclick="$('#merchant_estimete_modal').modal('show')" title="Add new salon" data-toggle="tooltip"><i class="glyphicon glyphicon-plus"></i></a>
+                        <a style="cursor:pointer;margin-right:10px" onclick="update_merchant(0, true,$('#merchant').val())" title="Edit merchant" data-toggle="tooltip"><i class="glyphicon glyphicon-edit"></i></a>
+                    }*@
+
+                            <a style="cursor:pointer" onclick="update_merchant(0, false,$('#merchant').val())" title="View detail" data-toggle="tooltip"><i class="glyphicon glyphicon-eye-open"></i></a>
+                        </div>
+                        <input type="hidden" name="hdmerchant" value="@Model.CustomerCode" />
+                        <img id="loading_merchant" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="width:20px;display:none" />
+                        <select name="merchant" id="merchant" ng-model="merchantSelected" class="form-control select2" ng-change="reload_product()">
+                            <option value="">Unassigned</option>
+                            <option ng-repeat="m in merchants" value="{{m.CustomerCode}}">{{m.BusinessName}} - {{m.BusinessAddressStreet}}, {{m.BusinessCity}}, {{m.BusinessState}} {{m.BusinessZipCode}}, {{m.BusinessCountry}}</option>
+                        </select>
+                </div>
+
+                @if (ticketRelated.Count > 0)
+                {
+                    <div class="form-group">
+                        <label class="col-sm-6">Related ticket</label>
+                        <div class="col-md-4"><a class="btn btn-xs btn-success pull-right" onclick="merge_ticket_popup('@Model.Id')"><i class="fa fa-compress"></i> Merge Tickets <img id="merge_ticket_popup_img" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" /></a></div>}
+                        <div class="col-sm-10">
+                            @foreach (var item in ticketRelated)
+                            {
+                                <a id="tk_@item.Id" @if (item.DateClosed != null) { @Html.Raw("style='text-decoration:line-through;'") } href="/development/detail/@item.Id" target="_blank" title="@item.Name" data-toggle="tooltip"><span class="label label-primary">Ticket #@item.Id</span> </a>
+                            }
+                        </div>
+                    </div>
+                }
+                <div class="form-group">
+                    <label>Share with Stages</label>
+                    <select id="stages" name="forward_stage" class="form-control select2" multiple>
+                        @foreach (var s in stages)
+                        {
+                            <option value="@s.Id" @(list_forwardStages.Any(f => f.StageId.Contains(s.Id) && f.active == true) == true ? "selected" : "")>@s.Name</option>
+                        }
+                    </select>
+                </div>
+            </fieldset>
+        </div>
+
+    </div>
+
+    <div class="box box-success">
+        <div class="box-header">
+
+        </div>
+
+        <div class="box-body">
+            @foreach (var s in list_forwardStages)
+            {
+                <fieldset style="border: 1px #ccc solid; padding:10px; margin-bottom:20px; background-color:#eee">
+
+                    <legend style="border: 1px #ccc solid; width:auto; padding:3px 20px; margin:0 5px; background-color:#fff; font-size:16px;"><b>@(s.StageName)</b></legend>
+                    <table style="width:100%">
+                        <tr>
+                            <td style="width:50%">Affected Version: @(s.affected_version??"---")</td>
+                            <td rowspan="2" style="width:50%; border-left: 1px solid #ddd" class="text-center"><label class="label label-@(s.status_type=="open"?"info":s.status_type=="closed"?"success":"warning")" style="font-size:15px">@s.status</label></td>
+                        </tr>
+                        <tr><td>Fixed Version: @(s.fixed_version??"---")</td></tr>
+                        <tr>
+                            <td colspan="2" style="text-decoration:underline">Assgined member:</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">
+                                @foreach (var m in s.assigned_member)
+                                {
+                                    <label class="label label-primary">@m.FullName</label>
+                                }
+                            </td>
+                        </tr>
+                    </table>
+                </fieldset>
+            }
+        </div>
+
+    </div>
+    <!--Popup update status/type-->
+    <div class="modal fade" id="modal-default">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title">Default Modal</h4>
+                </div>
+                <div class="modal-body">
+                    <p id="pname"></p>
+                    <input type="text" class="form-control" name="ivalue" />
+                    <input type="hidden" name="ihdvalue" />
+                    <input type="hidden" name="action" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                    <button type="button" ng-click="type_status_savechanges()" class="btn btn-primary">Save changes</button>
+                </div>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
+    <div class="modal fade" id="merge_ticket">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title">Merge Ticket</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="row merge_ticket" style="max-height:65vh;overflow-y:auto;overflow-x:hidden;">
+                        <div style="width:200%">
+                            <div class="col-md-6" id="mt_s1">
+
+                            </div>
+                            <div class="col-md-6" id="mt_s2">
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary mt_s1_btn" onclick="mt_s1_submit('@Model.Id')">
+                        Next <i class="fa fa-step-forward"></i>
+                        <img id="mt_s1_img" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                    </button>
+                    <button type="button" class="btn btn-warning mt_s2_btn" onclick="prev_s1()" style="display:none">
+                        <i class="fa fa-step-backward"></i> Prev
+                    </button>
+                    <button type="button" class="btn btn-primary mt_s2_btn" onclick="mt_s2_submit('@Model.Id')" style="display:none">
+                        Merge
+                        <img id="mt_s2_img" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                    </button>
+                </div>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
+
+    <!--Tags Popup Modal-->
+    <div id="tags_popup_modal">
+        <!--Append _TagsPopupPartial-->
+    </div>
+</div>
+
+
+
+
+
+
+@*<select id="template_promo" class="hidden">
+
+        <option value="{VALUE}">{NAME}</option>
+
+    </select>*@
+
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.7.8/angular.min.js"></script>
+<script type="text/javascript" src="~/Angular/ngdevelopmentInfoApp.js"></script>
+<script src="~/Scripts/noty-cfg.js"></script>
+
+
+<script type="text/javascript">
+
+
+    $(function () {
+        $('.select2[multiple]').select2({
+            closeOnSelect: false
+        });
+        //xac dinh "new salon form" duoc goi tu dau.
+        //=> xac dinh ham duoc goi sau khi submit thanh cong.
+        $("#newsalon_form").val("ticket");
+        $('[data-toggle="tooltip"]').tooltip();
+        //reselect assigned/subcriber/product
+        setTimeout(selectmember, 500);
+        $("#stage_status form").on("submit", function () { overlayOn(); })
+        $("#stage_status form").ajaxForm(function (data) {
+            if (data[0]) {
+                success(data[1]);
+                var e = $("#status option[value=" + data[2].Id + "]");
+                if (e.length == 0) {
+                    let opt = new Option(data[2].Name, data[2].Id, false, true);
+                    $("#status").append(opt);
+                } else {
+                    e.html(data[2].Name);
+                }
+                $("#status option[value=" + data[2].Id + "]").data("order", data[2].Order);
+                $("#stage_status form").resetForm();
+                $("#stage_status").modal("hide");
+            } else {
+                error(data[1]);
+            }
+            overlayOff();
+        })
+        //Neo nut save change
+        var fixmeTop = $('#ticket_info_partial .box-header').offset().top;
+        var fixmeTop_width = $('#ticket_info_partial .box-header').outerWidth();
+        $(window).scroll(function () {
+            var currentScroll = $(window).scrollTop();
+            if (currentScroll >= fixmeTop) {
+                $('#ticket_info_partial .box-header').css({
+                    position: 'fixed',
+                    top: '0',
+                    width: fixmeTop_width,
+                });
+            } else {
+                $('#ticket_info_partial .box-header').css({
+                    position: 'static',
+                    width: '',
+                });
+            }
+        });
+    });
+
+    function new_stage_verson(fixed) {
+        let version_name = prompt("Set name of new version: ");
+        if (version_name) {
+            $.ajax({
+                method: "POST",
+                url: "/Development/NewStageVersion",
+                data: { version_name },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    //$("#mt_s2").animate({left: '0'});
+                    if (data[0]) {
+                        success(data[1]);
+                        let opt = new Option(data[2].Name, data[2].Id, false, fixed ? false : true);
+                        let opt2 = new Option(data[2].Name, data[2].Id, false, fixed ? true : false);
+                        $("#available_versions").append(opt);
+                        $("#fixed_versions").append(opt2);
+                    } else {
+                        error(data[1]);
+                    }
+                })
+                .fail(function () {
+                    alert("Oops! Something went wrong. new_stage_verson() failure");
+                })
+                .always(function () {
+                });
+
+        }
+    }
+    function rename_stage_verson(fixed_version) {
+        let Id = fixed_version ? $("#fixed_versions").val() : $("#available_versions").val();
+        if (!Id) {
+            warning("Please select the version to edit");
+            return;
+        } else {
+            let version_name = prompt("Rename version: ", $((fixed_version ? "#fixed_versions" : "#available_versions") + " option:selected").html());
+            if (version_name) {
+                $.ajax({
+                    method: "POST",
+                    url: "/Development/RenameStageVersion",
+                    data: { Id, version_name },
+                    dataType: "json"
+                })
+                    .done(function (data) {
+                        if (data[0]) {
+                            success(data[1]);
+                            $("#available_versions option[value=" + data[2].Id + "]").html(data[2].Name);
+                            $("#fixed_versions option[value=" + data[2].Id + "]").html(data[2].Name);
+                        } else {
+                            error(data[1]);
+                        }
+                    })
+                    .fail(function () {
+                        alert("Oops! Something went wrong. new_stage_verson() failure");
+                    })
+                    .always(function () {
+                    });
+
+            }
+        }
+    }
+    function new_stage_status() {
+        $("#stage_status input[name=Id]").val("");
+        $("#stage_status .modal-title").html("Create new status");
+        $("#stage_status").modal("show");
+    }
+    function edit_stage_status() {
+        let Id = $("#status").val();
+        if (!Id) {
+            warning("Please select the status to edit");
+            return;
+        } else {
+            $.ajax({
+                method: "POST",
+                url: "/Development/getStageStatus",
+                data: { Id },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    if (data[0]) {
+                        $("#stage_status input[name=Id]").val(data[1].Id);
+                        $("#stage_status input[name=Name]").val(data[1].Name);
+                        $("#stage_status select[name=Type]").val(data[1].Type);
+                        $("#stage_status input[name=Order]").val(data[1].Order);
+                        $("#available_versions option[value=" + data[2].Id + "]").html(data[2].Name);
+                        $("#fixed_versions option[value=" + data[2].Id + "]").html(data[2].Name);
+                    } else {
+                        error(data[1]);
+                    }
+                })
+                .fail(function () {
+                    alert("Oops! Something went wrong. new_stage_verson() failure");
+                })
+                .always(function () {
+                });
+
+            $("#stage_status .modal-title").html("Edit status");
+            $("#stage_status").modal("show");
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+    function selectmember() {
+        //console.log("load membervalue:" +  $("#load_member").val());
+
+        if ($("#load_member_group").val() == "1") {
+            var assignedSL = $("input[name=hdassigned]").val();
+            var arrAssigned = new Array();
+            var _arrAssigned = assignedSL.split(",");
+            for (var i = 0; i < _arrAssigned.length; i++) {
+                arrAssigned.push(_arrAssigned[i]);
+            }
+            $("select[name=assigned]").val(arrAssigned).trigger('change');
+            $("#load_member_group").val(2)
+
+            //console.log(arrAssigned);
+        }
+
+
+        //alert("b");
+        if ($("#load_member").val() == "1") {
+            var arrSubcribe = new Array();
+            var subcribeSL = $("input[name=hdsubcribe]").val();
+            var _arrSubcribe = subcribeSL.split(",");
+            for (var ii = 0; ii < _arrSubcribe.length; ii++) {
+                arrSubcribe.push(_arrSubcribe[ii]);
+            }
+            $("select[name=subcribe]").val(arrSubcribe).trigger('change');
+            $("#load_member").val(2);
+        }
+
+
+        //alert("d");
+
+        //alert($("#load_member").val());
+        if ($("#load_member").val() == "0" || $("#load_member_group").val() == "0") {
+            setTimeout(selectmember, 500);
+            //console.log("load member callback");
+        }
+    }
+    function change_subcribeMember() {
+        //alert($("select[name='subcribe']").val());
+        $("input[name='hdsubcribe']").val($("select[name='subcribe']").val());
+    }
+
+    function merge_ticket_popup(ticket_id) {
+        $("#merge_ticket_popup_img").show();
+        $.ajax({
+            method: "POST",
+            url: "/ticket/GetMergeTicket_S1",
+            data: { ticket_id, dev: true },
+            dataType: "html"
+        })
+            .done(function (data) {
+                $("#mt_s1").html(data);
+                $("#merge_ticket").modal('show');
+                $("#mt_s1").css("left", 0);
+                $("#mt_s2").css("left", 0);
+                $(".mt_s1_btn").show();
+                $(".mt_s2_btn").hide();
+            })
+            .fail(function () {
+                alert("Oops! Something went wrong. merge_ticket_popup() failure");
+            })
+            .always(function () {
+                $("#merge_ticket_popup_img").hide();
+            });
+    }
+    function mt_s1_submit(ticket_id) {
+        var select_tickets = [];
+        $("[name=selected_tickets]:checked").each(function () {
+            select_tickets.push($(this).val());
+        });
+        if (select_tickets.length <= 1) {
+            warning("Select at least two Tickets!");
+            return;
+        }
+        $("#mt_s1_img").show();
+        $.ajax({
+            method: "POST",
+            url: "/ticket/GetMergeTicket_S2",
+            data: { ticket_id, select_tickets },
+            dataType: "html"
+        })
+            .done(function (data) {
+                $("#mt_s2").html(data);
+                $("#mt_s1").animate({ left: '-50%' });
+                $("#mt_s2").animate({ left: '-50%' });
+                $(".mt_s1_btn").hide();
+                $(".mt_s2_btn").show();
+                //$("#mt_s2").animate({left: '0'});
+            })
+            .fail(function () {
+                alert("Oops! Something went wrong. mt_s1_submit() failure");
+            })
+            .always(function () {
+                $("#mt_s1_img").hide();
+            });
+    }
+    function mt_s2_submit(cur_ticket) {
+        var select_tickets = [];
+        $("[name=selected_tickets]:checked").each(function () {
+            select_tickets.push($(this).val());
+        });
+        if (select_tickets.length <= 1) {
+            warning("Select at least two Tickets!");
+            return;
+        }
+        var main_ticket = $("[name=main_ticket]:checked").val();
+        if (!main_ticket) {
+            warning("Please select main Ticket!");
+            return;
+        }
+        $("#mt_s2_img").show();
+        $.ajax({
+            method: "POST",
+            url: "/ticket/MergeTicket_submit",
+            data: { main_ticket, select_tickets, cur_ticket },
+            dataType: "json"
+        })
+            .done(function (data) {
+                //$("#mt_s2").animate({left: '0'});
+                if (data[0]) {
+                    success(data[1]);
+                    $("#merge_ticket").modal('hide');
+                    $("#timeline ul").prepend(data[2]);
+                    for (var i in data[3]) {
+                        $("#tk_" + data[3][i]).css("text-decoration", "line-through");
+                    }
+                    if (data[4]) {
+                        $("#divStatus").find("span").addClass("label-danger").removeClass("label-primary").html("Complete");
+                    }
+                } else {
+                    error(data[1]);
+                }
+            })
+            .fail(function () {
+                alert("Oops! Something went wrong. mt_s2_submit() failure");
+            })
+            .always(function () {
+                $("#mt_s2_img").hide();
+            });
+    }
+    function prev_s1() {
+        $("#mt_s1").animate({ left: '0' });
+        $("#mt_s2").animate({ left: '0' });
+        $(".mt_s1_btn").show();
+        $(".mt_s2_btn").hide();
+    }
+</script>
+@section script{
+    load_change_form_alert();
+}

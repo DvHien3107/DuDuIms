@@ -1,0 +1,55 @@
+﻿@model string 
+<div class="modal fade" id="jira_verify_modal">
+    <div class="modal-dialog" style="width:640px">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h4> Jira Authentication</h4>
+            </div>
+            <div class="modal-body">
+                <div class="text-center">
+                    <img src="~/Content/jiraconnector/atlassian-jira-logo-large.png" width="150" />
+                    <div style="margin-top:15px">
+                        <span>Please help us authorize with your account jira</span>
+                    </div>
+                </div>
+                <div class="text-center" style="padding-top:15px">
+                    <a href="@Html.Raw(@Model)" class="btn btn-success">
+                        Auth Now
+                    </a>
+                    
+                </div>
+              
+                <button onclick="skipJiraAuth()" class="btn btn-warning" style="
+                    position: absolute;
+                    right: 16px;
+                    bottom: 13px;
+                         ">
+                    Skip <i class="fa fa-angle-double-right" aria-hidden="true"></i>
+                </button>
+            </div>
+
+        </div>
+
+
+    </div>
+</div>
+
+
+
+<script>
+    function skipJiraAuth() {
+        $.ajax({
+            method: "Post",
+            url: "/Home/SkipJiraAuth",
+            dataType: "json"
+        })
+            .done(function (data) {
+                $("#jira_verify_modal").modal("hide");
+            })
+            .fail(function () {
+            })
+            .always(function () {
+            });
+    }
+</script>

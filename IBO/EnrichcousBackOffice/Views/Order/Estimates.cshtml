@@ -1,0 +1,240 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.O_Orders>
+
+@{
+    ViewBag.Title = "Estimate";
+    Dictionary<string, bool> p = ViewBag.p;
+    List<string> order_product_codes = ViewBag.order_product_ids ?? new List<string>();
+}
+
+<section class="content-header">
+    <h1>
+        Estimate Management
+        <small>Estimate</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Dashboard</a></li>
+        <li><i class="fa fa-credit-card"></i> Estimate</li>
+    </ol>
+</section>
+
+<section class="content">
+    <div class="row">
+
+        @if (TempData["e"] != null)
+        {
+            <div class="alert alert-warning alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+            </div>
+        }
+        else if (TempData["s"] != null)
+        {
+            <div class="alert alert-success alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+            </div>
+        }
+
+        <div class="col-md-12">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Estimate Management</h3>
+                    @if (p.Any(k => k.Key.Equals("orders_addnew")) == true && p["orders_addnew"] == true)
+                    {
+                        <div class="box-tools pull-right">
+                            <div class="btn-group">
+                                <a href="/order/save" class="btn btn-success" @*dropdown-toggle*@ @*data-toggle="dropdown"*@ aria-expanded="false" style="min-width:200px; padding: 4px 12px">
+                                    <i class="fa fa-plus"></i> Add New
+                                </a>
+                                <ul class="dropdown-menu" role="menu" style="box-shadow: 5px 10px 8px #888888;">
+                                    <li><a href="/order/save?type=hardware" onclick="overlayOn()"><i class="fa fa-desktop"></i>Hardware Invoice</a></li>
+                                    <li><a href="/order/save?type=subscription" onclick="overlayOn()"><i class="fa fa-plus-circle" style="font-size:1.25em"></i>Subscription Invoice</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    }
+                </div>
+                <!-- /.box-header -->
+                <div class="box-body">
+                    <div class="row">
+                        <form method="get">
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" name="search_name" value="@TempData["search_name"]" placeholder="Search for Merchant name" />
+                            </div>
+                            <div class="col-md-5">
+                                <div class="input-group">
+                                    <div class="input-group-addon">
+                                        <span><b><i class="fa fa-calendar"></i> From</b></span>
+                                    </div>
+                                    <input type="text" class="form-control datepicker-jq" name="search_from_date" value="@TempData["search_from_date"]" autocomplete="off" />
+                                    <div class="input-group-addon">
+                                        <span><b><i class="fa fa-calendar"></i> To</b></span>
+                                    </div>
+                                    <input type="text" class="form-control datepicker-jq" name="search_to_date" value="@TempData["search_to_date"]" autocomplete="off" />
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <button type="submit" class="btn btn-default btn-flat" name="search_submit" onclick="return SearchSubmit()">
+                                    <i class="fa fa-search"></i> Search
+                                    <img id="search_loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    <br />
+                    <div>
+                        <table id="order_table" class="table table-bordered table-striped" data-order='[[ 0, "desc" ]]'>
+                            <thead>
+                                <tr>
+                                    <th>Estimate#</th>
+                                    <th>Merchant Name</th>
+                                    <th>Sales Person</th>
+                                    @*<th>Invoice Type</th>*@
+                                    <th>Grand Total</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model)
+                                {
+                                <tr>
+                                    <td>
+                                        @if ((p.Any(k => k.Key.Equals("orders_viewall")) == true && p["orders_viewall"] == true) || (p.Any(k => k.Key.Equals("orders_viewteam")) == true && p["orders_viewteam"] == true))
+                                        {
+                                            <a href="/order/estimatesdetail/@item.Id?url_back='/order/estimates'" onclick="overlayOn()" data-toggle="tooltip" data-original-title="Click here to view estimate">#@(item.OrdersCode)</a>
+                                        }
+                                        else
+                                        {
+                                            <span>#@(item.OrdersCode)</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <span><b>@(item.CustomerName)</b></span><br />
+                                        <span><i>Code: #@(item.CustomerCode)</i></span>
+                                    </td>
+                                    <td>
+                                        @if (string.IsNullOrEmpty(item.SalesMemberNumber) == false)
+                                        {
+                                            <span><b>@(item.SalesName)</b></span><br />
+                                            <span><i>Member number: #@(item.SalesMemberNumber)</i></span>
+                                        }
+                                        else
+                                        {
+                                            <span><b>--N/A--</b></span>
+                                        }
+                                    </td>
+                                    @*<td>
+                                        @if (order_product_codes.Contains(item.OrdersCode))
+                                        {
+                                            <label class="label label-warning"> Hardware Invoice</label>}
+                                        else
+                                        {
+                                            <label class="label label-success">Subscription Invoice</label>
+                                        }
+                                    </td>*@
+                                    <td>
+                                        <b style="color:#258e4f">@(item.GrandTotal?.ToString("$#,##0.#0"))</b>
+
+                                        @*@if (item.Service_MonthlyFee > 0)
+            {
+               <br/> <i>Monthly: </i><b style="color:#258e4f">@(item.Service_MonthlyFee?.ToString("$#,##0.#0"))</b>
+            }*@
+
+                                    </td>
+                                    <td>
+                                        @if (item.Status == "Lead" || item.Status == "Lost")
+                                        {
+                                            <span class="label @(item.Status == "Lead" ? Html.Raw("label-primary") : Html.Raw("label-warning"))"><b>@(item.Status)</b></span>
+                                        }
+                                        else
+                                        {
+                                            <span class="label label-default"><b>Closed</b></span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if ((p.Any(k => k.Key.Equals("orders_viewall")) == true && p["orders_viewall"] == true) || (p.Any(k => k.Key.Equals("orders_viewteam")) == true && p["orders_viewteam"] == true))
+                                        {
+                                            <a href="/order/estimatesdetail/@item.Id?url_back='/order/estimates'" onclick="overlayOn()" class="btn btn-success btn-sm">View</a>
+                                        }
+                                        @if (item.Status == "Lead" || item.Status == "Lost")
+                                        {
+                                            if (p.Any(k => k.Key.Equals("orders_update")) == true && p["orders_update"] == true)
+                                            {
+                                                <a href="/order/save/@item.Id?url_back=/order/estimates" onclick="overlayOn()" class="btn btn-warning btn-sm">
+                                                    <i class="fa fa-edit"></i> Edit
+                                                </a>
+                                            }
+                                            if (p.Any(k => k.Key.Equals("orders_delete")) == true && p["orders_delete"] == true)
+                                            {
+                                                <a href="/order/delete/@item.Id" class="btn btn-danger btn-sm" onclick="return confirm('Do you want to delete this etimate?')">Delete</a>
+                                            }
+                                        }
+                                    </td>
+                                </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- /.box-body -->
+            </div>
+            <!-- /.box -->
+        </div>
+
+    </div>
+</section>
+
+
+@section style
+{
+    <!-- datepicker jquery -->
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <!-- DataTables -->
+    <link rel="stylesheet" href="~/content/admin/bower_components/datatables.net-bs/css/dataTables.bootstrap.min.css">
+    <!--noty-->
+    <link href="~/Content/noty/jquery.noty.css" rel="stylesheet" />
+    <link href="~/Content/noty/noty_theme_default.css" rel="stylesheet" />
+    <style type="text/css">
+        .dropdown-menu > li > a {
+            padding: 10px 20px;
+        }
+    </style>
+}
+
+
+@section script
+{
+    <!-- DataTables -->
+    <script src="~/content/admin/bower_components/datatables.net/js/jquery.dataTables.min.js"></script>
+    <script src="~/content/admin/bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js"></script>
+    <!--noty-->
+    <script src="~/Content/noty/jquery.noty.js"></script>
+    <!-- datepicker jquery -->
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+    <script type="text/javascript">
+        //dataTable
+        $('#order_table').DataTable({
+            'paging': true,
+            'lengthChange': true,
+            'searching': false,
+            'ordering': true,
+            'info': false,
+            'autoWidth': true
+        })
+
+        //Datepicker
+        $(".datepicker-jq").datepicker({
+            changeMonth: true,
+            changeYear: true,
+            yearRange: '1950:2050'
+        });
+
+        function SearchSubmit() {
+            $("#search_loading").show();
+            return true;
+        }
+
+    </script>
+}

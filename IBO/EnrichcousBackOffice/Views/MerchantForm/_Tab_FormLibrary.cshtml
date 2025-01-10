@@ -1,0 +1,209 @@
+﻿
+<div class="box" style="border-top:none;">
+    <div class="box-header no-padding">
+        <button type="button" class="btn btn-primary btn-sm pull-right" onclick="loadFormDetail()">
+            <i class="fa fa-plus"></i> Add new form
+        </button>
+    </div>
+    <div class="box-body no-padding">
+        <div class="row filter-group" id="search_form">
+            <div class="col-md-3 col-sm-6 form-group">
+                <div class="input-group" style="width:100%">
+                    <div class="input-group-addon">
+                        Status
+                    </div>
+                    <select class="form-control change-search" id="Status" name="Status">
+                        <option value="" style="font-weight:bold">All</option>
+                        <option value="1" style="font-weight:bold;" class="text-success">Ready for send</option>
+                        <option value="0" style="font-weight:bold;" class="text-warning">Waiting</option>
+
+                    </select>
+                </div>
+                <!-- /.input group -->
+            </div>
+            <div class="col-md-6 col-sm-6 form-group">
+                <div class="input-group" style="width:100%">
+                    <div class="input-group-addon">
+                        Search By
+                    </div>
+                    <input type="text" class="form-control change-search" id="SearchText" name="SearchText" placeholder="Name | Phone | Email ..." value="" />
+                </div>
+                <!-- /.input group -->
+            </div>
+        </div>
+        <hr />
+        <div class="col-12">
+            <table id="form_library_list" class="table table-bordered table-striped" data-order='[[ 0, "desc" ]]' style="width: 100%">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Form name</th>
+                        <th>Description</th>
+                        <th>Status</th>
+                        <th>Last updated</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="save_form_modal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content"></div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $('#form_library_list').DataTable({
+            "language": {
+                "processing": '<img src="/Content/ajax-loaders/loading2.gif" width="60px" />',
+                "paginate": {
+                    "first": '<i class="fa fa-angle-double-left" aria-hidden="true"></i>',
+                    "last": '<i class="fa fa-angle-double-right" aria-hidden="true"></i>',
+                    "next": '<i class="fa fa-angle-right" aria-hidden="true"></i>',
+                    "previous": '<i class="fa fa-angle-left" aria-hidden="true"></i>'
+                },
+            },
+            "pageLength": 10,
+            "serverSide": true, // for process server side
+            "processing": true, // for show progress bar
+            'paging': true,
+            'lengthChange': true,
+            'searching': false,
+            'ordering': true,
+            'info': false,
+            'autoWidth': true,
+            'stateSave': false,
+            'columnDefs': [
+                { orderable: false, targets: 5 }
+            ],
+            "ajax": {
+                "url": "/merchantform/loadlistlibrary",
+                "type": "POST",
+                "datatype": "json",
+                data: function (data) {
+                    data.SearchText = $('#SearchText').val();
+                    data.Status = $('#Status').val();
+                    data.SalePerson = $('#SalePerson').val();
+                    return data;
+                },
+                'dataSrc': function (data) {
+                    return data.data;
+                }
+            },
+            'fnCreatedRow': function (nRow, aData, iDataIndex) {
+                //$(nRow).attr('onclick', `load_invoice('${aData.Customer.CustomerCode}', $(this))`);
+            },
+            "columns": [
+                {
+                    "name": "Code",
+                    "render": function (data, type, row) {
+                        let html = `<b>#${row["TemplateCode"]}</b><br/>`;
+                        return html;
+                    },
+                    "className": 'align-middle',
+                },
+                {
+                    "name": "Name",
+                    "render": function (data, type, row) {
+                        let html = `<b><a href="/merchantform/design?key=${row["Id"]}" onclick="overlayOn()"><span class="text-primary">${row["Name"].toUpperCase()}</span></a></b>`
+                        return html;
+                    },
+                    "className": 'align-middle',
+                },
+                {
+                    "name": "Description",
+                    "render": function (data, type, row) {
+                        let html = `<p>${row["Description"]}</p>`;
+                        return html;
+                    },
+                    "className": 'align-middle',
+                },
+                {
+                    "name": "Status",
+                    "render": function (data, type, row) {
+                        let html = '';
+                        if (row["Status"] == 1) html = `<label class="label label-success">Ready for send</label>`;
+                        else html = `<label class="label label-warning">Waiting</label>`;
+                        return html;
+                    },
+                },
+                {
+                    "name": "LastUpdated",
+                    "render": function (data, type, row) {
+                        let html = '';
+                        if (row["UpdatedAt"] != null && row["UpdatedAt"] != '') {
+                            let offset = moment().utcOffset();
+                            html = moment.utc(row["UpdatedAt"]).utcOffset(offset).format("MMM DD, YYYY");
+                        }
+                        html += ` by ${row["UpdatedBy"]}`;
+                        return html;
+                    },
+                    "className": 'align-middle',
+                },
+                {
+                    "name": "LastUpdated",
+                    "render": function (data, type, row) {
+                        let html = `<button class="btn btn-info btn-sm" type="button" onclick="previewForm('${row["Id"]}', '${row["TemplateCode"]}')"><i class="fa fa-file-text-o"></i> Preview</button>
+                                    <a href="/merchantform/design?key=${row["Id"]}" class="btn btn-warning btn-sm" onclick="overlayOn()"><i class="fa fa-pencil-square-o"></i> Edit</a>
+                                    <button class="btn btn-danger btn-sm" type="button" onclick="removeForm('${row["Id"]}', '${row["TemplateCode"]}')"><i class="fa fa-trash-o" aria-hidden="true"></i> Delete</button>`;
+                        return html;
+                    },
+                    "className": 'align-middle',
+                }
+            ]
+        })
+
+        $('#search_form').on('change paste', 'input, select, textarea', function () {
+            $('#form_library_list').DataTable().ajax.reload();
+        });
+
+    });
+
+    function loadFormDetail(id = "") {
+        overlayOn();
+        $.ajax({
+            method: "get",
+            url: `/merchantform/detail?id=${id}`
+        }).done(function (data) {
+            $('#save_form_modal .modal-content').html(data);
+            $('#save_form_modal').modal();
+        }).fail(function (data) {
+            var mess = $.parseJSON('{"text":"' + data.statusText + '", "layout":"topRight", "type":"error"}');
+            noty(mess);
+        }).always(function () {
+            overlayOff();
+        });
+    }
+
+    function removeForm(id, code) {
+        if (confirm('Are you sure that you want to delete form #' + code + '?')) {
+            overlayOn();
+            $.ajax({
+                method: "get",
+                url: `/merchantform/delete?id=${id}`
+            }).done(function (data) {
+                if (data[0]) {
+                    var mess = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"success"}');
+                    noty(mess);
+                    $('#form_library_list').DataTable().ajax.reload();
+                }
+                else {
+                    var mess = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"error"}');
+                    noty(mess);
+                }
+            }).fail(function (data) {
+                var mess = $.parseJSON('{"text":"' + data.statusText + '", "layout":"topRight", "type":"error"}');
+                noty(mess);
+            }).always(function () {
+                overlayOff();
+            });
+        }
+    }
+
+</script>

@@ -1,0 +1,472 @@
+﻿@{
+    string controller = ViewContext.RouteData.Values["controller"].ToString().ToLower();
+    string action = ViewContext.RouteData.Values["action"].ToString().ToLower();
+    string id = ViewContext.RouteData.Values["id"]?.ToString();
+    var member = EnrichcousBackOffice.AppLB.Authority.GetCurrentMember();
+    var access = EnrichcousBackOffice.AppLB.Authority.GetAccessAuthority();
+    var embeds = EnrichcousBackOffice.Controllers.ExternalEmbedController.GetEmbedList().OrderBy(e => e.Name);
+
+}
+
+
+<ul class="sidebar-menu" data-widget="tree">
+    <li class="header">Menu</li>
+    <li class="treeview">
+        <a href="#">
+            <i class="fa fa-dashboard"></i> <span class="menu-chinh">Dashboard</span>
+            <span class="pull-right-container">
+                <i class="fa fa-angle-left pull-right"></i>
+            </span>
+        </a>
+        <ul class="treeview-menu">
+            <li @if (controller == "home" && action == "index") { @Html.Raw("class='active'") }>
+                <a href="/home" onclick="overlayOn()"><i class="fa fa-circle-o"></i> Accounting</a>
+            </li>
+            <li @if (controller == "account" && action == "myteam") { @Html.Raw("class='active'") }>
+                <a href="/account/myteam" onclick="overlayOn()"><i class="fa fa-circle-o"></i> Teams</a>
+            </li>
+            <li @if (controller == "tasksman" && action != "template") { @Html.Raw("class='active'") }>
+                <a href="/tasksman" onclick="overlayOn()"><i class="fa fa-circle-o"></i> Tasks</a>
+            </li>
+        </ul>
+    </li>
+    <li class="treeview @if (controller == "order"||controller=="salelead"||controller=="demoscheduler") { @Html.Raw("active") }">
+        <a href="#">
+            <i class="fa fa-credit-card"></i> <span>Sale</span>
+            <span class="pull-right-container">
+                <i class="fa fa-angle-left pull-right"></i>
+            </span>
+        </a>
+        <ul class="treeview-menu">
+            @if ((access.Any(k => k.Key.Equals("sales_lead_view_all")) == true && access["sales_lead_view_all"] == true) || (access.Any(k => k.Key.Equals("sales_lead_view_team")) == true && access["sales_lead_view_team"] == true) || (access.Any(k => k.Key.Equals("sales_lead_new_register_tracking")) == true && access["sales_lead_new_register_tracking"] == true))
+            {
+                <li @if (controller == "salelead" & action == "index") { @Html.Raw("class='active'") }>
+                    <a href="/SaleLead" onclick="overlayOn()"><i class="fa fa-circle-o"></i> Sales Lead</a>
+                </li>
+            }
+
+            @*@if ((access.Any(k => k.Key.Equals("orders_viewall")) == true && access["orders_viewall"] == true)
+                    || (access.Any(k => k.Key.Equals("orders_viewteam")) == true && access["orders_viewteam"] == true))
+                {
+                    <li @if (controller == "order" & action == "estimates") { @Html.Raw("class='active'") }>
+                        <a href="/order/estimates" onclick="overlayOn()"><i class="fa fa-circle-o"></i> Estimate</a>
+                    </li>
+                }*@
+
+            @if ((access.Any(k => k.Key.Equals("orders_viewall")) == true && access["orders_viewall"] == true)
+                || (access.Any(k => k.Key.Equals("orders_viewteam")) == true && access["orders_viewteam"] == true))
+            {
+                <li @if (controller == "order" & action == "index") { @Html.Raw("class='active'") }>
+                    <a href="/order" onclick="overlayOn()"><i class="fa fa-circle-o"></i> Invoice</a>
+                </li>
+            }
+
+        </ul>
+    </li>
+
+
+    @if (access.Any(k => k.Key.Equals("customer_view")) == true && access["customer_view"] == true)
+    {
+        <li @if ((controller == "merchantman" && action != "transactionreport") || controller == "bossmanagement") { @Html.Raw("class='active'") }>
+            <a href="/merchantman?merchantstatus=2&merchantstatus=4&sites=1">
+                <i class="fa fa-users"></i> <span>Merchant Dashboard</span>
+            </a>
+        </li>
+    }
+
+    <li class="treeview treeview-ticket" onclick="openTicketTreeView()">
+        <a href="#">
+            <i class="fa fa-ticket"></i> <span>Ticket</span>
+            <span class="pull-right-container">
+                <i class="fa fa-angle-left pull-right"></i>
+            </span>
+        </a>
+        <ul class="treeview-menu" id="ticket-treeview">
+            <li>
+                <a href="#">
+                    <i class="fa fa-circle-o"></i> <span>Loading</span>
+                </a>
+            </li>
+        </ul>
+    </li>
+
+    @if (access.Any(k => k.Key.Equals("helpdesk_manage")) == true && access["helpdesk_manage"] == true)
+    {
+        <li class="treeview">
+            <a href="#">
+                <i class="fa fa-life-ring"></i> <span>Help Desk</span>
+                <span class="pull-right-container">
+                    <i class="fa fa-angle-left pull-right"></i>
+                </span>
+            </a>
+            <ul class="treeview-menu">
+                <li @if (controller == "kb") { @Html.Raw("class='active'") }>
+                    <a href="/kb/index" onclick="overlayOn()">
+                        <i class="fa fa-circle-o"></i> <span> Knowledge Base</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/documents" onclick="overlayOn()">
+                        <i class="fa fa-circle-o"></i> <span>Documents</span>
+                    </a>
+                </li>
+
+                <li>
+                    <a href="javascript:void(0)" data-toggle="tooltip" data-placement="bottom" title="construction">
+                        <i class="fa fa-circle-o"></i> <span> Q&A</span>
+                    </a>
+                </li>
+
+            </ul>
+        </li>
+    }
+
+
+    <li class="treeview">
+        <a href="#">
+            <i class="fa fa-info-circle"></i> <span>Other Management</span>
+            <span class="pull-right-container">
+                <i class="fa fa-angle-left pull-right"></i>
+            </span>
+        </a>
+        <ul class="treeview-menu">
+            @foreach (var embed in embeds)
+            {
+                if (access.Any(k => k.Key.Equals(embed.FunctionCode)) == true && access[embed.FunctionCode] == true)
+                {
+                    <li @if (controller == "externalembed" && (action == "open") && (id == embed.Id)) { @Html.Raw("class='active'") }>
+                        <a href="/ExternalEmbed/Open/@embed.Id" onclick="overlayOn()">
+                            <svg version="1.0" xmlns="http://www.w3.org/2000/svg" width="20px" viewBox="0 0 127.000000 100.000000" preserveAspectRatio="xMidYMid meet"><g transform="translate(0.000000,100.000000) scale(0.100000,-0.100000)" stroke="none"> <path d="M58 518 c-2 -260 -3 -474 -3 -475 1 -6 182 39 249 61 97 33 238 104 299 150 l47 36 24 -48 c45 -87 95 -118 111 -69 8 23 19 585 13 692 l-3 60 -66 -100 c-37 -55 -94 -150 -128 -212 -65 -118 -171 -344 -171 -365 0 -24 -17 8 -54 106 -47 119 -109 215 -154 237 l-33 17 31 26 c18 15 44 26 60 26 38 0 93 -48 130 -113 l28 -49 46 88 c54 105 147 233 241 333 l67 71 -365 0 -366 0 -3 -472z" /> </g> </svg>
+                            <span>@embed.Name</span>
+                        </a>
+                    </li>
+                }
+            }
+            @if (access.Any(k => k.Key.Equals("survey_manage")) == true && access["survey_manage"] == true)
+            {
+                <li @if (controller == "MeetingSurvey") { @Html.Raw("class='active'") }>
+                    <a href="/MeetingSurvey/Index" onclick="overlayOn()">
+                        <svg version="1.0" xmlns="http://www.w3.org/2000/svg" width="20px" viewBox="0 0 127.000000 100.000000" preserveAspectRatio="xMidYMid meet"><g transform="translate(0.000000,100.000000) scale(0.100000,-0.100000)" stroke="none"> <path d="M58 518 c-2 -260 -3 -474 -3 -475 1 -6 182 39 249 61 97 33 238 104 299 150 l47 36 24 -48 c45 -87 95 -118 111 -69 8 23 19 585 13 692 l-3 60 -66 -100 c-37 -55 -94 -150 -128 -212 -65 -118 -171 -344 -171 -365 0 -24 -17 8 -54 106 -47 119 -109 215 -154 237 l-33 17 31 26 c18 15 44 26 60 26 38 0 93 -48 130 -113 l28 -49 46 88 c54 105 147 233 241 333 l67 71 -365 0 -366 0 -3 -472z" /> </g> </svg>
+                        <span>Survey</span>
+                    </a>
+                </li>
+            }
+            @if (access.Any(k => k.Key.Equals("newcustomergoal_manage")) == true && access["newcustomergoal_manage"] == true)
+            {
+                <li @if (controller == "newcustomergoal" && action == "index") { @Html.Raw("class='active'") }>
+                    <a href="/newcustomergoal/index" onclick="overlayOn()"><i class="fa fa-circle-o"></i> New Customer Goal</a>
+                </li>
+            }
+            @if (access.Any(k => k.Key.Equals("twilio_account_manage")) == true && access["twilio_account_manage"] == true)
+            {
+                <li @if (controller == "twiliomanage" && action == "index") { @Html.Raw("class='active'") }>
+                    <a href="/twiliomanage/index" onclick="overlayOn()"><i class="fa fa-circle-o"></i> Twilio Account</a>
+                </li>
+            }
+        </ul>
+    </li>
+    @if (access.Any(k => k.Key.Equals("product_management")) == true && access["product_management"] == true)
+    {
+        <li class="treeview">
+            <a href="#">
+                <i class="fa fa-television"></i> <span>Products</span>
+                <span class="pull-right-container">
+                    <i class="fa fa-angle-left pull-right"></i>
+                </span>
+            </a>
+            <ul class="treeview-menu">
+                <li class="treeview">
+                    <a href="#">
+                        <i class="fa fa-circle-o"></i> <span>Inventory</span>
+                        <span class="pull-right-container">
+                            <i class="fa fa-angle-left pull-right"></i>
+                        </span>
+
+                    </a>
+                    <ul class="treeview-menu">
+                        @if (access.Any(k => k.Key.Equals("inventory_manage")) == true && access["inventory_manage"] == true)
+                        {
+
+                            <li @if (controller == "device" && action == "index") { @Html.Raw("class='active'") }>
+                                <a href="/device/index" onclick="overlayOn()"><i class="fa fa-circle-o"></i> Dashboard</a>
+                            </li>
+
+                        }
+                        @if (access.Any(k => k.Key.Equals("inventory_edit_package")) == true && access["inventory_edit_package"] == true)
+                        {
+                            <li @if (controller == "device" && action == "package") { @Html.Raw("class='active'") }>
+                                <a href="/device/Package" onclick="overlayOn()"><i class="fa fa-circle-o"></i> Package</a>
+                            </li>
+                        }
+                    </ul>
+                </li>
+                @if (access.Any(k => k.Key.Equals("inventory_purchase_order_request")) == true && access["inventory_purchase_order_request"] == true)
+                {
+                    <li class="treeview">
+                        <a href="#">
+                            <i class="fa fa-circle-o"></i> <span>Purchase order</span>
+                            <span class="pull-right-container">
+                                <i class="fa fa-angle-left pull-right"></i>
+                            </span>
+                        </a>
+                        <ul class="treeview-menu">
+                            <li @if (controller == "po" && (action == "index" || action == "createpo")) { @Html.Raw("class='active'") }>
+                                <a href="/po/index" onclick="overlayOn()"><i class="fa fa-circle-o"></i> Item requested</a>
+                            </li>
+                            @if (access.Any(k => k.Key.Equals("inventory_purchase_order_manager")) == true && access["inventory_purchase_order_manager"] == true)
+                            {
+                                <li @if (controller == "po" && (action == "pomanager" || action == "edititem")) { @Html.Raw("class='active'") }>
+                                    <a href="/po/pomanager" onclick="overlayOn()"><i class="fa fa-circle-o"></i> PO Manager</a>
+                                </li>
+                            }
+                        </ul>
+                    </li>
+
+                }
+                @if (access.Any(k => k.Key.Equals("inventory_check_in")) == true && access["inventory_check_in"] == true)
+                {
+                    <li @if (controller == "po" && action == "checkininventory") { @Html.Raw("class='active'") }>
+                        <a href="/po/checkininventory" onclick="overlayOn()"><i class="fa fa-circle-o"></i> Check in inventory</a>
+                    </li>
+                }
+
+                @if (access.Any(k => k.Key.Equals("products_accessdevice")) == true && access["products_accessdevice"] == true)
+                {
+
+                    <li @if (controller == "productmanage" && action == "product") { @Html.Raw("class='active'") }>
+                        <a href="/ProductManage/Product" onclick="overlayOn()"><i class="fa fa-circle-o"></i> Products Management</a>
+                    </li>
+                }
+
+            </ul>
+        </li>
+    }
+
+    <li class="treeview @if (controller == "memberman"||controller == "payroll") { @Html.Raw("active") }">
+        <a href="#">
+            <i class="fa fa-user-circle-o"></i>
+            <span class="menu-chinh">Team</span>
+            <span class="pull-right-container">
+                <i class="fa fa-angle-left pull-right"></i>
+            </span>
+        </a>
+        <ul class="treeview-menu">
+            @if (access.Any(k => k.Key.Equals("partners_addnewmember")) == true && access["partners_addnewmember"] == true)
+            {
+                <li @if (controller == "memberman" && (action == "subcription")) { @Html.Raw("class='active'") }>
+                    <a href="/memberman/subcription" onclick="overlayOn()"><i class="fa fa-circle-o"></i>Subscription</a>
+                </li>
+            }
+            @if (access.Any(k => k.Key.Equals("partners_accessmember")) == true && access["partners_accessmember"] == true)
+            {
+
+                <li @if ((controller == "memberman" && (action == "index" || action == "save"))) { @Html.Raw("class='active'") }>
+                    <a href="/memberman" onclick="overlayOn()"><i class="fa fa-circle-o"></i>User</a>
+                </li>
+            }
+            @*@if ((access.Any(k => k.Key.Equals("payroll_view")) == true && access["payroll_view"] == true) || (access.Any(k => k.Key.Equals("payroll_viewall")) == true && access["payroll_viewall"] == true) || (access.Any(k => k.Key.Equals("payroll_accounting")) == true && access["payroll_accounting"] == true))
+                {
+                    <li @if (controller == "payroll" && action == "payroll") { @Html.Raw("class='active'") }>
+                        <a href="/payroll/payroll" onclick="overlayOn()"><i class="fa fa-circle-o"></i> <span>Payroll</span></a>
+                    </li>
+                }*@
+        </ul>
+    </li>
+
+
+
+    <li class="treeview">
+        <a href="#">
+            <i class="fa fa-line-chart" aria-hidden="true"></i><span>Report</span>
+            <span class="pull-right-container">
+                <i class="fa fa-angle-left pull-right"></i>
+            </span>
+        </a>
+        <ul class="treeview-menu">
+            @if (access.Any(k => k.Key.Equals("report_service")) == true && access["report_service"] == true)
+            {
+                <li @if (controller == "storereport" & action == "services") { @Html.Raw("class='active'") }>
+                    <a href="/storereport/Services" onclick="overlayOn()"><i class="fa fa-circle-o"></i> Service Report</a>
+                </li>
+                <li @if (controller == "storereport" & action == "recurringreport") { @Html.Raw("class='active'") }>
+                    <a href="/storereport/RecurringReport" onclick="overlayOn()"><i class="fa fa-circle-o"></i> Recurring Report</a>
+                </li>
+            }
+            @if (access.Any(k => k.Key.Equals("report_cancel")) == true && access["report_cancel"] == true)
+            {
+                <li @if (controller == "storereport" & action == "cancelreport") { @Html.Raw("class='active'") }>
+                    <a href="/storereport/cancelreport" onclick="overlayOn()"><i class="fa fa-circle-o"></i> Cancel Report</a>
+                </li>
+            }
+            @if (access.Any(k => k.Key.Equals("report_expires")) == true && access["report_expires"] == true)
+            {
+                <li @if (controller == "storereport" & action == "filterstore") { @Html.Raw("class='active'") }>
+                    <a href="/storereport/filterstore" onclick="overlayOn()"><i class="fa fa-circle-o"></i> Expires Report</a>
+                </li>
+            }
+            @if (access.Any(k => k.Key.Equals("report_transaction")) == true && access["report_transaction"] == true)
+            {
+                <li @if (controller == "storereport" & action == "transactionreport") { @Html.Raw("class='active'") }>
+                    <a href="/storereport/transactionreport" onclick="overlayOn()">
+                        <i class="fa fa-circle-o"></i> Transaction Report
+                    </a>
+                </li>
+            }
+            @if (access.Any(k => k.Key.Equals("report_sms")) == true && access["report_sms"] == true)
+            {
+                <li @if (controller == "otherreport" & (action == "smsreport" || action == "smsexport" || action == "SMSUsedReport")) { @Html.Raw("class='active'") }>
+                    <a href="/otherreport/smsreport" onclick="overlayOn()"><i class="fa fa-circle-o"></i> SMS Report</a>
+                </li>
+            }
+            @*<li>
+                    <a href="javascript:void(0)" data-toggle="tooltip" data-placement="bottom" title="construction">
+                        <i class="fa fa-circle-o"></i> <span> Other Reports</span>
+                    </a>
+                </li>*@
+
+        </ul>
+    </li>
+    @if (access.Any(k => k.Key.Equals("campaign_ads")) == true && access["campaign_ads"] == true)
+    {
+        <li @if (controller == "adscampaign" && action == "index") { @Html.Raw("class='active'") }>
+            <a href="/adscampaign">
+                <i class="fa fa-paper-plane"></i> <span>Ads Campaign</span>
+            </a>
+        </li>
+    }
+
+    @if (User.IsInRole("admin") == true && member.SiteId == 1)
+    {
+
+        <li class="treeview">
+            <a href="#">
+                <i class="fa fa-cogs"></i> <span class="menu-chinh">Setting</span>
+                <span class="pull-right-container">
+                    <i class="fa fa-angle-left pull-right"></i>
+                </span>
+            </a>
+            <ul class="treeview-menu">
+                <li class="treeview">
+                    <a href="#">
+                        <i class="fa fa-circle-o"></i> <span>Licenses Management</span>
+                        <span class="pull-right-container">
+                            <i class="fa fa-angle-left pull-right"></i>
+                        </span>
+                    </a>
+                    <ul class="treeview-menu">
+                        <li @if (controller == "licenses" && action == "licenseitems") { @Html.Raw("class='active'") }>
+                            <a href="/licenses/licenseItems" onclick="overlayOn()"><i class="fa fa-circle-o"></i> Licenses Items</a>
+                        </li>
+                        <li @if (controller == "licenses" && action == "licenseproduct") { @Html.Raw("class='active'") }>
+                            <a href="/licenses/licenseProduct" onclick="overlayOn()"><i class="fa fa-circle-o"></i> Licenses Product &amp; Addon</a>
+                        </li>
+                    </ul>
+                </li>
+
+                <li class="treeview">
+                    <a href="#">
+                        <i class="fa fa-circle-o"></i> <span>Templates</span>
+                        <span class="pull-right-container">
+                            <i class="fa fa-angle-left pull-right"></i>
+                        </span>
+                    </a>
+                    <ul class="treeview-menu">
+                        <li @if (controller == "emailtemplate" && action == "index") { @Html.Raw("class='active'") }>
+
+                            <a href="/EmailTemplate" onclick="overlayOn()"><i class="fa fa-circle-o"></i> Email templates</a>
+
+                        </li>
+                        <li @if (controller == "tasksman" && action == "template") { @Html.Raw("class='active'") }>
+
+                            <a href="/TasksMan/Template" onclick="overlayOn()"><i class="fa fa-circle-o"></i> Task templates</a>
+
+                        </li>
+                    </ul>
+                </li>
+
+                <li @if (controller == "externalembed" && action == "index") { @Html.Raw("class='active'") }>
+
+                    <a href="/ExternalEmbed" onclick="overlayOn()"><i class="fa fa-circle-o"></i> External Embed</a>
+
+                </li>
+                <li class="treeview">
+                    <a href="#">
+                        <i class="fa fa-circle-o"></i> <span>Department & Permission</span>
+                        <span class="pull-right-container">
+                            <i class="fa fa-angle-left pull-right"></i>
+                        </span>
+                    </a>
+                    <ul class="treeview-menu">
+                        <li @if (controller == "departmentman" && action == "index") { @Html.Raw("class='active'") }>
+                            <a href="/departmentman" onclick="overlayOn()"><i class="fa fa-circle-o"></i> Departments</a>
+                        </li>
+                        <li @if (controller == "levelsetting") { @Html.Raw("class='active'") }><a href="/levelsetting/" onclick="overlayOn()"><i class="fa fa-circle-o"></i> MLM Level</a></li>
+                        <li @if (controller == "grantaccess" && action == "index") { @Html.Raw("class='active'") } onclick="overlayOn()"><a href="/grantaccess"><i class="fa fa-circle-o"></i> Grant Access</a></li>
+                    </ul>
+                </li>
+                @*<li @if (controller == "projectmanagement") { @Html.Raw("class='active'") }><a href="/projectmanagement/" onclick="overlayOn()"><i class="fa fa-circle-o"></i> Project Management</a></li>*@
+                <li @if (controller == "systemsetting" && action == "index") { @Html.Raw("class='active'") } onclick="overlayOn()"><a href="/systemsetting"><i class="fa fa-circle-o"></i> Profile & Optional</a></li>
+                <li class="treeview">
+                    <a href="#">
+                        <i class="fa fa-circle-o"></i> <span>Others</span>
+                        <span class="pull-right-container">
+                            <i class="fa fa-angle-left pull-right"></i>
+                        </span>
+                    </a>
+
+                </li>
+            </ul>
+        </li>
+    }
+    else if (access.Any(k => k.Key.Equals("setting_manage")) == true && access["setting_manage"] == true)
+    {
+        <li class="treeview">
+            <a href="#">
+                <i class="fa fa-cogs"></i> <span class="menu-chinh">Setting</span>
+                <span class="pull-right-container">
+                    <i class="fa fa-angle-left pull-right"></i>
+                </span>
+            </a>
+            <ul class="treeview-menu">
+                <li @if (controller == "departmentman" && action == "index") { @Html.Raw("class='active'") }>
+                    <a href="/departmentman" onclick="overlayOn()"><i class="fa fa-circle-o"></i> Departments</a>
+                </li>
+                <li @if (controller == "grantaccess" && action == "index") { @Html.Raw("class='active'") } onclick="overlayOn()"><a href="/grantaccess"><i class="fa fa-circle-o"></i> Grant Access</a></li>
+            </ul>
+        </li>
+    }
+
+</ul>
+<style>
+    @@media(max-height:700px) {
+        .sidebar-menu {
+            position: fixed;
+            width: 230px;
+            max-height: 100vh;
+            overflow-y: scroll !important;
+            padding-bottom: 40px;
+            transition: .3s ease-out !important;
+        }
+    }
+
+    .sidebar-collapse .sidebar-menu {
+        position: relative !important;
+        width: 0px !important;
+    }
+
+    .sidebar-menu::-webkit-scrollbar {
+        width: 7px;
+    }
+
+    .sidebar-menu::-webkit-scrollbar-track {
+        background: #222d32;
+        border-radius: 10px
+    }
+
+    .sidebar-menu::-webkit-scrollbar-thumb {
+        background-color: #2c3b41;
+        border: 2px solid #1e282c;
+        border-radius: 10px;
+    }
+</style>
+<script src="~/Scripts/Layout/menu.js"></script>

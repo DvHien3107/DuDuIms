@@ -1,0 +1,134 @@
+﻿@model EnrichcousBackOffice.Models.C_MerchantFormData
+@using EnrichcousBackOffice.Models;
+@{
+    var Customers = ViewBag.Customers as List<C_Customer>;
+    var Templates = ViewBag.Templates as List<C_MerchantForm>;
+}
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+    <h4 id="modal-group_detail-title" class="modal-title">@(string.IsNullOrEmpty(Model.Id) ? "Create new" : "Edit form already send")</h4>
+</div>
+<div class="modal-body">
+    @if (TempData["e"] != null)
+    {
+        <div class="alert alert-warning alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+        </div>
+        return;
+    }
+    <div class="row">
+        <form id="save_already_form" action="/merchantform/saveformalready" method="post" onsubmit="overlayOn()">
+            <input type="hidden" class="form-control" id="Id" name="Id" value="@Model.Id" />
+            <div class="form-group col-md-6">
+                <label class="control-label" style="">Customer <span style="color:red">*</span></label>
+                <select class="form-control select2" id="CustomerCode" name="CustomerCode" tabindex="1" required style="width: 100%">
+                    @foreach (var cus in Customers)
+                    {
+                        <option value="@cus.CustomerCode" @(cus.CustomerCode == Model.CustomerCode ? "selected" : "")>#@cus.CustomerCode - @cus.BusinessName</option>
+                    }
+                </select>
+            </div>
+            <div class="form-group col-md-6">
+                <label class="control-label" style="">Form Template <span style="color:red">*</span></label>
+                <select class="form-control select2" id="TemplateId" name="TemplateId" tabindex="2" required style="width: 100%">
+                    @foreach (var tem in Templates)
+                    {
+                        <option value="@tem.Id" @(tem.Id == Model.TemplateId ? "selected" : "")>#@tem.TemplateCode - @tem.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="form-group col-md-12">
+                <label class="control-label" style="">Email CC</label>
+                <input tabindex="3" type="email" class="form-control" id="EmailCC" name="EmailCC" value="@Model.EmailCC" />
+            </div>
+            <div class="form-group col-md-12">
+                <label class="control-label" style="">Subject <span style="color:red">*</span></label>
+                <input tabindex="4" type="text" class="form-control" id="Subject" name="Subject" value="@Model.Subject" required />
+            </div>
+            <div class="form-group col-md-12">
+                <label class="control-label" style="">Content Addon</label>
+                <textarea tabindex="5" type="text" class="form-control" id="ContentAddon" name="ContentAddon" style="resize:vertical; min-height: 100px">@Model.ContentAddon</textarea>
+            </div>
+            <div class="form-group col-md-12">
+                <label class="control-label" style="">Form preview</label>
+                <iframe id="iframe_preview_form" style="width:100%; height:320px" src="MerchantForm/Render?key=@(Model.TemplateId ?? Templates.First().Id)&code=@Model.CustomerCode"></iframe>
+            </div>
+            <div class="col-md-12" style="padding-top: 15px; border-top: 1px solid #f4f4f4">
+                <button type="button" class="btn btn-default btn-sm pull-left" data-dismiss="modal">Close</button>
+                <button class="btn btn-danger btn-sm" type="button" style="margin-left:3px" onclick="removeAlreadyForm('@Model.Id')"><i class="fa fa-trash-o" aria-hidden="true"></i> Delete</button>
+
+                <button type="submit" class="btn btn-primary btn-sm pull-right" style="margin-left:3px"><i class="fa fa-floppy-o" aria-hidden="true"></i> Save</button>
+                @if (!string.IsNullOrEmpty(Model.Id))
+                {
+                    <button class="btn btn-info btn-sm pull-right" type="button" onclick="sendMerchantFormEmail()"><i class="fa fa-envelope-o"></i> Send to merchant</button>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $('.select2').select2();
+
+        $("#save_already_form").ajaxForm(function (data) {
+            if (data[0]) {
+                var mess = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"success"}');
+                noty(mess);
+                $('#form_already_list').DataTable().ajax.reload();
+                $('#already_form_modal').modal("hide");
+            } else {
+                var mess = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"error"}');
+                noty(mess);
+            }
+            overlayOff();
+        });
+
+        $('#TemplateId').on("change", function (e) { $('#iframe_preview_form').attr('src', 'MerchantForm/Render?key=' + $('#TemplateId').val()); });
+    })
+
+    $('input[type="checkbox"].flat-red, input[type="radio"].flat-red').iCheck({
+        checkboxClass: 'icheckbox_flat-blue',
+        radioClass: 'iradio_flat-blue'
+    })
+
+    function sendMerchantFormEmail() {
+        overlayOn();
+        $.ajax({
+            method: "POST",
+            url: "/merchantform/sendmerchantformtocustomer",
+            data: {
+                Id: '@Model.Id',
+                ContentAddon: $('#ContentAddon').val(),
+                CustomerCode: $('#CustomerCode').val(),
+                TemplateId: $('#TemplateId').val(),
+                EmailCC: $('#EmailCC').val(),
+                Subject: $('#Subject').val(),
+            },
+            dataType: "json"
+        })
+            .done(function (data) {
+                if (data[0]) {
+                    var Success = $.parseJSON('{"text":"' + data[1] + '", "layout":"top", "type":"success"}');
+                    noty(Success);
+                    $('#form_already_list').DataTable().ajax.reload();
+                    $('#already_form_modal').modal("hide");
+                }
+                else {
+                    var Error = $.parseJSON('{"text":"' + data[1] + '", "layout":"top", "type":"error"}');
+                    noty(Error);
+                }
+            })
+            .fail(function () {
+                var Error = $.parseJSON('{"text":"Oops! Something went wrong", "layout":"top", "type":"error"}');
+                noty(Error);
+            }).always(function () {
+                overlayOff();
+            });
+
+    }
+
+</script>

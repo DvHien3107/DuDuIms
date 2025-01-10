@@ -1,0 +1,755 @@
+﻿@using EnrichcousBackOffice.Utils
+@using EnrichcousBackOffice.ViewModel
+@using EnrichcousBackOffice.Models
+@using EnrichcousBackOffice.AppLB
+@model  EnrichcousBackOffice.Models.CustomizeModel.DetailSalesLeadCustomizeModel
+@{
+    var access = EnrichcousBackOffice.AppLB.Authority.GetAccessAuthority();
+    var cMem = EnrichcousBackOffice.AppLB.Authority.GetCurrentMember();
+    var SalesMember = ViewBag.ListMemberSales as List<P_Member>;
+    var pr_access = ViewBag.pr_access;
+    WebDataModel db = new WebDataModel();
+}
+@functions{
+
+    string FeaturesOfInterest(SaleLeadInfo lead)
+    {
+        string interest = "";
+        if (lead.Features_Interes?.Contains("checkin") == true)
+        {
+            interest += "+ CHECKIN" + "<br/>";
+        }
+        if (lead.Features_Interes?.Contains("payroll") == true)
+        {
+            interest += "+ PAYROLL" + "<br/>";
+        }
+        if (lead.Features_Interes?.Contains("automation") == true)
+        {
+            interest += "+ AUTOMATION" + "<br/>";
+        }
+        if (lead.Features_Interes?.Contains("techmanagement") == true)
+        {
+            interest += "+ TECHMANAGEMENT" + "<br/>";
+        }
+        if (!string.IsNullOrEmpty(lead.Features_Interes_other))
+        {
+            interest += "+ OTHER:_" + lead.Features_Interes_other;
+        }
+        return interest;
+    }
+
+    string TimeView(string time)
+    {
+        if (string.IsNullOrEmpty(time))
+        {
+            return "";
+        }
+        var h = int.Parse(time.Substring(11, 2));
+        var m = time.Substring(14, 2);
+        var ap = "AM";
+        if (h > 12)
+        {
+            ap = "PM";
+            h = h - 12;
+        }
+        return $"{h}:{m} {ap}";
+    }
+
+    string FormatDateRemain(DateTime dt)
+    {
+        string time = dt > DateTime.UtcNow ? "later" : "ago";
+        TimeSpan ts = dt > DateTime.UtcNow ? dt - DateTime.UtcNow : DateTime.UtcNow - dt;
+
+        if (ts.Days == 0 && ts.Hours == 0 && ts.Minutes == 0)
+        {
+            return "a few seconds " + time;
+        }
+        else if (ts.Days == 0 && ts.Hours == 0)
+        {
+            return ts.Minutes + " minutes " + time;
+        }
+        else if (ts.Days == 0)
+        {
+            return ts.Hours + " hours " + ts.Minutes + " minutes " + time;
+        }
+        else if (ts.Days > 365)
+        {
+            return Math.Round((decimal)(ts.Days / 365), 0, MidpointRounding.ToEven).ToString() + " years " + time;
+        }
+        else if (ts.Days > 30)
+        {
+            return Math.Round((decimal)(ts.Days / 30), 0, MidpointRounding.ToEven).ToString() + " months " + time;
+        }
+        return ts.Days + " days " + time;// +ts.Hours + " hours " + ts.Minutes + " minutes ago";
+    }
+}
+
+<tr class="appoiments" id="appoiments_@Model.lead.SaleLeadId" style="background-color: #b7b6b6;">
+    <td class="list_appoi" colspan="10" style="display:none">
+        <div class="nav-tabs-custom @(pr_access ? "col-md-8" : "col-md-12") " style="margin: auto;float: none; padding: 10px;">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#history_@Model.lead.SaleLeadId" data-toggle="tab"><b>History</b></a></li>
+                <li><a href="#infosaleslead_@Model.lead.SaleLeadId" data-toggle="tab"><b>Information</b></a></li>
+                @if (pr_access)
+                {
+                    <li style="float: right;color: grey;font-size: 18px;">
+                        <span onclick="show_appoiment('@Model.lead.SaleLeadId')"><i class="fa fa-times" aria-hidden="true"></i></span>
+                    </li>
+                }
+            </ul>
+            <div class="tab-content" style="border: 0px 1px 1px 1px solid #ddd;overflow: auto;max-height: 500px">
+                <div class="active tab-pane" id="history_@Model.lead.SaleLeadId">
+                    <!-- The timeline -->
+                    @if (Model.even == null || !Model.even.Any())
+                    {
+                        <div class="col-md-12">
+                            <div class="alert alert-warning">
+                                <span><i class="icon fa fa-warning"></i> No data</span>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <ul class="timeline timeline-inverse">
+                            @{
+                                string LastDaysinMonth = "";
+                            }
+                            @foreach (var itemd in Model.even.OrderByDescending(f => AppFunc.ParseTimeToUtc(f.StartEvent)))
+                            {
+                                var IMSTime = AppFunc.ParseTimeToUtc(itemd.StartEvent).UtcToIMSDateTime();
+                                string y = itemd.StartEvent.Substring(0, 4);
+                                string m = itemd.StartEvent.Substring(5, 2);
+                                <!-- timeline time label -->
+                                if (y + m != LastDaysinMonth)
+                                 {
+                                    LastDaysinMonth = y + m;
+                                    <text>
+                                        <li class="time-label">
+                                            <span class="bg-green">
+                                                @IMSTime.ToString("MMM dd, yyyy")
+                                            </span>
+                                        </li>
+                                    </text>
+                                }
+                                string dateago = FormatDateRemain(AppFunc.ParseTimeToUtc(itemd.StartEvent));
+                                <!-- timeline item -->
+                                <li class="list-item-log">
+                                    <i class="fa fa-comments bg-yellow"></i>
+                                    <div class="timeline-item">
+                                        <div class="timeline-header">
+                                            <table style="width:100%">
+                                                <tr>
+                                                    <td>
+                                                        <h5 class="title-log" style="margin:0">
+                                                            @Html.Raw(@itemd.Name)
+                                                        </h5>
+                                                    </td>
+                                                    <td style="text-align:right">
+                                                        <span style="color: #999;font-size:12px"><i class="fa fa-clock-o"></i>&nbsp;@dateago</span>
+
+                                                        @if (AppFunc.ParseTimeToUtc(itemd.StartEvent) <= DateTime.UtcNow && itemd.Done != 1 && itemd.Type == "Event")
+                                                        {
+                                                                                    <text>
+                                                                                        &nbsp; &nbsp; <img src="~/Content/Img/warning.gif" data-toggle="tooltip" title="Missed an appointment" style="width: 18px" alt="Not completed..." />
+                                                                                    </text>
+
+                                                                                }
+                                                        @if (Model.lead.NextAppointment != null && Model.lead.NextAppointment.Id == itemd.Id && itemd.Type == "Event")
+                                                        {
+                                                                                    <text>
+                                                                                        &nbsp; &nbsp;<img src="~/Content/Img/ringing-bell.gif" data-toggle="tooltip" title="The appointment is coming" style="width: 23px;" alt="Coming soon..." />
+                                                                                    </text>
+                                                                                }
+                                                                                else if (AppFunc.ParseTimeToUtc(itemd.StartEvent) >= DateTime.UtcNow && itemd.Type == "Event" && itemd.Done != 1)
+                                                                                {
+                                                                                    <text>
+                                                                                        &nbsp; &nbsp; <img src="~/Content/Img/lamp_blue.png" data-toggle="tooltip" title="Future appointment" style="width: 23px;" alt="Coming soon..." />
+                                                                                    </text>
+                                                                                }
+                                                    &nbsp;&nbsp;
+                                                        <a class="btn-xs @(itemd.Type == "Event" ? "btn-warning" :  itemd.Type == "Note" ? "btn-success" :"btn-primary")" id="iconpublish-@itemd.Id" style="margin-right:10px;color:white">
+                                                            @Html.Raw(itemd.Type == "Event" ? "<i class='fa fa-handshake-o'></i> " : itemd.Type == "Note" ? "<i class='fa fa-sticky-note'></i> " : "<i class='fa fa-comment-o' aria-hidden='true'></i> ")&nbsp;@(itemd.Type == "Event" ? "Appoiment" : itemd.Type)
+                                                        </a>
+
+                                                    </td>
+                                                </tr>
+                                            </table>
+
+                                        </div>
+                                        <div class="timeline-body timeline-@itemd.Id" style="max-width:100%; overflow-x:auto">
+                                            <div class="noi-dung-log">
+                                                @Html.Raw(itemd.Description?.Replace("\n", "<br/>"))
+                                            </div>
+                                            <br />
+                                        </div>
+                                        <div class="timeline-footer">
+                                            <div style="display:flex">
+                                                @if (itemd.CreateBy != "IMS System" && itemd.MemberNumber == cMem.MemberNumber)
+                                                {
+                                                    <a class="btn btn-sm btn-warning btn-edit-log" onclick="@(itemd.Type == "Event" ? "edit_appointment" : "edit_log")('@itemd.SalesLeadId','@itemd.Id','img_@itemd.Id')" title="" data-toggle="tooltip" style="padding: 2px 7px; color: white;" data-original-title="Click to Edit">
+                                                        <i class="fa fa-edit"></i><span>&nbsp;Edit</span>
+                                                    </a>
+                                                }
+
+                                                <span style="display: block;margin-left: auto;color: #666;font-size:13px">
+                                                    <span>@(AppFunc.ParseTimeToUtc(itemd.StartEvent).UtcToIMSDateTime().ToString("MMM dd, yyyy hh:mm tt"))</span>
+                                                    - by: <i>@(!string.IsNullOrEmpty(itemd.MemberNumber) ? db.P_Member.FirstOrDefault(x => x.MemberNumber == itemd.MemberNumber).FullName : (string.IsNullOrEmpty(itemd.LastUpdateBy) ? "IMS System" : itemd.LastUpdateBy))</i>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+                            }
+                            <!-- END timeline item -->
+                            <li>
+                                <i class="fa fa-clock-o bg-gray"></i>
+                            </li>
+                        </ul>
+                    }
+                </div>
+                <div class="tab-pane" id="infosaleslead_@Model.lead.SaleLeadId">
+                    <table class="table table-striped table-bordered" style="border: 1px solid #dad6d6 !important;">
+                        <tr>
+                            <th class="col-md-3">Salon Name</th>
+                            <td>
+                                @(Model.lead?.BusinessName)
+                                <br />
+                                @for (var i = 0; i < Model.lead.PotentialRateScore; i++)
+                                {
+                                    <img src="/Content/Img/star-on.png" alt="star" />;
+                                }
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="col-md-3">Salon Phone</th>
+                            <td>@(Model.lead?.SalonPhone)</td>
+                        </tr>
+                        <tr>
+                            <th class="col-md-3">Salon Email</th>
+                            <td>@(Model.lead?.SalonEmail)</td>
+                        </tr>
+                        <tr>
+                            <th class="col-md-3">Salon Address</th>
+                            <td>@(Model.lead?.SalonAddress1), @(Model.lead?.SalonCity), @(Model.lead?.SalonState), @(Model.lead?.BusinessZipCode) @(Model.lead?.BusinessCountry)</td>
+                        </tr>
+                        <tr>
+                            <th class="col-md-3">Contact Name</th>
+                            <td>@(Model.lead?.ContactName)</td>
+                        </tr>
+                        <tr>
+                            <th class="col-md-3">Contact Phone</th>
+                            <td>@(Model.lead?.CellPhone)</td>
+                        </tr>
+                        <tr>
+                            <th class="col-md-3">Contact Email</th>
+                            <td>@(Model.lead?.Email)</td>
+                        </tr>
+                        <tr>
+                            <th>Features Of Interest</th>
+                            <td>
+                                @Html.Raw(FeaturesOfInterest(Model.lead))
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="col-md-3">Sales Person</th>
+                            <td>
+                                @(Model.lead?.MemberName)
+                                @if (!string.IsNullOrEmpty(Model.lead?.MemberNumber))
+                                {
+                                    <a class="btn btn-primary" style="padding: 0px 5px; font-size: 12px; margin-left: 8px;" onclick="viewdetail('@(Model.lead?.MemberNumber)')"><i class="glyphicon glyphicon-search"></i> View</a>
+                                }
+
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="col-md-3">Spa/Salon Information</th>
+                            <td>
+                                Number Of Branches : @(Model.lead?.MoreInfo?.NumberBranches) <br />
+                                Number Of Employees : @(Model.lead?.MoreInfo?.NumberEmployees) <br />
+                                Are Using Software :
+                                @if (Model.lead?.MoreInfo?.AreUsingSoftware != null)
+                                {<text>
+                                        @(Model.lead?.MoreInfo.AreUsingSoftware == "Yes" ? "Yes" : "No")
+                                </text>
+                            } <br />
+                                Hardware :
+                                @if (Model.lead?.MoreInfo?.Hardware != null)
+                                {
+                                    <text>
+                                        @(Model.lead?.MoreInfo?.Hardware == "MANGO offers" ? "MANGO offers" : "Self-supply")
+                                    </text>
+                                } <br />
+                                Software :
+                                @if (Model.lead?.MoreInfo?.ServicePackage != null)
+                                {
+                                    <text>
+                                        @(Model.lead?.MoreInfo?.ServicePackage)
+                                    </text>
+                                }
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <!-- /.tab-content -->
+        </div>
+
+        @if (pr_access && Model.lead.Active == 1)
+        {
+            <div class="col-md-8 detail-sales-lead" style="margin: auto;float: none;padding: 10px 10px 10px 0;text-align: right;display: flex;flex-wrap: wrap;">
+                <div class="dropup dropdown-action" style="display:inline-block;margin-top:1px;background:transparent;margin-right:5px;">
+                    <button class="btn btn-warning dropdown-toggle" type="button" data-toggle="dropdown">
+                        <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
+                        Update
+                        <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        @if (Model.lead.SL_Status == 1 || Model.lead.SL_Status == 4)
+                        {
+                            <li>
+                                <button type="button" class="btn bg-olive pull-left" onclick="open_lead_popup('@Model.lead.SaleLeadId',this)"><i class="fa fa-pencil" aria-hidden="true"></i> Edit</button>
+                            </li>
+                        }
+
+                        <li>
+                            <button type="button" onclick="new_appoiment('@Model.lead.SaleLeadId')" class="btn bg-purple pull-left" style="color:white"><i class="fa fa-calendar" aria-hidden="true"></i>Add Appoiment</button>&nbsp;
+                        </li>
+                        <li>
+                            <button type="button" style="color:white" onclick="new_log('@Model.lead.SaleLeadId')" class="btn  btn-primary pull-left"><i class="fa fa-check-square" aria-hidden="true"></i>Update Note/Status</button>
+                        </li>
+                    </ul>
+                </div>
+                @if (Model.lead.SL_Status != 3 && Model.lead.SL_Status != 2)
+                {
+                    <div class="dropup dropdown-action" style="display:inline-block;margin-top:1px;background:transparent;margin-right:5px;">
+                        <button class="btn btn-info dropdown-toggle" type="button" data-toggle="dropdown">
+                            <i class="fa fa-user-circle-o" aria-hidden="true"></i>
+                            Account
+                            <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu">
+                            @if (Model.lead.SL_Status == 1 || Model.lead.SL_Status == 4)
+                            {
+
+                                if (Model.lead.IsVerify != true && access.Any(k => k.Key.Equals("sales_lead_create_trial")) == true && access["sales_lead_create_trial"] == true)
+                                {
+                                    <li>
+                                        <button type="button" class="btn bg-purple" style="color:white" data-button="@(Model.lead.IsSendMailCreateTrial?"resend-email":"create-trial")" onclick="open_lead_popup('@Model.lead.SaleLeadId',this)">@(Model.lead.IsSendMailCreateTrial? Html.Raw("<i class='fa fa-envelope' aria-hidden='true'></i>Resend Email Verify") : Html.Raw("<i class='fa fa-share' aria-hidden='true'></i>Create Trial"))</button>
+                                    </li>
+
+                                }
+                                if (Model.lead.IsSendMailCreateTrial && Model.lead.IsVerify != true && access.Any(k => k.Key.Equals("sales_lead_verify")) == true && access["sales_lead_verify"] == true)
+                                {
+                                    <li>
+                                        <button type="button" class="btn  bg-navy" data-button="verify" onclick="open_lead_popup('@Model.lead.SaleLeadId',this)"><i class="fa fa-refresh" aria-hidden="true"></i>Verify</button>
+                                    </li>
+                                }
+                            }
+                        </ul>
+                    </div>
+                }
+                @if (Model.lead.SL_Status == 2)
+                {
+
+                    <button type="button" class="btn  btn-primary" onclick="Renewtrial('@Model.lead.StoreCode')"><i class="fa fa-refresh" aria-hidden="true"></i> Renew Trial Account</button>
+                    <script>
+                        function Renewtrial(StoreCode) {
+                            if (confirm("Are you sure renew this trial account ?")) {
+                                $('.loading').show();
+                                    $.ajax({
+                                        url: "/MerchantMan/RenewTrial",
+                                        dataType: "json",
+                                        method: "POST",
+                                        data: { StoreCode }
+                                    })
+                                        .done(function (data) {
+                                            if (data[0]) {
+                                                noty({ "text": data[1], "layout": "topRight", "type": "success" });
+                                                UpdateRow('@Model.lead.SaleLeadId',true)
+                                            }
+                                            else {
+                                                noty({ "text": data[1], "layout": "topRight", "type": "error" });
+                                            }
+                                        })
+                                        .fail(function () {
+                                            alert("Renewtrial fail");
+                                        })
+                                        .always(function () {
+                                            $('.loading').hide();
+                                        });
+                         }
+                        }
+                    </script>
+
+                }
+
+                @if (Model.lead.SL_Status == 1 || Model.lead.SL_Status == 4)
+                {
+                    if (access.Any(k => k.Key.Equals("sales_lead_assigned")) == true && access["sales_lead_assigned"] == true)
+                    {
+                        <button type="button" class="btn  btn-success pull-left" onclick="LoadAssignBySalesPerson_InLog() " data-toggle="modal" data-target="#reassigned_modal_@Model.lead.SaleLeadId"><i class="fa fa-user-plus" aria-hidden="true"></i>@(string.IsNullOrEmpty(Model.lead.MemberNumber)&&Model.lead.TeamNumber==null? " Assigned" : " Re-Assigned")</button>
+                    }
+                }
+                @if (Model.lead.SL_Status == 2 || Model.lead.SL_Status == 3)
+                {
+                    if (access.Any(k => k.Key.Equals("customer_view")) == true && access["customer_view"] == true)
+                    {
+                        <a class="btn bg-olive pull-left" style="padding: 6px 11px;" href="/merchantman/detail/@Model.lead.Id" target="_blank"><i class="fa fa-users" aria-hidden="true"></i> Dashboard</a>
+                    }
+                }
+                @*@if (access.Any(k => k.Key.Equals("orders_addnew")) == true && access["orders_addnew"] == true)
+                    {
+                        <a class="btn bg-maroon" style="padding: 6px 11px;" href="/order/save?select_cus_code=@Model.lead.CustomerCode" target="_blank"><i class="fa fa-cart-arrow-down" aria-hidden="true"></i> New invoice</a>
+                    }*@
+                @*<a onclick="show_appoiment('@Model.lead.SaleLeadId')" class="btn btn-default " style="margin-left:auto !important">Close</a>*@
+                <div class="dropup dropdown-action" style="margin-left:auto !important">
+                    @*<button type="button" class="btn btn-info"></button>*@
+                    <button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown" style="margin: 0 0 5px 5px" aria-expanded="false">
+                        <i class="fa fa-envelope" aria-hidden="true"></i> Email to client <span class="caret"></span><span class="sr-only"></span>
+                        <img style="display:none" id="send-email-to-customer" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                    </button>
+                    <ul class="dropdown-menu" role="menu">
+                        <li>
+                            <button type="button" onclick="sendQuestionareEmail('@Model.lead.CustomerCode')" class="btn btn-warning" style="margin: 0 0 5px 5px;text-align:left;color:white;">
+                                <i class="fa fa-send"></i> Email questionare
+                            </button>
+                        </li>
+                        <li>
+                            <button type="button" onclick="sendGiftCardForm('@Model.lead.CustomerCode')" class="btn btn-success" style="margin: 0 0 5px 5px;text-align:left;">
+                                <i class="fa fa-share"></i> Gift card form
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        }
+        else
+        {
+
+            <div class="col-md-8" style="margin: auto;float: none;padding:10px 0px 10px 0;text-align: right;display: flex;flex-wrap: wrap;">
+                <div class="dropup dropdown-action" id="dropdown-action" style="display:inline-block;margin-top:1px;background:transparent;margin-right:5px">
+                    <button class="btn btn-warning dropdown-toggle" type="button" data-toggle="dropdown">
+                        <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
+                        Update
+                        <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <button type="button" onclick="new_appoiment('@Model.lead.SaleLeadId')" class="btn bg-purple" style="margin-bottom: 2px;padding: 4px 11px;margin-right: 3px;"><i class="fa fa-calendar" aria-hidden="true"></i> Add Appoiment</button>
+                        </li>
+                        <li>
+                            <button type="button" onclick="new_log('@Model.lead.SaleLeadId')" style="margin-bottom: 2px;padding: 4px 11px;margin-right: 3px;" class="btn bg-primary"><i class="fa fa-check-square" aria-hidden="true"></i> Update Note/Status</button>
+                        </li>
+
+                    </ul>
+                </div>
+
+                <div class="dropup dropdown-action" id="dropdown-action" style="display:inline-block;margin-top:1px;background:transparent;margin-right:5px;">
+                    <button class="btn btn-info dropdown-toggle" type="button" data-toggle="dropdown">
+                        <i class="fa fa-user-circle-o" aria-hidden="true"></i>
+                        Account
+                        <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        @if ((access.Any(k => k.Key.Equals("sales_lead_verify")) == true && access["sales_lead_verify"] == true))
+                        {
+                            <li>
+                                <button type="button" id="verify" data-button="verify" onclick="open_account_popup('@Model.lead.SaleLeadId', this)" class="btn btn-secondary" style="margin-bottom: 2px;padding: 4px 11px;margin-right: 3px;"><i class="fa fa-refresh" aria-hidden="true"></i> Verify</button>
+                            </li>
+                        }
+                        @if ((access.Any(k => k.Key.Equals("sales_lead_create_trial")) == true && access["sales_lead_create_trial"] == true))
+                        {
+                            <li>
+                                <button type="button" id="update" data-button="create-trial" class="btn bg-purple" style="margin-bottom: 2px;margin-right:3px;padding: 4px 11px;" onclick="open_account_popup('@Model.lead.SaleLeadId',this)"><i class="fa fa-pencil-square-o" aria-hidden="true"></i> Update/Create Trial</button>
+                            </li>
+                        }
+                    </ul>
+                </div>
+                @if ((access.Any(k => k.Key.Equals("sales_lead_add_lead")) == true && access["sales_lead_add_lead"] == true))
+                {
+                    <button type="button" id="update" data-button="edit-to-sales-lead" class="btn btn-success" style="margin-bottom: 2px;margin-right:5px;padding: 4px 11px;" onclick="open_account_popup('@Model.lead.SaleLeadId',this)"><i class="fa fa-plus" aria-hidden="true"></i> Add To Sales Lead</button>
+                }
+                @if ((access.Any(k => k.Key.Equals("sales_lead_delete")) == true && access["sales_lead_delete"] == true))
+                {
+
+                    <button type="button" class="btn btn-danger" style="margin-bottom:2px" onclick="delete_account('@Model.lead.SaleLeadId',this)"><i class="fa fa-trash"></i> Delete</button>
+
+                }
+
+                <button onclick="showDetailLog('@Model.lead.SaleLeadId', false)" class="btn btn-default" style="margin-left:auto !important">Close</button>
+            </div>
+        }
+        <style>
+            #add_addon_popup tr td {
+                background: white;
+            }
+
+            #add_addon_popup td {
+                white-space: normal;
+            }
+
+            .input-group {
+                position: relative;
+                display: table !important;
+                border-collapse: separate;
+            }
+        </style>
+        <div class="modal fade" id="add_addon_popup" role="dialog">
+            <div class="modal-dialog modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"><i class="fa fa-close"></i></button>
+                    <h4 class="modal-title">Select Addon</h4>
+                </div>
+                <div class="modal-body">
+                </div>
+                <div class="modal-footer">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div id="Duration" class=" input-group">
+                                <span class="input-group-addon">Duration</span>
+                                <select id="month_qty" class="form-control"><option value="1">1 Month</option><option value="3">3 Month</option><option value="6">6 Month</option><option value="12">12 Month</option></select>
+
+                            </div>
+                        </div>
+                        <div class="col-md-7">
+                            <div class="input-group">
+                                <span class="input-group-addon">Effective date</span>
+                                <input name="effect_addon_date" class="form-control datepicker" id="effect_date" style="background-color:#fff" readonly value="@DateTime.Now.ToString("MM/dd/yyyy")" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="text-align: left">
+                    <div class="col-12 form-group">
+                        <label class="label label-default" style="cursor:pointer; font-size: 14px"><input type="checkbox" id="payment-now" name="paymentNow" value="false" style="vertical-align: sub; font-size: 14px" /> Set As Paid</label>
+                    </div>
+                    <div class="col-12" id="form-payment-infor" hidden>
+                        <div class="form-group col-12">
+                            <label class="control-label">Payment Date</label>
+                            <input type="date" class="form-control" name="PaymentDate" id="PaymentDate" maxlength="50" style="max-width: 100%">
+                        </div>
+                        <div class="form-group-s col-12">
+                            <label class="control-label">Payment method</label>
+                            <select class="form-control" name="PaymentMethod" id="PaymentMethod" onchange="change_method()">
+                                <option value="Wire transfer">Wire transfer</option>
+                                <option value="Deposit">Deposit</option>
+                                <option value="Paypal">Paypal</option>
+                                <option value="Cash">Cash</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group-s col-12" id="form-bank-name">
+                            <label class="control-label">Bank</label>
+                            <input type="text" class="form-control" name="BankName" id="BankName" maxlength="50" style="max-width: 100%">
+                        </div>
+                        <div class="form-group-s col-12" id="form-card-number">
+                            <label class="control-label">Card number (4 last digits)</label>
+                            <input type="text" class="form-control" name="CardNumber" id="CardNumber" maxlength="4" style="max-width: 100%">
+                        </div>
+                        <div class="form-group-s col-12">
+                            <label class="control-label">Descriptions</label>
+                            <textarea type="text" class="form-control" name="PaymentNote" id="PaymentNote" maxlength="200" style="max-width: 100%"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary " onclick="add_addon()">Submit <img src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" id="img_load_addon_submit" /></button>
+                </div>
+            </div>
+        </div>
+
+        @if (access.Any(k => k.Key.Equals("sales_lead_assigned")) == true && access["sales_lead_assigned"] == true)
+        {
+
+            <style>
+                .multi-wrapper a {
+                    color: #000;
+                }
+            </style>
+            <div id="reassigned_modal_@Model.lead.SaleLeadId" class="modal  modal-select-member-@Model.lead.SaleLeadId" role="dialog">
+                <div class="modal-dialog" style="background:white;">
+                    <!-- Modal content-->
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title">Select Sales Person</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="row text-center" style="margin-bottom:5px">
+                                    <button style="width:100px" class="btn btn-select-assigned btn-salesperson active" onclick="LoadAssignBySalesPerson_InLog()">Sales Person</button>
+                                    @{
+                                        var showteam = ViewBag.ShowTeam as bool?;
+                                    }
+                                    @if (showteam == true)
+                                    {
+                                        <text>
+                                            |
+                                            <button style="width:100px" class="btn btn-select-assigned btn-team" onclick="LoadAssignByTeam_InLog()">Team</button>
+                                        </text>
+                                    }
+                                </div>
+                                <select class="assign-select" id="Reassigned-SalesPerson-@Model.lead.SaleLeadId" data-type="SalesPerson" multiple="multiple" name="Reassigned-SalesPerson">
+                                </select>
+                                @*<select id="Reassigned-SalesPerson-@Model.lead.SaleLeadId" multiple="multiple" name="Reassigned-SalesPerson">
+                                        @foreach (var m in SalesMember)
+                                        {
+                                            <option value="@m.MemberNumber" @(Model.lead.MemberNumber == m.MemberNumber ? "selected" : "")>@m.FullName - @m.MemberNumber</option>
+                                        }
+                                    </select>*@
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                        @*<button type="button" class="btn btn-primary" onclick="ReAssigned('@Model.lead.SaleLeadId')">Save</button>*@
+
+                        @*<button type="button" onclick="UnAssigned('@Model.lead.SaleLeadId');" class="btn-unassigned btn btn-warning pull-left">UnAssigned</button>*@
+                        <button type="button" onclick="ReAssigned('@Model.lead.SaleLeadId');" class="btn-assigned btn btn-primary">Assigned</button>
+                    </div>
+                </div>
+            </div>
+            <script src="~/Content/DualListMulti/multi.custom.js"></script>
+            <script>
+
+                var select = document.getElementById('Reassigned-SalesPerson-@Model.lead.SaleLeadId');
+                localStorage.setItem("non_selected_header", "Member");
+                localStorage.setItem("selected_header", "Assigned To Sales Person");
+                multi(select, {
+                    "ajax": {
+                        endpoint: '/SaleLead/GetListMemberAssigned',
+                        transform: function (res) {
+                            return res.data.map(function (res) {
+                                return {
+                                    value: res.Value,
+                                    label: res.Text,
+                                    //disabled: disabled,
+                                    //selected: selected && !disabled
+                                };
+
+                            });
+                        },
+                    },
+                    "limit": 1,
+                    "non_selected_header": 'Members',
+                    "selected_header": 'Assigned To Sales Person',
+                });
+                $('#Reassigned-SalesPerson-@Model.lead.SaleLeadId').val('@Model.lead.TeamNumber')
+                var trigger_event = function (type, el) {
+                    var e = document.createEvent("HTMLEvents")
+                    e.initEvent(type, false, true)
+                    el.dispatchEvent(e)
+                }
+                function LoadAssignByTeam_InLog() {
+                    localStorage.setItem("non_selected_header", "Team");
+                    localStorage.setItem("selected_header", "Assigned To Team");
+                    $.ajax({
+                        type: "Post",
+                        url: "/SaleLead/GetListTeamAssigned",
+                        success: function (res) {
+                            $('#Reassigned-SalesPerson-@Model.lead.SaleLeadId').html('');
+                            $.each(res.data, function (id, option) {
+                                $('#Reassigned-SalesPerson-@Model.lead.SaleLeadId').append($('<option></option>').val(option.Value).html(option.Text));
+                            });
+                            $('#Reassigned-SalesPerson-@Model.lead.SaleLeadId').attr("data-type", "Team")
+                            $('#Reassigned-SalesPerson-@Model.lead.SaleLeadId').val('@Model.lead.TeamNumber')
+                            trigger_event("change", select)
+                            $('.btn-select-assigned').removeClass('active');
+                            $('.btn-team').addClass('active');
+                            CheckDisableMulti();
+                        },
+                        error: function (xhr, ajaxOptions, thrownError) {
+                            alert('fail');
+                        },
+                    });
+                }
+                function LoadAssignBySalesPerson_InLog() {
+                    localStorage.setItem("non_selected_header", "Member");
+                    localStorage.setItem("selected_header", "Assigned To Sales Person");
+                    $.ajax({
+                        type: "Post",
+                        url: "/SaleLead/GetListMemberAssigned",
+                        success: function (res) {
+                            $('#Reassigned-SalesPerson-@Model.lead.SaleLeadId').html('');
+                            $.each(res.data, function (id, option) {
+                                $('#Reassigned-SalesPerson-@Model.lead.SaleLeadId').append($('<option></option>').val(option.Value).html(option.Text));
+                            });
+                            $('#Reassigned-SalesPerson-@Model.lead.SaleLeadId').attr("data-type", "SalesPerson")
+                            $('#Reassigned-SalesPerson-@Model.lead.SaleLeadId').val('@Model.lead.MemberNumber')
+                            trigger_event("change", select)
+                            $('.btn-select-assigned').removeClass('active');
+                            $('.btn-salesperson').addClass('active');
+                            CheckDisableMulti();
+                        },
+                        error: function (xhr, ajaxOptions, thrownError) {
+                            alert('fail');
+                        },
+                    });
+                }
+            </script>
+        }
+    </td>
+</tr>
+
+<script>
+    function ReAssigned(SalesLeadId) {
+
+        if ($('#Reassigned-SalesPerson-@Model.lead.SaleLeadId').val() == '') {
+            if ($("#Reassigned-SalesPerson-@Model.lead.SaleLeadId").attr("data-type") == 'Team') {
+                return alert('Please select one team !');
+            }
+            else {
+                return alert('Please select one sales person!');
+            }
+
+        }
+        var Type = $("#Reassigned-SalesPerson-@Model.lead.SaleLeadId").attr("data-type");
+        $('.loading').show();
+        $.ajax({
+            url: '/SaleLead/ReAssigned',
+            type: 'POST',
+            dataType: 'json',
+            data: { "SalesLeadId": SalesLeadId, "SalesPerson": $('#Reassigned-SalesPerson-@Model.lead.SaleLeadId').val(), "Type": Type },
+            success: function (data) {
+                if (data.status == true) {
+                    $('#reassigned_modal_@Model.lead.SaleLeadId').modal('hide');
+                    noty({ "text": data.message, "layout": "topRight", "type": "success" });
+
+                }
+                else {
+                    $('#reassigned_modal_@Model.lead.SaleLeadId').modal('hide');
+                    noty({ "text": data.message, "layout": "topRight", "type": "error" });
+                }
+            },
+            error: function (data) {
+                console.log(data.message);
+            },
+            complete: function () {
+                UpdateRow(SalesLeadId, true);
+                $('.loading').hide();
+            }
+
+        });
+    }
+
+
+    $('[data-toggle="tooltip"]').tooltip();
+    function CheckDisableMulti() {
+    $(".modal-select-member-@Model.lead.SaleLeadId .item").each(function (data, index) {
+        if (($(".modal-select-member-@Model.lead.SaleLeadId .selected")[0])) {
+            if (!($(index).hasClass('selected'))) {
+                $(index).addClass('disabled')
+            }
+        }
+    });
+        $(".non-selected-wrapper>.disabled").on('click', function (event) {
+            event.stopPropagation();
+        })
+    }
+    CheckDisableMulti();
+    $(".entry-time").html(function (index, value) {
+        return moment(value).format("MMM DD YYYY, h:mm:ss A");
+    });
+
+</script>

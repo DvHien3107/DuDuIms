@@ -1,0 +1,1536 @@
+﻿@model EnrichcousBackOffice.Models.T_SupportTicket
+@using EnrichcousBackOffice.AppLB
+@using EnrichcousBackOffice.Models
+@{
+    Layout = "~/Views/Ticket_New/_TicketLayout.cshtml";
+    ViewBag.Title = "Ticket #" + Model.Id.ToString();
+    var attachfile = ViewBag.Attachments as List<EnrichcousBackOffice.Models.UploadMoreFile>;
+    var host = $"{HttpContext.Current.Request.Url.Scheme}://{HttpContext.Current.Request.Url.Authority}";
+    //membernumber1,membernumber2|membername1,membername2
+    string memberInGroup = ViewBag.memberInGroup;
+    T_Project_Stage stage = ViewBag.stage;
+    T_Project_Milestone project_version = ViewBag.project_version;
+    List<P_Department> DepartmentsTransferList = ViewBag.DepartmentsTransfer as List<P_Department>;
+    var cmem = EnrichcousBackOffice.AppLB.Authority.GetCurrentMember();
+    string controller = ViewContext.RouteData.Values["controller"].ToString().ToLower();
+    //bool is_closed = ViewBag.IsClosed;
+    var Page = ViewBag.Page as string;
+    string PageDeployment = "19120001";
+    string PageSupportTicket = "19120003";
+    string PageDevelopmentsTicket = "19120002";
+
+}
+
+
+
+@section style {
+    <!--Thu vien de chay _TagsPopupPartial-->
+    <link href="~/Content/Scrollbar/style_Scrollbar.css" rel="stylesheet" />
+    @*<link href="~/Content/Admin/plugins/iCheck/all.css" rel="stylesheet" />*@
+    <link href="~/Content/Admin/bower_components/bootstrap-colorpicker/dist/css/bootstrap-colorpicker.min.css" rel="stylesheet" />
+    <link href="~/Content/Admin/plugins/jqueryconfirm/jquery-confirm.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.min.css" rel="stylesheet" />
+    <style>
+        .input-noborder-custom {
+            border-top: 0px;
+            border-right: 0px;
+            border-left: 0px;
+        }
+
+        .blink_me {
+            animation: blinker 1s linear infinite;
+        }
+
+        @@keyframes blinker {
+            50% {
+                opacity: 0;
+            }
+        }
+
+        .bell-reminder {
+            color: #ebb904 !important;
+            -webkit-animation: ring 4s .7s ease-in-out infinite;
+            -webkit-transform-origin: 50% 4px;
+            -moz-animation: ring 4s .7s ease-in-out infinite;
+            -moz-transform-origin: 50% 4px;
+            animation: ring 4s .7s ease-in-out infinite;
+        }
+
+        .noi-dung-ticket img,
+        .noi-dung-ticket table {
+            max-width: 70% !important;
+            height: auto !important;
+        }
+
+        hr {
+            margin-bottom: 5px;
+            margin-top: 5px;
+        }
+
+        .tab-content section {
+            background: #ecf0f5 !important;
+        }
+
+        .content-header {
+            margin-bottom: 10px;
+            padding: 15px 15px 8px 15px;
+        }
+
+        .test:after {
+            content: '\2807';
+            font-size: 25px;
+            cursor: pointer;
+            color: #444444
+        }
+
+        .test:hover:after {
+            color: black
+        }
+    </style>
+    @* bootstrap-toggle *@
+    <link href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css" rel="stylesheet">
+    @* Zoom image *@
+    <link href="~/Content/plugins/simpleLightbox.min.css" rel="stylesheet" />
+}
+
+
+@section breadcrumb{
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li>@(Page == PageDeployment ? "Delivery Ticket" : Page == PageSupportTicket ? "Support Ticket" : "Developments Ticket")</li>
+        <li class="active">Ticket #@CommonFunc.view_TicketId(Model.Id)</li>
+    </ol>
+}
+
+<section class="content-header box box-default">
+    <h1 class="close-title" @if (Model.DateClosed != null) { @Html.Raw(@"style='text-decoration:line-through'") }>
+        Ticket #@CommonFunc.view_TicketId(Model.Id)
+        @if (Page == PageDevelopmentsTicket)
+        {
+            <small style="text-transform:uppercase;">
+                @ViewBag.TicketBreadcrumb
+            </small>
+        }
+    </h1>
+    <div class="bottom-title" style="padding-top:5px;display:flex">
+        @if (Model.CreateAt != null)
+        {
+            <p>
+                <span class="label label-primary">OPENED</span><i> by </i><strong>@(Model.OpenByName??Model.CreateByName??"System")</strong>
+                <i>
+                    at
+                    <span id="localtime">
+                        @((Model.DateOpened??Model.CreateAt).Value.UtcToIMSDateTime().ToString("MMM dd,yyyy, hh:mm tt"))
+                    </span>
+                </i>
+            </p>
+        }
+
+        @if (Model.DateClosed != null)
+        {
+            <span style="display:inline-block;padding:0px 6px;"> | </span>
+            <p>
+                <span class="label label-danger">CLOSED</span><i> by </i><strong>@Model.CloseByName</strong>
+                <i>
+                    at
+                    <span id="localtime-Close-@Model.Id">
+                        <script>convertLocalTime("Close-" + "@Model.Id", "@Model.DateClosed")</script>
+                    </span>
+                </i>
+            </p>
+        }
+
+        @if (ViewBag.TransferFrom != null)
+        {
+            <span style="display:inline-block;padding:0px 6px;"> | </span>
+            <p>
+                <span>Transfer From: </span><strong class="label bg-orange">@ViewBag.TransferFrom</strong>
+            </p>
+        }
+        @if (!string.IsNullOrEmpty(Model.CustomerCode))
+        {
+            if (ViewBag.LicenseName != null)
+            {
+                <span style="display:inline-block;padding:0px 6px;"> | </span>
+                <p>
+                    <span>License Name: </span><strong>@ViewBag.LicenseName - </strong>
+                    @if (ViewBag.RemainingDate > 0 && ViewBag.RemainingDate < 3650)
+                    {
+                        <label class="label label-success">@ViewBag.RemainingDate @(ViewBag.RemainingDate == 1?"day":"days")</label>
+                    }
+                    else if (ViewBag.RemainingDate >= 3650)
+                    {
+                        <label class="label label-success">Lifetime</label>
+                    }
+                    else
+                    {
+                        <label class="label label-danger">Expires</label>
+                    }
+                </p>
+            }
+            else
+            {
+                <span style="display:inline-block;padding:0px 6px;"> | </span>
+                <p>
+                    <span>License Name: </span><strong>N/A</strong>
+                </p>
+            }
+
+        }
+        @if (ViewBag.GoliveDate != null)
+        {
+            <span style="display:inline-block;padding:0px 3px;"> | </span>
+            <p>
+                <span>Go-live Date: </span><strong class="label bg-purple">@((ViewBag.GoliveDate as DateTime?).Value.ToString("MMM dd, yyyy"))</strong>
+
+            </p>
+        }
+        else
+        {
+            <span style="display:inline-block;padding:0px 3px;"> | </span>
+            <p>
+                <span>Go-live Date: </span><strong>N/A</strong>
+            </p>
+        }
+    </div>
+    <div class="box-tools" style="position:absolute;top:10px;right:15px;">
+        <a href="/ticket?page=@Page" class="btn btn-sm btn-default" data-toggle="tooltip" title="" data-original-title="Go back">
+            <i class="fa fa-arrow-left"></i> Go back
+        </a>
+    </div>
+</section>
+
+<section class="content">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="box box-info" style="border-bottom:1px solid gray;">
+                <div class="box-header with-border">
+                    <h3 class="box-title close-title" @if (Model.DateClosed != null) { @Html.Raw(" style='text-decoration:line-through'") }>@Model.Name</h3>
+
+                    <input type="hidden" id="hd_controller" value="@controller" />
+                </div>
+                <!-- /.box-body -->
+                <div class="box-body no-padding">
+                    <div class="col-md-12 ticket-description" style="overflow:auto;max-height:400px">
+                        <div class="noi-dung-ticket">
+                            @Html.Raw(Model.Description)
+                        </div>
+                        <br /> <br />
+                        @Html.Partial("_UploadMoreFilesPartial_Small", attachfile, new ViewDataDictionary { { "upload", false } })
+                    </div>
+
+                </div>
+                <div class="box-footer" style="margin-top:5px">
+                    <div class="pull-right" style="text-align: right">
+                        <input class="custom-show-detail" type="checkbox" checked data-toggle="toggle"
+                               data-on="Show more <i class='fa fa-arrow-down'></i> " data-off="Show less <i class='fa fa-arrow-up'></i>"
+                               data-onstyle="default" data-offstyle="danger">
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                @if (TempData["e"] != null)
+                {
+                    <div class="alert alert-warning alert-dismissible">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                        <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+                    </div>
+                }
+                else if (TempData["s"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                        <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+                    </div>
+                }
+                <div class="box box-default" style="border-bottom:1px solid gray;">
+                    <div class="box-body no-padding">
+                        <div class="row">
+                            <div class="col-md-12 " style="padding-top:5px">
+                                <div style="padding:10px">
+                                    @if (ViewBag.CanUpdate == true)
+                                    {
+                                        <a style="margin-right:5px;" href="/ticket/update/@Model.Id?urlback=/ticket/detail/@Model.Id&Page=@Page" class="btn btn-warning"><i class="fa fa-pencil" aria-hidden="true"></i> Edit Ticket</a>
+                                    }
+                                    <a style="margin-right:5px;" onclick="addOrUpdateMoreInfoTicket('@Model.Id',0)" class="btn btn-info"><i class="fa fa-info-circle" aria-hidden="true"></i> Add Info</a>
+
+                                    <div class="btn-group">
+
+                                        <button type="button" class="btn btn-success btn-flat dropdown-toggle" data-toggle="dropdown">
+                                            <i class="fa fa-plus"></i>
+                                            Add Task
+                                            <span class="caret" style="transform:rotate(-90deg);margin-bottom:1px;"></span>
+                                        </button>
+                                        <ul class="dropdown-menu" style="left:101%;top:-3px;" role="menu">
+                                            <li>
+                                                <a onclick="update_task('@ViewBag.can_update',0,'true', '@Model.Id', '')"> New Task</a>
+                                            </li>
+                                            <li>
+                                                <a onclick="update_ticket_task_template(@Model.Id)"> From Task Template</a>
+                                            </li>
+                                        </ul>
+
+                                    </div>
+                                    <div class="btn-group pull-right">
+                                        <div class="dots-menu btn-group">
+                                            <div class="test" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></div>
+                                            <ul class="dropdown-menu dropdown-menu-right">
+                                                <li><a onclick="showTranferTicket('@Model.Id')" href="#"><i class="fa fa-exchange"></i> Transfer </a></li>
+                                                @*<li><a onclick="remindersTicket('@Model.Id')" href="#"><i class="fa fa-bell"></i> Reminders </a></li>*@
+                                            </ul>
+                                        </div>
+                                    </div>
+
+                                    @if (Page == PageDeployment && ViewBag.ShowHardWarePreparing)
+                                    {
+
+                                        if (!ViewBag.HardwareStatus)
+                                        {
+                                            <button href="#" onclick="show_progress_modal('@ViewBag.OrderId')" style="margin-right:5px;" class="btn btn-warning btn-sm pull-right btn-preparation"> Hardware Preparing <i class="fa fa-angle-double-right" aria-hidden="true"></i></button>
+                                        }
+                                        else
+                                        {
+                                            <button href="#" onclick="show_progress_modal('@ViewBag.OrderId')" style="margin-right:5px;" class="btn btn-default btn-sm pull-right btn-preparation">Hardware Preparing Completed <i class="fa fa-check text-success" aria-hidden="true"></i></button>
+                                        }
+
+                                    }
+                                    @if (!string.IsNullOrEmpty(Model.JiraIssueLink))
+                                    {
+                                        <div style="padding:15px 0px">
+                                            <div style="font-weight:bold;padding-bottom:5px">Web Link</div>
+                                            <a href="@Model.JiraIssueLink" target="_blank">Jira Issue <b>#@(Model.JiraIssueLink.Split('/').LastOrDefault())</b></a>
+                                        </div>
+                                    }
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="box-footer" style="margin-top:5px">
+                        <img src="~/Content/ajax-loaders/ajax-loader-1.gif" id="loading_task" style="display:none" />
+                        <div id="divTaskStatus">
+                            <!--show task status-->
+                        </div>
+                    </div>
+
+                </div>
+                <div id="file_related">
+
+                </div>
+
+                <div>
+                    <img src="~/Content/ajax-loaders/ajax-loader-1.gif" id="loading_timeline" style="display:none" />
+
+                    <div id="div_timeline">
+                        @*@Html.Partial("_TicketTimelinePartial")*@
+                    </div>
+                </div>
+
+
+
+            </div>
+        </div>
+        <div class="col-md-4" style="padding-left: 0">
+            @*@if (ViewBag.can_update == true)
+                {*@
+            @using (Ajax.BeginForm("saveticketinfo", null, new AjaxOptions
+            {
+                Url = "/Ticket_New/saveticketinfo",
+                HttpMethod = "Post",
+                LoadingElementId = "loading_info",
+                OnSuccess = "SaveTicketInfoSuccess",
+                OnFailure = "SaveTicketInfoFailure",
+                OnBegin = "overlayOn"
+            }, new { @id = "MainFormTicket" }))
+            {
+                @Html.Partial("_TicketInfoPartial")
+            }
+            @*}
+                else
+                {
+                    @Html.Partial("_TicketInfoSimplePartial")
+                }*@
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- /.col -->
+
+
+
+    </div>
+</section>
+
+<div class="modal fade" id="subversion_modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title"></h4>
+            </div>
+            <form action="/Ticket_New/SaveSubversion" method="post">
+                <div class="modal-body">
+                    <input type="hidden" name="Id" />
+                    <input type="hidden" name="SubversionSelected" />
+                    <div class="form-group">
+                        <label>Name:</label>
+                        <input type="text" class="form-control" name="Name" required />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary pull-right">Save</button>
+                    <button type="button" id="subversion-delete-button" style="display:none;" onclick="delete_stage_version()" class="btn btn-danger pull-right">Delete</button>
+                </div>
+            </form>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+<div class="modal fade" id="CreateOrUpdate_Type">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="/Ticket_New/SaveStageType" method="post">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title">Type</h4>
+                </div>
+                <div class="modal-body">
+
+                    <input type="hidden" name="Id" />
+                    <input type="hidden" name="ProjectId" />
+                    <input type="hidden" name="Page" value="@Page" />
+                    <div class="form-group">
+                        <label>Project Name</label>
+                        <input class="form-control" name="ProjectName" readonly />
+                    </div>
+                    <div class="form-group">
+                        <label>Type Name</label>
+                        <input class="form-control" type="text" name="TypeName" required />
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+
+                    <button type="submit" class="btn btn-primary pull-right">Save</button>
+                    <button type="button" onclick="delete_type()" class="btn btn-danger pull-right delete-button" style="display:none">Delete</button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+
+</div>
+
+<div class="modal fade" id="category-modal" role="dialog">
+    <form action="/Ticket_New/CategorySave" method="post">
+        <div class="modal-dialog modal-content" style="width: 450px;">
+            @* START - Header *@
+            <div class="modal-header">
+                <button style="font-size:2em" type="button" class="close" data-dismiss="modal">
+                    <i class="fa fa-close"></i>
+                </button>
+                <h3 class="modal-title" style="margin-right:50px"></h3>
+            </div>
+
+            <div class="loading_over" style="width: 100%; height: 100%;position: absolute;top: 0;left: 0;opacity: 0.3; background-color:grey; z-index:999;display:none">
+                <img style="margin:40% auto; display:block; height:50px" src="/Content/ajax-loaders/loading-partial.gif">
+            </div>
+
+
+            <div class="modal-body">
+                <div class="row">
+                    <input type="hidden" name="CategoryId" />
+                    <div class="col-md-12 form-inline filter-category">
+                        <div class="input-group col-md-12 pull-left" style="margin-bottom:10px;">
+                            <div class="input-group-addon" style="line-height: 20px;width: 35%;text-align: left;text-indent: 5px;">
+                                <i class="fa fa-list-alt" style="margin-right: 5px;"></i>Category
+                            </div>
+
+                            <input class="form-control category-item" name="CategoryName" style="width: 100%;">
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+
+            <div class="modal-footer">
+                <button data-dismiss="modal" class="btn btn-default pull-left">Close</button>
+                <button type="button" class="btn btn-danger btn-delete" onclick="CategoryDelete()" style="display: none">Delete</button>
+                <button class="btn btn-primary">Save</button>
+
+            </div>
+            @* END - Footer *@
+        </div>
+    </form>
+</div>
+<div class="modal fade" id="transfer-modal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Transfer Ticket To :</h4>
+            </div>
+            <form action="/Ticket_New/TransferSubmit" method="post" id="TransferForm">
+                <div class="modal-body">
+                    <input type="hidden" name="TicketId" value="@Model.Id" />
+                    <div class="row">
+                        <div class="col-sm-5">
+                            <div class="form-group">
+                                <label>Project</label>
+
+                                <select name="projectId" class="form-control" required>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Version</label>
+
+                                <select name="versionId" class="form-control select2" required>
+                                </select>
+                            </div>
+                            <div class="form-group department-wrapper" style="display:none;">
+                                <label>Department</label>
+                                <select name="department" class="form-control">
+                                    <option value="">N/A</option>
+                                    @foreach (var dep in DepartmentsTransferList.Where(x => x.ParentDepartmentId == null))
+                                    {
+                                        <option data-type="@dep.Type" value="@dep.Id" @(Model.GroupID == dep.Id ? "selected" : "")>@dep.Name</option>
+                                        foreach (var depchild in DepartmentsTransferList.Where(x => x.ParentDepartmentId == dep.Id))
+                                        {
+                                            <option data-type="@dep.Type" value="@depchild.Id">--- @depchild.Name</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <div class="form-group stage-transfer-wrapper" style="display:none;">
+                                <label>Stage</label>
+                                <select name="stage" class="form-control select2" required multiple>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Assign Members</label>
+                                <select name="assign" class="form-control select2-member" required multiple>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-7">
+                            <div class="form-group">
+                                <label>Note</label>
+                                <textarea class="form-control" id="transfer_note" name="transfer_note" rows="5"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary pull-right">Submit <img src="/Content/ajax-loaders/ajax-loader-1.gif" style="display:none;" id="loading_transfer_submit"></button>
+                </div>
+            </form>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+
+<div class="modal fade" id="transfer-success-modal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <a href="/ticket?Page=@Page" class="close">
+                    <span aria-hidden="true">&times;</span>
+                </a>
+                <h4 class="modal-title">Transfer Success</h4>
+            </div>
+            <div class="modal-body">
+                <span id="notice_transfer_success"></span>
+
+            </div>
+            <div class="modal-footer">
+                <a href="/ticket?Page=@Page" class="btn btn-default pull-left">Back To List</a>
+                <a href="/ticket/Detail/@Model.Id" class="btn btn-primary pull-right">Go To New Ticket Transfer</a>
+            </div>
+
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+<!--Modal merchant-->
+<div id="merchant_popup">
+</div>
+
+<div id="task_template_render_popup">
+</div>
+
+<div class="modal fade" id="Invoice" role="dialog" style="display: none;">
+    <div class="modal-dialog modal-content" style="min-width:900px">
+        <div class="modal-header">
+            <div class="modal-title pull-left"><h3 style="margin:0">View Invoice</h3></div>
+            <button type="button" class="btn btn-sm btn-warning" style="float:left; margin-left:20px" onclick="document.getElementById('invoice-view').contentWindow.print()"><i class="fa fa-print"></i> Print</button>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">×</span>
+            </button>
+        </div>
+        <div class="modal-body" style="padding:1px;height: 77vh;">
+            <iframe width="100%" height="100%" style="border: none;" id="invoice-view" data-src="@host/order/ImportInvoiceToPDF?_code=%code%&amp;flag=Invoice"></iframe>
+        </div>
+    </div>
+</div>
+
+<div id="option_ticket_info_list_render">
+</div>
+
+<div id="reminder_render_popup">
+</div>
+
+<div id="more_info_ticket">
+</div>
+
+
+
+@if (Page == PageDeployment && ViewBag.ShowHardWarePreparing)
+{
+    @Html.Partial("_HardwarePreparing")
+}
+<!--End modal merchant-->
+
+@section script
+{
+    <!--Thu vien de chay _TagsPopupPartial-->
+    @*<script src="~/Content/Admin/plugins/iCheck/icheck.min.js"></script>*@
+    <script src="~/Content/Admin/bower_components/bootstrap-colorpicker/dist/js/bootstrap-colorpicker.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"></script>
+    <!--Asp ajax form-->
+    @*<script src="~/Scripts/jquery.unobtrusive-ajax.min.js"></script>*@
+    @*<script src="~/Scripts/jquery.form.min.js"></script>*@
+
+    <!--upload and review-->
+    <script src="~/Scripts/upload_and_review.js"></script>
+    @* bootstrap-toggle *@
+    <script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
+    @* Zoom image *@
+    <script src="~/Content/plugins/zoom_image.js"></script>
+    <script src="~/Content/plugins/simpleLightbox.min.js"></script>
+    @*<script src="~/Content/Admin/bower_components/moment/moment.js"></script>*@
+
+    <script src="~/Scripts/task_popup.js"></script>
+    <script src="~/Content/Admin/plugins/jqueryconfirm/jquery-confirm.min.js"></script>
+    <script src="~/Scripts/ticket/Detail.js"></script>
+    <script src="~/Scripts/ticket/Transfer.js"></script>
+    <script type="text/javascript">
+
+        var form_changed = false;
+        function setonunload() {
+
+        }
+
+          $(".datepicker").datepicker({
+                dateFormat: "mm/dd/yy",
+                changeMonth: true,
+                changeYear: true,
+                yearRange: '-70:+10'
+          });
+
+        /**
+         * load task list cua ticket nay
+         * */
+        function GetTaskStatusList() {
+            $("#loading_task").show();
+            $.ajax({
+                url: "/Ticket_New/GetTaskStatusByTicket",
+                dataType: "html",
+                method: "post",
+                data: {id: '@Model.Id'}
+            }).done(function (result) {
+                $("#divTaskStatus").html(result);
+
+            }).fail(function () {
+                alert("Opp!Something went wrong");
+
+            }).always(function ()
+            {
+                $("#loading_task").hide();
+            });
+        }
+
+
+        /**
+         * get list member cung group/ list groups cung department
+         * */
+        function Get_Reassign_Group_Status() {
+            $("img[name=loading_top]").show();
+            $.ajax({
+                url: "/Ticket_New/Get_Reassign_Group_Status",
+                dataType: "json",
+                method: "post",
+                data: { id: '@Model.Id' }
+            }).done(function (result) {
+                //new object[] { tic.StatusName, memberInGroup, group, tic.ReassignedToMemberNumber, tic.EscaladeToGroupId }
+                //status
+
+                //console.log(result);
+
+                if (result[0] == "") {
+                    $("#divStatus").html('<span style="font-size:1em" class="label label-primary">Open</span>');
+                }
+                else if (result[0].search(/close/i) >= 0) {
+                    $("#divStatus").html('<del><span style="font-size:1em" class="label label-default">' + result[0] + '</span></del>');
+                }
+                else {
+                    $("#divStatus").html('<span style="font-size:1em" class="label label-primary">' + result[0] + '</span>');
+                }
+
+                //alert("0");
+
+                //groups
+                $("select[name=escalate]").empty();
+                var option_g = new Option("Unassigned","");
+                $("select[name=escalate]").append(option_g);
+
+                    for (var i = 0; i < result[2].length; i++) {
+
+                    //alert(result[2].length + "|" + result[2][i].Id + "|" + result[2][i].Name);
+
+                    if (result[4] == result[2][i].Id) {
+                        var option_g = new Option(result[2][i].Name, result[2][i].Id, true, true);
+                        $("select[name=escalate]").append(option_g);
+                    }
+                    else {
+                        var option_g = new Option(result[2][i].Name, result[2][i].Id);
+                        $("select[name=escalate]").append(option_g);
+                    }
+
+                }
+
+                //members
+                $("select[name=reassigned]").empty();
+                if (result[1] != null && result[1] != "") {
+
+                    var memberNumber = result[1].split('|')[0];
+                    var memberName = result[1].split('|')[1];
+
+                    //alert(memberNumber + "|" + memberName);
+                    $("select[name=reassigned]").append(new Option("Unassigned",""));
+
+                    var arrMemberNumber = memberNumber.split(',');
+                    var arrMemberName = memberName.split(',');
+                    for (var i = 0; i < arrMemberNumber.length; i++) {
+                        if (result[3] == arrMemberNumber[i]) {
+                            var option_m = new Option(arrMemberName[i], arrMemberNumber[i], true, true);
+                            $("select[nDateOpenedDateOpenedDateOpenedme=reassigned]").append(option_m);
+                        }
+                        else {
+                            var option_m = new Option(arrMemberName[i], arrMemberNumber[i]);
+                            $("select[name=reassigned]").append(option_m);
+                        }
+                    }
+
+                }
+
+
+
+
+            }).fail(function () {
+                alert("Opp!Something went wrong. Reassigned, groups, status infomation loading failure");
+                }).always(function () { $("img[name=loading_top]").hide(); });
+        }
+
+
+        function SaveTicketInfoSuccess(result) {
+            overlayOff();
+            if (result[0] == true) {
+                //form_submited = true;
+
+                form_changed = false;
+                Get_Reassign_Group_Status();
+
+                //alert(result[2]);
+                //upate lai member assigned
+                //var arrAssigned = new Array();
+                //var _arrAssigned = result[2].split(",");
+                //for (var i = 0; i < _arrAssigned.length; i++) {
+                //    arrAssigned.push(_arrAssigned[i]);
+                //}
+                //$("select[name=assigned]").val(arrAssigned).trigger('change');
+
+                var options = $.parseJSON('{"text":"' + result[1] + '","layout":"top","type":"success"}');
+                noty(options);
+
+                close_ticket_title(result[2]);
+                Gettimeline();
+                //setTimeout(function () { window.location.reload() }, 1000);
+
+                return;
+            }
+            else {
+                var optionsErr;
+                if (result[1] == 'Please complete all required tasks before closing this ticket') {
+                     optionsErr = { "text": result[1], "layout": "top", "type": "warning" };
+
+                }
+                else {
+                    optionsErr = { "text": "Ticket update failure." + result[1], "layout": "top", "type": "warning" };
+
+                }
+                noty(optionsErr);
+                //noty({ "text": data[2], "layout": "topRight", "type": "error" });
+                return;
+            }
+        }
+
+
+        function redirect() {
+            location.href = $("input[name=urlback]").val();
+        }
+
+
+        function SaveTicketInfoFailure() {
+            overlayOff();
+            var optionsErr = $.parseJSON('{"text":"Opp!Something went wrong","layout":"topRight","type":"warning"}');
+            noty(optionsErr);
+            return;
+        }
+
+        /**
+         * load time line.
+         * */
+        async function Gettimeline() {
+            overlayOn();
+            //alert("get timeline");
+          //  $("#loading_timeline").show();
+
+            await $.ajax({
+                url: "/Ticket_New/gettimeline",
+                dataType: "html",
+                method: "post",
+                data: { id: '@Model.Id', 'GMT': moment().format("Z")}
+            }).done(function (result) {
+
+                $("#div_timeline").html(result);
+                let contr = $("#hd_controller").val();
+                $("input[name='_controller']").val(contr);
+
+            }).fail(function () {
+                alert("Opp!Something went wrong, timeline loading failure");
+
+            }).always(function ()
+            {
+                overlayOff();
+              //  $("#loading_timeline").hide();
+
+                @*if ($("#update_bank_infomation").length > 0) {
+
+                    $("#update_bank_infomation").on("click", function () {
+
+                        $('#update_bank_infomation_popup').modal({
+                            backdrop: 'static',
+                            keyboard: false,
+                            show: true
+                        });
+
+                        //get thogn tin
+                        $.ajax("/ticket/getbankinfomation/?code=@Model.CustomerCode",
+                            {
+                                dataType: "json",
+                                method: "post",
+                            }).done(function (data) {
+                                $("input[name=bi_BankName]").val(data[0]);
+                                $("input[name=bi_BankDDA]").val(data[1]);
+                                $("input[name=bi_AccountRouting]").val(data[2]);
+                            }).fail(function () { console.log("[getbankinfomation] error!"); }).always(function () { });
+                });
+                }*@
+
+            });
+        }
+
+        /**
+         *
+         * @@param id ticketid
+         * @@param type publish/private
+         */
+        function globalticket(id, type) {
+
+            $.ajax({
+                url: "/Ticket_New/SetActionTicket",
+                dataType: "json",
+                method: "post",
+                data: {
+                    id: id,
+                    type: type
+                }
+            }).done(function (result) {
+                //return Json(new object[] {true, id, type });
+                if (type == "publish") {
+
+                    $("#btnprivate").removeClass().addClass("btn");
+                    $("#btnpublish").removeClass().addClass("btn btn-warning");
+
+                    var optionsErr = $.parseJSON('{"text":"The ticket is now published.","layout":ModeltopRight","type":"success"}');
+                        noty(optionsErr);
+
+                    }
+                else {
+                    $("#btnpublish").removeClass().addClass("btn");
+                    $("#btnprivate").removeClass().addClass("btn btn-warning");
+
+                    var optionsErr = $.parseJSON('{"text":"The ticket is now privated.","layout":"topRight","type":"success"}');
+                        noty(optionsErr);
+
+                    }
+
+                Gettimeline();
+
+            }).fail(function () {
+                var optionsErr = $.parseJSON('{"text":"Opp, something went wrong.","layout":"topRight","type":"warning"}');
+                noty(optionsErr);
+                return;
+
+            });
+        }
+
+
+
+        function close_ticket_title(isclosed) {
+            $('.last-update-time').html("<i>" + moment().format('MMM DD, YYYY hh:mm A') + " by @cmem.FullName</i>");
+            if (isclosed) {
+                $(".close-title").css("text-decoration", "line-through");
+            } else {
+                $(".close-title").css("text-decoration", "none");
+            }
+        }
+
+        function SaveComplete(data) {
+            if (data[0] == true) {
+                $('#modal-merchant').modal('toggle');
+                var Success = $.parseJSON('{"text":"'+data[2]+'", "layout":"top", "type":"success"}');
+                noty(Success);
+                loadAccountManagerTicket();
+            }
+            else {
+                var Error = {"text": data[1], "layout":"top", "type":"error"};
+                noty(Error);
+            }
+        };
+
+        function reloadtab() {
+            return;
+        };
+
+        function show_invoice(code) {
+            let src = $("#invoice-view").data("src").replace("%code%", code);
+            $("#invoice-view").attr("src", src);
+            $('#Invoice').modal('show');
+        }
+    </script>
+}
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        zoomWrapper(".noi-dung-ticket").then(() => {
+            $('.noi-dung-ticket .zoom.wrapper').simpleLightbox();
+        });
+        //load ticket timeline
+        Gettimeline();
+        //get task
+        GetTaskStatusList();
+        // Toggle detail
+        $('.custom-show-detail').change(function () {
+            let maxHeight = '100%';
+            if ($(this).prop('checked')) {
+                maxHeight = '400px';
+                $('.ticket-description').scrollTop(0);
+                $('html').scrollTop(0)
+            }
+            $('.ticket-description').css({ 'max-height': maxHeight });
+        });
+    });
+</script>
+<script>
+
+        CKEDITOR.replace('transfer_note', {
+        extraPlugins: 'mentions',
+        mentions: [
+            {
+                feed: dataTransferNoteFeed,
+                itemTemplate: '<li data-id="{MemberNumber}">' +
+                    '<img class="photo" src="{Avatar}" />' +
+                    '<strong class="username">#{MemberNumber}</strong>' +
+                    '<span class="fullname">{FullName}</span>' +
+                    '</li>',
+                outputTemplate: '<a href="#Mentions_{MemberNumber}">@('@'){FullName}</a><span>&nbsp;</span>',
+                minChars: 0
+            },
+
+        ],
+        })
+
+        function dataTransferNoteFeed(opts, callback) {
+            var matchProperty = 'FullName',
+                data = usersMentions.filter(function (item) {
+                    return item[matchProperty].toLowerCase().includes(opts.query.toLowerCase());
+                });
+
+            data = data.sort(function (a, b) {
+                return a[matchProperty].localeCompare(b[matchProperty], undefined, { sensitivity: 'accent' });
+            });
+            callback(data);
+            }
+
+
+
+    $('#transfer-modal form').submit(function (e) {
+
+        e.preventDefault(); // avoid to execute the actual submit of the form.
+        $("#loading_transfer_submit").show();
+        var form = $(this);
+        var url = form.attr('action');
+        CKEDITOR.instances["transfer_note"].updateElement();
+        //var Note = CKEDITOR.instances['transfer_note'].getData();
+        //console.log(Note);
+        $.ajax({
+            type: "POST",
+            url: url,
+            data: form.serialize(), // serializes the form's elements.
+            success: function (data) {
+                if (data.status) {
+                    $("#transfer-modal").modal('hide');
+                    // success(data.message);
+                    $("#notice_transfer_success").html(data.message);
+                    $("#transfer-success-modal").modal({
+                        backdrop: 'static',
+                        keyboard: false,
+                        show: true
+                    });
+                   // Gettimeline();
+                    //$("#transfer-nav-li").removeClass("hide");
+                    //loadTransferContent(true);
+                }
+                else {
+
+                    error(data.message);
+                }
+                $("#loading_transfer_submit").hide();
+
+            }
+        });
+
+
+    });
+
+    function edit_type() {
+        let Id = $("#type").val();
+        if (!Id) {
+            warning("Please select the type to edit");
+            return;
+        } else {
+            $.ajax({
+                method: "POST",
+                url: "/Ticket_New/GetType",
+                data: { Id },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    if (data[0]) {
+
+                        $("#CreateOrUpdate_Type input[name=Id]").val(data[1].Id);
+                        $("#CreateOrUpdate_Type input[name=TypeName]").val(data[1].TypeName);
+                        $("#CreateOrUpdate_Type input[name=ProjectId]").val(data[1].ProjectId);
+                        $("#CreateOrUpdate_Type input[name=ProjectName]").val(data[1].ProjectName);
+
+                    } else {
+                        error(data[1]);
+                    }
+                })
+                .fail(function () {
+                    alert("Oops! Something went wrong");
+                })
+                .always(function () {
+                });
+            $("#CreateOrUpdate_Type .modal-title").html('Edit Type');
+            $("#CreateOrUpdate_Type .delete-button").show();
+            $("#CreateOrUpdate_Type").modal("show");
+        }
+    }
+
+    // load table status
+    function getListStatus() {
+        $("#loading_status").show();
+        $.ajax({
+            method: "POST",
+            url: "/ticket_new/GetListStatusUpdate",
+            data: { "ProjectId": $("#Project_select").val() },
+            dataType: "html"
+        })
+            .done(function (data) {
+                $("#option_ticket_info_list_render").html(data);
+                $("#status_list_modal").modal("show");
+            })
+            .fail(function () {
+                alert("Oops! Something went wrong");
+            })
+            .always(function () {
+                $("#loading_status").hide();
+            });
+    }
+
+
+    // load table priority
+    function getListPriority() {
+        $("#loading_priority").show();
+        $.ajax({
+            method: "POST",
+            url: "/ticket_new/GetListPriorityUpdate",
+            dataType: "html"
+        })
+            .done(function (data) {
+                $("#option_ticket_info_list_render").html(data);
+                $("#priority_list_modal").modal("show");
+            })
+            .fail(function () {
+                alert("Oops! Something went wrong");
+            })
+            .always(function () {
+                $("#loading_priority").hide();
+            });
+    }
+
+
+    // load table type
+    function getListType() {
+        $("#loading_type").show();
+        $.ajax({
+            method: "POST",
+            url: "/ticket_new/GetListTypeUpdate",
+            data: { "ProjectId": $("#Project_select").val() },
+            dataType: "html"
+        })
+            .done(function (data) {
+                $("#option_ticket_info_list_render").html(data);
+                $("#type_list_modal").modal("show");
+            })
+            .fail(function () {
+                alert("Oops! Something went wrong");
+            })
+            .always(function () {
+                $("#loading_type").hide();
+            });
+    }
+
+    //// load table type
+    //function getListFixedSubversion() {
+    //    $("#loading_fixedversion").show();
+    //    $.ajax({
+    //        method: "POST",
+    //        url: "/ticket_new/GetListFixedSubversionUpdate",
+    //        data: { "ProjectId": $("#Project_select").val() },
+    //        dataType: "html"
+    //    })
+    //        .done(function (data) {
+    //            $("#option_ticket_info_list_render").html(data);
+    //            $("#type_list_modal").modal("show");
+    //        })
+    //        .fail(function () {
+    //            alert("Oops! Something went wrong");
+    //        })
+    //        .always(function () {
+    //            $("#loading_fixedversion").hide();
+    //        });
+    //}
+
+    // load table subversion
+    function getListFixedSubversion(fixedSubversion = true) {
+        if (fixedSubversion == true) {
+            $("#loading_fixedversion").show();
+        }
+        else {
+            $("#loading_affectedversion").show();
+        }
+
+        $.ajax({
+            method: "POST",
+            url: "/ticket_new/GetListVersionUpdate",
+            data: { "VersionId": $("#project_versions").val() },
+            dataType: "html"
+        })
+            .done(function (data) {
+                $("#option_ticket_info_list_render").html(data);
+                $("#version_list_modal").modal("show");
+            })
+            .fail(function () {
+                alert("Oops! Something went wrong");
+            })
+            .always(function () {
+                if (fixedSubversion == true) {
+                    $("#loading_fixedversion").hide();
+                }
+                else {
+                    $("#loading_affectedversion").hide();
+                }
+            });
+    }
+
+    function delete_type() {
+        if (confirm('Are you sure are you sure to delete this type ?')) {
+            var TypeId = $("#CreateOrUpdate_Type input[name=Id]").val();
+            var e = $("#type option[value=" + TypeId + "]");
+            $.ajax({
+                method: "POST",
+                url: "/ticket_new/deleteType",
+                data: { TypeId },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    if (data.status) {
+                        $("#CreateOrUpdate_Type").modal("hide");
+                        success("delete type success");
+                        e.remove();
+                        ;
+                    } else {
+                        error(data.message);
+                    }
+                })
+                .fail(function () {
+                    alert("Oops! Something went wrong");
+                })
+                .always(function () {
+                });
+
+        }
+
+    }
+    function new_stage_version(fixed) {
+        $("#subversion_modal .modal-title").html("Create new subversion")
+        if (fixed) {
+            $("#subversion_modal [name='SubversionSelected']").val("fixed")
+        }
+        else {
+            $("#subversion_modal [name='SubversionSelected']").val("affected")
+        }
+        $("#subversion-delete-button").hide();
+        $("#subversion_modal [name='Id']").val("");
+        $("#subversion_modal [name='Name']").val("");
+        $("#subversion_modal").modal("show");
+    }
+    function edit_stage_version(fixed) {
+        let Id = fixed ? $("#fixed_versions").val() : $("#available_versions").val();
+        if (!Id) {
+            warning("Please select the version to edit");
+            return;
+        }
+        $("#subversion_modal .modal-title").html("edit subversion")
+        if (fixed) {
+            $("#subversion_modal [name='SubversionSelected']").val("fixed")
+        }
+        else {
+            $("#subversion_modal [name='SubversionSelected']").val("affected")
+        }
+        $("#subversion_modal [name='Id']").val(Id);
+        $("#subversion_modal [name='Name']").val($((fixed ? "#fixed_versions" : "#available_versions") + " option:selected").html())
+        $("#subversion-delete-button").show();
+        $("#subversion_modal").modal("show");
+    }
+    $("#subversion_modal form").submit(function (e) {
+
+        e.preventDefault(); // avoid to execute the actual submit of the form.
+        overlayOn();
+        var form = $(this);
+        var url = form.attr('action');
+        let projectVerId = $("#project_versions").val();
+        $.ajax({
+            type: "POST",
+            url: url,
+            data: form.serialize() + '&projectVerId=' + projectVerId, // serializes the form's elements.
+            success: function (data) {
+                if (data.status) {
+
+                    if ($("#subversion_modal [name='Id']").val()) {
+                        $("#available_versions option[value=" + data.version.Id + "]").html(data.version.Name);
+                        $("#fixed_versions option[value=" + data.version.Id + "]").html(data.version.Name);
+                    }
+                    else
+                    {
+                        $("#available_versions,#fixed_versions").append($('<option/>')
+                            .val(data.version.Id)
+                            .text(data.version.Name)
+                            .attr("data-p_ver", data.version.ParentId)
+                        );
+                        let fixed = $("#subversion_modal [name='SubversionSelected']").val() == "fixed";
+                        if (fixed) { $('#fixed_versions').val(data.version.Id) }
+                        else { $('#available_versions').val(data.version.Id) }
+                    }
+                    success(data.message);
+                    $("#subversion_modal").modal("hide");
+                }
+                else {
+                    error(data.message);
+                }
+            },
+            error: function (xhr) {
+                alert("Error occured.please try again");
+            },
+            complete: function () {
+                overlayOff();
+            },
+        });
+
+
+    });
+    function delete_stage_version() {
+        if (confirm('Are you sure are you sure to delete this subversion ?')) {
+            var Id = $("#subversion_modal input[name=Id]").val();
+            var FixedOption = $("#fixed_versions option[value=" + Id + "]");
+            var AffectedOption = $("#available_versions option[value=" + Id + "]");
+            $.ajax({
+                method: "POST",
+                url: "/ticket_new/DeleteSubversion",
+                data: { Id },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    if (data.status) {
+                        $("#subversion_modal").modal("hide");
+                        success(data.message);
+                        FixedOption.remove();
+                        AffectedOption.remove();
+
+                    } else {
+                        error(data.message);
+                    }
+                })
+                .fail(function () {
+                    alert("Oops! Something went wrong");
+                })
+                .always(function () {
+                });
+
+        }
+    }
+    $("#CreateOrUpdate_Type form").ajaxForm(function (data) {
+        if ($("#CreateOrUpdate_Type input[name=TypeName]").val() === "") {
+            warning("Please enter type name !");
+            return;
+        }
+        overlayOn();
+        if (data[0]) {
+            success(data[1]);
+            var e = $("#type option[value=" + data[2].Id + "]");
+            if (e.length == 0) {
+                //let opt = new Option(data[2].Name, data[2].Id, false, true).attr("data-stg_ver", data[2].StageId + "|" + data[2].ProjectVersionId);
+                $("#type").append($('<option />')
+                    .val(data[2].Id)
+                    .text(data[2].TypeName)
+                    .attr({ "selected": true }));
+
+            } else {
+                e.html(data[2].TypeName);
+            }
+            $("#CreateOrUpdate_Type").modal("hide");
+        } else {
+            error(data[1]);
+        }
+        overlayOff();
+    })
+
+    function AddCategory() {
+        $("#category-modal [name='CategoryId']").val("");
+        $("#category-modal [name='CategoryName']").val("");
+        $("#category-modal .modal-title").html("Add Category");
+        $("#category-modal .btn-delete").hide();
+        $("#category-modal").modal("show");
+    }
+
+    function EditCategory() {
+        let CategoryId = $("#category").val();
+        let CategoryName = $("#category option:selected").html();
+        if (!CategoryId) {
+            warning("Please the category to edit");
+            return;
+        }
+        $("#category-modal .modal-title").html("Edit Category");
+        $("#category-modal [name='CategoryId']").val(CategoryId);
+        $("#category-modal [name='CategoryName']").val(CategoryName);
+        $("#category-modal .btn-delete").show();
+        $("#category-modal").modal("show");
+    }
+
+    $("#category-modal form").ajaxForm(function (data) {
+        if ($("#category-modal input[name=CategoryName]").val() === "") {
+            warning("Please enter category name !");
+            return;
+        }
+        overlayOn();
+        if (data.status) {
+            success(data.message);
+            var e = $("#category option[value=" + data.category.Id + "]");
+            if (e.length == 0) {
+                //let opt = new Option(data[2].Name, data[2].Id, false, true).attr("data-stg_ver", data[2].StageId + "|" + data[2].ProjectVersionId);
+                $("#category").append($('<option />')
+                    .val(data.category.Id)
+                    .text(data.category.Name)
+                    .attr({ "selected": true }));
+            }
+            else {
+                e.html(data.category.Name);
+            }
+            $('#MainFormTicket select[name="category"]').select2("destroy");
+            $('#MainFormTicket select[name="category"]').select2();
+            $("#category-modal").modal("hide");
+        } else {
+            error(data.message);
+        }
+        overlayOff();
+    })
+
+    function CategoryDelete() {
+        if (confirm("are you sure delete this category ?")) {
+            var CategoryId = $("#category-modal [name='CategoryId']").val();
+            $.ajax({
+                method: "POST",
+                url: "/Ticket_New/DeleteCategory",
+                data: {
+                    CategoryId,
+                },
+            }).done(function (data) {
+                if (data.status) {
+                    $("#category-modal").modal('hide');
+                    success(data.message);
+                    $("#category option[value=" + CategoryId + "]").remove();
+                    $("#category").trigger('change.select2');
+                }
+                else {
+                    error(data.message);
+                }
+            });
+        }
+    }
+</script>
+<script>
+    function update_ticket_task_template(Id = 0) {
+        overlayOn();
+        $.ajax({
+            method: "POST",
+            url: "/ticket_new/CreateOrUpdateTicketTaskTemplate",
+            data: { 'TicketId': Id,'TicketGroup':'@Page' },
+            dataType: "html"
+        })
+            .done(function (data) {
+                $("#task_template_render_popup").html(data);
+                $("#ticket_task_template_modal").modal('show');
+            })
+            .fail(function () {
+                alert("Oops! can not load task template");
+            })
+            .always(function () {
+                overlayOff();
+            });
+    }
+
+    function update_task_ticket_template(can_update, TaskId) {
+
+        overlayOn();
+        $.ajax({
+            method: "POST",
+            url: "/ticket_new/CreateOrUpdateTicketTaskTemplate",
+            data: {'TaskId': TaskId },
+            dataType: "html"
+        })
+            .done(function (data) {
+                $("#task_template_render_popup").html(data);
+                $("#ticket_task_template_modal").modal('show');
+            })
+            .fail(function () {
+                alert("Oops! can not load task template");
+            })
+            .always(function () {
+                overlayOff();
+            });
+    }
+
+    function remindersTicket() {
+        overlayOn();
+        $.ajax({
+            method: "POST",
+            url: "/ticket_new/CreateOrUpdateReminder",
+            data: { 'TicketId': @Model.Id },
+            dataType: "html"
+        })
+            .done(function (data) {
+                $("#reminder_render_popup").html(data);
+                $("#reminder_popup").modal('show');
+            })
+            .fail(function () {
+                alert("Oops! can not load reminders popup");
+            })
+            .always(function () {
+                overlayOff();
+            });
+    }
+
+
+    function addOrUpdateMoreInfoTicket(TicketId, Id) {
+        overlayOn();
+        $.ajax({
+            method: "POST",
+            url: "/ticket_new/addOrUpdateMoreInfo",
+            data: { 'TicketId': TicketId,Id },
+            dataType: "html"
+        })
+            .done(function (data) {
+                $("#more_info_ticket").html(data);
+                $("#more-info-modal").modal("show");
+            })
+            .fail(function () {
+                alert("Oops! can not load more info ticket");
+            })
+            .always(function () {
+                overlayOff();
+            });
+    }
+
+      function loadTicketFileRelated() {
+        $.ajax({
+            method: "POST",
+            url: "/ticket_new/loadFilesRelated",
+            data: { 'TicketId': @Model.Id },
+            dataType: "html"
+        })
+            .done(function (data) {
+                $("#file_related").html(data);
+
+            })
+            .fail(function () {
+                alert("Oops! can not load reminders content");
+            })
+            .always(function () {
+
+            });
+    }
+    loadTicketFileRelated()
+   // loadReminder();
+</script>
+<script>
+    $(window).ready(function () {
+        $("#MainFormTicket").on("keypress", function (event) {
+            var keyPressed = event.keyCode || event.which;
+            if (keyPressed === 13) {
+                event.preventDefault();
+                return false;
+            }
+        });
+    });
+
+</script>

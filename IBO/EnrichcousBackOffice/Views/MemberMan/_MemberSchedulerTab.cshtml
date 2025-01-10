@@ -1,0 +1,124 @@
+﻿
+<div id="schedule" class="tab-pane">
+    <!-- schedule-->
+    <section class="content container-fluid">
+        <div class="row">
+            @if (TempData["e"] != null)
+            {
+                <div class="alert alert-warning alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                    <span><i class="icon fa fa-warning"></i>@TempData["e"]</span>
+                </div>
+            }
+
+            @if (TempData["s"] != null)
+            {
+                <div class="alert alert-success alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                    <span><i class="icon fa fa-check"></i>@TempData["s"]</span>
+                </div>
+            }
+        <div class="content">
+            <div>Construction ...</div>
+            <!--<div class="col-md-12">
+        <form method="post" action="/MemberMan/SaveAvailableTime" id="Availabel-Form">
+
+            <div class="form-horizontal">
+                <style>
+                    .label-wrapper {
+                        min-width: 120px;
+                        margin-right: 5px;
+                    }
+
+                    .form-group label {
+                        margin-right: 15px;
+                    }
+
+                    .form-group .name-day {
+                        margin-left: 5px;
+                    }
+                </style>
+            </div>
+        </form>
+        <div class="">
+            <div class="box-body">-->
+            @*@if (Model.CreatedBy != null)
+        {*@
+            <!--<div id="calendar"></div>-->
+            @*}
+        else
+        {
+             <span>You need to save the default recurring availabel time to display this calendar</span>
+        }*@
+
+            <!--</div>
+        </div>
+    </div>-->
+        </div>
+        </div>
+    </section>
+    <!-- schedule-->
+    <div class="modal fade" id="event_modal" role="dialog" style="">
+        <div class="modal-dialog">
+            <!-- Modal content-->
+            <div class="modal-content">
+                <form action="/MemberMan/CreateOrUpdateSpecificTime" method="post" id="event_form">
+                    <div class="modal-header">
+                        <button style="font-size:19px" type="button" class="close" data-dismiss="modal"><i class="fa fa-close"></i></button>
+
+                        <h4 class="modal-title" style="margin-right:50px"><i class="fa fa-pencil-square-o"></i>&nbsp;Update Availabel Time</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <span id="title-popup-cru" style="font-size: 18px;text-align: center;display: block;"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label style="width:100%;">
+                                        Start
+                                    </label>
+                                    <div style="display:flex;flex-wrap:nowrap">
+                                        <input class="form-control datepicker" name="StartDate" onkeydown="return false" required readonly />
+                                        <input class="form-control time-only" style="margin-left:5px;" name="StartTime" onkeydown="return false" required />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="input-group form-group">
+                                    <label>End </label>
+                                    <div style="display:flex;flex-wrap:nowrap">
+                                        <input class="form-control datepicker" name="EndDate" onkeydown="return false" required readonly />
+                                        <input class="form-control time-only" style="margin-left:5px;" name="EndTime" onkeydown="return false" required />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Status </label>
+                                    <select class="form-control" name="Status">
+                                        <option value="true">Availabel</option>
+                                        <option value="false">Not Availabel</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label>Note </label>
+                                    <textarea id="desc" class="form-control" wrap="soft" name="Note" rows="5"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button name="btnsubmit" value="save" type="submit" class="btn btn-sm btn-primary">Save</button>
+                        <button data-dismiss="modal" class="btn btn-sm btn-default">Close</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+</div>

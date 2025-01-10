@@ -1,0 +1,581 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.O_MerchantForm>
+@using EnrichcousBackOffice.Utils.IEnums
+@using Inner.Libs.Helpful
+@{
+    ViewBag.Title = "Merchant Management";
+}
+
+<link href="~/Content/Scrollbar/style_Scrollbar.css" rel="stylesheet" />
+
+<section class="content-header">
+    <h1>
+        Merchant Management
+        <small>Support</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li><i class="fa fa-life-ring"></i> Support</li>
+        <li class="active">Merchant Management</li>
+    </ol>
+</section>
+
+<!-- Main content -->
+<section class="content">
+    @if (TempData["e"] != null)
+    {
+        <div class="alert alert-warning alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+        </div>
+    }
+    else if (TempData["s"] != null)
+    {
+        <div class="alert alert-success alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+        </div>
+    }
+    <div class="row">
+
+        <div class="col-md-9">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Merchant Management</h3>
+                    @*<div class="pull-right">
+                            <a href="/order" class="btn"><i class="fa fa-arrow-left"></i> Go back</a>
+                        </div>*@
+                </div>
+                <!-- /.box-header -->
+                <div class="box-body">
+                    <form id="search_form" action="/MerchantFormManage/load" method="post">
+                        <div class="input-group">
+                            <input id="current_page" name="page" type="hidden" value="0" />
+                            <div class="input-group-btn" style="padding:0; width:120px">
+
+                                <select name="Merchant_type" class="form-control" onchange="Load(0)">
+                                    @foreach (MerchantForm_filter item in Enum.GetValues(typeof(MerchantForm_filter)).Cast<MerchantForm_filter>().ToList())
+                                    {
+                                        <option value="@((int)item)">@item.Text()</option>
+                                    }
+                                </select>
+                                @*<label style="margin: 0px;"><input name="ActiveOnly" value="true" type="checkbox" onchange="Load(0)" /> Active Salons only </label>*@
+                            </div>
+                            <input name="Searchtext" type="text" class="form-control" placeholder="Search name, phone, email, storeid" onchange="Load(0)">
+                            <div class="input-group-btn">
+                                <button class="btn btn-primary" type="button" onclick="Load(0)">
+                                    Search
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                    <br />
+                    <div id="Partial_list_Merchantform" class="row">
+                        <!--Append partial list merchant forms-->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="box box-warning">
+                <div class="box-header with-border">
+                    <h3 class="box-title">History forms</h3>
+                </div>
+                <!-- /.box-header -->
+                <div class="box-body">
+                    <div id="List_PDF_history" class="scrollbar scroll-style-1" style="height:775px">
+                        @foreach (var file in Model)
+                        {
+                            <div class="col-md-12 PDF_history" title="@file.TemplateName" style="border-bottom: 1px solid lightgray; padding-left:0px; margin-bottom:10px; padding-bottom:10px; cursor:pointer"
+                                 onclick="ViewForSend('view','@file.Id', '@(file.TemplateName + "|" + file.MerchantCode + "|" + file.OrderId)')">
+                                <div class="col-md-2" style="padding-left:0px">
+                                    <img src="/Upload/Img/pdf.png" width="40" />
+                                </div>
+                                <div class="col-md-10">
+                                    <b style="color:#00A65A">@(file.TemplateName.Length > 30 == true ? file.TemplateName.Substring(0, 30) + "..." : file.TemplateName)</b><br />
+                                    <b>DBA Name: </b>@file.MerchantName<br />
+                                    <b>Status: </b>
+
+                                    @if (file.Status.Equals("completed", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        <span class="label label-primary">Signed</span><br />
+                                        <b><i class="fa fa-clock-o"></i></b><span>
+                                            <span id="localtime-@file.Id">
+                                                <script>convertLocalTime("@file.Id", "@file.UpdateAt")</script>
+                                            </span>
+                                        </span><br />
+                                        <b>Sent by: </b><span>
+                                            @(file.SendByAgent?.Split('|')[1]) - At:
+                                            <span id="localtime-send-@file.Id">
+                                                <script>convertLocalTime("send-" + "@file.Id", "@file.SendAt")</script>
+                                            </span>
+                                        </span>
+                                    }
+                                    else if (file.Status.Equals("sent", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        <span class="label label-success">Sent</span><br />
+                                        <b><i class="fa fa-clock-o"></i></b><span>
+                                            <span id="localtime-send-@file.Id">
+                                                <script>convertLocalTime("send-" + "@file.Id", "@file.SendAt")</script>
+                                            </span>
+                                            - By: @(file.SendByAgent?.Split('|')[1])
+                                        </span>
+                                    }
+                                    else if (file.Status.Equals("delivered", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        <span class="label" style="background-color:deepskyblue">Delivered</span><br />
+                                        <b><i class="fa fa-clock-o"></i></b><span>
+                                            <span id="localtime-update-@file.Id">
+                                                <script>convertLocalTime("update-" + "@file.Id", "@file.UpdateAt")</script>
+                                            </span>
+                                        </span><br />
+                                        <b>Sent by: </b><span>
+                                            @(file.SendByAgent?.Split('|')[1]) - At:
+                                            <span id="localtime-send-@file.Id">
+                                                <script>convertLocalTime("send-" + "@file.Id", "@file.SendAt")</script>
+                                            </span>
+
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="label label-warning">Uploaded</span><br />
+                                        <b><i class="fa fa-clock-o"></i></b><span>
+                                            <span id="localtime-create-@file.Id">
+                                                <script>convertLocalTime("create-" + "@file.Id", "@file.CreateAt")</script>
+                                            </span>
+                                            - By: @(file.CreateBy)
+                                        </span>
+                                    }
+                                </div>
+                            </div>
+                        }
+                        <button type="button" class="btn btn-block btn-flat btn-success" id="add_pdf_history" onclick="load_more_history()" @if (!ViewBag.canLoadMore) { @Html.Raw("style='display: none'") }>
+                            View more...
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div id="PartialDejavo">
+    <!--Appent _DejavooPopupPartial-->
+</div>
+
+<div id="merchant_popup">
+    <!--Appent _MerchantPopupPartial-->
+</div>
+
+<!--Modal popup-->
+<div class="modal fade" id="modal_choose_template">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Choose Template</h4>
+            </div>
+            <div class="modal-body">
+                <form id="add_more_file_form" action="/Page/MerchantFormHandle/GetFileUrl" method="post">
+                    <input type="hidden" id="merchant_code" name="merchantCode" />
+                    <input type="hidden" id="merchant_name" name="merchantName" />
+                    <input type="hidden" id="pdf_key" name="Key" />
+                    <input type="hidden" id="merchant_form_id" name="merchantFormId" />
+                    <input type="hidden" name="nuvei_type" />
+                    <div class="form-group">
+                        <label class="control-label">
+                            Template: <span style="color:red">*</span>&nbsp;
+                            <img id="template_loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                        </label>
+                        <select class="form-control" id="list_template" name="templateName" onchange="LoadOrder()">
+                            <option value="">--Select--</option>
+                            <option value="BANK CHANGE FORM">BANK CHANGE FORM</option>
+                            <option value="CHANGE REQUEST FORM">CHANGE REQUEST FORM</option>
+                            <option value="" disabled>--------------------------------</option>
+                            <option value="One-Time Payment ACH">ONE-TIME PAYMENT ACH</option>
+                            <option value="Recurring Payment ACH">RECURRING PAYMENT ACH</option>
+                            <option value="Refund">REFUND</option>
+                            <option value="" disabled>--------------------------------</option>
+                            <option value="DEJAVOO Z11 DATA SHEET">DEJAVOO</option>
+                            <option value="" disabled>--------------------------------</option>
+                            @*<option value="Nuvei">NUVEI AGREEMENT</option>*@
+                        <option value="Priority Merchant Agreement_ Flat Rate">Priority Merchant Agreement_ Flat Rate</option>
+                        <option value="Priority Merchant Agreement_ IC+">Priority Merchant Agreement_ IC+</option>
+                        <option value="Priority Merchant Agreement_ Tiered">Priority Merchant Agreement_ Tiered</option>
+                            @*<option value="RequestForm">VAR SHEET REQUEST</option>*@
+                        </select>
+                    </div>
+                    <div class="form-group" id="div_list_order" style="display:none">
+                        <label class="control-label">
+                            Order: <span style="color:red">*</span>&nbsp;
+                            <img id="order_loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                        </label>
+                        <select class="form-control" id="list_order" name="orderCode" onchange="change_order()" @*onchange="LoadTerminal()"*@>
+                            <option value="">--Select--</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="div_period" style="display:none">
+                        <label class="control-label">
+                            Period:&nbsp;
+                            <img id="period_loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                        </label>
+                        <select class="form-control" id="choose_period" name="period">
+                            <option value="MONTHLY">MONTHLY</option>
+                            <option value="QUATERLY">QUATERLY</option>
+                            <option value="YEARLY">YEARLY</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="div_list_terminal" style="display:none">
+                        <label class="control-label">Terminal: <span style="color:red">*</span></label>
+                        <select class="form-control" id="list_terminal" name="list_terminal">
+                            <option value="">--Select--</option>
+                        </select>
+                    </div>
+                    @*<div class="form-group" id="div_attach" style="display:none">
+                            <div class="form-group">
+                                <label>Select Nuvei PDF: <span style="color:red">*</span></label>
+                                <select class="form-control" name="pdf_nuvei_type" required>
+                                    <option value="">--Select--</option>
+                                    <option value="Nuvei M2M Merchant Application">Nuvei M2M Merchant Application</option>
+                                    <option value="Nuvei 3 year Merchant Application">Nuvei 3 year Merchant Application</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label">File Download: </label><br />
+                                <div class="btn-group">
+                                    <a class="btn btn-warning" onclick="DownloadtoUpdate(true)"> <i class="fa fa-download"></i> Download New Document</a>
+                                    <a class="btn btn-success" onclick="DownloadtoUpdate()"> <i class="fa fa-download"></i> Download Last Update</a>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label">Upload Your Update: <span style="color:red">*</span></label>
+                                <input class="form-control" required type="file" name="file_attachment" accept="application/pdf" />
+                            </div>
+
+                        </div>*@
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="addfile_btn" class="btn btn-primary" onclick="AddFile()">
+                    Add File <img id="addfile_loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                </button>
+                @*<button type="button" id="submit_btn" class="btn btn-primary" onclick="ViewForSend()">
+                        OK <img id="viewforsend_loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                    </button>*@
+                <button id="createfile" type="button" class="btn btn-primary" onclick="CreateNewPDF()">
+                    Create
+                    <img id="createfile_loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                </button>
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!--/.End-->
+<!-- View pdf modal -->
+<div class="modal fade" id="modal_PDFfile">
+    <div class="modal-dialog" style="width:80%; max-width:1000px; margin-top:10px; margin-bottom:10px">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="PDFfile_name"></h4>
+                <input type="hidden" name="hd_pdf_file_name" />
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="Id_PDFfile" />
+                <input type="hidden" id="merchant_form_id" />
+                <ul class="nav nav-tabs">
+                    <li id="li_pdf_unsigned" class="active"><a data-toggle="tab" href="#pdf_unsigned">Unsigned file</a></li>
+                    <li id="li_pdf_signed"><a data-toggle="tab" href="#pdf_signed">Signed file</a></li>
+                </ul>
+                <div class="tab-content">
+                    <div id="pdf_unsigned" class="tab-pane fade in active">
+                        <iframe id="PDFfile_url" style="width:100%; height: 65vh"></iframe>
+                    </div>
+                    <div id="pdf_signed" class="tab-pane fade">
+                        <iframe id="PDFfile_sign_url" style="width:100%; height: 65vh"></iframe>
+                    </div>
+                </div>
+                <div class="modal-footer" style="padding: 10px 0">
+                    @*<button type="button" id="btn_sendmerchant" class="btn btn-primary pull-left pdf_btn" onclick="SendToMerchant()">
+                            <span id="btn-send-title">Send to merchant </span><img id="sendfile_loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                        </button>*@
+                    @*<button type="button" id="btn_save_nuvei_pdf" class="btn btn-primary pull-left pdf_btn" onclick="SaveNuveiPDF()">
+                            <span id="btn-send-title">Save </span><img id="save_loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                        </button>*@
+                    <button type="button" id="update_dejavo" class="btn btn-primary pull-left pdf_btn" onclick="UpdateFile()">
+                        Update File <img id="update_dejavooz11_loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                    </button>
+                    @*<div class="input-group">
+                            <input id="uploadfile" class="form-control" type="file" />
+                            <button type="button" class="input-group-btn btn btn-warning" onclick="$('#uploadfile').trigger('click')">
+                                <i class="fa fa-upload"></i> Upload Updated PDF
+                            </button>
+                        </div>*@
+                    <form id="upload_update_file" class="col-md-4" style="padding:0" method="post" action="/merchantFormhandle/UploadUpdatedPdf">
+                        <input type="hidden" name="templatename" />
+                        <input type="hidden" name="merchantCode" />
+                        <div class="input-group pull-left upload_f" style="display:none">
+                            <div class="input-group-btn">
+                                <button type="button" class="btn btn-default" style="margin-left:0" onclick="$('.upload_f').toggle()">
+                                    <i class="fa fa-close"></i>
+                                </button>
+                            </div>
+                            <div class="input-group">
+
+                                <input id="uploadfile" name="upload_file" class="form-control" type="file" accept="application/pdf" />
+                                @*<div class="input-group-addon">
+                                        <label><input type="checkbox" /> Signed</label>
+                                    </div>*@
+                            </div>
+                            <div class="input-group-btn">
+                                <button type="submit" class="btn btn-warning">
+                                    <i class="fa fa-upload" style="color:#fff"></i>
+                                </button>
+
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-warning upload_f pull-left" onclick="$('#uploadfile').trigger('click'),$('.upload_f').toggle()">
+                            <i class="fa fa-upload" style="color:#fff"></i> Upload PDF
+                        </button>
+                    </form>
+
+                    <button type="button" class="btn btn-default pull-right" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-success pull-right" onclick="download_pdf()">
+                        <i class="fa fa-download"></i> Download PDF
+                    </button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!--/End-->
+
+<div class="modal fade" id="modal_FileSending">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="FileSending_TemplateName">BANK CHANGE FORM</h4>
+            </div>
+            <div class="modal-body" style="font-size:16px">
+                <center>
+                    <span class="text-success"><b>File is sending</b></span>&nbsp;
+                    <img src="~/Content/ajax-loaders/ajax-loader-1.gif" height="8" />
+                </center>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section script{
+    <script src="~/Scripts/jquery.unobtrusive-ajax.js"></script>
+    <script src="~/Scripts/merchant_form.js"></script>
+
+
+    <script type="text/javascript">
+        $(function () {
+            //GetListTemplate();
+            //check_file_open();
+
+            if (sessionStorage.getItem("viewdata") != null) {
+                //data_session: "key|templateName|merchantCode|orderCode"
+                var data_session = sessionStorage.getItem("viewdata");
+                if (data_session.split("|")[0] == "view") {
+                    ViewForSend("view", "", data_session.replace("view|", ""));
+                }
+            }
+
+            if (sessionStorage.getItem("send") != null) {
+                //data_session: "key|templateName|merchantCode|orderCode"
+                var data_session = sessionStorage.getItem("viewdata");
+                SendToMerchant("reload");
+            }
+            $("#search_form").on("submit", function () {
+                $("#Partial_list_Merchantform").html('<center><img src="/Content/ajax-loaders/loading-partial.gif" /></center>');
+            });
+            $("#search_form").ajaxForm(function (data) {
+                $("#Partial_list_Merchantform").html(data);
+            }, function (data) {
+                alert("submit fail");
+            });
+            $("[name=Searchtext]").on("keyup", function (e) {
+                if (e.keyCode == 13) {
+                    Load(0);
+                }
+            })
+            Load(0);
+            $("#upload_update_file").submit(function () {
+                $('[name="templatename"]').val($("#list_template").val());
+                $('[name="merchantCode"]').val($("#merchant_code").val());
+            })
+            $("#upload_update_file").ajaxForm(function (data) {
+                if (data[0]) {
+                    $("#modal_choose_template").modal("hide");
+                    $('.upload_f').toggle();
+                    Load();
+                    success(data[1]);
+                    ViewForSend('view', data[2], `${$("#list_template").val()}|${$("#merchant_code").val()}|`);
+                } else {
+                    error(data[1]);
+                }
+            })
+        });
+
+
+        function Load(page = null) {
+            if (page == null) {
+                page = $("#current_page").val() || 0;;
+            }
+            $("#current_page").val(page);
+            $("#search_form").trigger("submit");
+        }
+
+        function load_more_history() {
+            var skip = $(".PDF_history").length;
+
+            $.ajax({
+                method: "POST",
+                url: "/MerchantFormManage/Load_history",
+                data: { skip },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    if (data[0] == true) {
+                        var _option = "";
+                        for (var i = 0; i < data[1].length; i++) {
+                            var _tempalte_name = data[1][i]["TemplateName"];
+                            if (data[1][i]["TemplateName"].length > 30) {
+                                _tempalte_name = data[1][i]["TemplateName"].substring(0, 30) + '...';
+                            }
+
+                            var _status = "";
+                            if (data[1][i]["Status"] == "completed") {
+                                _status = '<span class="label label-primary">Signed</span><br />' +
+                                    '<b><i class="fa fa-clock-o"></i></b><span> ' + data[1][i]["UpdateAt"] + '</span><br />' +
+                                    '<b>Sent by: </b><span>' + data[1][i]["SendByAgent"] + ' - At: ' + data[1][i]["SendAt"] + '</span>';
+                            }
+                            else if (data[1][i]["Status"] == "sent") {
+                                _status = '<span class="label label-success">Sent</span><br />' +
+                                    '<b><i class="fa fa-clock-o"></i></b><span> ' + data[1][i]["SendAt"] + ' - By: ' + data[1][i]["SendByAgent"] + '</span>';
+                            }
+                            else if (data[1][i]["Status"] == "delivered") {
+                                _status = '<span class="label" style="background-color:deepskyblue">Delivered</span><br />' +
+                                    '<b><i class="fa fa-clock-o"></i></b><span> ' + data[1][i]["UpdateAt"] + '</span><br />' +
+                                    '<b>Sent by: </b><span>' + data[1][i]["SendByAgent"] + ' - At: ' + data[1][i]["SendAt"] + '</span>';
+                            }
+                            else {
+                                _status = '<span class="label label-warning">Uploaded</span><br />' +
+                                    '<b><i class="fa fa-clock-o"></i></b><span> ' + data[1][i]["CreateAt"] + ' - By: ' + data[1][i]["CreateBy"] + '</span>';
+                            }
+
+                            var data_view = data[1][i]["TemplateName"] + '|' + data[1][i]["MerchantCode"] + '|' + data[1][i]["OrderId"];
+                            _option += '<div class="col-md-12 PDF_history" title="' + data[1][i]["TemplateName"] + '" style="border-bottom: 1px solid lightgray; padding-left:0px; margin-bottom:10px; padding-bottom:10px; cursor:pointer" ' +
+                                'onclick="ViewForSend(\'view\',\'' + data_view + '\')">' +
+                                '<div class="col-md-2" style="padding-left:0px"><img src="/Upload/Img/pdf.png" width="40" /></div>' +
+                                '<div class="col-md-10">' +
+                                '<b style="color:#00A65A">' + _tempalte_name + '</b><br />' +
+                                '<b>DBA Name: </b>' + data[1][i]["MerchantName"] + '<br />' +
+                                '<b>Status: </b>' + _status +
+                                '</div></div>';
+                        }
+                        $('#List_PDF_history').append(_option);
+
+                        if (data[2] == false) {
+                            $('#add_pdf_history').hide();
+                        }
+                        else {
+                            $('#add_pdf_history').remove();
+                            $('#List_PDF_history').append('<button type="button" class="btn btn-block btn-flat btn-success" id="add_pdf_history" onclick="load_more_history()">View more...</button>');
+                        }
+                    }
+                })
+                .fail(function () {
+                })
+                .always(function () {
+                });
+        }
+
+        function view_template(id, name, url, terminal_id, sign_url = "") {
+            sessionStorage.clear();
+
+            if (sign_url != "") {
+                overlayOn();
+                $.ajax({
+                    method: "POST",
+                    url: "/MerchantFormManage/GetFileSigned_Url",
+                    data: { id: id, url: sign_url },
+                    dataType: "json"
+                })
+                    .done(function (data) {
+                        if (data[0] == true) {
+                            overlayOff();
+                            $('#PDFfile_sign_url').prop("src", sign_url);
+                            $('#li_pdf_signed').show();
+                            $('#li_pdf_signed a').trigger("click");
+
+                            if (terminal_id != "null" && terminal_id != "" && terminal_id != "undefined") {
+                                $("#update_dejavo").show();
+                            }
+                            else {
+                                $("#update_dejavo").hide();
+                            }
+
+                            $('#Id_PDFfile').val(id);
+                            $('#PDFfile_name').html(name);
+                            $('input[name="hd_pdf_file_name"]').val(name.replace(".pdf", "") + "_" + terminal_id);
+                            $('#PDFfile_url').prop("src", url);
+                            $('#modal_PDFfile').modal('show');
+                        }
+                        else {
+                            if (data[1] == "Login for get access token") {
+                                var _data = id + "|" + name + "|" + url + "|" + terminal_id + "|" + sign_url;
+                                sessionStorage.setItem("viewdata", _data);
+                                window.location.href = '/DocuSignLoad?goback=/MerchantFormManage';
+                            }
+                            else {
+                                overlayOff();
+                                var Error = $.parseJSON('{"text":Failure! "' + data[1] + '", "layout":"topRight", "type":"error"}');
+                                noty(Error);
+                                return "";
+                            }
+                        }
+
+                    })
+                    .fail(function () {
+                        overlayOff();
+                        alert("Oops! Something went wrong");
+                    })
+                    .always(function () {
+                    });
+            }
+            else {
+                $('#li_pdf_signed').hide();
+                $('#li_pdf_unsigned a').trigger("click");
+
+                if (terminal_id != "null" && terminal_id != "" && terminal_id != "undefined") {
+                    $("#update_dejavo").show();
+                }
+                else {
+                    $("#update_dejavo").hide();
+                }
+
+                $('#Id_PDFfile').val(id);
+                $('#PDFfile_name').html(name);
+                $('input[name="hd_pdf_file_name"]').val(name.replace(".pdf", "") + "_" + terminal_id);
+                $('#PDFfile_url').prop("src", url);
+                $('#modal_PDFfile').modal('show');
+            }
+        }
+
+    </script>
+
+}

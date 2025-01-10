@@ -1,0 +1,528 @@
+﻿@model EnrichcousBackOffice.Models.C_Questionare
+@using EnrichcousBackOffice.Models
+@using EnrichcousBackOffice.AppLB
+
+@{
+    ViewBag.Title = "Result";
+    Layout = "~/Areas/Page/Views/Shared/_Questionare_Layout.cshtml";
+}
+
+
+<div class="container forms-form">
+    <div class="logo">
+        <img src="~/Areas/Page/Content/img/logo.png">
+    </div>
+    <h1>Salon Starter Questionnaire</h1>
+
+    @if (TempData["error"] != null)
+    {
+        <div class="alert alert-warning alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <span><i class="icon fa fa-warning"></i> @TempData["error"]</span>
+        </div>
+    }
+    else if (TempData["success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <span><i class="icon fa fa-check"></i> @TempData["success"]</span>
+        </div>
+    }
+
+    <h5>Thank you for filling out the form. Your response has been recorded.</h5>
+    <div class="mango col-md-12 col-xs-12">
+        <div class="pull-right">
+            <a class="btn btn-default" href="/page/salon/questionare/@Model.CustomerId?n=@(CommonFunc.ConvertNonUnicodeURL(Model.SalonName))&u=true">Update</a>
+            <button type="button" class="btn btn-default" onclick="window.print()"><i class="fa fa-print"></i> Print</button>
+        </div>
+
+        <div id="information" class="">
+            <h2>Information</h2>
+            <div class="form-item col-md-12 col-xs-12">
+                <div class="item col-md-12 col-xs-12">
+                    <div class="item-list col-md-6 col-xs-6">
+                        <div class="form-group">
+                            <label for="SalonName">Salon Name</label>
+                            <div class="item-content">@Model.SalonName</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="SalesRep">Salon Email</label>
+                            <div class="item-content">@Model.SalonEmail</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="ContactNumber">Best Contact Number</label>
+                            <div class="item-content">@Model.ContactNumber</div>
+                        </div>
+
+                    </div>
+                    <div class="item-list col-md-6 col-xs-6">
+                        <div class="form-group">
+                            <label for="YourName">Your Name</label>
+                            <div class="item-content">@Model.ContactName</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="YourName">Owner Email</label>
+                            <div class="item-content">@Model.OwnerEmail</div>
+                        </div>
+                        @*<div class="form-group">
+                            <label for="SalesRep">Sales Rep</label>
+                            <div class="item-content"></div>
+                        </div>*@
+                        <div class="form-group">
+                            <label for="SalonName">Can we text you?</label>
+                            <div class="item-content">@(Model.AllowTexting == true ? "Yes" : "No")</div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-xs-6">
+                        <div class="form-group">
+                            <label for="SalonName">Address 1</label>
+                            <div class="item-content">@Model.SalonAddress1</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-xs-6">
+                        <div class="form-group">
+                            <label for="SalesRep">Address 2</label>
+                            <div class="item-content">@Model.SalonAddress2</div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-12 col-xs-12">
+                        <div class="form-group col-md-4 col-xs-4" style="padding-left:0px">
+                            <label for="ContactNumber">City</label>
+                            <div class="item-content">@Model.SalonCity</div>
+                        </div>
+                        <div class="form-group  col-md-4  col-xs-4">
+                            <label for="SalesRep">State</label>
+                            <div class="item-content">@Model.SalonState</div>
+                        </div>
+                        <div class="form-group  col-md-4  col-xs-4">
+                            <label for="SalesRep">Zipcode</label>
+                            <div class="item-content">@Model.SalonZipcode</div>
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-md-12 col-xs-12">
+
+                        <div class="form-group">
+                            <label for="SalesRep">Time zone</label>
+                            <div class="item-content">@Model.SalonTimeZone</div>
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+
+        <div id="boarding" class="">
+            <h2>Boarding</h2>
+            <div class="form-item col-md-12 col-xs-12">
+                <div class="item col-md-12 col-xs-12">
+                    <div class="item-list col-md-12 col-xs-12">
+                        <div class="col-md-12 col-xs-12 form-group" style="display:grid;padding-left:0px;">
+                            <label for="Drivers_License_Front_Image">Driver's License Front Side : </label>
+                            @*<img width="150" src="@Model.Drivers_License_Front_Image" />*@
+                            <div>
+                                <div class="form-group">
+                                    <div class="col-sm-9">
+                                        <div style="padding-left:0px;" class="col-md-12">
+                                            @if (!string.IsNullOrEmpty(Model.Drivers_License_Front_Image))
+                                            {
+                                                <p class="col-md-12" style="border:1px dotted red; padding:3px">
+                                                    <img style="height:70px;margin-left:0" alt="picture" src="@Model.Drivers_License_Front_Image" onerror="this.onerror=null; this.src='@Model.Drivers_License_Front_Image'">
+                                                    <i style="padding-left:10px">...@(Model.Drivers_License_Front_Image.Substring(Model.Drivers_License_Front_Image.LastIndexOf('/')+1)) </i>
+                                                    <a style="padding-left:10px" href="/Upload/DownloadFile_?file=@Model.Drivers_License_Front_Image" data-toggle="tooltip" class="pull-right" title="Download">
+                                                        <i class="glyphicon glyphicon-download"></i>
+                                                    </a>
+                                                    <a style="padding-left:10px" href="@Model.Drivers_License_Front_Image" target="_blank" data-toggle="tooltip" class="pull-right" title="View file">
+                                                        <i class="glyphicon glyphicon-zoom-in"></i>
+                                                    </a>
+                                                </p>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12 col-xs-12  form-group" style="display:grid;padding-left:0px;">
+                            <label for="SalesRep">Driver's License Back Side :</label>
+                            <div>
+                                <div class="form-group">
+                                    <div class="col-sm-9">
+                                        <div style="padding-left:0px;" class="col-md-12">
+                                            @if (!string.IsNullOrEmpty(Model.Drivers_License_Back_Image))
+                                            {
+                                                <p class="col-md-12" style="border:1px dotted red; padding:3px">
+                                                    <img style="height:70px;margin-left:0" alt="picture" src="@Model.Drivers_License_Back_Image" onerror="this.onerror=null; this.src='@Model.Drivers_License_Back_Image'">
+                                                    <i style="padding-left:10px">...@(Model.Drivers_License_Back_Image.Substring(Model.Drivers_License_Back_Image.LastIndexOf('/')+1)) </i>
+                                                    <a style="padding-left:10px" href="/Upload/DownloadFile_?file=@Model.Drivers_License_Back_Image" data-toggle="tooltip" class="pull-right" title="Download">
+                                                        <i class="glyphicon glyphicon-download"></i>
+                                                    </a>
+                                                    <a style="padding-left:10px" href="@Model.Drivers_License_Back_Image" target="_blank" data-toggle="tooltip" class="pull-right" title="View file">
+                                                        <i class="glyphicon glyphicon-zoom-in"></i>
+                                                    </a>
+                                                </p>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="item-list col-md-12 col-xs-12">
+                        <div class="col-md-6 col-xs-6  form-group" style="display:grid;padding-left:0px;">
+                            <label>SS-4</label>
+                            @if (!string.IsNullOrEmpty(Model.SS4))
+                            {
+                                <div>@(Model.SS4.Substring(Model.SS4.LastIndexOf('/')+1))</div>
+                                <a style="width:150px" href="/Upload/DownloadFile_?file=@Model.SS4" class="btn btn-success">Download</a>
+                            }
+                        </div>
+                    </div>
+                    <div class="col-md-12 col-xs-12  form-group" style="display:grid;padding-left:0px;">
+                        <label for="SalesRep">Voided Business Check </label>
+                        <div>
+                            <div class="form-group">
+                                <div class="col-sm-9">
+                                    <div style="padding-left:0px;" class="col-md-12">
+                                        @if (!string.IsNullOrEmpty(Model.VoidedBusinessCheck))
+                                        {
+                                            <p class="col-md-12" style="border:1px dotted red; padding:3px">
+                                                <img style="height:70px;margin-left:0" alt="picture" src="@Model.VoidedBusinessCheck" onerror="this.onerror=null; this.src='@Model.VoidedBusinessCheck'">
+                                                <i style="padding-left:10px">...@(Model.VoidedBusinessCheck.Substring(Model.VoidedBusinessCheck.LastIndexOf('/')+1)) </i>
+                                                <a style="padding-left:10px" href="/Upload/DownloadFile_?file=@Model.VoidedBusinessCheck" data-toggle="tooltip" class="pull-right" title="Download">
+                                                    <i class="glyphicon glyphicon-download"></i>
+                                                </a>
+                                                <a style="padding-left:10px" href="@Model.VoidedBusinessCheck" target="_blank" data-toggle="tooltip" class="pull-right" title="View file">
+                                                    <i class="glyphicon glyphicon-zoom-in"></i>
+                                                </a>
+                                            </p>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @*<div class="col-md-12 col-xs-12">
+                        <div class="form-group">
+                            <label>Voided Business Check</label>
+                            <div class="item-content">@Model.VoidedBusinessCheck</div>
+                        </div>
+                    </div>*@
+                    <div class="col-md-12 col-xs-12">
+                        <div class="form-group">
+                            <label>Your merchant application will be sent to the owner's email address you listed</label>
+                            <div class="item-content">@Model.SendToOwnersEmail</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="specifics" class="">
+            <h2>Salon Specifics</h2>
+            <div class="form-item col-md-12 col-xs-12">
+                <div class="item col-md-12 col-xs-12">
+                    <div class="item-list">
+                        <div class="form-group">
+                            <label for="SalonHours">Salon Hours:</label>
+                            <div class="item-content">@Html.Raw(Model.SalonHours)</div>
+                        </div>
+                        @*<div class="form-group">
+                            <label for="">Do you currently have ethernet wired to your reception desk? (POS cannot run on WiFi)</label>
+                            <div class="item-content">@(Model.EthernetWrite == true ? "Yes" : "No")</div>
+                            @if (Model.EthernetWrite == false)
+                            {
+                                <div class="thumbnail" style="border:unset">
+                                    <span>Below is a diagram of how the POS unit will be configured.There has to be a wired connection from the salon's internet source in to the POS unit for it to work properly.</span>
+                                    <img src="~/Areas/Page/Content/img/SCO-Install-Diagram-Color-Coded-for-Merchants.jpg" />
+                                </div>
+                            }
+                        </div>*@
+                        @*<div class="form-group">
+                            <label for="">Do you want to run any promotional discounts right now (i.e.. Grand opening 10% off)?</label>
+                            <div class="item-content">@(string.IsNullOrEmpty(Model.PromotionType) == true ? "No" : "Yes")</div>
+                            @if (string.IsNullOrEmpty(Model.PromotionType) == false)
+                            {
+                                <div id="text-multiplelines" class="text-multiplelines">
+                                    <label id="c-9-41-label">Promo Type</label>
+                                    <div class="item-content">@Html.Raw(Model.PromotionType)</div>
+                                </div>
+                            }
+                        </div>*@
+                        <div class="form-group">
+                            <label for="">Do any of your menu items have a Services Charge?</label>
+                            <div class="item-content">@(string.IsNullOrEmpty(Model.ServiceFee) == true ? "No" : "Yes")</div>
+                            @if (string.IsNullOrEmpty(Model.ServiceFee) == false)
+                            {
+                                <div id="text-multiplelines1" class="text-multiplelines">
+                                    <label id="c-9-42-label" for="ServiceFees">Service Fees</label>
+                                    <div class="item-content">@Html.Raw(Model.ServiceFee)</div>
+                                </div>
+                            }
+                        </div>
+                        @*<div class="form-group">
+                            <label for="">Do you have any general discounts? (ie. %5 off for cash)</label>
+                            <div class="item-content">@(string.IsNullOrEmpty(Model.DiscountType) == true ? "No" : "Yes")</div>
+                            @if (string.IsNullOrEmpty(Model.DiscountType) == false)
+                            {
+                                <div id="discount" class="discount col-md-12 col-xs-12">
+                                    <div id="text-multiplelines2" class="discount-1 text-multiplelines col-md-6">
+                                        <label id="c-9-43-label" for="DiscountType">Discount Type</label>
+                                        <div class="item-content">@Html.Raw(Model.DiscountType)</div>
+                                    </div>
+                                    <div class="discount-2 col-md-6">
+                                        <label for="">Does the discount impact technician commissions?</label>
+                                        <div class="item-content">@(Model.TechCommDiscount == true ? "Yes" : "No")</div>
+                                    </div>
+                                </div>
+                                <div class="clearfix"></div>
+                            }
+                        </div>*@
+                        <div class="form-group">
+                            <label for="sel1">What is turn order for the technicians?</label>
+                            <div class="item-content">@(Model.TechOrder)</div>
+                        </div>
+                    </div>
+                    <div class="item-list">
+                        <div class="form-group">
+                            <label for="Dollar">Dollar amount for 1 turn</label>
+                            <div class="item-content">@(Model.DollarAmount?.ToString("$#,##0.#0"))</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="add-file">Please attach a copy of your menu or email it into contact@enrichcous.com</label>
+                            @if (ViewBag.MoreFiles != null)
+                            {
+                                <div id="morefile">
+                                    @Html.Partial("_UploadMoreFilesPartial", ViewBag.MoreFiles as List<UploadMoreFile>, new ViewDataDictionary { { "upload", false } })
+                                    <div class="clearfix"></div>
+                                </div>
+                            }
+                        </div>
+                        @*<div class="form-group">
+                            <label>Take Snapshot</label>
+                            @if (ViewBag.MoreFiles != null)
+                            {
+                                @Html.Partial("_UploadMoreFileSnapshotPartial", ViewBag.MoreFilesSnap as List<UploadMoreFile>, new ViewDataDictionary { { "upload", false } })
+                                <div class="clearfix"></div>
+                            }
+                        </div>*@
+                        <div class="form-group">
+                            <label for="">Do you have any menu items when done together receive a price reduction? (ie combos or specials)</label>
+                            <div class="item-content">@(Model.ComboSpecialDiscount == true ? "Yes" : "No")</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="specifics" class="">
+            <h2>Check Out</h2>
+            <div class="form-item col-md-12 col-xs-12">
+                <h3>Simply pos captures signatures on the terminal. </h3>
+                <div class="item col-md-12 col-xs-12">
+                    <div class="item-list">
+                        <div class="form-group">
+                            <label for="">Do you want the customer to add tips on the terminal?</label>
+                            <div class="item-content">@(Model.CustomerAddTips == true ? "Yes" : "No")</div>
+                        </div>
+                        @if (Model.CustomerAddTips == true)
+                        {
+                            <div class="form-group">
+                                <label for="DollarAmount">Do you want to suggest percentage tip amounts?</label>
+                                <div class="item-content">@(Model.SuggestPercentTip == true ? "Yes" : "No")</div>
+                            </div>}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="question">
+            <h2>Security & Payroll Question</h2>
+            <div class="form-item">
+                <h3>Receptionists/Managers & Other Non Tech's</h3>
+                <div class="item col-md-12 col-xs-12">
+                    @{ int x = 1;}
+                    @foreach (var item in ViewBag.ListNonTechnician as List<C_Questionare_NonTechnician>)
+                    {
+                        <div style="background-color: @(x % 2 == 0 ? Html.Raw("white") : Html.Raw("whitesmoke")); padding:5px">
+                            <div class="item-number">
+                                <b>Item @x</b>
+                            </div>
+                            <div class="item-list col-md-3 col-xs-3">
+                                <div class="form-group">
+                                    <label for="Name">Name</label>
+                                    <div class="item-content">@(item.Name)</div>
+                                </div>
+                            </div>
+                            <div class="item-list col-md-3 col-xs-3">
+                                <div class="form-group">
+                                    <label for="Job">Job</label>
+                                    <div class="item-content">@(item.Job)</div>
+                                </div>
+                            </div>
+                            <div class="item-list col-md-3 col-xs-3">
+                                <div class="form-group">
+                                    <label for="Pay">Pay</label>
+                                    <div class="item-content">@(item.Pay)</div>
+                                </div>
+                            </div>
+                            <div class="item-list col-md-3 col-xs-3">
+                                <div class="form-group">
+                                    <label for="SalesRep">Adjust/View Payroll</label>
+                                    <div class="item-content">@(item.AdjustViewPayroll == true ? "Yes" : "No")</div>
+                                </div>
+                            </div>
+                            <div class="clearfix"></div>
+                        </div>
+                        x++;
+                    }
+                </div>
+                <div class="item-note">
+                    <div class="col-md-6 note">
+                        <div class="form-group">
+                            <label for="note">Note about Receptionists/Managers & Other Non Tech's</label>
+                            <div class="item-content">@Html.Raw(Model.Note)</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <span>
+                            Standard Receptionists/Manager abilities include being able to adjust the turn queue, voiding items, and adjusting tickets and selling gift cards.
+                        </span><br />
+                        <span>Please note if you want to revise this. </span>
+                    </div>
+                </div>
+                <h3>Technician List</h3>
+                <div class="item col-md-12 col-xs-12" style="overflow: auto;">
+                    <div style="min-width:630px">
+                        @{ int y = 1;}
+                        @foreach (var item in ViewBag.ListTechnician as List<C_Questionare_Technician>)
+                        {
+                            <div style="background-color: @(y % 2 == 0 ? Html.Raw("white") : Html.Raw("whitesmoke")); padding:5px">
+                                <div class="item-number">
+                                    <b>Item @y</b>
+                                </div>
+                                <div class="item-list col-md-2 col-xs-2">
+                                    <div class="form-group">
+                                        <label for="TechnicianName">Technician Name</label>
+                                        <div class="item-content">@(item.Name)</div>
+                                    </div>
+                                </div>
+                                <div class="item-list col-md-2 col-xs-2">
+                                    <div class="form-group">
+                                        <label for="Nickname">Nickname</label>
+                                        <div class="item-content content_style">@(item.NickName)</div>
+                                    </div>
+                                </div>
+                                <div class="item-list col-md-2 col-xs-2">
+                                    <div class="form-group">
+                                        <label for="Commission">Commission</label>
+                                        <div class="item-content content_style">@(item.Commission)</div>
+                                    </div>
+                                </div>
+                                <div class="item-list col-md-2 col-xs-2">
+                                    <div class="form-group">
+                                        <label for="PayrollSplit">Payroll Split</label>
+                                        <div class="item-content content_style">@(item.PayrollSplitCheckOrCash)</div>
+                                    </div>
+                                </div>
+                                <div class="item-list col-md-2 col-xs-2">
+                                    <div class="form-group">
+                                        <label for="AddDiscounts">Add Discounts</label>
+                                        <div class="item-content">@(item.AddDiscounts == true ? "Yes" : "No")</div>
+                                    </div>
+                                </div>
+                                <div class="item-list col-md-2 col-xs-2">
+                                    <div class="form-group">
+                                        <label for="AdjustPrices">Adjust Prices</label>
+                                        <div class="item-content content_style">@(item.AdjustPrices == true ? "Yes" : "No")</div>
+                                    </div>
+                                </div>
+                                <div class="clearfix"></div>
+                            </div>
+                            y++;
+                        }
+                    </div>
+                </div>
+                <div class="item col-md-12 col-xs-12">
+                    <div class="form-group">
+                        <label for="">Do you pay out credit card tips daily?</label>
+                        @if (Model.PayoutCreditCard != null)
+                        {
+                            <div class="item-content">@(Model.PayoutCreditCard == true ? "Yes" : "No")</div>
+
+                            if (Model.PayoutCreditCard == false)
+                            {
+                                <div class="form-group" style="padding-left:20px">
+                                    <label for="">Do you charge a fee for tips taken via credit card?</label>
+                                    <div class="item-content">@(Model.ChargeFeeTips == true ? "Yes" : "No")</div>
+                                </div>
+                            }
+
+                        }
+                    </div>
+                    <div class="form-group">
+                        <label for="">Do you give a commission for product sales?</label>
+                        <div class="item-content">@(Model.CommissionProductSales == true ? "Yes" : "No")</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="">Do you want technicians to be able to sell gift cards?</label>
+                        <div class="item-content">@(string.IsNullOrEmpty(Model.AUTHORIZED_Seller) == true ? "No" : "Yes")</div>
+                        @if (string.IsNullOrEmpty(Model.AUTHORIZED_Seller) == false)
+                        {
+                            <div id="text-multiplelines3" class="text-multiplelines">
+                                <label id="c-9-44label" for="sellers">List of AUTHORIZED sellers</label>
+                                <div class="item-content">@Html.Raw(Model.AUTHORIZED_Seller)</div>
+                            </div>
+                        }
+                    </div>
+                    <div class="form-group">
+                        <label for="">Do you want technicians to be able to make appointments?</label>
+                        <div class="item-content">@(string.IsNullOrEmpty(Model.AUTHORIZED_Tech) == true ? "No" : "Yes")</div>
+                        @if (string.IsNullOrEmpty(Model.AUTHORIZED_Tech) == false)
+                        {
+                            <div id="text-multiplelines4" class="text-multiplelines">
+                                <label id="c-9-45label" for="technicians">List of AUTHORIZED technicians</label>
+                                <div class="item-content">@Html.Raw(Model.AUTHORIZED_Tech)</div>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="form-group">
+                        <label for="OtherSpecial">Other Special Requests?</label>
+                        <div class="item-content">@Html.Raw(Model.OtherRequest)</div>
+                    </div>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+        </div>
+
+        <br />
+        <div class="pull-right">
+            <a class="btn btn-default" href="/page/salon/questionare/@Model.CustomerId?n=@(CommonFunc.ConvertNonUnicodeURL(Model.SalonName))&u=true">Update</a>
+            <button type="button" class="btn btn-default" onclick="window.print()"><i class="fa fa-print"></i> Print</button>
+        </div>
+    </div>
+
+</div>
+
+@section script{
+    <script src="~/Scripts/upload_and_review.js"></script>
+    <style type="text/css">
+        .item-content {
+            min-height: 20px;
+        }
+    </style>
+    <script type="text/javascript">
+        $(function () {
+            var _label = $("#morefile").find("label");
+            //console.log(_label);
+            for (i = 0; i < _label.length; i++) {
+                _label[i].remove();
+            }
+        });
+    </script>
+}

@@ -1,0 +1,297 @@
+﻿@using Enrich.Services.Utils.Twilio;
+@using EnrichcousBackOffice.Models;
+@model EnrichcousBackOffice.Models.TwilioA2PTollFreeVerification
+@{
+    var profile = ViewBag.Profile as TwilioCustomerProfile;
+    var account = ViewBag.Account as TwilioAccount;
+}
+<div class="modal fade" id="detail-toll-free-popup" role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-content modal-lg">
+        <form action="/TwilioManage/UpdateTollFree" method="post" id="detail-toll-free-form">
+            <input name="Id" type="hidden" value="@Model.Id"/>
+            <div class="modal-header">
+                <div class="modal-title pull-left">Toll-Free Verification Infomation</div>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div style="">
+                        <div class="panel panel-default product-info-panel">
+                            <div class="panel-heading">
+                                <span>Business Information</span>
+                            </div>
+                            <div class="panel-body" style="padding:15px">
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label>
+                                                Business Name
+                                                <span class="ico-help" title="" data-original-title="The business name."><i class="fa fa-question-circle"></i></span>
+                                                <span style="color:red">*</span>
+                                            </label>
+                                            <input type="text" class="form-control" readonly value="@profile.BusinessName" maxlength="500" placeholder="Business Name" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label>
+                                                Business Website
+                                                <span class="ico-help" title="" data-original-title="The business website. (Ppprove facebook,instagram,twiter...)"><i class="fa fa-question-circle"></i></span>
+                                                <span style="color:red">*</span>
+                                            </label>
+                                            <input type="text" class="form-control" readonly value="@profile.BusinessWebsite" maxlength="500" placeholder="Business Website" required>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-sm-12">
+                                        <div class="form-group">
+                                            <label>
+                                                Business Street Address
+                                                <span class="ico-help" title="" data-original-title="The business address."><i class="fa fa-question-circle"></i></span>
+                                                <span style="color:red">*</span>
+                                            </label>
+                                            <input type="text" class="form-control" readonly value="@profile.BusinessStreetAddress" maxlength="100" placeholder="Business Street Address" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-3">
+                                        <div class="form-group">
+                                            <label>
+                                                Business City
+                                                <span class="ico-help" title="" data-original-title="The business city."><i class="fa fa-question-circle"></i></span>
+                                                <span style="color:red">*</span>
+                                            </label>
+                                            <input type="text" class="form-control" readonly value="@profile.BusinessCity" maxlength="100" placeholder="Business City" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-3">
+                                        <div class="form-group">
+                                            <label>
+                                                State Province Region
+                                                <span class="ico-help" title="" data-original-title="The business state province region."><i class="fa fa-question-circle"></i></span>
+                                                <span style="color:red">*</span>
+                                            </label>
+                                            <input type="text" class="form-control" readonly maxlength="100" value="@profile.BusinessStateProvinceRegion" placeholder="Business State Province Region" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-3">
+                                        <div class="form-group">
+                                            <label>
+                                                Postal Code
+                                                <span class="ico-help" title="" data-original-title="The business postal code."><i class="fa fa-question-circle"></i></span>
+                                                <span style="color:red">*</span>
+                                            </label>
+                                            <input type="text" class="form-control" readonly maxlength="100" value="@profile.BusinessPostalCode" placeholder="Business Postal Code" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-3">
+                                        <div class="form-group">
+                                            <label>
+                                                Country
+                                                <span class="ico-help" title="" data-original-title="The business country."><i class="fa fa-question-circle"></i></span>
+                                                <span style="color:red">*</span>
+                                            </label>
+                                            <input type="text" class="form-control" readonly maxlength="100" value="@profile.BusinessCountry" placeholder="Business Country" required>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <div class="panel panel-default product-info-panel">
+                            <div class="panel-heading">
+                                <span>Contact Information</span>
+                            </div>
+                            <div class="panel-body">
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label>
+                                                Contact First Name
+                                                <span class="ico-help" title="" data-original-title="The business contact first name."><i class="fa fa-question-circle"></i></span>
+                                                <span style="color:red">*</span>
+                                            </label>
+                                            <input type="text" class="form-control" readonly value="@profile.BusinessContactFirstName" placeholder="Contact First Name" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label>
+                                                Contact Last Name
+                                                <span class="ico-help" title="" data-original-title="The business contact last name."><i class="fa fa-question-circle"></i></span>
+                                                <span style="color:red">*</span>
+                                            </label>
+                                            <input type="text" class="form-control" readonly value="@profile.BusinessContactLastName" placeholder="Contact Last Name" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label>
+                                                Contact Email
+                                                <span class="ico-help" title="" data-original-title="The business contact email."><i class="fa fa-question-circle"></i></span>
+                                                <span style="color:red">*</span>
+                                            </label>
+                                            <input type="email" class="form-control" readonly value="@profile.BusinessContactEmail" placeholder="Contact Email" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label>
+                                                Contact Phone
+                                                <span class="ico-help" title="" data-original-title="The business contact phone."><i class="fa fa-question-circle"></i></span>
+                                                <span style="color:red">*</span>
+                                            </label>
+                                            <input type="text" class="form-control" readonly value="@profile.BusinessContactPhone" placeholder="Contact Phone" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label>
+                                                Notification Email
+                                                <span class="ico-help" title="" data-original-title="The nofitication email"><i class="fa fa-question-circle"></i></span>
+                                                <span style="color:red">*</span>
+                                            </label>
+                                            <input type="email" class="form-control" readonly value="@profile.NotificationEmail" placeholder="Notification Email" required>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                 
+                    <div class="panel panel-default product-info-panel">
+                        <div class="panel-heading">
+                            <span>Toll-Free Information</span>
+                        </div>
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label>Buy Phone Number (Toll-Free)<span style="color:red">*</span> <i onclick="reLoadPhoneNumber()" class="fa fa-refresh" aria-hidden="true"></i></label>
+                                        <select class="form-control" readonly required>
+                                            <option value="">@Model.PhoneNumber</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label>Message Volume (Monthly)<span style="color:red">*</span></label>
+                                        <select class="form-control" readonly style="width: 100%;" required>
+                                            <option value="">@Model.MessageVolume</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label>Use Case Categories <span style="color:red">*</span></label>
+                                        <input class="form-control" readonly value="@Model.UseCaseCategories" />
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label>
+                                            Use Case Summary
+                                            <span style="color:red">*</span>
+                                        </label>
+                                        <textarea class="form-control" readonly rows="3" required placeholder="Example: This number is used to send out promotional offers and coupons to the customers of for example the John’s Coffee Shop">@Model.UseCaseSummary</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="form-group">
+                                        <label>
+                                            Production Message Sample
+                                            <span style="color:red">*</span>
+                                        </label>
+                                        <textarea class="form-control" readonly placeholder="Example: Thank you for being a loyal customer of John’s Coffee Shop. Enjoy 10% off your next purchase. Reply STOP to opt out." rows="3" required>@Model.ProductionMessageSample</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label>Opt In Type <span style="color:red">*</span></label>
+                                        <input class="form-control" readonly value="@Model.OptInType" />
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label>Opt In Image Urls <span style="color:red">*</span></label>
+                                        <textarea class="form-control" readonly rows="3" placeholder="each url = 1 line." required>@Model.OptInImageUrls</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label>Type of use case for POS:<span style="color:red">*</span></label>
+                                        <label style="margin-right:5px; margin-left:5px">
+                                            <input type="checkbox" name="PosUsingForOperation" value="true" @(Model.PosUsingForOperation == true ? "checked" : "")>
+                                            Operation
+                                        </label>
+                                        <label>
+                                            <input type="checkbox" name="PosUsingForPosPromotion" value="true" @(Model.PosUsingForPosPromotion == true ? "checked" : "")>
+                                            Promotion
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="form-group">
+                                        <label>Additional Information (Optional)</label>
+                                        <textarea class="form-control" readonly rows="3">
+                                             @Model.AdditionalInformation
+                                            </textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-success">Update</button>
+                <button type="button" data-dismiss="modal" aria-label="Close" class="btn btn-default">Close</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    $("#detail-toll-free-form").on('submit', function (e) {
+            e.preventDefault();
+            overlayOn();
+            var form = $(this);
+            var actionUrl = form.attr('action');
+            $.ajax({
+                type: "post",
+                url: actionUrl,
+                data: form.serialize(),
+                success: function (data) {
+                    if (data.status) {
+                        $("#detail-toll-free-popup").modal("hide");
+                        $('#detail-phone-table').DataTable().ajax.reload();
+                        success(data.message)
+                    }
+                    else {
+                        error(data.message)
+                    }
+                },
+                error: function (data) {
+                    Error('An error occurred.')
+                },
+                complete: function (data) {
+                    overlayOff();
+                }
+            });
+    });
+</script>

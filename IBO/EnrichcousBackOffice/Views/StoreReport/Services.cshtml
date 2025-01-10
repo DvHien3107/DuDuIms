@@ -1,0 +1,543 @@
+﻿@using Inner.Libs.Helpful;
+@using EnrichcousBackOffice.Models
+@using EnrichcousBackOffice.Utils.IEnums
+@using EnrichcousBackOffice.AppLB
+
+@{
+    ViewBag.Title = "Services report";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var cMem = Authority.GetCurrentMember();
+    var Partners = ViewBag.Partners as List<C_Partner> ?? new List<C_Partner>() { };
+    var Services = ViewBag.Services as List<License_Product> ?? new List<License_Product>() { };
+    var gr_Services = Services.GroupBy(c => c.Type).Select(c => new
+    {
+        Type = c.Key,
+        Service = c.ToList()
+    }).OrderByDescending(c => c.Type == "license").ThenBy(c => c.Type == "other").ToList();
+}
+<style>
+    .input-group-addon {
+        background-color: #d9edf7 !important;
+        color: black;
+    }
+
+    .cardIcon {
+        background: url("../Areas/PaymentGate/Content/Images/sprite_logos_wallet_v10_1x.png") no-repeat 0 100px;
+        height: 22px;
+        margin-right: 5px;
+        float: left;
+        width: 32px;
+        padding: 0 4px 0 0
+    }
+
+    .ELO {
+        background-position: 0 -713px
+    }
+
+    .CUP {
+        background-position: 0 -837px
+    }
+
+    .VISA {
+        background-position: 0 -31px
+    }
+
+    .RUPAY {
+        background-image: url(https://www.paypalobjects.com/images/checkout/hermes/rupay_logo.svg);
+        background-position: 0 0;
+        background-size: 32px 20px;
+        background-repeat: no-repeat
+    }
+
+    .MASTERCARD {
+        background-position: 0 -62px
+    }
+
+    .HIPER {
+        background-position: 0 -682px
+    }
+
+    .HIPERCARD {
+        background-position: 0 -744px
+    }
+
+    .AMEX {
+        background-position: 0 -93px;
+        margin-right: -5px
+    }
+
+    .JCB {
+        background-position: 0 -527px
+    }
+
+    .ELECTRON {
+        background-position: 0 -217px
+    }
+
+    .MAESTRO, .SWITCH {
+        background-position: 0 -248px
+    }
+
+    .DISCOVER {
+        background-position: 0 -124px
+    }
+
+    .CBNATIONALE {
+        background-position: 0 -310px
+    }
+
+    .CETELEM {
+        background-position: 0 -465px
+    }
+
+    .COFIDIS {
+        background-position: 0 -651px;
+        margin-right: -5px
+    }
+
+    .COFINOGA {
+        background-position: 0 -341px
+    }
+
+    .QIWI {
+        background-position: 0 -806px;
+        width: 30px
+    }
+</style>
+
+<section class="content-header">
+    <h1>
+        Service reports
+        <small>report</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Dashboard</a></li>
+        <li><i class="fa fa-bar-chart"></i> Service reports</li>
+    </ol>
+</section>
+
+<section class="content">
+    <div class="row">
+
+        @if (TempData["e"] != null)
+        {
+            <div class="alert alert-warning alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+            </div>
+        }
+        else if (TempData["s"] != null)
+        {
+            <div class="alert alert-success alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+            </div>
+        }
+        <div class="col-md-12">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Service list</h3>
+                </div>
+                <!-- /.box-header -->
+
+                <div class="box-body">
+                    <div class="row">
+                        <div class="col-md-4 col-sm-6 form-group">
+                            <div class="input-group" style="width:100%">
+                                <div class="input-group-addon">
+                                    Services
+                                </div>
+                                <select class="form-control select2" id="s_service" style="width:100%" name="s_service" onchange="$('#table-service').DataTable().ajax.reload()">
+                                    <option value="" selected>All</option>
+                                    @foreach (var grp in gr_Services)
+                                    {
+                                        if (grp.Type == LicenseType.LICENSE.Text())
+                                        {
+                                            <optgroup label="Licenses"></optgroup>
+                                        }
+                                        else if (grp.Type == LicenseType.ADD_ON.Text())
+                                        {
+                                            <optgroup label="Add-on"></optgroup>
+                                        }
+                                        else if (grp.Type == LicenseType.GiftCard.Text())
+                                        {
+                                            <optgroup label="Giftcard"></optgroup>
+                                        }
+                                        else if (grp.Type == LicenseType.VirtualHardware_Other.Text())
+                                        {
+                                            <optgroup label="Other services"></optgroup>
+                                        }
+                                        foreach (var item in grp.Service)
+                                        {
+                                            <option value="@item.Code">@item.Name</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <!-- /.input group -->
+                        </div>
+                        <div class="col-md-4 col-sm-6 form-group">
+                            <div class="input-group" style="width:100%">
+                                <div class="input-group-addon">
+                                    Recurring Status
+                                </div>
+                                <select class="form-control" name="s_recurring_status" id="s_recurring_status" onchange="$('#table-service').DataTable().ajax.reload()">
+                                    <option value="" style="font-weight:bolder">All</option>
+                                    <option value="1" style="color: green;font-weight:bolder">Active</option>
+                                    <option value="0" style="color: darkred; font-weight: bolder">Inactive</option>
+                                </select>
+                            </div>
+                            <!-- /.input group -->
+                        </div>
+                        <div class="col-md-4 col-sm-6 form-group">
+                            <div class="input-group" style="width:100%">
+                                <div class="input-group-addon">
+                                    Remaining date
+                                </div>
+                                <select class="form-control" name="s_remaining" id="s_remaining" onchange="$('#table-service').DataTable().ajax.reload()">
+                                    <option value="-1">All</option>
+                                    <option value="5">About 5 days</option>
+                                    <option value="10">About 10 days</option>
+                                    <option value="15">About 15 days</option>
+                                    <option value="30">About 1 month</option>
+                                    <option value="0">Expires</option>
+                                </select>
+                            </div>
+                            <!-- /.input group -->
+                        </div>
+                        @if (string.IsNullOrEmpty(cMem.BelongToPartner))
+                        {
+                            <div class="col-md-4 col-sm-6 form-group">
+                                <div class="input-group" style="width:100%">
+                                    <div class="input-group-addon">
+                                        Partner/Company
+                                    </div>
+                                    <select class="form-control" name="s_partner" id="s_partner" onchange="$('#table-service').DataTable().ajax.reload()">
+                                        <option value="">All</option>
+                                        <option value="mango">@ViewBag.ProductName</option>
+                                        @foreach (var item in Partners.OrderBy(c => c.Code))
+                                        {
+                                            <option value="@item.Code">#@item.Code - @item.Name</option>
+                                        }
+                                    </select>
+                                </div>
+                                <!-- /.input group -->
+                            </div>
+                        }
+                        <div class="col-md-4 col-sm-6 form-group">
+                            <div class="input-group" style="width:100%">
+                                <div class="input-group-addon">
+                                    Payment Later
+                                </div>
+                                <select class="form-control" name="s_paymentlater" id="s_paymentlater" onchange="$('#table-service').DataTable().ajax.reload()">
+                                    <option value="">All</option>
+                                    <option value="true">Yes</option>
+                                    <option value="false">No</option>
+                                </select>
+                            </div>
+                            <!-- /.input group -->
+                        </div>
+                        <div class="col-md-4 col-sm-6 form-group">
+                            <div class="input-group" style="width:100%">
+                                <div class="input-group-addon">
+                                    Search By
+                                </div>
+                                <input class="form-control" name="s_text" id="s_text" value="@ViewBag.search_text" placeholder="Input search text..." onchange="$('#table-service').DataTable().ajax.reload()" />
+                            </div>
+                            <!-- /.input group -->
+                        </div>
+                    </div>
+                    <hr />
+                    <div class="render-table">
+                        <div class="btn-group grp_btn_recurring pull-right">
+                            <button type="button" class="btn btn-info dropdown-toggle btn-sm btn-recurring" data-toggle="dropdown" aria-expanded="false" disabled>
+                                Recurring payment <span class="caret"></span><span class="sr-only"></span>
+                            </button>
+                            <ul class="dropdown-menu" role="menu" style="width:80%;min-width:0;padding:0">
+                                <li>
+                                    <button type="button" class="btn btn-success btn-sm pull-right" onclick="turnRecurring(true)" style="width:100%">
+                                        Turn On <img style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                                    </button>
+                                </li>
+                                <li>
+                                    <button type="button" class="btn btn-danger btn-sm pull-right" onclick="turnRecurring(false)" style="width:100%">
+                                        Turn Off <img style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                        <!--<p class="grp_btn_recurring">-->
+                        @*<button class="btn btn-warning pull-right btn-flat btn-recurring" onclick="turnRecurring(false)" disabled>Turn off</button>
+                            <button class="btn btn-success pull-right btn-flat btn-recurring" onclick="turnRecurring(true)" disabled style="margin-right: 10px">Turn on</button>*@
+
+
+                        <!--</p>-->
+                        <table class="table table-bordered table-hover" id="table-service" style="width:100%">
+                            <thead>
+                                <tr class="bg-info">
+                                    <th>#</th>
+                                    <th>Store Name</th>
+                                    <th>Owner </th>
+                                    <th>Activated License </th>
+                                    <th>Expires Date</th>
+                                    <th>Next Payment</th>
+                                    <th>Recurring Status</th>
+                                    <th>Card Number</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- /.box-body -->
+            </div>
+            <!-- /.box -->
+        </div>
+
+    </div>
+</section>
+
+<script>
+    $(function () {
+        var beforeDate = parseInt('@ViewBag.BeforeDate')
+        var t = $("#table-service").DataTable({
+            "language": {
+                "processing": '<img src="/Content/ajax-loaders/loading2.gif" width="60px" />',
+                "paginate": {
+                    "first": '<i class="fa fa-angle-double-left" aria-hidden="true"></i>',
+                    "last": '<i class="fa fa-angle-double-right" aria-hidden="true"></i>',
+                    "next": '<i class="fa fa-angle-right" aria-hidden="true"></i>',
+                    "previous": '<i class="fa fa-angle-left" aria-hidden="true"></i>'
+                },
+            },
+            //"columnDefs": [{
+            //    "targets": 'no-sort',
+            //    "orderable": false,
+            //}],
+            'paging': true,
+            "pageLength": 10,
+            "serverSide": true, // for process server side
+            "processing": true, // for show progress bar
+            'lengthChange': true,
+            'searching': false,
+            //'ordering': false,
+            'stateSave': false,
+            'info': false,
+            "scrollX": true,
+            'autoWidth': true,
+            "order": [[0, "desc"]],
+            "ajax": {
+                "url": "/storereport/getservices",
+                "type": "POST",
+                "datatype": "json",
+                data: function (data) {
+                    data.s_text = $("[name='s_text']").val();
+                    data.s_service = $("[name='s_service']").val();
+                    data.s_partner = $("[name='s_partner']").val();
+                    data.s_paymentlater = $("[name='s_paymentlater']").val();
+                    data.s_remaining = $("[name='s_remaining']").val();
+                    data.s_recurring_status = $("[name='s_recurring_status']").val();
+                    return data;
+                },
+                'dataSrc': function (data) {
+                    //$('#total-record').html(data.recordsTotal);
+                    //$('#total-amount').html(data.totalAmount);
+                    return data.data;
+                }
+            },
+            "columns": [
+                {
+                    name: 'StoreCode',
+                    render: function (data, type, row, meta) {
+                        return `<b>#${row['Store'].StoreCode}</b>`;
+                    },
+                },
+                {
+                    name: 'StoreName',
+                    render: function (data, type, row, meta) {
+                        let html = '';
+                        html += `<a target="_blank" href="/merchantman/detail/${row['Customer']?.Id}"><b class="text-success">${row['Store'].StoreName} </b></a>`;
+                        if (row['Customer']?.PartnerCode != null && row['Customer']?.PartnerCode != '')
+                            html += `<span class="label label-default"> #${row['Customer']?.PartnerCode}</span>`;
+                        html += `<br/><i>Phone: ${row['Customer']?.SalonPhone ?? 'N/A'}</i>`;
+                        html += `<br/><i>Email: ${row['Customer']?.SalonEmail ?? 'N/A'}</i>`;
+                        return html;
+                    },
+                },
+                {
+                    name: 'Owner',
+                    render: function (data, type, row, meta) {
+                        let html = '';
+                        html += `<a target="_blank" href="/merchantman/detail/${row['Customer']?.Id}"><b class="text-primary">${row['Customer']?.OwnerName ?? 'N/A'} </b></a>`;
+                        html += `<br/><i>Phone: ${row['Customer']?.OwnerMobile ?? 'N/A'}</i>`;
+                        html += `<br/><i>Email: ${row['Customer']?.Email ?? 'N/A'}</i>`;
+                        return html;
+                    },
+                },
+                {
+                    name: 'Productname',
+                    render: function (data, type, row, meta) {
+                        let html = '';
+                        html += `<b>${row['Store']?.Productname} </b></br>`;
+
+                        if (row["RemainingDate"] > 3650) {
+                            html += `<label class="label" style="background-color: #00CC00"> Lifetime </label>`
+                        }
+                        else if (row["RemainingDate"] >= 1 && row["RemainingDate"] != null) {
+                            html += `<label class="label" style="background-color: #00CC00"> ${row["RemainingDate"]} day${row["RemainingDate"]>1?'s':''}</label>`
+                        }
+                        else if (row["RemainingDate"] < 1 && row["RemainingDate"] != null) {
+                            html += `<label class="label" style="background-color: #EE0000"> Expires</label>`
+                        }
+                        else {
+                            html += `<label class="label label-default"> N/A</label>`
+                        }
+                        if (row['Subcription']?.DiscountPercent > 0 && row['Subcription']?.ApplyDiscountAsRecurring == true) {
+                            html += `<br/><span class="badge"> Discount as recuring: ${row['Subcription']?.DiscountPercent} % </span>`;
+                        }
+                        else if (row['Subcription']?.Discount > 0 && row['Subcription']?.ApplyDiscountAsRecurring == true) {
+                            html += `<br/><span class="badge"> Discount as recuring: $ ${row['Subcription']?.Discount} </span>`;
+                        }
+
+                        if (row['Order']?.Status == "PaymentLater") {
+                            let duedate = moment(row['Order']?.DueDate);
+                            if (duedate.valueOf() > moment().valueOf()) {
+                                html += `</br><label class="label label-primary">Payment Later: ${duedate.startOf('day').diff(moment().startOf('day'), 'days')} days</label>`
+                            }
+                            else {
+                                html += `</br><label class="label label-danger">Payment Later: ${duedate.format('MMM DD, YYYY')} (Expired)</label>`
+                            }
+                        }
+                        return html;
+                    },
+                },
+                {
+                    name: 'ExpiresDate',
+                    render: function (data, type, row, meta) {
+                        let html = '';
+                        let offset = moment().utcOffset();
+                        if (row['Store']?.RenewDate != null) {
+                            let expireDate = moment.utc(row['Store']?.RenewDate).utcOffset(offset).format("MMM DD, YYYY");
+                            html += `<span>${expireDate}</span>`;
+                          
+
+                        }
+                        else {
+                            html += 'N/A';
+                        }
+                        return html;
+                    },
+                },
+                {
+                    name: 'NextPayment',
+                    render: function (data, type, row, meta) {
+                        let html = '';
+                        let offset = moment().utcOffset();
+                        if (row['Store']?.RenewDate != null) {
+                            let local = moment.utc(row['Store']?.RenewDate).add(-beforeDate, 'days').utcOffset(offset).format("MMM DD, YYYY");
+                            html += `<span>${local}</span>`;
+
+                        }
+                        else {
+                            html += 'N/A';
+                        }
+                        return html;
+                    },
+                },
+
+                {
+                    name: 'RecurringStatus',
+                    render: function (data, type, row, meta) {
+                        let html = '';
+                        if (row['Store']?.AutoRenew == true)
+                            html += `<span class="label label-success">Active</span>`;
+                        else
+                            html += `<span class="label label-warning">Inactive</span>`;
+                        return html;
+                    },
+                },
+                {
+                    name: 'CardNumber',
+                    render: function (data, type, row, meta) {
+                        let html = '';
+                        if (row['PartnerCard'] != null)
+                            html += `<a target="_blank" href="/partner/save/${row['PartnerId']}" data-toggle="tooltip" title="Click to update card">
+                                        <div class="cardIcon ${row['PartnerCard'].CardType}"></div><b>${row['PartnerCard'].CardNumber}</b>
+                                    </a>`
+                        else if (row['CustomerCard'] != null)
+                            html += `<a target="_blank" href="/merchantman/detail/${row['Customer']?.Id}?tab=transaction" data-toggle="tooltip" title="Click to update card">
+                                        <div class="cardIcon ${row['CustomerCard'].CardType}"></div><b>${row['CustomerCard'].CardNumber}</b>
+                                    </a>`
+                        else if (row['Store']?.AutoRenew == true && row['Store']?.RecurringType == "ACH")
+                            html += `<a target="_blank" href="/merchantman/detail/${row['Customer']?.Id}?tab=transaction" data-toggle="tooltip" title="Click to update card">
+                                        <b>${row['Customer'].DepositBankName} - ${row['Customer'].DepositAccountNumber}</b>
+                                    </a>`
+                        else if (row['Store']?.AutoRenew == true)
+                            html += `<label class="label animate-flicker" style="background-color:red;">
+                                        <span data-toggle="tooltip" data-placement="bottom" title="This payment schedule has not been confirmed because the system has not recorded the merchant's card payment">Not yet card or turn off</span>
+                                    </label>`;
+                        else
+                            html += `<b>N/A</b>`
+                        return html;
+                    },
+                },
+                {
+                    name: 'Action',
+                    width: "20px",
+                    render: function (data, type, row, meta) {
+                        let html = `<input id="ip_recurring" type="checkbox" style="width:20px;height:20px" name="ip_recurring" data-storecode="${row['Store'].StoreCode}" data-sto="${row['Store'].Id}" value="" onclick="checkRecurring()" />`
+                        return html;
+                    },
+                },
+            ]
+        });
+
+    })
+
+    function checkRecurring() {
+        if ($('#ip_recurring:checked').length > 0)
+            $('.btn-recurring').attr("disabled", false);
+        else
+            $('.btn-recurring').attr("disabled", true);
+    }
+
+    async function turnRecurring(Autorenew = false) {
+        var listStore = $('#ip_recurring:checked').toArray();
+        if (listStore.length == 0) return;
+        var confirmtxt = "Do you want to changes status auto recurring for this subscription?";
+        var hasCard = true;
+        overlayOn();
+        let stores = $('#ip_recurring:checked').toArray().map(a => $(a).attr('data-storecode'));
+        await $.ajax({
+            method: "GET",
+            url: "/storereport/checkcard?stores=" + stores
+        }).done(async function (data) {
+            hasCard = data.toLowerCase() == "true";
+        }).fail(function () {
+        }).always(function () {
+            overlayOff();
+        });
+
+        if (!hasCard && Autorenew)
+            confirmtxt = "Some merchant does not exist any payment cards in the system, Invoices will not be able to automatically pay according to the schedule. A new invoice will be generated with a pending payment status for you when scheduled.\nMake sure you want to do this?";
+
+        if (confirm(confirmtxt)) {
+            overlayOn();
+            for (var i = 0; i < listStore.length; i++) {
+                let sto_id = $(listStore[i]).attr('data-sto');
+                await $.ajax({
+                    method: "POST",
+                    url: "/merchantman/ChangeSubscriptionRenew",
+                    data: { sto_id, Autorenew },
+                }).done(function (data) {
+                }).fail(function () {
+                }).always(function () {
+                });
+            }
+            $('#table-service').DataTable().ajax.reload();
+            overlayOff();
+        }
+    }
+</script>

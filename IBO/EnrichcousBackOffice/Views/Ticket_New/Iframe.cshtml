@@ -1,0 +1,14 @@
+﻿@using EnrichcousBackOffice.Utils.IEnums
+@model EnrichcousBackOffice.Models.CustomizeModel.Ticket.IndexTicketModel
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";   
+}
+<style>
+    body
+    {
+        overflow-y:hidden;
+    }
+</style>
+<div style="height: calc(100vh);">
+    <iframe src="@(ViewBag.Link)" name="ticket_iframe" style="top:0;left:0;height:100%;width:100%;" id="ticket_iframe" onload="window.history.pushState('', '', ('/ticket_new/iframe?link='+document.getElementById('ticket_iframe').contentWindow.location.href));" scrolling="auto" frameborder="0"></iframe>
+</div>

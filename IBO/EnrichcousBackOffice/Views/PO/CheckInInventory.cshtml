@@ -1,0 +1,428 @@
+﻿@model  IEnumerable<EnrichcousBackOffice.Models.CustomizeModel.PO_manager_view>
+@using EnrichcousBackOffice.Models;
+@{
+    ViewBag.Title = "Check In Inventory";
+
+    Dictionary<string, bool> access = ViewBag.p;
+    var locations = new EnrichcousBackOffice.Models.WebDataModel().Locations.ToList();
+    bool po_manage = false;
+
+    if (access.Any(k => k.Key.Equals("inventory_purchase_order_manager")) == true && access["inventory_purchase_order_manager"] == true)
+    {
+        po_manage = true;
+    }
+}
+<section class="content-header">
+    <h1>
+        Check In Inventory
+        <small>Product</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li><i class="fa fa-reorder"></i> Product</li>
+        <li class="active">Check In Inventory</li>
+    </ol>
+</section>
+
+<section class="content">
+    @if (TempData["e"] != null)
+    {
+        <div class="alert alert-warning alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+        </div>
+    }
+    else if (TempData["s"] != null)
+    {
+        <div class="alert alert-success alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+        </div>
+    }
+
+    <input type="hidden" id="po_manage" value="@Html.Raw(po_manage)" />
+    <div class="row">
+        <div class="col-md-12">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Check In Inventory</h3>
+                    @*<a class="pull-right" href="/PO/index"><i class="fa fa-arrow-left"></i> Go back</a>*@
+                </div>
+                <div class="box-body">
+                    <div class="row">
+                        <form id="search_form">
+                            <div class="form-group col-md-3">
+                                <div class="input-group">
+                                    <div class="input-group-addon">
+                                        <i class="fa fa-calendar"></i> From
+                                    </div>
+                                    <input type="text" id="FDate" name="FDate" class="form-control datepicker input_change" value="@TempData["FDate"]" readonly>
+                                </div>
+
+                            </div>
+                            <div class="form-group col-md-3">
+                                <div class="input-group">
+                                    <div class="input-group-addon">
+                                        <i class="fa fa-calendar"></i> To
+                                    </div>
+                                    <input type="text" id="TDate" name="TDate" class="form-control datepicker input_change" value="@TempData["TDate"]" readonly>
+                                </div>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <div class="input-group">
+                                    <div class="input-group-addon">
+                                        Vendor
+                                    </div>
+                                    <select id="SVendor" name="SVendor" class="form-control select2 input_change">
+                                        <option value="">All</option>
+                                        @foreach (Vendor p in ViewBag.vendor)
+                                        {
+                                            <option value="@p.Id" @(TempData["SVendor"]?.ToString().Equals(p.Id.ToString()) == true ? "selected" : "")>@p.CompanyName</option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <div class="input-group">
+                                    <div class="input-group-addon">
+                                        Check in Status
+                                    </div>
+                                    <select id="SStatus" name="SStatus" class="form-control select2 input_change">
+                                        <option value="">All</option>
+                                        <option value="true">All checked in</option>
+                                        <option value="false">Unchecked in</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group col-md-3">
+                                <div class="input-group">
+                                    <div class="input-group-addon">
+                                        Search
+                                    </div>
+                                   <input name="SearchText"  id="SearchText" value="" type="text" class="form-control input_change" placeholder="Search by PO# | SO#"/>
+                                </div>
+                            </div>
+                            <div class="col-md-3 form-group">
+                                <button type="button" class="btn btn-primary" id="SearchButton" name="SearchButton"><i class="fa fa-search"></i> Search</button>
+                            </div>
+
+                        </form>
+                    </div>
+                    <hr />
+                    <div class="row">
+                        <div class="col-md-12">
+                            @Html.Partial("_Checkin_load")
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<div class="modal fade" id="checkin_form" role="dialog">
+    <div class="modal-dialog modal-lg" style="max-width:600px">
+        <!-- Modal content-->
+        <form method="post" action="/po/CheckinSubmit">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">×</button>
+                    <h4 class="modal-title">Check-in</h4>
+                </div>
+                <div class="modal-body" style="max-height: 72vh; overflow-y:auto">
+                    <div class="row" style="padding-bottom:20px">
+                        <div style="padding-left:15px">
+                            <div class="container-fluid pull-left" style="border: 2px outset;margin:2px; padding:0">
+                                <img id="modal_pic" src="/" onerror="this.src='/Upload/Img/no_image.jpg'" height="150" width="150" />
+                            </div>
+                            <div class="pull-left" style="padding-left:30px; padding-top:20px; width:380px">
+                                <label style="min-width:100px">Product: </label> <label id="modal_product" class="text-primary">Product</label><br />
+                                <label style="min-width:100px">Model: </label> <label id="modal_model" class="text-info">Model</label><br />
+                                <label style="min-width:100px">Color: </label> <label id="modal_color" class="text-info">Color</label><br />
+                                <label style="min-width:100px">QTY: </label> <label id="modal_qty" class="text-info">QTY</label><br />
+                            </div>
+                        </div>
+                    </div>
+                    <label>Check-in: </label>
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="input-group" style="padding-bottom:10px">
+                                <div class="input-group-addon">Location</div>
+                                <select name="location" class="form-control">
+                                    @foreach (var location in locations)
+                                    {
+                                        <option value="@location.Id">@location.Name</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4" style="padding-left:0">
+                            <div class="input-group" style="padding-bottom:20px">
+                                <div class="input-group-addon">Qty</div>
+                                <input type="number" oninput="refresh_invs($(this).val())" name="checkin_qty" class="form-control" min="1" max="3000" />
+                            </div>
+                        </div>
+                    </div>
+                    <input name="detail_id" type="hidden" />
+                    <input name="list_inv_string" type="hidden" />
+                    <input name="export_excel" type="hidden" />
+
+                    <label style="font-size: 16px">List Inv-number: </label><br />
+                    <label style="font-size: 20px" id="list_inv">
+                    </label>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <input type="submit" class="btn btn-success" name="action" value="Submit & Export exel">
+                    <input type="submit" class="btn btn-primary" name="action" value="Submit">
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<!-- Modal -->
+<form id="CreateModel" action="/po/newmodel" method="post" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">New Model</h4>
+            </div>
+            <div class="modal-body">
+                <input id="detail_id" name="detail_id" type="hidden" />
+                <div class="form-group">
+                    <label>Vendor</label>
+                    <input id="vendor" class="form-control" readonly />
+                </div>
+                <div class="form-group">
+                    <label>Product</label>
+                    <input id="product" class="form-control" readonly />
+                </div>
+                <div class="form-group">
+                    <label>Color</label>
+                    <input id="color" class="form-control" readonly />
+                </div>
+                <div class="form-group">
+                    <label>Model # <span style="color:red">*</span></label>
+                    <input name="code" class="form-control" required />
+                </div>
+                <div class="form-group">
+                    <label>Price <span style="color:red">*</span></label>
+                    <input name="price" type="number" min="0" step="0.25" class="form-control" required />
+                </div>
+                <div class="form-group">
+                    <label>Picture</label>
+                    <input type="file" onchange="ShowImg(this)" name="model_picture" class="form-control" />
+                    <img id="show_img" height="50" />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                <button type="submit" class="btn btn-default pull-right">Save</button>
+            </div>
+        </div>
+    </div>
+</form>
+<script src="~/Scripts/jquery.form.min.js"></script>
+<script>
+    $(function () {
+        $("#TDate").datepicker({
+            showAnim: 'slideDown',
+            showButtonPanel: true,
+            changeMonth: true,
+            changeYear: true,
+            yearRange: '1950:2050'
+        });
+        $("#FDate").datepicker({
+            showAnim: 'slideDown',
+            showButtonPanel: true,
+            changeMonth: true,
+            changeYear: true,
+            yearRange: '1950:2050'
+        });
+        $('.select2').select2({
+            minimumResultsForSearch: -1
+        });
+    });
+
+    function checkin(id) {
+        $.ajax({
+            method: "POST",
+            url: "/po/CheckinModal",
+            data: { id },
+            dataType: "json"
+        })
+            .done(function (data) {
+                if (data[0]) {
+                    $("#modal_product").html(data[1].ProductName);
+                    $("#modal_model").html(data[1].ModelName);
+                    $("#modal_color").html(data[1].Color || "N/A");
+                    $("#modal_qty").html(data[2]);
+                    $("#modal_pic").attr("src", data[1].Picture);
+                    $("input[name=checkin_qty]").val(data[2]);
+                    $("input[name=detail_id]").val(id);
+                    $("#list_inv").html("");
+                    if (data[3].length) {
+                        $("input[name=list_inv_string]").val(data[3].join(","));
+                        for (var i in data[3]) {
+                            $("#list_inv").append('<span class="label label-primary">#' + data[3][i] + '</span> ');
+                        };
+                    }
+                    $("#checkin_form").modal("show");
+                }
+                else {
+                    noty({ "text": data[1], "layout": "topRight", "type": "error" });
+                }
+            })
+            .fail(function () {
+                console.log("download_excel fail");
+            })
+            .always(function () {
+            });
+    }
+    function refresh_invs(n) {
+        var n_max = parseInt($("#modal_qty").html() || "0");
+        if (n > n_max) {
+            noty({ "text": "The check-in QTY cannot be more than the QTY in the PO", "layout": "topRight", "type": "error" });
+            $("input[name=checkin_qty]").val(n_max);
+            n = n_max;
+        }
+        $.ajax({
+            method: "POST",
+            url: "/po/get_invs",
+            data: { n },
+            dataType: "json"
+        })
+            .done(function (data) {
+                if (data[0]) {
+                    $("#list_inv").html("");
+                    if (data[1].length) {
+                        $("input[name=list_inv_string]").val(data[1].join(","));
+                        for (var i in data[1]) {
+                            $("#list_inv").append('<span class="label label-primary">' + data[1][i] + '</span> ');
+                        };
+                    }
+                    $("#checkin_form").modal("show");
+                }
+            })
+            .fail(function () {
+                console.log("download_excel fail");
+            })
+            .always(function () {
+            });
+    }
+    $('#checkin_form form').ajaxForm(function (data) {
+        if (data[0]) {
+            noty({ "text": data[1], "layout": "topRight", "type": "success" });
+            search_load(data[2]);
+            $("#checkin_form").modal("hide");
+
+            $(".load-data-checkin").DataTable().ajax.reload();
+            if (data[3]) {
+                download_excel(data[2]);
+            }
+        } else {
+            noty({ "text": data[1], "layout": "topRight", "type": "error" });
+        }
+    });
+
+    $(".checkall").click(function (e) {
+
+        var pr = $(this);
+        $(this).closest('tr').next('tr').find('.check').each(function () {
+            if ($(this).is(':checked') != pr.is(':checked')) {
+                $(this).trigger('click');
+            }
+        });
+        if (!$(this).closest('tr').next('tr').is(":visible")) {
+            $(this).closest("tr").toggleClass('opened');
+            $(this).closest('tr').next('tr').show();
+        }
+        e.stopPropagation();
+    });
+    $('#CreateModel').ajaxForm(function (data) {
+        if (data[0]) {
+            noty({ "text": data[1], "layout": "topRight", "type": "success" });
+            alert(data[2]);
+
+            search_load(data[2]);
+
+        }
+        else {
+            noty({ "text": data[1], "layout": "topRight", "type": "error" });
+        }
+        $('#CreateModel').modal('hide');
+    });
+
+    function search_load(po_code = "") {
+        var vendor = $('#vendor_select').val();
+        var status = $('#status_select').val();
+        $.ajax({
+            method: "POST",
+            url: "/po/CheckInInventory_search",
+            data: { vendor, status },
+            dataType: "html"
+        })
+            .done(function (data) {
+                $("#list_model").html(data);
+                $("#tr_" + po_code).show();
+            })
+            .fail(function () {
+            })
+            .always(function () {
+            });
+    }
+    function CreateModel_show(id, product, color, vendor) {
+        $('#CreateModel').resetForm();
+        $('#detail_id').val(id);
+        $('#product').val(product);
+        $('#color').val(color);
+        $('#vendor').val(vendor);
+        $('#CreateModel').modal('show');
+    }
+    function ShowImg(input) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+
+            reader.onload = function (e) {
+                $('#show_img').attr('src', e.target.result);
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    //function submit_form() {
+    //    $('#search_form').submit();
+    //}
+</script>
+<style>
+    /*
+    table.table-bordered {
+        border: 1px solid #ddd;
+        margin-top: 20px;
+    }
+
+        table.table-bordered > thead > tr {
+            border: 1px solid #ddd;
+        }
+
+        table.table-bordered > tbody > tr {
+            border: 1px solid #ddd;
+        }
+
+        table.table-bordered > thead > tr > th {
+            border: 1px solid #ddd;
+        }
+
+        table.table-bordered > tbody > tr > td {
+            border: 1px solid #eee;
+        }
+
+    .opened {
+        background-color: #e3f1ff !important;
+    }
+
+    .not_hover:hover {
+        background-color: #fff !important;
+    }*/
+</style>

@@ -1,0 +1,707 @@
+﻿@using EnrichcousBackOffice.Utils.IEnums
+@using Inner.Libs.Helpful;
+@using EnrichcousBackOffice.Models
+@{
+    List<EnrichcousBackOffice.Models.P_Member> members = ViewBag.ListMember;
+    List<EnrichcousBackOffice.Models.C_SalesLead_Status> status = ViewBag.status;
+    var Team = ViewBag.Team as List<EnrichcousBackOffice.Models.P_Department>;
+    var ShowSalesPerson = ViewBag.ShowSalesPerson as bool?;
+    var ShowTeam = ViewBag.ShowTeam as bool?;
+    var access = EnrichcousBackOffice.AppLB.Authority.GetAccessAuthority();
+    int StatusTrialAccount = LeadStatus.TrialAccount.Code<int>();
+    int StatusSlice = LeadStatus.SliceAccount.Code<int>();
+    int StatusMerchant = LeadStatus.Merchant.Code<int>();
+    int StatusLead = LeadStatus.Lead.Code<int>();
+    int CurrentYear = DateTime.UtcNow.Year;
+    var cMem = EnrichcousBackOffice.AppLB.Authority.GetCurrentMember();
+
+}
+
+<script src="~/Content/Admin/plugins/anychart/js/anychart-pyramid-funnel.min.js"></script>
+<script>
+
+</script>
+<style>
+    .small-box .icon {
+        top: -5px;
+        right: 10px;
+        font-size: 50px;
+    }
+
+    .small-box:hover .icon {
+        font-size: 55px;
+    }
+</style>
+<section class="content">
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="box box-default" style="border:1px solid #ddd">
+                <div class="box-header with-border" style="background: #f5f5f5">
+
+                    <div>
+                        <div class="input-group col-sm-2 pull-right" style="display:inline-table">
+                            <div class="input-group-addon">Time</div>
+                            <select class="form-control" id="time" name="time">
+                                <option value="current-month">This month</option>
+                                <option value="last-month">Last month</option>
+                                <option value="nearest-3-months">Nearest 3 months</option>
+                                <option value="current-year">This year</option>
+                                <option value="last-year">Last year</option>
+                            </select>
+                        </div>
+                        @if (ShowSalesPerson.GetValueOrDefault())
+                        {
+                            <text>
+                                <div class="input-group col-sm-3 pull-right" style="margin-right:5px;display:inline-table">
+                                    <div class="input-group-addon">Sales Person</div>
+                                    <select class="form-control select2" id="sales-person" name="sales-person">
+                                        <option value=""> All </option>
+                                        <option value="Unassigned">Unassigned</option>
+                                        @foreach (var member in members)
+                                        {
+                                            <option value="@member.MemberNumber"> @member.FullName - #@member.MemberNumber</option>
+                                        }
+
+                                    </select>
+                                </div>
+                            </text>
+                        }
+                        @if (ShowTeam.GetValueOrDefault())
+                        {
+                            <div class="input-group  col-md-3 pull-right" style="margin-right:5px">
+                                <div class="input-group-addon" style="width:100px">
+                                    Team
+                                </div>
+                                <select class="form-control member-in-dept select2" id="Team" name="Team" style="min-width: 100px">
+                                    <option value="">All</option>
+                                    @foreach (var item in Team)
+                                    {
+                                        <option value="@item.Id">@item.Name</option>
+                                    }
+                                </select>
+                            </div>
+                        }
+                        @if (cMem.SiteId == 1)
+                        {
+                            <div class="input-group  col-md-3 pull-right" style="margin-right: 5px">
+                                <div class="input-group" style="width:100%">
+                                    <div class="input-group-addon">
+                                        Partner
+                                        <div class="ico-help" title="Search by Partner"><i class="fa fa-question-circle"></i></div>
+                                    </div>
+                                    <select class="form-control change-search" id="SiteId" name="SiteId" style="width:100%">
+                                        @foreach (var s in ViewBag.S_SiteId as List<Site>)
+                                        {
+                                            <option value="@s.Id">@s.Name</option>
+                                        }
+                                    </select>
+                                </div>
+                                <!-- /.input group -->
+                            </div>
+                        }
+                    </div>
+
+                </div>
+                <!-- /.box-header -->
+
+                <div class="box-body salelead-list">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="box box-info " id="common-statistics-box">
+                                <div class="box-header with-border clearfix">
+                                    <div class="box-title">
+                                        <i class="fa fa-line-chart" aria-hidden="true"></i>
+                                        Statistics By Lead
+                                    </div>
+                                </div>
+                                <div class="box-body statistics-box-1">
+                                    <div id="pyramid-chart">
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="col-md-7">
+                            <div class="box box-info " id="common-statistics-box">
+                                <div class="box-header with-border clearfix">
+                                    <div class="box-title">
+                                        <i class="fa ion-stats-bars"></i>
+                                        Common Statistics
+                                    </div>
+                                </div>
+                                <div class="box-body statistics-box-1">
+                                    <div class="row" style="justify-content: center;">
+                                        <div class="col col-md-6 col-sm-6 col-xs-6">
+                                            <!-- small box -->
+                                            <div class="small-box bg-green-gradient">
+                                                <div class="inner">
+                                                    <h3><span class="count" id="total-all"></span><sup style="font-size: 20px"> All Total</sup></h3>
+                                                    <p>IMS: <span class="count" id="total-all-ims"></span> | Mango site:   <span class="count" id="total-all-mango"></span> | External data: <span class="count" id="total-all-external"></span></p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col col-md-6 col-sm-6 col-xs-6">
+                                            <!-- small box -->
+                                            <div class="small-box bg-aqua-gradient">
+                                                <div class="inner">
+                                                    <h3> <span class="count" id="total-lead"></span> <sup style="font-size: 20px"> Leads Total</sup></h3>
+                                                    <p>IMS:<span class="count" id="total-lead-ims"></span> | Mango site: <span class="count" id="total-lead-mango"></span>  | External data: <span class="count" id="total-lead-external"></span></p>
+                                                </div>
+                                                @*<div class="icon">
+                                                        <i class="ion ion-person-add"></i>
+                                                    </div>*@
+                                            </div>
+                                        </div>
+                                        <!-- ./col -->
+                                        <div class="col col-md-6 col-sm-6 col-xs-6">
+                                            <!-- small box -->
+                                            <div class="small-box bg-yellow-gradient loading-bro">
+                                                <div class="inner">
+                                                    <h3>  <span class="count" id="total-trial"></span> <sup style="font-size: 20px">Trial Account Total</sup></h3>
+                                                    <p>IMS: <span class="count" id="total-trial-ims"></span> | Mango site: <span class="count" id="total-trial-mango"></span> | External data: <span class="count" id="total-trial-external"></span></p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- ./col -->
+                                        <div class="col col-md-6 col-sm-6 col-xs-6">
+                                            <!-- small box -->
+                                            <div class="small-box bg-purple-gradient">
+                                                <div class="inner">
+                                                    <h3><span class="count" id="total-slice"></span> <sup style="font-size: 20px">Slice Account Total</sup></h3>
+                                                    <p>IMS: <span class="count" id="total-slice-ims"></span> |  Mango site: <span class="count" id="total-slice-mango"></span>  | External data: <span class="count" id="total-slice-external"></span></p>
+                                                </div>
+                                                @*<div class="icon">
+                                                        <i class="ion ion-server-outline"></i>
+                                                    </div>*@
+                                            </div>
+                                        </div>
+                                        <!-- ./col -->
+                                        <div class="col col-md-6 col-sm-6 col-xs-6">
+                                            <!-- small box -->
+                                            <div class="small-box bg-red-gradient">
+                                                <div class="inner">
+                                                    <h3><span class="count" id="total-merchant"></span> <sup style="font-size: 20px">Merchant Total</sup></h3>
+                                                    <p>IMS: <span class="count" id="total-merchant-ims"></span> |  Mango site: <span class="count" id="total-merchant-mango"></span>  | External data: <span class="count" id="total-merchant-external"></span></p>
+                                                </div>
+                                                @*<div class="icon">
+                                                        <i class="ion ion-pie-graph"></i>
+                                                    </div>*@
+
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <script>
+                        LoadDataCommonStatistics();
+                        function LoadDataCommonStatistics() {
+                            $.ajax({
+                                url: '/SaleLead/GetDashboardReportSalesLead',
+                                type: 'POST',
+                                dataType: 'json',
+                                data: {
+                                    "time": $('#time').val(), "siteId": $('#SiteId').val(), "Team": $('#Team').val(), "salesPerson": $('#sales-person').val()
+                                },
+                                success: function (data) {
+                                    $('#total-all').html(data.TotalAll);
+                                    $('#total-all-ims').html(data.TotalAllCreateIMS);
+                                    $('#total-all-mango').html(data.TotalAllMango);
+                                    $('#total-all-external').html(data.TotalAllExternal);
+
+                                    $('#total-lead').html(data.TotalLead);
+                                    $('#total-lead-ims').html(data.TotalLeadCreateIMS);
+                                    $('#total-lead-mango').html(data.TotalLeadMango);
+                                    $('#total-lead-external').html(data.TotalLeadExternal);
+
+                                    $('#total-trial').html(data.TotalTrial);
+                                    $('#total-trial-ims').html(data.TotalTrialCreateIMS);
+                                    $('#total-trial-mango').html(data.TotalTrialMango);
+                                    $('#total-trial-external').html(data.TotalTrialExternal);
+
+                                    $('#total-slice').html(data.TotalSlice);
+                                    $('#total-slice-ims').html(data.TotalSliceCreateIMS);
+                                    $('#total-slice-mango').html(data.TotalSliceMango);
+                                    $('#total-slice-external').html(data.TotalSliceExternal);
+
+                                    $('#total-merchant').html(data.TotalMerchant);
+                                    $('#total-merchant-ims').html(data.TotalMerchantCreateIMS);
+                                    $('#total-merchant-mango').html(data.TotalMerchantMango);
+                                    $('#total-merchant-external').html(data.TotalMerchantExternal);
+
+                                    animation();
+                                },
+                                error: function (data) {
+                                    console.log(data.message);
+                                },
+                            })
+                        }
+                        function animation() {
+                            $('.count').each(function () {
+                                $(this).prop('Counter', 0).animate({
+                                    Counter: $(this).text()
+                                }, {
+                                    duration: 1000,
+                                    easing: 'swing',
+                                    step: function (now) {
+                                        $(this).text(Math.ceil(now));
+                                    }
+                                });
+                            });
+                        }
+                    </script>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="box box-info" id="trial-merchant-report">
+                                <div class="box-header with-border" style="padding: 12px;">
+                                    <h3 class="box-title">
+                                        <i class="fa fa-pie-chart" aria-hidden="true"></i>
+                                        Sales Lead Report
+                                    </h3>
+                                    <div class="box-tools pull-right">
+                                    </div>
+                                </div>
+                                <div class="box-body">
+                                    <div class="row">
+
+
+                                        <div class="col-sm-12" style="margin-bottom:2rem">
+                                            <canvas id="trial-merchant" width="400" height="400"></canvas>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <div style="max-width: 350px;margin: auto">
+                                                <canvas id="pie-create-from-ims"></canvas>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-4">
+                                            <div style="max-width: 350px;margin: auto;">
+                                                <canvas id="pie-create-from-mango"></canvas>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-4">
+                                            <div style="max-width: 350px;margin: auto;">
+                                                <canvas id="pie-create-from-external"></canvas>
+                                            </div>
+
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                            @*<div class="box box-info" id="table-report-for-sales-person">
+                                    <div class="box-header with-border" style="padding: 12px;">
+                                        <h3 class="box-title">
+
+                                            Sales Person Report
+                                        </h3>
+                                        <div class="box-tools pull-right">
+
+                                            @if (access.Any(k => k.Key.Equals("sales_lead_view_all")) == true && access["sales_lead_view_all"] == true)
+                                            {
+                                                <text>
+                                                    <div class="input-group col-sm-5 pull-right" style="margin-bottom:1rem;margin-right:5px;display:inline-table">
+                                                        <div class="input-group-addon">Sales Person</div>
+                                                        <select class="form-control" id="sales-person-trial-merchant-report" name="sales-person-trial-merchant-report">
+                                                            <option value="">All</option>
+                                                            @foreach (var member in members)
+                                                            {
+                                                                <option value="@member.MemberNumber">@member.FullName - #@member.MemberNumber</option>
+                                                            }
+                                                        </select>
+                                                    </div>
+                                                </text>
+                                            }
+
+
+                                        </div>
+                                    </div>
+                                    <div class="box-body">
+                                        <div id="table-report-sales-person">
+
+                                        </div>
+                                    </div>
+                                </div>*@
+                        </div>
+                        @*<div class="col-md-6">
+
+                                <div class="box box-info" id="order-statistics-box">
+                                    <div class="box-header with-border"  style="padding: 12px;">
+                                        <h3 class="box-title">
+                                            <i class="fa fa-line-chart" aria-hidden="true"></i>
+                                            Sales Lead Report
+                                        </h3>
+
+                                    </div>
+                                    <div class="box-body">
+                                        <div style="max-width: 350px;margin: auto">
+                                            <canvas id="pie-create-from-ims"></canvas>
+                                        </div>
+
+                                        <div style="max-width: 350px;margin: auto;">
+                                            <canvas id="pie-create-from-mango"></canvas>
+                                        </div>
+                                        <div style="max-width: 350px;margin: auto;">
+                                            <canvas id="pie-create-from-external"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+
+
+                            </div>*@
+
+                    </div>
+
+                    @*<div class="row">
+
+                            <div class="col-md-6">
+                                <div class="input-group col-sm-4" style="margin-bottom:1rem;">
+                                </div>
+                                <div style="max-width: 400px;margin: auto;">
+                                    <canvas id="pie-create-ims"></canvas>
+                                </div>
+
+                            </div>
+
+                        </div>*@
+                </div>
+
+            </div>
+            <!-- /.box -->
+        </div>
+    </div>
+</section>
+<div class="loading" style="display:none;position: fixed;top: 50%;left: 50%;transform: translate(-50%, -50%);"><img src="/Content/ajax-loaders/loading2.gif" width="60"></div>
+
+@*trial merchant chart*@
+<script type="text/javascript">
+    var ctx1 = document.getElementById("trial-merchant").getContext('2d');
+    //var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    var chart1 = new Chart(ctx1, {
+        type: 'bar',
+        data: {
+            //labels: MONTHS,
+            datasets: [
+                {
+                    label: "Lead",
+                    backgroundColor: '#4bc0c0',
+                    borderColor: '#4bc0c0',
+                    borderWidth: 1,
+
+                },
+                {
+                    label: "Trial Account",
+                    backgroundColor: '#fdb45c',
+                    borderColor:'#fdb45c',
+                    borderWidth: 1,
+
+                },
+                {
+                    label: "Slice Account",
+                    backgroundColor: '#6662ab',
+                    borderColor: '#6662ab',
+                    borderWidth: 1,
+
+                },
+                {
+                    label: "Merchant",
+                    backgroundColor: 'rgba(255, 99, 132, 1)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1
+            }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            title: {
+                display: true,
+                text: ''
+            },
+            scales: {
+
+                yAxes: [{
+                    ticks: {
+                        beginAtZero: true,   // minimum value will be 0.
+                        callback: function (value) { if (value % 1 === 0) { return value; } },
+                    },
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'users'
+                    },
+                }],
+
+
+            },
+            plugins: {
+                labels: {
+                    render: function () {
+                        return '';
+                    }
+                }
+            }
+        },
+
+    });
+    function LoadDataChart() {
+        $.ajax({
+            url: '/SaleLead/ChartTrialAccountAndMerchant',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                "time": $("#time").val(), "siteId": $('#SiteId').val(), "Team": $('#Team').val(), "salesPerson": $('#sales-person').val()
+            },
+            success: function (data) {
+                var maxY = 1;
+                var DataLead = data.SampleWithEmptyData;
+                var DataTrial = data.SampleWithEmptyData;
+                var DataSlice = data.SampleWithEmptyData;
+                var DataMerchant = data.SampleWithEmptyData;
+                if (data.Data!=null) {
+                      for (var i = 0; i < data.Data.length; i++) {
+                    // look for the entry with a matching `code` value
+                          if (data.Data[i].Name == @StatusLead) {
+                              DataLead = data.Data[i].Data;
+                          }
+                          else if (data.Data[i].Name == @StatusTrialAccount) {
+                              DataTrial = data.Data[i].Data;
+                          }
+                            else if (data.Data[i].Name == @StatusSlice) {
+                              DataSlice = data.Data[i].Data;
+                          }
+                          else {
+                              DataMerchant = data.Data[i].Data;
+                          }
+                    }
+                    maxY = data.maxY;
+                }
+                chart1.data.datasets[0].data = DataLead;
+                chart1.data.datasets[1].data = DataTrial;
+                chart1.data.datasets[2].data = DataSlice;
+                chart1.data.datasets[3].data = DataMerchant;
+                chart1.options.scales.yAxes[0].ticks.max = maxY;
+                chart1.options.title.text = data.title;
+                chart1.data.labels = data.label;
+                chart1.update();
+            },
+            error: function (data) {
+                console.log(data.message);
+            },
+        })
+    }
+    LoadDataChart();
+
+</script>
+@*Create From IMS*@
+
+<script>
+    var pie1 = document.getElementById("pie-create-from-ims").getContext('2d');
+    var PieChartCreateFromIMS = new Chart(pie1, {
+        type: 'pie',
+        data: {
+            labels: ["Lead", "Trial Account", "Slice Account","Merchant"],
+            datasets: [{
+                backgroundColor: ["#46BFBD", "#FDB45C","#9933CC", "#F7464A"],
+                hoverBackgroundColor: ["#5AD3D1", "#FFC870","#AA66CC","#FF5A5E"]
+            }]
+        },
+        options: {
+            responsive: true,
+            legend: {
+                position: 'right',
+                labels: {
+                    padding: 20,
+                    boxWidth: 20
+                }
+            },
+            title: {
+                display: true,
+                text: ''
+            },
+            plugins: {
+                labels: {
+                    render: 'percentage',
+                    fontColor: 'white',
+                },
+            },
+        },
+
+    });
+
+@*Create From Mango Site*@
+
+    var pie2 = document.getElementById("pie-create-from-mango").getContext('2d');
+    var PieChartCreateFromMango = new Chart(pie2, {
+        type: 'pie',
+        data: {
+            labels: ["Lead", "Trial Account", "Slice Account", "Merchant"],
+            datasets: [{
+                backgroundColor: ["#46BFBD", "#FDB45C", "#9933CC", "#F7464A"],
+                hoverBackgroundColor: ["#5AD3D1", "#FFC870", "#AA66CC", "#FF5A5E"]
+            }]
+        },
+        options: {
+            responsive: true,
+            legend: {
+                position: 'right',
+                labels: {
+                    padding: 20,
+                    boxWidth: 20
+                }
+            },
+            title: {
+                display: true,
+                text: ''
+            },
+            plugins: {
+                labels: {
+                    render: 'percentage',
+                    fontColor: 'white',
+                }
+            }
+            ,
+        }
+    });
+
+@*Create From Mango Site*@
+    var pie3 = document.getElementById("pie-create-from-external").getContext('2d');
+    var PieChartCreateFromExternal = new Chart(pie3, {
+        type: 'pie',
+        data: {
+            labels: ["Lead", "Trial Account", "Slice Account", "Merchant"],
+            datasets: [{
+                backgroundColor: ["#46BFBD", "#FDB45C", "#9933CC", "#F7464A"],
+                hoverBackgroundColor: ["#5AD3D1", "#FFC870", "#AA66CC", "#FF5A5E"]
+            }]
+        },
+        options: {
+            responsive: true,
+            legend: {
+                position: 'right',
+                labels: {
+                    padding: 20,
+                    boxWidth: 20
+                }
+            },
+            title: {
+                display: true,
+                text: ''
+            },
+            plugins: {
+                labels: {
+                    render: 'percentage',
+                    fontColor: 'white',
+                }
+            }
+            ,
+        }
+    });
+
+    LoadDataPieChart();
+
+    function LoadDataPieChart() {
+        $.ajax({
+            url: '/SaleLead/GetDataPieChart',
+            type: 'POST',
+            dataType: 'json',
+            data: { "time": $('#time').val(), "siteId": $('#SiteId').val(), "Team": $('#Team').val(), "salesPerson": $('#sales-person').val() },
+            success: function (data) {
+                    PieChartCreateFromIMS.data.datasets[0].data = data.dataCreateFromIMS;
+                    PieChartCreateFromIMS.options.title.text = "Data From IMS";
+                    PieChartCreateFromIMS.update();
+
+                    PieChartCreateFromMango.data.datasets[0].data = data.dataCreateFromMangoSite;
+                PieChartCreateFromMango.options.title.text = "Data From Mango Site";
+                    PieChartCreateFromMango.update();
+
+                    PieChartCreateFromExternal.data.datasets[0].data = data.dataCreateFromExternal;
+                PieChartCreateFromExternal.options.title.text = "Data From External Data";
+                    PieChartCreateFromExternal.update();
+            },
+            error: function (data) {
+                console.log(data.message);
+            },
+        })
+    }
+
+    $('#time,#sales-person,#SiteId').off('change').on('change',function () {
+        LoadDataCommonStatistics();
+        LoadPyramid_Chart();
+        LoadDataPieChart();
+        LoadDataChart();
+    })
+
+    $('.select2').select2();
+    $("#Team").off('change').on('change',function () {
+        var IdTeam = $('#Team').val();
+        $.ajax({
+            type: "Post",
+            url: "/SaleLead/GetMemberSalesPersonByTeam",
+            data: { "IdTeam": IdTeam },
+            success: function (data) {
+                $('#sales-person').html('');
+                $('#sales-person').append($('<option value="">All</option>'));
+                $.each(data, function (id, option) {
+                    $('#sales-person').append($('<option></option>').val(option.Id).html(option.Name));
+                });
+                LoadPyramid_Chart();
+                LoadDataCommonStatistics();
+                LoadDataPieChart();
+                LoadDataChart();
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                alert('fail');
+            }
+        });
+    })
+
+    function LoadPyramid_Chart()
+    {
+        $.ajax({
+            type: "Post",
+            url: "/SaleLead/PyramidChart",
+            data: { "time": $('#time').val(), "siteId": $('#SiteId').val(), "Team": $('#Team').val(), "salesPerson": $('#sales-person').val() },
+            success: function (data) {
+                if (data) {
+                    json = [
+                        { name: "Lead", value: data.Lead },
+                        { name: "Interested/Demo", value: data.InterestedDemo },
+                        { name: "Trial", value: data.Trial },
+                        { name: "Merchant", value: data.Merchant  },
+                    ];
+                    $("#pyramid-chart").html('');
+                    var chart = anychart.pyramid(json);
+                    chart.reversed(true);
+                    chart.labels().format("{%name}: {%value}");
+                    // configure tooltips
+                    var palette = anychart.palettes.distinctColors();
+                    palette.items(['#46BFBD', '#00a65a', '#FDB45C', '#F7464A']);
+                    //chart.selected().fill("#ff000000", 0.5);
+                    //set palette.
+                    chart.palette(palette);
+                    chart.tooltip().format("{%value}\n\n{%custom_field}");
+                    chart.container("pyramid-chart");
+                    chart.legend().inverted(false);
+                    titlechart = chart.title();
+                    titlechart.enabled(true);
+                    titlechart.useHtml(true);
+                    //place text in the center
+                    titlechart.hAlign("center");
+                    titlechart.text("<b style=\"color:#666666; font-size: 12px;font-family: 'Source Sans Pro','Helvetica Neue',Helvetica,Arial,sans-serif;\">" + data.title+"</b>");
+                    chart.draw();
+                }
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                alert('fail');
+            }
+        });
+    }
+    LoadPyramid_Chart();
+</script>

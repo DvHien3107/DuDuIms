@@ -1,0 +1,684 @@
+﻿@{
+    var access = EnrichcousBackOffice.AppLB.Authority.GetAccessAuthority();
+    var host = $"{HttpContext.Current.Request.Url.Scheme}://{HttpContext.Current.Request.Url.Authority}";
+    var detectIframe = Request.Params["mode"] == "iframe";
+    if (detectIframe)
+    {
+        Layout = "~/Views/Shared/_LayoutIframe.cshtml";
+    }
+    else
+    {
+        Layout = "~/Views/Shared/_Layout.cshtml";
+    }
+}
+@section title{
+    Sale Lead Management
+}
+@section style{
+    <style>
+        /*  .nav-tabs-custom > .tab-content {
+            border-right: 1px solid #ddd;
+            border-left: 1px solid #ddd;
+        }*/
+        .wrap-text {
+            white-space: pre-wrap !important;
+        }
+
+        .nav-tabs-custom-saleslead > .nav-tabs > li.active > a {
+            border-right: 1px solid #f4f4f4 !important;
+            border-left: 1px solid #f4f4f4 !important;
+        }
+
+        .nav-tabs-custom-saleslead > .nav-tabs {
+            border-bottom-color: #f4f4f4 !important;
+        }
+
+            .nav-tabs-custom-saleslead > .nav-tabs > li > a {
+                color: #444;
+                border-radius: 0;
+                line-height: 1.42857143;
+                padding: 10px 30px;
+            }
+
+        .nav-tabs-custom-saleslead .nav-tabs li {
+            font-size: 1.3em;
+        }
+
+        .dataTables_processing {
+            z-index: 1;
+            background: #ff000000;
+            border: none;
+            outline: 0;
+            box-shadow: none;
+        }
+
+        .dataTable td {
+            white-space: nowrap;
+            vertical-align: middle !important;
+        }
+
+        .dataTable th {
+            background: #f4f4f4;
+        }
+
+        .table-bordered > thead > tr > th, .table-bordered > tbody > tr > th, .table-bordered > tfoot > tr > th {
+            border: 1px solid #e3e3e3;
+        }
+
+        .btn-assigned-custom {
+            width: 85px;
+            border-radius: 2px;
+        }
+
+        .btn-warning {
+            color: white;
+        }
+
+        b {
+            font-weight: 600;
+        }
+
+        .open-detail {
+            cursor: pointer;
+        }
+
+        .jconfirm .jconfirm-box.jconfirm-type-blue {
+            border-top: solid 5px #3498db !important;
+        }
+
+        .jconfirm.jconfirm-white .jconfirm-box, .jconfirm.jconfirm-light .jconfirm-box {
+            border-radius: unset;
+        }
+
+        .jconfirm .jconfirm-box.jconfirm-type-blue .jconfirm-title-c .jconfirm-icon-c {
+            color: #217346 !important;
+        }
+
+        .jconfirm-icon-c {
+            font-size: 16px !important;
+            transform: translateY(-2px);
+        }
+
+        .jconfirm-title {
+            font-size: 16px !important;
+            color: #3498db;
+        }
+
+        .jconfirm-content {
+            font-size: 14px;
+        }
+
+        .btn.btn-cancel {
+            background-color: #d2d2d2;
+            border-color: #d2d2d2;
+            margin-right: 5px;
+            font-size: 14px !important;
+            font-weight: 400 !important;
+            text-transform: capitalize !important;
+        }
+
+            .btn.btn-cancel i {
+                padding-right: 5px !important;
+            }
+
+            .btn.btn-cancel:hover {
+                border-color: #d2d2d2;
+            }
+
+        .btn.btn-confirm {
+            background-color: #2ca25d;
+            color: #ffffff;
+            border-color: #38a25d;
+            margin-right: 5px;
+            font-size: 14px !important;
+            font-weight: 400 !important;
+            text-transform: capitalize !important;
+        }
+
+            .btn.btn-confirm i {
+                padding-right: 5px !important;
+            }
+
+            .btn.btn-confirm:hover {
+                border-color: #38a25d;
+            }
+
+        .btn-select-assigned {
+            color: #28a745;
+            background-color: #ffffff;
+            border-color: #28a745;
+            outline: none;
+            width: 85px;
+            border-radius: 2px;
+        }
+
+            .btn-select-assigned:focus {
+                outline: none !important;
+            }
+
+            .btn-select-assigned:hover, .btn-select-assigned.active {
+                color: #fff;
+                background-color: #28a745;
+                border-color: #28a745;
+            }
+
+        .ico-help {
+            display: inline-block;
+            transform: translateY(1px);
+            color: var(--main-color-1);
+            font-size: 1em;
+            padding-left: 1px;
+        }
+
+        .dropdown-submenu {
+            position: relative;
+        }
+
+            .dropdown-submenu .dropdown-menu {
+                top: 0;
+                left: 100% !important;
+                margin-top: -1px;
+            }
+
+        .dropdown button, .dropdown a, .dropup button {
+            width: 100%;
+            display: block;
+            text-align: left;
+        }
+
+        .dropdown-menu button i, .dropdown-menu a i {
+            width: 25px;
+            margin-right: 0px !important;
+        }
+
+        .dropdown-menu > li:not(:last-child) {
+            padding-bottom: 0px;
+        }
+
+        .dropdown-menu > i {
+            width: 15px;
+        }
+
+        .icon-dropdown {
+            width: 15px;
+            margin-right: 0px !important;
+        }
+
+        .dropdown-menu .disabled {
+            background: #eee;
+        }
+
+        .dropdown-action .dropdown-menu {
+            padding: 0px;
+            box-shadow: 0 1px 5px 0 rgb(0 0 0 / 30%);
+        }
+
+        .circular {
+            animation: rotate 2s linear infinite;
+            height: 50px;
+            transform-origin: center center;
+            width: 50px;
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            margin: auto;
+        }
+
+        .path {
+            stroke-dasharray: 1, 200;
+            stroke-dashoffset: 0;
+            animation: dash 1.5s ease-in-out infinite, color 6s ease-in-out infinite;
+            stroke-linecap: round;
+        }
+
+        @@keyframes rotate {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @@keyframes dash {
+            0% {
+                stroke-dasharray: 1, 200;
+                stroke-dashoffset: 0;
+            }
+
+            50% {
+                stroke-dasharray: 89, 200;
+                stroke-dashoffset: -35px;
+            }
+
+            100% {
+                stroke-dasharray: 89, 200;
+                stroke-dashoffset: -124px;
+            }
+        }
+
+        @@keyframes color {
+            100%, 0% {
+                stroke: #d62d20;
+            }
+
+            40% {
+                stroke: #0057e7;
+            }
+
+            66% {
+                stroke: #008744;
+            }
+
+            80%, 90% {
+                stroke: #ffa700;
+            }
+        }
+
+        .anychart-credits {
+            display: none;
+        }
+
+        #pyramid-chart {
+            height: 350px;
+        }
+
+        @@media only screen and (max-width: 768px) {
+            #pyramid-chart {
+                height: 300px;
+            }
+        }
+
+        .statistics-box-1 {
+            min-height: 387px;
+        }
+
+        #search_form .form-group .input-group-addon {
+            width: 120px;
+        }
+
+        #search_form .form-group {
+            padding: 0px 10px;
+        }
+    </style>
+    <link href="~/Content/Admin/plugins/jqueryconfirm/jquery-confirm.min.css" rel="stylesheet" />
+}
+@section headscript{
+    <script src="~/Content/Admin/bower_components/moment/moment.js"></script>
+    <script src="~/Content/Admin/plugins/jqueryconfirm/jquery-confirm.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.bundle.min.js"></script>
+    <script src="https://emn178.github.io/chartjs-plugin-labels/src/chartjs-plugin-labels.js"></script>
+    <script src="~/Content/Admin/plugins/anychart/js/anychart-core.min.js"></script>
+    <script src="~/Content/Admin/plugins/anychart/js/anychart-base.min.js" type="text/javascript"></script>
+    <script src="~/Content/Admin/plugins/anychart/js/anychart-bundle.min.js"></script>
+    
+}
+<section class="content-header">
+    <h1>
+        Sale Lead Management
+        <small>Sale Lead</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li>
+            <a href="/home"><i class="fa fa-dashboard"></i> Home</a>
+        </li>
+        <li><i class="fa fa-credit-card"></i> Sale</li>
+        <li><i class="fa fa-file-o"></i> Sale Lead Management</li>
+    </ol>
+</section>
+<section class="content">
+    <div class="row">
+
+        @if (TempData["e"] != null)
+        {
+            <div class="alert alert-warning alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+            </div>
+        }
+        else if (TempData["s"] != null)
+        {
+            <div class="alert alert-success alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+            </div>
+        }
+
+        <div class="col-md-12">
+            <div class="box box-primary">
+                @*<div class="box-header ">
+
+                    </div>*@
+                <!-- /.box-header -->
+
+                <div class="box-body">
+                    <div class="nav-tabs-custom nav-tabs-custom-saleslead">
+                        <ul class="nav nav-tabs" id="main_tab" style="margin:10px 0px">
+                            @*@if ((access.Any(k => k.Key.Equals("sales_lead_new_register_tracking")) == true && access["sales_lead_new_register_tracking"] == true))
+                            {
+                                <li id="new-register"><a style="cursor: pointer;" class="tabs" data-toggle="tab" data-tab='new-register'>Unverified Leads</a></li>
+                            }
+                            @if ((access.Any(k => k.Key.Equals("sales_lead_import")) == true && access["sales_lead_import"] == true))
+                            {
+                                <li id="import-data"><a style="cursor: pointer;" class="tabs" data-toggle="tab" data-tab='import-data'>Import Data</a></li>
+                            }*@
+                            @if ((access.Any(k => k.Key.Equals("sales_lead_view_all")) == true && access["sales_lead_view_all"] == true) || (access.Any(k => k.Key.Equals("sales_lead_view_team")) == true && access["sales_lead_view_team"] == true))
+                            {
+                                <li id="sales-lead"><a style="cursor: pointer;" class="tabs" data-toggle="tab" data-tab='sales-lead'>Sales Lead</a></li>
+                            }
+                            <li id="report"><a style="cursor: pointer;" data-toggle="tab" data-tab='report'>Report</a></li>
+                        </ul>
+                        <div class="tab-content">
+                            <div class="tab-pane active">
+                                <div style="text-align:center">
+                                    <svg id="load_partial_tab" style="display:none" class="circular" viewBox="25 25 50 50"><circle class="path" cx="50" cy="50" r="20" fill="none" stroke-width="2" stroke-miterlimit="10"></circle></svg>
+                                </div>
+                                <div class="content-tab-load" style="min-height:300px;position:relative">
+                                    <div id="partial_tab">
+
+                                    </div>
+                                    <div class="loadding-tab" style="position: absolute; right: 50%;top: 50%;transform: translate(50%, -50%) ;display:none">
+                                        <svg class="circular" viewBox="25 25 50 50"><circle class="path" cx="50" cy="50" r="20" fill="none" stroke-width="2" stroke-miterlimit="10"></circle></svg>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+                <!-- /.box-body -->
+            </div>
+            <!-- /.box -->
+        </div>
+
+    </div>
+</section>
+
+<div class="modal fade" id="Invoice" role="dialog" style="display: none;">
+    <div class="modal-dialog modal-content" style="min-width:900px">
+        <div class="modal-header">
+            <div class="modal-title pull-left"><h3 style="margin:0">View Invoice</h3></div>
+            <button type="button" class="btn btn-sm btn-warning" style="float:left; margin-left:20px" onclick="document.getElementById('invoice-view').contentWindow.print()"><i class="fa fa-print"></i> Print</button>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">×</span>
+            </button>
+        </div>
+        <div class="modal-body" style="padding:1px;height: 77vh;">
+            <iframe width="100%" height="100%" style="border: none;" id="invoice-view" data-src="@host/order/ImportInvoiceToPDF?_code=%code%&amp;flag=Invoice"></iframe>
+        </div>
+    </div>
+</div>
+
+<form method="post" action="/SalesLead/CreateOrUpdateStatusInteraction" class="modal fade" id="create-or-interaction-status">
+    <div class="modal-dialog" style="width: 450px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" onclick="$('#create-or-interaction-status').modal('hide')" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title"></h4>
+            </div>
+            <div class="modal-body">
+                <div id="modal-content">
+                    <input type="hidden" name="Id" class="Id" />
+                    <div class="form-group col-12">
+                        <label class="control-label">Name<span style="color:red">*</span></label>
+                        <input type="text" class="form-control" name="Name" style="max-width: 100%" required>
+                    </div>
+                    <div class="form-group col-12">
+                        <label class="control-label">Order<span style="color:red">*</span></label>
+                        <input type="number" class="form-control" name="Order" style="max-width: 100%" required>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" name="SaveBtn" class="btn btn-primary">Save</button>
+                <button type="button" class="btn btn-default" onclick="$('#create-or-interaction-status').modal('hide')">Close</button>
+            </div>
+        </div>
+    </div>
+</form>
+@section script{
+    <script>
+        $('#main_tab li a').on("click", function (e) {
+            var TabName = $(this).attr('data-tab');
+            var CurrentTab = localStorage.getItem('lastTab');
+            if (TabName !== CurrentTab) {
+                localStorage.setItem('lastTab', TabName);
+                var activeRequestsTable = $('.dataTable').DataTable();
+                activeRequestsTable.state.clear();  // 1a - Clear State
+                activeRequestsTable.destroy();   // 1b - Destroy
+                LoadTabContent();
+            }
+        })
+        var getUrlParameter = function getUrlParameter(sParam) {
+            var sPageURL = window.location.search.substring(1),
+                sURLVariables = sPageURL.split('&'),
+                sParameterName,
+                i;
+
+            for (i = 0; i < sURLVariables.length; i++) {
+                sParameterName = sURLVariables[i].split('=');
+
+                if (sParameterName[0] === sParam) {
+                    return typeof sParameterName[1] === undefined ? true : decodeURIComponent(sParameterName[1]);
+                }
+            }
+            return false;
+        };
+        let firstLoad = true;
+        function LoadTabContent() {
+            var states = [];
+            $(".state-label").each(function () {
+                states.push($(this).attr("data-value"));
+            });
+            var DataFilter = {
+                FromDate: $("#FromDate").val(),
+                ToDate: $("#ToDate").val(),
+                Status: $("#Status").val(),
+                Team: $("#Team").val(),
+                Member: $("#Member").val(),
+                SearchText: $("#SearchText").val(),
+                State: states.toString()
+            };
+
+            $("#partial_tab").html('')
+            $('.loadding-tab').show();
+            let CurrentTab;
+            var tab = getUrlParameter('tab');
+            
+            if (tab == 'sales_lead' && firstLoad) {
+                CurrentTab = "sales-lead"; 
+            }
+            else {
+                 CurrentTab = localStorage.getItem('lastTab');
+            }
+       
+            if (!($('#main_tab').find('#' + CurrentTab)[0])) {
+                CurrentTab = $('#main_tab').find('li').first().attr('id');
+            }
+            $('#' + CurrentTab).tab('show');
+
+            $.ajax({
+                url: '/SaleLead/ChangeTab',
+                type: 'POST',
+                dataType: 'html',
+                data: { "TabName": CurrentTab, "DataFilter": DataFilter },
+                success: function (data) {
+                    $("#partial_tab").html('');
+                    $("#partial_tab").html(data);
+                },
+                error: function (data) {
+                    console.log(data.text);
+                },
+                complete: function () {
+                    $('.loadding-tab').hide();
+                }
+            });
+        }
+        LoadTabContent();
+        function export_excel() {
+            window.location.href = "/salelead/ExportExcel";
+        }
+        function export_excel_ri() {
+            $(".dataTable").DataTable().ajax.reload();
+            window.location.href = "/salelead/ExportExcelRI";
+        }
+        //click tr show detail
+        $(document).on("click", "table.sale-lead tr.lead-info", function (e) {
+            e.preventDefault();
+            var el = $(this).find('.icon').toggleClass('dd-menu-show');
+            if ($(e.target).closest(".on_rows").length == 0) {
+                show_appoiment($(this).data("lead-item"));
+            }
+        });
+
+        function show_invoice(code) {
+            let src = $("#invoice-view").data("src").replace("%code%", code);
+            $("#invoice-view").attr("src", src);
+            $('#Invoice').modal('show');
+        }
+        $(document).on("click", "table#dataTable .open-detail", function (e) {
+            e.preventDefault();
+            if ($(e.target).closest(".on_rows").length == 0) {
+                var salesLeadId = $(this).parent("tr").data("slid");
+                if ($(".tr-detail-" + salesLeadId).length) {
+                    showDetailLog(salesLeadId, false);
+                }
+                else {
+                    showDetailLog(salesLeadId);
+                }
+            }
+        });
+    </script>
+    <script>
+        let FlagCallHandleInteractionStatus = false;
+        let InteractionStatusFormParam = {
+            FormId: '#create-or-interaction-status',
+            GetAllInteractionStatus: '/SaleLead/LoadInteraction_Status',
+            GetInteractionStatusById: '/SaleLead/GetInteractionStatusById',
+            InsertOrUpdateUrl: '/SaleLead/CreateOrUpdateStatusInteraction',
+            DeleteInteractionStatus: '/SaleLead/DeleteInteractionStatus',
+            DeleteUrl: '/SaleLead/DeleteInteractionStatus',
+            StatusInteractionId: '#StatusInteraction'
+        };
+        let HandleInteractionStatus = {
+            Init: function () {
+                $(document).ready(function () {
+                    this.register = function () {
+                        $("#InsertInteractionStatus").off('click').on('click', function () {
+                            debugger;
+                            $(InteractionStatusFormParam.FormId).modal('show');
+                            $(InteractionStatusFormParam.FormId).find(".modal-title").html('Create Interaction Status');
+                            $(InteractionStatusFormParam.FormId + " [name=Id]").val('');
+                            $(InteractionStatusFormParam.FormId + " [name=Name]").val('');
+                            $(InteractionStatusFormParam.FormId + " [name=Order]").val(0);
+                        })
+                        $("#UpdateInteractionStatus").off('click').on('click', function () {
+                            var SelectedInteractionStatus = $(InteractionStatusFormParam.StatusInteractionId).val();
+                            if (SelectedInteractionStatus === '') {
+                                return alert('Please select one Interaction Status !')
+                            }
+                            $.ajax({
+                                url: InteractionStatusFormParam.GetInteractionStatusById,
+                                type: 'POST',
+                                data: { "Id": SelectedInteractionStatus },
+                                dataType: 'json',
+                                success: function (rs) {
+                                    $(InteractionStatusFormParam.FormId).modal('show');
+                                    $(InteractionStatusFormParam.FormId).find(".modal-title").html('Update Interaction Status');
+                                    $(InteractionStatusFormParam.FormId + " [name=Id]").val(rs.Id);
+                                    $(InteractionStatusFormParam.FormId + " [name=Name]").val(rs.Name);
+                                    $(InteractionStatusFormParam.FormId + " [name=Order]").val(rs.Order);
+                                    HandleInteractionStatus.RefreshInteractionStatusInSearchForm();
+                                },
+                                error: function (er) {
+                                    console.log(er.responseText);
+                                }
+                            })
+                        })
+
+                        $("#DeleteInteractionStatus").off('click').on('click', function () {
+                            var SelectedInteractionStatus = $(InteractionStatusFormParam.StatusInteractionId).val();
+                            if (SelectedInteractionStatus === '') {
+                                return alert('Please select one Interaction Status !')
+                            }
+                            confirmation = confirm("Are you sure delete this interaction status !");
+                            if (!confirmation) {
+                                return;
+                            }
+                            $.ajax({
+                                url: InteractionStatusFormParam.DeleteInteractionStatus,
+                                type: 'POST',
+                                data: { "Id": SelectedInteractionStatus },
+                                dataType: 'json',
+                                success: function (rs) {
+                                    HandleInteractionStatus.RefreshInteractionStatus();
+                                    HandleInteractionStatus.RefreshInteractionStatusInSearchForm();
+                                },
+                                error: function (er) {
+                                    console.log(er.responseText);
+                                }
+                            })
+                        })
+
+                        $(InteractionStatusFormParam.FormId + " [name=SaveBtn]").off('click').on('click', function () {
+                            $.ajax({
+                                url: InteractionStatusFormParam.InsertOrUpdateUrl,
+                                type: 'POST',
+                                data: $(InteractionStatusFormParam.FormId).serialize(),
+                                dataType: 'json',
+                                success: function (rs) {
+                                    $(InteractionStatusFormParam.FormId).modal('hide');
+                                    HandleInteractionStatus.RefreshInteractionStatus(rs.Id);
+                                    HandleInteractionStatus.RefreshInteractionStatusInSearchForm();
+                                    noty({ "text": rs.message, "layout": "topRight", "type": "success" });
+                                },
+                                error: function (er) {
+                                    console.log(er.responseText);
+                                }
+                            })
+                        })
+                    }
+                    this.register();
+                })
+            },
+            RefreshInteractionStatus: function (selectedValue) {
+                $.ajax({
+                    url: InteractionStatusFormParam.GetAllInteractionStatus,
+                    type: 'Get',
+                    dataType: 'json',
+                    success: function (data) {
+                        $('[name=StatusInteraction]').html('');
+                        $('[name=StatusInteraction]').append('<option value="">N/A</option>');
+                        $.each(data, function (id, option) {
+                            $('[name=StatusInteraction]').append($('<option></option>').val(option.Value).html(option.Text));
+                        });
+                        $("#log_popup").find('[name=StatusInteraction]').val(selectedValue);
+                    },
+                    error: function (er) {
+                        console.log(er.responseText);
+                    }
+                })
+            },
+            RefreshInteractionStatusInSearchForm: function () {
+                $.ajax({
+                    url: InteractionStatusFormParam.GetAllInteractionStatus,
+                    type: 'Get',
+                    dataType: 'json',
+                    success: function (data) {
+                        $('#Status').html('');
+                        $('#Status').append('<option value="">N/A</option>');
+                        $.each(data, function (id, option) {
+                            $('#Status').append($('<option></option>').val(option.Value).html(option.Text));
+                        });
+                    },
+                    error: function (er) {
+                        console.log(er.responseText);
+                    }
+                })
+            }
+        }
+
+    </script>
+}

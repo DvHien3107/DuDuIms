@@ -1,0 +1,274 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.CustomizeModel.C_Customer_select_view>
+@using EnrichcousBackOffice.Models;
+@using EnrichcousBackOffice.Models.CustomizeModel;
+
+@{
+    ViewBag.Title = "Merchant Form";
+    List<Select_view> Customers = ViewBag.CustomerSelect ?? new List<Select_view>();
+}
+
+<section class="content-header">
+    <h1>
+        Boarding
+        <small>Merchant form</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li>On board</li>
+        <li class="active">Boarding</li>
+    </ol>
+</section>
+
+<!-- Main content -->
+<section class="content">
+    <div class="row">
+        <div class="col-md-12">
+
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Boarding</h3>
+
+                </div>
+                <div class="box-body">
+                    <div id="partial_loading" style="text-align:center; padding: 50px; display:none">
+                        <img src="~/Content/ajax-loaders/loading-partial.gif" />
+                    </div>
+                    <div style="box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); padding: 20px; margin:20px">
+                        <input type="hidden" id="CusId" />
+                        <div class="col-md-12" style="padding:0px;margin-bottom:5px">
+                            <a class="btn btn-default btn-flat btn-sm pull-right" id="close-merchantprocess-btn" onclick="$('#Subcriber_partial_div').hide(300); $(this).hide()" style="display:none"><i class="fa fa-close"></i> Close</a>
+                        </div>
+                        <div id="Subcriber_partial_div" style="display:none; min-height: 200px;border: 1px solid rgb(40, 96, 144);margin-bottom: 20px;padding: 1rem;max-height: 500px;overflow-y: auto;overflow-x: hidden;">
+
+                            @Html.Partial("_PartialSubcriber", new List<MerchantProcessingCustomizeModel>())
+                            <hr />
+                        </div>
+
+                        <div class="form-group">
+                            <label>Filter</label>
+                            <div class="col-md-12" style="padding:0px; margin-bottom:10px">
+
+                                <div class="col-md-5" style="padding:0px;margin-bottom:5px;">
+                                    <div class="input-group">
+                                        <span class="input-group-addon">Business/Owner</span>
+                                        <input class="form-control filter_input" id="filter_info" placeholder="Filter by Name/Phone/Email/Address..." />
+                                    </div>
+                                </div>
+                                <div class="col-md-3" style="padding:0px;margin-bottom:5px;">
+                                    <div class="input-group">
+                                        <span class="input-group-addon">Ticket</span>
+                                        <input class="form-control filter_input" id="filter_ticket" placeholder="Filter by ticket #" />
+                                    </div>
+                                </div>
+                                <div class="col-md-1" style="padding:0px">
+                                    <a class="btn btn-primary" style="border-top-left-radius:0; border-bottom-left-radius:0" onclick="filter()"><i class="fa fa-filter"></i> Filter</a>
+                                </div>
+                                <div class="col-md-3" style="padding:0">
+                                    <button class="btn btn-success pull-right" onclick="$('#create_onboarding_popup').modal('show')"><i class="fa fa-plus"></i> Create new</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="subscribe_merchant">
+                            @Html.Partial("_merchantformboarding_load", Model)
+
+                        </div>
+
+                    </div>
+                    <div class="col-md-12">
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+<div class="modal fade in" id="create_onboarding_popup" style="display: none;">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <h4 id="modal-department-title" class="modal-title">Select Merchant to create Priority Onboarding</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="form-group col-md-12">
+                        <label>Salon</label>
+                        <select id="new_select_cus" class="form-control select2" style="width:100%">
+                            @foreach (var cus in Customers)
+                            {
+                                <option value="@cus.value" @(cus?.disabled == true ?"disabled":"")>@cus.name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group col-md-12">
+                        <label>Description</label>
+                        <textarea id="new_description" class="form-control"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="create_onboarding()">
+                    Create <img id="loading" src="/Content/ajax-loaders/ajax-loader-1.gif" style="display:none">
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section style
+{
+    <!-- DataTables -->
+    <link rel="stylesheet" href="~/content/admin/bower_components/datatables.net-bs/css/dataTables.bootstrap.min.css">
+}
+<script>
+    $('.filter_input').on('keydown', function (e) {
+        if (e.keyCode == 13) {
+            filter();
+        }
+    });
+</script>
+
+@section script
+{
+    <!-- DataTables -->
+    <script src="~/content/admin/bower_components/datatables.net/js/jquery.dataTables.min.js"></script>
+    <script src="~/content/admin/bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js"></script>
+    <script type="text/javascript">
+
+        $(function () {
+            $(".select2").select2();
+            $('#subscribe_merchant_table').DataTable({
+                "order": [[0, "desc"]],
+                'stateSave': true,
+                
+            });
+        });
+        function filter(info = null, ticket = null) {
+            var info = info != null ? info : $('#filter_info').val();
+            var ticket = ticket != null ? ticket : $('#filter_ticket').val();
+            $.ajax({
+                method: "POST",
+                url: "/MerchantFormBoarding/filter",
+                data: { info, ticket },
+                dataType: "html"
+            })
+                .done(function (data) {
+                    $('#subscribe_merchant').html(data);
+                    $('#subscribe_merchant_table').DataTable({
+                        "order": [[0, "desc"]],
+                        'stateSave': true,
+                    });
+                })
+                .fail(function () {
+                })
+                .always(function () {
+                });
+        }
+        var selectedmerchant = '';
+        function SelectMerchant(Id) {
+            $('#Subcriber_partial_div').hide(300);
+            $('#partial_loading').show();
+            $('#Subcriber_partial_div').html('');
+            $.ajax({
+                method: "POST",
+                url: "/MerchantFormBoarding/getMerchantSubcribe",
+                data: { Id },
+                dataType: "html"
+            })
+                .done(function (data) {
+                    $('#CusId').val(Id);
+                    $('#Subcriber_partial_div').html(data);
+                    $('#Subcriber_partial_div').show(300);
+                    $('#close-merchantprocess-btn').show();
+                    //goToByScroll("Subcriber_partial_div");
+                    selectedmerchant = Id;
+                })
+                .fail(function () {
+                    alert("getMerchantSubcribe fail!");
+                })
+                .always(function () {
+                    $('#partial_loading').hide();
+                })
+        }
+        function DeleteNuveiOnBoarding(Id,Cuscode) {
+            if (confirm("Delete this Onboarding info?")) {
+                overlayOn();
+                if (Id == selectedmerchant) {
+                    $('#Subcriber_partial_div').hide(300);
+                }
+                $.ajax({
+                    method: "POST",
+                    url: "/MerchantFormBoarding/DeleteNuveiOnBoarding",
+                    data: { Id },
+                    dataType: "json"
+                })
+                    .done(function (data) {
+                        if (data[0]) {
+                            success(data[1]);
+                            $(".subscribe_" + Id).hide(300);
+                            $("#new_select_cus option[value='" + Cuscode + "']").removeAttr("disabled"); $("#new_select_cus").select2();
+                        } else {
+                            error(data[1]);
+                        }
+                        
+                        
+
+                    })
+                    .fail(function () {
+                        alert("getMerchantSubcribe fail!");
+                    })
+                    .always(function () {
+                        overlayOff();
+                    })
+            }
+        }
+        function goToByScroll(id) {
+            // Remove "link" from the ID
+            id = id.replace("link", "");
+            // Scroll
+            $('html,body').animate({
+                scrollTop: $("#" + id).offset().top
+            }, 'fast');
+        }
+        function create_onboarding() {
+            var CustomerName = $("#new_select_cus option:selected").text();
+            if (confirm("Do you want to create Priority Onboarding for " + CustomerName + "?")) {
+                var CustomerCode = $("#new_select_cus").val();
+                var description = $("#new_description").val();
+                $("#loading").show();
+                $.ajax({
+                    method: "POST",
+                    url: "/MerchantFormBoarding/Create_NuveiOnboarding",
+                    data: { CustomerCode, description },
+                    dataType: "json"
+                })
+                    .done(function (data) {
+                        if (data[0]) {
+                            success(data[1]);
+                            $("#new_select_cus").find("option[value=" + CustomerCode + "]").remove().select2();
+                            $("#new_description").val("");
+                            $("#create_onboarding_popup").modal("hide");
+                            filter("", "");
+                        } else {
+                            warning(data[1]);
+                        }
+                    })
+                    .fail(function () {
+                        alert("create_onboarding fail!");
+                    })
+                    .always(function () {
+                        $('#loading').hide();
+                    })
+            }
+        }
+    </script>
+}
+<style>
+    .input-group-addon {
+        background-color: #EEE !important;
+    }
+</style>

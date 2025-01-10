@@ -1,0 +1,310 @@
+﻿@model IEnumerable<Enrich.DataTransfer.T_EmailTemplate_customize>
+@using EnrichcousBackOffice.Models
+@{
+    /**/
+    var groups = new WebDataModel().T_EmailTemplateGroup.ToList();
+}
+<style>
+    #taskTemplateTable_processing {
+        background: transparent;
+        border: none;
+    }
+</style>
+<section class="content-header">
+    <h1>
+        Task Templates
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Dashboard</a></li>     
+        <li class="active">Email Templates</li>
+    </ol>
+</section>
+
+<!-- Main content -->
+<section class="content">
+    <div class="row">
+
+        @if (TempData["e"] != null)
+        {
+            <div class="alert alert-warning alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+            </div>
+        }
+        else if (TempData["s"] != null)
+        {
+            <div class="alert alert-success alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+            </div>
+        }
+
+        <div class="col-md-12">
+            <div class="box box-primary">
+           
+                <div class="box-header with-border">
+                    <h3 class="box-title">List Task Template</h3>
+                    <div class="pull-right box-tools" style="transform: translateY(-2px);">
+                        <a class="btn btn-success" onclick="CreateOrUpdateTaskTemplate()" title="Add new">
+                            <i class="fa fa-plus"></i> Add Task Template
+                        </a>
+                    </div>
+                </div>
+                <div class="box-body">
+                    <form id="search_form" action="#">
+                        <div class="col-lg-3 col-md-6 col-sm-6 form-group input_change" style="padding: 0 5px">
+                            <div class="input-group">
+                                <div class="input-group-addon">
+                                    Category
+                                  
+                                </div>
+                                <select class="form-control input_change" id="Category" onchange="reloadTaskTemplateTable()" name="Category">
+                                    <option value="">All</option>
+                                    <option value="DeploymentTicket">Deployment Ticket</option>
+                                    <option value="SupportTicket">Support Ticket</option>
+                                    <option value="DevelopmentsTicket">Developments Ticket</option>
+
+                                </select>
+                            </div>
+                        </div>
+
+                      
+                      
+                        <div class="col-lg-3 col-md-6 col-sm-6 form-group" style="padding: 0 5px">
+                            <div class="input-group">
+                                <div class="input-group-addon">
+                                    Search
+                                  
+                                </div>
+                                <input type="text" id="SearchText" name="SearchText" onchange="reloadTaskTemplateTable()" class="form-control input_change" placeholder="Task Template Name" />
+                            </div>
+                        </div>
+                        <div class="col-md-2 form-group" style="padding: 0 5px">
+                            <button class="btn btn-primary btn-flat" type="button" onclick="reloadTaskTemplateTable()" name="SearchButton"><i class="fa fa-search"></i> Search</button>
+                        </div>
+                    </form>
+                  
+                    <div>
+                        <table class="table table-bordered table-hover" id="taskTemplateTable" style="width:100%">
+                            <thead>
+                                <tr>
+
+                                    <th>Name</th>
+                                    <th>Description</th>
+                                    <th>Category</th>
+                                    <th>Status</th>
+                                    <th>Requirement</th>
+                                    <th>Last Update</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="render_cru_modal">
+
+    </div>
+</section>
+@section script{
+
+    <script type="text/javascript">
+        $("#SearchText").keydown(function (event) {
+            if (event.keyCode === 13) {
+                $("#taskTemplateTable").DataTable().ajax.reload();
+                return false;
+            }
+        });
+        var t = $("#taskTemplateTable").DataTable({
+            "language": {
+                "processing": '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>',
+                "emptyTable": "No data",
+                "paginate": {
+                    "first": '<i class="fa fa-angle-double-left" aria-hidden="true"></i>',
+                    "last": '<i class="fa fa-angle-double-right" aria-hidden="true"></i>',
+                    "next": '<i class="fa fa-angle-right" aria-hidden="true"></i>',
+                    "previous": '<i class="fa fa-angle-left" aria-hidden="true"></i>'
+                },
+            },
+            // "lengthMenu": [10, 25, 50, 75, 100],
+            "pageLength": 10,
+            "serverSide": true, // for process server side
+            "processing": true, // for show progress bar
+
+            'searching': false,
+            "orderable": true,
+            //'ordering': false,
+            'stateSave': true,
+            'info': false,
+            'autoWidth': true,
+            //"order": [[2, "desc"]],
+            "ajax": {
+                "url": "/TasksMan/LoadTemplate",
+                "type": "Post",
+                "datatype": "json",
+                'data': function (data) {
+                    data.Category = $('[name="Category"]').val();
+                    data.SearchText = $('[name="SearchText"]').val();
+                    return data;
+                },
+                "complete": function (json) {
+                    $('[data-toggle="tooltip"]').tooltip();
+                },
+
+            },
+
+            "columns": [
+
+
+                {
+                    "name": "Name",
+                    'data': "Name",
+                    "render": function (data, type, row) {
+                        let html = '';
+                        html += `<a href="javascript:void(0)" data-toggle="tooltip" title="click to view this task template" onclick="CreateOrUpdateTaskTemplate('${row['Id']}')"><b>${data}</b></a>`;
+                        return html;
+                    },
+                    "orderable": true,
+                },
+                {
+                    "name": "Description",
+                    'data': "Description",
+
+                    "orderable": false,
+                },
+                {
+                    "name": "Category",
+                    'data': "Category",
+                    "render": function (data, type, row) {
+                        let html = '';
+                        if (data == 'DeploymentTicket') {
+                            html += '<span>Deployment</span>';
+                        }
+                        else if (data == 'SupportTicket') {
+                            html += '<span>Support</span>';
+                        }
+                        else {
+                            html += '<span>Developments</span>';
+                        }
+                        return html;
+                    },
+                    "orderable": true,
+                },
+                {
+                    "name": "Status",
+                    'data': "Status",
+                    "render": function (data, type, row) {
+                        let html = '';
+                        if (data == true) {
+                            html += '<i class="fa fa-check text text-success" aria-hidden="true"></i>';
+                        }
+                        else {
+                            html += '<i class="fa fa-times text text-danger" aria-hidden="true"></i>';
+                        }
+                        return html;
+                    },
+                    "className": '',
+                    "orderable": true,
+                },
+                {
+                    "name": "Requirement",
+                    'data': "Requirement",
+                    "render": function (data, type, row) {
+                        let html = '';
+                        if (data == true) {
+                            html += '<i class="fa fa-check text text-success" aria-hidden="true"></i>';
+                        }
+                        else {
+                            html += '<i class="fa fa-times text text-danger" aria-hidden="true"></i>';
+                        }
+                        return html;
+                    },
+                    "orderable": true,
+                },
+                {
+                    "name": "Date",
+                    "data": "Date",
+                    "render": function (data, type, row) {
+                        return data + '<br/> By: '+ row['UpdateBy'];
+                    }, 
+                    "orderable": true,
+                },
+                {
+                    "name": "Action",
+                    "class": "text-center",
+                    "render": function (data, type, row) {
+                        return `<div class="btn-group">
+                                    <div class="dots-menu btn-group">
+                                        <div class="dropdown-dot" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></div>
+                                        <ul class="dropdown-menu dropdown-menu-right">
+                                                <li class=""><a href="javascript:void(0)" style="margin-right:5px;" onclick="CreateOrUpdateTaskTemplate('${row['Id']}')"><i class="fa fa-pencil"></i>Update</a></li>
+                                                <li class=""><a href="javascript:void(0)" style="margin-right:5px;" onclick="DeleteTaskTemplate(${row['Id']})"><i class="fa fa-trash"></i>Delete</a></li>
+                                        </ul>
+                                    </div>
+                                </div>`;
+                    },
+                    "orderable": false,
+                },
+            ]
+
+        });
+
+        function reloadTaskTemplateTable() {
+            $("#taskTemplateTable").DataTable().ajax.reload();
+        }
+        function CreateOrUpdateTaskTemplate(Id) {
+            overlayOn();
+        $.ajax({
+            method: "POST",
+            url: "/tasksman/TaskTemplateCreateOrModel",
+            data: { 'TaskTemplateId':Id },
+            dataType: "html"
+         })
+        .done(function (data) {
+            $("#render_cru_modal").html(data);
+            $("#cru_task_template_modal").modal('show');
+        })
+        .fail(function () {
+            alert("Oops! can not load task template modal");
+        })
+        .always(function () {
+            overlayOff();
+        });
+        }
+        function DeleteTaskTemplate(Id) {
+            if (confirm('are you sure delete this task template ?')) {
+                overlayOn();
+                $.ajax({
+                    method: "POST",
+                    url: "/tasksman/DeleteTaskTemplate",
+                    data: { 'TaskTemplateId': Id },
+                    dataType: "json"
+                })
+                    .done(function (data) {
+                        if (data.status) {
+                            success(data.message);
+                            reloadTaskTemplateTable();
+                        }
+                        else {
+                            error(data.message);
+                        }
+                    })
+                    .fail(function () {
+                        alert("Oops! can not load task template modal");
+                    })
+                    .always(function () {
+                        overlayOff();
+                    });
+            }
+            }
+        
+    </script>
+    
+}
+
+
+

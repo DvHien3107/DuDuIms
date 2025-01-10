@@ -1,0 +1,57 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.O_Orders>
+@using EnrichcousBackOffice.Models;
+<tr class="st_detail" id="detail_@ViewBag.CustomerCode" style="background:#b7b6b6">
+    <td colspan="10" class="td-detail" style="padding:10px 20px;">
+            <div class="col-md-8  div-detail-@ViewBag.CustomerCode" style="display: none;margin: auto; float: none; padding: 10px;">
+                <table class="table table-bordered table-striped">
+                    <thead style="background-color: #AAD3EA">
+                        <tr>
+                            <th>Invoice #</th>
+                            <th>Invoice date</th>
+                            <th>Due date</th>
+                            <th>Status</th>
+                            <th>Amount</th>
+                            <th>Receipt</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Count() > 0)
+                        {
+                            foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        <b>#@item.OrdersCode</b>
+                                        @if (item.IsDelete == true)
+                                        {
+                                            <label class="label label-default" style="float: right">Deleted</label>
+                                        }
+                                    </td>
+                                    <td>
+                                        <span id="localtime-@item.Id">
+                                            <script>convertLocalTime("@item.Id", "@item.InvoiceDate", "MMMddyyyy")</script>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span id="localtime-DueDate-@item.Id">
+                                            <script>convertLocalTime("DueDate-" + "@item.Id", "@item.DueDate", "MMMddyyyy")</script>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @(item.Status == "Submitted" ? "New" : (item.Status == "Completed" || item.Status == "Payment cleared") ? "Collected" : "")
+                                    </td>
+                                    <td>@item.GrandTotal</td>
+                                    <td><a  onclick="show_invoice(@item.OrdersCode)">[View receipt]</a></td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr><td colspan="6" style="text-align:center">(This merchant does not have any invoice)</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+</td>
+</tr>

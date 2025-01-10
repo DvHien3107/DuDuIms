@@ -1,0 +1,279 @@
+﻿<section class="content">
+    <div class="row">
+        <a class="btn btn-sm btn-success btn-header-lead btn-flat pull-right" onclick="editcampaign(null,'cam')">
+            <i class="fa fa-plus"></i> Add campaign
+        </a>
+    </div>
+    <br />
+    <div class="row">
+        <form id="search_form">
+            <div class="form-inline filter-group">
+                <div class="col-md-12">
+                    <div class="row">
+                        <div class="input-group col-sm-3 pull-left" style="padding-right:5px">
+                            <div class="input-group-addon" style="width:100px">
+                                <i class="fa fa-calendar"></i> From
+                            </div>
+                            <input type="text" id="FDate" name="FDate" class="form-control datepicker change-search" value="@TempData["FDate"]" readonly>
+                        </div>
+                        <div class="input-group col-sm-3 pull-left" style="padding-right: 5px">
+                            <div class="input-group-addon" style="width:100px">
+                                <i class="fa fa-calendar"></i> To
+                            </div>
+                            <input type="text" id="TDate" name="TDate" class="form-control datepicker change-search" value="@TempData["TDate"]" readonly>
+                        </div>
+                        <div class="col-sm-3 input-group pull-left" style="padding-right: 5px">
+                            <div class="input-group-addon">Name</div>
+                            <input type="text" class="form-control change-search" id="SText" name="SText" value="@TempData["SText"]" placeholder="Name" />
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-flat" id="search_submit">
+                            <i class="fa fa-search"></i> Search
+                        </button>
+                    </div>
+
+                </div>
+
+            </div>
+        </form>
+    </div><hr />
+    <div class="row">
+        <table id="data_campaign" class="table table-bordered table-striped table-hover" data-order='[[ 0, "desc" ]]' style="width: 100%">
+            <thead>
+                <tr>
+                    <th style="width: 60px">#</th>
+                    <th>Name</th>
+                    <th>Number Of Reached</th>
+                    @*<th>Result (success/failed)</th>*@
+                    @*<th>Status</th>*@
+                    <th>Note</th>
+                    <th width="215"></th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<style>
+    .bootstrap-tagsinput {
+        width: 100%;
+        border-radius: 0px;
+        border: 1px solid #ccc !important;
+        resize: vertical;
+        font-size: 14px;
+        background: #fff;
+        min-height: 100px;
+        overflow-y: auto;
+    }
+
+</style>
+
+<script>
+    var _dataCamps = [];
+    $(function () {
+        var t = $("#data_campaign").DataTable({
+            "language": {
+                "processing": '<img src="/Content/ajax-loaders/loading2.gif" width="60px" />',
+                "paginate": {
+                    "first": '<i class="fa fa-angle-double-left" aria-hidden="true"></i>',
+                    "last": '<i class="fa fa-angle-double-right" aria-hidden="true"></i>',
+                    "next": '<i class="fa fa-angle-right" aria-hidden="true"></i>',
+                    "previous": '<i class="fa fa-angle-left" aria-hidden="true"></i>'
+                },
+            },
+            "pageLength": 10,
+            "serverSide": true, // for process server side
+            "processing": true, // for show progress bar
+            'paging': true,
+            'lengthChange': true,
+            'searching': false,
+            'ordering': true,
+            'info': false,
+            'autoWidth': true,
+            'stateSave': false,
+            'columnDefs': [
+                { targets: [4], orderable: false }
+            ],
+            "ajax": {
+                "url": "/AdsCampaign/LoadCampaign",
+                "type": "POST",
+                "datatype": "json",
+                data: function (data) {
+                    data.SText = $('#SText').val();
+                    data.FDate = $('#FDate').val();
+                    data.TDate = $('#TDate').val();
+                    return data;
+                },
+                'dataSrc': function (data) {
+                    _dataCamps = data.data;
+                    return data.data;
+                },
+            },
+            'fnCreatedRow': function (nRow, aData, iDataIndex) {
+                $(nRow).hover(
+                    function () {
+                        $(this).find(".btn_group").css({ opacity: 0.0, visibility: "visible" }).animate({ opacity: 1.0 });
+                    },
+                    function () {
+                        $(this).find(".btn_group").css({ opacity: 0.0, visibility: "hidden" }).animate({ opacity: 1.0 });
+                    }
+                )
+            },
+            "columns": [
+                {
+                    "name": "CreateAt",
+                    "render": function (data, type, row) {
+                        let offset = moment().utcOffset();
+                        let local = moment.utc(row["CreateAt"]).utcOffset(offset).format("MMM DD, YYYY");
+                        return local;
+                    },
+                },
+                {
+                    "name": "Name",
+                    "render": function (data, type, row) {
+                        return `<a class="text-primary" style="cursor: pointer" href="/adscampaign?page=ads&Scampaign=${row["Id"]}">${row["Name"].toUpperCase()}</a>`;
+                    },
+                },
+                {
+                    "name": "NumberOfPeopleReached",
+                    "render": function (data, type, row) {
+                        return `<b><span class="text-success">${row["TotalSuccess"] ?? 0}</span> / ${row["NumberOfPeopleReached"] ?? 0}<b>`;
+                    },
+                },
+                //{
+                //    "name": "Result",
+                //    "render": function (data, type, row) {
+                //        return `<b><span class="text-success">${row["TotalSuccess"] ?? 0}</span> / <span class="text-warning">${row["TotalFailed"] ?? 0}</span><b>`;
+                //    }
+                //},
+                //{
+                //    "name": "Status",
+                //    "render": function (data, type, row) {
+                //        if (row["Status"] == 0)
+                //            return `<span class="label label-primary">Open</span>`;
+                //        else if (row["Status"] == 1)
+                //            return `<span class="label label-success">Closed</span>`;
+                //        else if (row["Status"] == -1)
+                //            return `<span class="label label-warning">Fail</span>`;
+                //        else
+                //            return `<span class="label label-danger">Removed</span>`;
+                //    }
+                //},
+                {
+                    "name": "Note",
+                    "render": function (data, type, row) {
+                        return row["Note"];
+                    }
+                },
+                {
+                    "name": "Action",
+                    "render": function (data, type, row) {
+                        return `<div class="btn_group" style="visibility:hidden">
+                                    <a class="btn btn-sm btn-info btn-header-lead btn-flat" onclick="editcampaign('${row["Id"]}', 'ads')"><i class="fa fa-plus"></i> Add ads</a>
+                                    <a class="btn btn-sm btn-warning btn-header-lead btn-flat" onclick="editcampaign('${row["Id"]}', 'cam')"><i class="fa fa-pencil-square-o"></i> Edit</a>
+                                    <a class="btn btn-sm btn-danger btn-header-lead btn-flat" onclick="removecampign('${row["Id"]}')"><i class="fa fa-trash-o"></i> Remove</a>
+                                </div>`;
+                    }
+                },
+            ]
+        });
+
+        //Datepicker
+        $("#TDate").datepicker({
+            showAnim: 'slideDown',
+            showButtonPanel: true,
+            changeMonth: true,
+            changeYear: true,
+            yearRange: '1950:2050'
+        });
+        $("#FDate").datepicker({
+            showAnim: 'slideDown',
+            showButtonPanel: true,
+            changeMonth: true,
+            changeYear: true,
+            yearRange: '1950:2050'
+        });
+
+        $('input[type="checkbox"].flat-red, input[type="radio"].flat-red').iCheck({
+            checkboxClass: 'icheckbox_flat-blue',
+            radioClass: 'iradio_flat-blue'
+        })
+
+        $('.box-tag').tagsinput({
+            tagClass: 'label label-primary',
+            confirmKeys: [13],
+            allowDuplicates: false
+        });
+    })
+
+    function removecampign(id) {
+        if (confirm("Are you sure you want to remove this Campaign?") == true) {
+            $.ajax({
+                url: `/adscampaign/removecampaign?key=${id}`,
+                type: "get",
+                success: function (data) {
+                    if (data[0]) {
+                        noty({ "text": data[1], "layout": "topRight", "type": "success" });
+                        $("#data_campaign").DataTable().ajax.reload();
+                    }
+                    else {
+                        noty({ "text": data[1], "layout": "topRight", "type": "error" });
+                    }
+                },
+            })
+        }
+    }
+
+    function editcampaign(id, mode) {
+        $('#modal_create_campaign').modal("show");
+
+        if (mode == 'cam') { //Campaign
+            let Ecampaign = _dataCamps.find(e => e.Id == id);
+            if (id != null) { //Edit
+                $('#smartwizard .step-anchor').hide();
+                $('.modal-title').html("Edit Compaign");
+                $('#smartwizard').smartWizard("reset");
+                //$('#smartwizard').smartWizard("goToStep", 1);
+                if (Ecampaign != null) {
+                    $('#Name').val(Ecampaign.Name);
+                    $('#Note').val(Ecampaign.Note);
+                    $('#CamId').val(Ecampaign.Id);
+                }
+            }
+            else {
+                $('.modal-title').html("Add new Compaign");
+                $('#smartwizard .step-anchor').show();
+                $('#smartwizard').smartWizard("reset");
+                $('#Name').val('');
+                $('#Note').val('');
+            }
+        }
+        else { //Ads
+            if (id != null) {
+                $('#smartwizard .step-anchor').hide();
+                $('.modal-title').html("Add Ads");
+                $('#smartwizard').smartWizard("next");
+                $('.btn-for-detail-ads').hide();
+                $('.btn-for-save-ads').show();
+                $('#modal_create_campaign #CompaignName').val(id).trigger('change');
+                $('#modal_create_campaign #Name').val("").prop("disabled", false);
+                $("[name=AdsType][value=sms]").iCheck('check').iCheck('enable').iCheck('update');
+                $("[name=AdsType][value=email]").iCheck('uncheck').iCheck('enable').iCheck('update');
+                $('#modal_create_campaign #Resource').val("").prop("disabled", false).trigger('change');
+                $('#modal_create_campaign #LicenseType').val("").prop("disabled", false).trigger('change');
+                $('#modal_create_campaign #State').val("").prop("disabled", false).trigger('change');
+                $('#modal_create_campaign #Zipcode').tagsinput('removeAll');
+                $('#modal_create_campaign #Zipcode').prop("disabled", false).trigger('change');
+                $('#modal_create_campaign #Additional').tagsinput('removeAll');
+                $('#modal_create_campaign #Additional').prop("disabled", false).trigger('change');
+                $('#show_NumberOfPeopleReached').html(0);
+                $('#modal_create_campaign #Message').val("").prop("disabled", false);
+
+                _readyChange = true;
+            } else {
+            }
+        }
+    }
+
+</script>

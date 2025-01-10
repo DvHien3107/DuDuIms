@@ -1,0 +1,184 @@
+﻿@model EnrichcousBackOffice.Models.T_RemindersTicket
+@using EnrichcousBackOffice.Services.Tickets
+
+@{ 
+    var currentDate = Model.Date + Model.Time;
+}
+<style>
+    #date_reminder .ui-datepicker-inline {
+        width: 100%;
+    }
+</style>
+<div class="modal fade" id="reminder_popup">
+
+    <div class="modal-dialog">
+        <form action="/Ticket_New/ReminderSubmit" method="post" class="modal-content">
+            <input type="hidden" name="Id" value="@Model.Id" />
+            <input type="hidden" name="TicketId" value="@Model.TicketId" />
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" style="text-transform:uppercase"><i class="fa fa-bell"></i> Reminders Ticket</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-6">
+                        <div class="box box-default box-solid">
+                            <div class="box-header">
+                                <i class="fa fa-calendar"></i>
+
+                                <h3 class="box-title">Date</h3>
+                                <!-- tools box -->
+                                <div class="pull-right box-tools">
+
+                                    @*<button type="button" class="btn btn-success btn-sm" data-widget="collapse">
+                                    <i class="fa fa-minus"></i>
+                                </button>*@
+                                    @*<label class="switch " style="vertical-align: text-top;transform: translateY(6px);">
+                                        <input id="enable_date" type="checkbox" @if (Model.Date != null) { @Html.Raw("checked") }>
+                                        <span class="slider round"></span>
+                                    </label>*@
+                                </div>
+                                <!-- /. tools -->
+                            </div>
+                            <!-- /.box-header -->
+                            <div class="box-body no-padding">
+                                <!--The calendar -->
+                                <div id="date_reminder" style="width: 100%"></div>
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="box box-default box-solid">
+                            <div class="box-header">
+                                <i class="fa fa-clock-o"></i>
+
+                                <h3 class="box-title">Hours</h3>
+                                <!-- tools box -->
+                                <div class="pull-right box-tools">
+
+                                    @*<button type="button" class="btn btn-success btn-sm" data-widget="collapse">
+                                    <i class="fa fa-minus"></i>
+                                </button>*@
+                                    @*<label class="switch " style="vertical-align: text-top;transform: translateY(6px);">
+                                        <input id="enable_time" type="checkbox" @if (Model.Time != null) { @Html.Raw("checked") }>
+                                        <span class="slider round"></span>
+                                    </label>*@
+                                </div>
+                                <!-- /. tools -->
+                            </div>
+                            <!-- /.box-header -->
+                            <div class="box-body no-padding">
+                                <!--The calendar -->
+                                <div id="time_reminder" style="width: 100%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="form-group">
+                            <label>Repeat</label>
+                            <select name="Repeat" class="form-control">
+                                <option value="@RepeatDefine.Never" @(Model.Repeat == @RepeatDefine.Never ? "selected" : "")>Never</option>
+                                <option value="@RepeatDefine.Daily" @(Model.Repeat == @RepeatDefine.Daily ? "selected" : "")>Daily</option>
+                                <option value="@RepeatDefine.Weekly" @(Model.Repeat == @RepeatDefine.Weekly ? "selected" : "")>Weekly</option>
+                                <option value="@RepeatDefine.Monthly" @(Model.Repeat == @RepeatDefine.Monthly ? "selected" : "")>Monthly</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="form-group">
+                            <label>Note</label>
+                            <textarea name="Note" class="form-control" rows="5">@Html.Raw(Model.Note)</textarea>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary pull-right" >Save</button>
+            </div>
+        </form>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+<script>
+
+    $('#date_reminder').datepicker();
+
+    $('#time_reminder').datetimepicker({
+        format: 'LT',
+        inline: true,
+
+    });
+
+    @if (Model.Id > 0)
+    {
+        <text>
+          $('#date_reminder').datepicker('setDate', moment("@string.Format("{0:r}", currentDate)").toDate());
+          $('#time_reminder').data('DateTimePicker').date(moment("@string.Format("{0:r}", currentDate)"));
+        </text>
+    }
+
+    //$("#enable_date").change(function () {
+    //    if ($(this).is(":checked")) {
+    //        $("#date_reminder").slideDown();
+    //    }
+    //    else {
+
+    //        $("#date_reminder").slideUp();
+    //    }
+    //})
+    //$("#enable_time").change(function () {
+    //    if ($(this).is(":checked")) {
+
+    //        $("#time_reminder").slideDown();
+    //    }
+    //    else {
+    //        $("#time_reminder").slideUp();
+    //    }
+    //})
+    //$("#enable_date").trigger('change');
+    //$("#enable_time").trigger('change');
+
+    $('#reminder_popup form').submit(function (e) {
+        e.preventDefault(); // avoid to execute the actual submit of the form.
+       
+        var form = $(this);
+        var url = form.attr('action');
+        var date = $('#date_reminder').datepicker('getDate');
+        var time = $("#time_reminder").data("DateTimePicker").date().toDate();
+        var note = $(form).find('[name="Note"]').val();
+        var repeat = $(form).find('[name="Repeat"]').val();
+        var id = $(form).find('[name="Id"]').val();
+        var ticketid = $(form).find('[name="TicketId"]').val();
+        $.ajax({
+            type: "POST", 
+            url: url,
+            data: { 'GMT': moment().format("Z"), "date": $.datepicker.formatDate('M-dd-yy', date), "time": (time.getHours() + ":" + time.getMinutes()+":00"),note,repeat,id,ticketid}, // serializes the form's elements.
+            success: function (data) {
+                if (data.status) {
+                    $("#reminder_popup").modal('hide');
+                    success('set ticket reminder success');
+                    loadReminder();
+                    Gettimeline();
+                }
+                else
+                {
+                    error(data.message);
+                }
+                $("#loading_transfer_submit").hide();
+            }
+        });
+
+
+    });
+
+</script>

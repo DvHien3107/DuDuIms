@@ -1,0 +1,343 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.CustomizeModel.StoreReportView>
+@{
+    Dictionary<string, bool> access = EnrichcousBackOffice.AppLB.Authority.GetAccessAuthority();
+    var host = $"{HttpContext.Current.Request.Url.Scheme}://{HttpContext.Current.Request.Url.Authority}";
+}
+<style>
+    .align-middle {
+        vertical-align: middle !important;
+    }
+    .edit-note{
+        font-size:16px;
+        cursor:pointer;
+        display:none;
+        margin-left:5px;
+    }
+    .note-td:hover .edit-note{
+        display:inline-block;
+    }
+
+</style>
+<table id="store_table" class="table table-bordered table-hover">
+    <thead style="background-color: #AAD3EA">
+        <tr>
+            <th>Store Id</th>
+            <th>Store Name</th>
+            <th>Subscription Name</th>
+            <th>Start date</th>
+            <th>End date</th>
+            <th>Status</th>
+            <th>Auto Renew</th>
+            @*<th>Last updated</th>*@
+            <th>Note</th>
+
+        </tr>
+    </thead>
+    <tbody>
+    </tbody>
+</table>
+<div class="modal fade" id="select_effective_date" role="dialog">
+    <div class="modal-dialog modal-lg" style="max-width:400px">
+        <div class="modal-content">
+            <form onsubmit="submit_effective_date(event)">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">Select Effective date</h4>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="id" />
+                    <input class="form-control datepicker" name="effective_date" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary" onclick="">Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="expires-note-modal" role="dialog">
+    <div class="modal-dialog modal-lg" style="max-width:500px">
+        <div class="modal-content">
+            <form method="post" action="/StoreReport/UpdateExpiresNote" id="expires-note-form">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title"><i class="fa fa-pencil-square-o" aria-hidden="true"></i></h4>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="StoreCode" />
+                    <textarea class="form-control datepicker" name="Note" rows="4"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancle</button>
+                    <button type="submit" class="btn btn-primary" onclick="">Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="~/Content/Admin/bower_components/moment/moment.js"></script>
+<script>
+    $(function () {
+        $(".datepicker").datepicker({
+            dateFormat: "mm/dd/yy",
+            changeMonth: true,
+            changeYear: true,
+            yearRange: '-100:+100'
+        });
+    });
+    function renew(id, effect_date = null) {
+        if (effect_date != null || confirm("Do you want to Renew this plan?")) {
+            $("#img_load_" + id).show();
+            overlayOn();
+            $.ajax({
+                method: "POST",
+                url: "/Order/renew",
+                data: { id, effect_date },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    overlayOff();
+                    if (data[0]) {
+                        noty({ "text": "Renew completed", "layout": "top", "type": "success" });
+                        //reload_page();
+                        $('#store_table').DataTable().ajax.reload(null, false);
+                    }
+                    else {
+                        if (data[1]) {
+                            noty({ "text": data[2], "layout": "top", "type": "warning" });
+                            $("input[name=id]").val(id);
+                            $("input[name=effective_date]").datepicker("setDate", new Date());
+                            $("#select_effective_date").modal("show");
+                        } else {
+                            noty({ "text": data[2], "layout": "top", "type": "error" });
+                        }
+                    }
+                    $("#img_load_" + id).hide();
+                })
+        }
+        //    .fail(function () {
+        //        alert("renew ajax fail");
+        //        $("#img_load_" + id).hide();
+        //    });
+    }
+    function renewtrial(StoreCode) {
+        if (confirm("Are you sure renew this trial account ?")) {
+            $('.loading').show();
+            $.ajax({
+                url: "/MerchantMan/RenewTrial",
+                dataType: "json",
+                method: "POST",
+                data: { StoreCode }
+            })
+                .done(function (data) {
+                    if (data[0]) {
+                        noty({ "text": data[1], "layout": "topRight", "type": "success" });
+                        //reload_page();
+                        $('#store_table').DataTable().ajax.reload(null, false);
+                    }
+                    else {
+                        noty({ "text": data[1], "layout": "topRight", "type": "error" });
+                    }
+                })
+                .fail(function () {
+                    alert("Renewtrial fail");
+                })
+                .always(function () {
+                    $('.loading').hide();
+                });
+        }
+    }
+    function submit_effective_date(e) {
+        overlayOn();
+        e.preventDefault();
+        $("#select_effective_date").modal("hide");
+        var id = $("input[name=id]").val();
+        var effect_date = $("input[name=effective_date]").val();
+        renew(id, effect_date);
+    }
+    $(function () {
+        var tableStore = $('#store_table').DataTable({
+            "language": {
+                "processing": '<img src="/Content/ajax-loaders/loading2.gif" width="60px" />',
+            },
+            "pageLength": 10,
+            "serverSide": true, // for process server side
+            "processing": true, // for show progress bar
+            'paging': true,
+            'lengthChange': true,
+            'searching': false,
+            'ordering': false,
+            'info': false,
+            'autoWidth': true,
+            'stateSave': false,
+          /*  "order": [[5, 'asc']],*/
+            "ajax": {
+                "url": "/StoreReport/LoadListStore",
+                "type": "POST",
+                "datatype": "json", 
+                data: function (data) {
+                    data.expiresAbout = $('#expiresAbout').val();
+                    data.licenseType = $('#licenseType').val();
+                    data.partnerCode = $('#partnerCode').val();
+                    data.search_text = $('#search_text').val();
+                    data.search_services = $('#search_services').val();
+                    return data;
+                },
+                'dataSrc': function (data) {
+                    return data.data;
+                }
+            },
+            'fnCreatedRow': function (nRow, aData, iDataIndex) {
+                //$(nRow).attr('onclick', `load_invoice('${aData.Store.CustomerCode}', '${aData.Store.Id}', $(this))`);
+            },
+            "columns": [
+                {
+                    "name": "StoreCode",
+                    "render": function (data, type, row) {
+                        return '<strong style="cursor: pointer">#' + row["StoreCode"] + '</strong>'
+                    },
+                    "className": 'align-middle',
+                },
+                {
+                    "name": "Storename",
+                    "render": function (data, type, row) {
+                        let html = '<a href="/merchantman/detail/' + row["CustomerId"] + '" target="_blank"><strong class="text-info" style="cursor: pointer">' + row["StoreName"] + '</strong></a> ';
+                      
+                        if (row["PartnerCode"] && row["PartnerCode"] != '') {
+                            html += '<br/><span class="label label-default" data-toggle="tooltip">' + row["PartnerCode"] + '</span>'
+                        }
+                        return html;
+                    },
+                },
+                {
+                    "name": "Productname",
+                    "render": function (data, type, row) {
+                        return '<strong>' + row["Productname"] + '</strong>';
+                    },
+                },
+                {
+                    "name": "StartDate",
+                    "render": function (data, type, row) {
+                        let html = '<span>' +row["EffectiveDate"] + '</span>';
+                        return html;
+                    },
+                    "className": 'align-middle',
+                },
+                {
+                    "name": "EndDate",
+                    "render": function (data, type, row) {
+                        let html = '';
+                        if (row["RenewDate"]) {
+                            html += '<span>' + row["RenewDate"] + '</span>';
+                        }
+                        return html;
+                    },
+                    "className": 'align-middle',
+                },
+
+                {
+                    "name": "Status",
+                    "render": function (data, type, row) {
+                        let html = '';
+                        if (row["DueDate"]) {
+                            html += '<label class="label label-warning">PaymentLater</label>';
+                            html += `<br/><label class="label label-primary">Payment Later - ${moment(row["DueDate"]).format("MMM DD, YYYY")}</label>`;
+                            return html;
+                        }
+                        if (row["Order"] == 1 || row["Order"] == 3) 
+                        {
+
+                            html += '<label class="label label-danger">Expired</label>';
+                        }
+                        else {
+                            html += '<label class="label label-success">Active</label>'
+                        }
+                        return html;
+                    },
+                    "className": 'align-middle',
+                },
+                {
+                    "name": "AutoRenew",
+                    "render": function (data, type, row) {
+                        return row["AutoRenew"] == true ? "Yes" : "";
+                    },
+                    "className": 'align-middle',
+                },
+                //{
+                //    "name": "LastUpdate",
+                //    "render": function (data, type, row) {
+                //        let html = '<span>' + moment(row["LastUpdateAt"]).format("MMM DD, YYYY, HH:mm A") + '</span>';
+                //        if (row["LastUpdateBy"]) {
+                //            html += '<br /><i>- By ' + row["LastUpdateBy"] + '</i>'
+                //        }
+                //        return html;
+                //    },
+                //    "className": 'align-middle',
+                //},
+                {
+                    "name": "ExpiresNote",
+                    "render": function (data, type, row) {
+                        let html = `<span>${(row["ExpiresNote"]||'')}</span><span onclick="setNote('${row["StoreCode"]}')" class="edit-note"><i class="fa fa-pencil-square-o"></i></span>`;
+                        return html;
+                    },
+                    "className": 'align-middle note-td',
+                    "width":"100px"
+                },
+              
+            ]
+        });
+
+    });
+    $(".on_row").on('click', function (event) {
+        event.stopPropagation();
+    })
+
+    function setNote(storeCode) {
+        overlayOn();
+        $.ajax({
+            method: "get",
+            url: "/storereport/GetExpiresLastNote",
+            data: { storeCode },
+            dataType: "json"
+        })
+            .done(function (data) {
+                if (data.status) {
+                    $("#expires-note-form").find("[name='StoreCode']").val(storeCode);
+                    $("#expires-note-form").find("[name='Note']").val(data.note);
+                    $("#expires-note-modal").modal("show");
+                } else {
+                    noty({ "text": data.message, "layout": "topRight", "type": "error" });
+                }
+            })
+            .fail(function () {
+            })
+            .always(function () {
+                overlayOff();
+            });
+   
+    }
+
+    $("#expires-note-form").submit(function (e) {
+        e.preventDefault(); // avoid to execute the actual submit of the form.
+        var form = $(this);
+        var actionUrl = form.attr('action');
+        $.ajax({
+            type: "POST",
+            url: actionUrl,
+            data: form.serialize(), // serializes the form's elements.
+            success: function (data) {
+                if (data.status) {
+                    $("#expires-note-modal").modal("hide");
+                    $('#store_table').DataTable().ajax.reload();
+                    noty({ "text": data.message, "layout": "topRight", "type": "success" });
+                } else {
+                    noty({ "text": data.message, "layout": "topRight", "type": "error" });
+                }
+            }
+        });
+
+    });
+</script>

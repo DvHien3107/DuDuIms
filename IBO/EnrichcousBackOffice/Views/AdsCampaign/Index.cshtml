@@ -1,0 +1,637 @@
+﻿@using EnrichcousBackOffice.Controllers
+@using EnrichcousBackOffice.Models
+@using Enrich.Core.Infrastructure 
+@{
+    WebDataModel db = new WebDataModel();
+    var states = Json.Decode(Json.Encode(EngineContext.Current.Resolve<MerchantManController>().LoadListState().Data))[0];
+    var resourceMerchant = new List<SelectListItem> {
+        new SelectListItem{
+            Value = "Merchant",
+            Text = "Merchant"
+        },
+        new SelectListItem{
+            Value = "Trial",
+            Text = "Trial Account"
+        },
+        new SelectListItem{
+            Value = "Lead",
+            Text = "Sales Lead"
+        },
+
+        //"Merchant"
+        //, "Lead"
+        //, "Potential"
+        //, "Data"
+        //, "Other"
+
+    };
+    List<License_Product> licenses = db.License_Product.Where(l => l.isAddon != true).ToList();
+    List<M_Campaign> listCampaign = db.M_Campaign.Where(c => c.Status != -2).ToList();
+}
+@{
+    ViewBag.Title = "Ads Campaign";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<section class="content-header">
+    <h1>
+        Ads Campaign
+        <small>@("ads".Equals(TempData["Page"]) ? "Ads settings" : "Campaigns")</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Dashboard</a></li>
+        <li><i class="fa fa-paper-plane"></i> Ads Campaign</li>
+    </ol>
+</section>
+
+<!-- Main content -->
+<section class="content">
+    <div class="row">
+
+        @if (TempData["e"] != null)
+        {
+            <div class="alert alert-warning alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+            </div>
+        }
+        else if (TempData["s"] != null)
+        {
+            <div class="alert alert-success alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+            </div>
+        }
+
+        <div class="col-md-12">
+            <div class="box box-primary">
+                <!-- /.box-header -->
+                <div class="box-body">
+                    <div class="nav-tabs-custom" style="margin-bottom: 0; box-shadow: none">
+                        <ul class="nav nav-tabs nav-link">
+                            <li class="@("campaign".Equals(TempData["Page"]) ? "active" : "")">
+                                <a style="cursor: pointer; font-size: 16px" class="tabs" href="/adscampaign?page=campaign">Campaigns</a>
+                            </li>
+                            <li class="@("ads".Equals(TempData["Page"]) ? "active" : "")">
+                                <a style="cursor: pointer; font-size: 16px" class="tabs" href="/adscampaign?page=ads">Ads Settings</a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="tab-content">
+                        @if ("ads".Equals(TempData["Page"]))
+                        {
+                            Html.RenderPartial("_Partial_Ads");
+                        }
+                        else
+                        {
+                            Html.RenderPartial("_Partial_Campaign");
+                        }
+                    </div>
+                </div>
+                <!-- /.box-body -->
+            </div>
+            <!-- /.box -->
+        </div>
+
+    </div>
+</section>
+
+
+<div class="modal fade" id="modal_create_campaign" tabindex="0" role="dialog" data-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Add new campaign</h4>
+            </div>
+            <div class="modal-body">
+                <div id="smartwizard">
+                    <ul>
+                        <li><a href="#step-1">Step 1<br /><small>Create new campaign</small></a></li>
+                        <li><a href="#step-2">Step 2<br /><small>Add Ads</small></a></li>
+                    </ul>
+                    <br />
+                    <div class="mt-4">
+                        <div id="step-1">
+                            <form method="post" action="/adscampaign/savecampaign" id="form_create_campaign" class="msform">
+                                <div class="row">
+                                    <input id="CamId" name="CamId" class="form-control" value="" type="hidden" />
+                                    <div class="col-md-12" style="padding-bottom:20px">
+                                        <label>Compaign Name <span style="color:red">*</span></label>
+                                        <input id="Name" name="Name" class="form-control" required />
+                                    </div>
+                                    <div class="col-md-12" style="padding-bottom:20px">
+                                        <label>Descriptions</label>
+                                        <textarea id="Note" name="Note" style="max-width: 100%; min-height: 100px; resize:vertical" class="form-control"></textarea>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                                <button type="submit" class="btn btn-primary pull-right" onsubmit="overlayOn()" id="btn-save-cam">Save Campaign</button>
+                            </form>
+                        </div>
+                        <div id="step-2">
+                            <form method="post" action="/adscampaign/saveads" id="form_create_ads" class="msform" onsubmit="overlayOn()" onkeypress="return event.keyCode!=13">
+                                <div class="row">
+                                    <div class="col-md-6" style="padding-bottom:20px">
+                                        <label>Compaign Name <span style="color:red">*</span></label>
+                                        <select name="CompaignId" id="CompaignName" class="form-control select2" style="width: 100%;" required>
+                                            @foreach (var cam in listCampaign)
+                                            {
+                                                <option value="@cam.Id">@cam.Name</option>
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6" style="padding-bottom:20px">
+                                        <label>Ads Name <span style="color:red">*</span></label>
+                                        <input id="Name" name="Name" class="form-control" required />
+                                    </div>
+                                    <div class="col-md-6" style="padding-bottom:20px">
+                                        <label>Ads type</label><br />
+                                        <label style="font-weight:unset; margin: 0 10px 0 0">
+                                            <input type="radio" name="AdsType" value="sms" class="flat-red card_type" checked>
+                                            SMS
+                                        </label>
+                                        <label style="font-weight:unset; margin: 0 10px 0 0; display: none">
+                                            <input type="radio" name="AdsType" value="email" class="flat-red card_type">
+                                            Email
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6" style="padding-bottom:20px">
+                                        <label>Resource @*<i class="text-primary fa fa-exclamation-circle" data-toggle="tooltip" data-placement="right" title="Blank same as select all"></i>*@</label>
+                                        <select name="Resource" id="Resource" class="form-control select2" onchange="updateNumberReached()" multiple style="width: 100%;">
+                                            @foreach (var re in resourceMerchant)
+                                            {
+                                                <option value="@re.Value">@re.Text</option>
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6" style="padding-bottom:20px">
+                                        <label>License @*<i class="text-primary fa fa-exclamation-circle" data-toggle="tooltip" data-placement="right" title="Blank same as select all"></i>*@</label>
+                                        <select name="LicenseType" id="LicenseType" class="form-control select2" onchange="updateNumberReached()" multiple style="width: 100%;">
+                                            @foreach (var lic in licenses)
+                                            {
+                                                <option value="@lic.Code">@lic.Name</option>
+                                            }
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6" style="padding-bottom:20px">
+                                        <label>State @*<i class="text-primary fa fa-exclamation-circle" data-toggle="tooltip" data-placement="right" title="Blank same as select all"></i>*@</label>
+                                        <select name="State" id="State" class="form-control select2" onchange="updateNumberReached()" multiple style="width: 100%;">
+                                            @foreach (string state in states)
+                                            {
+                                                <option value="@state">@state</option>
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6" style="padding-bottom:20px">
+                                        <label>Zipcode <i class="text-primary fa fa-exclamation-circle" data-toggle="tooltip" data-placement="right" title='Add objects that match this condition'></i></label>
+                                        <textarea name="Zipcode" id="Zipcode" onchange="updateNumberReached()"
+                                                  style="max-width: 100%; min-height: 50px; height: 50px; resize:vertical" class="form-control box-tag"></textarea>
+                                    </div>
+                                    <div class="col-md-6" style="padding-bottom:20px">
+                                        <label>Additional <i class="text-primary fa fa-exclamation-circle" data-toggle="tooltip" data-placement="right" title="Add the phone number of the object you want to send"></i></label>
+                                        <textarea name="Additional" id="Additional" data-role="tagsinput" @*onchange="updateNumberReached()"*@
+                                                  style="max-width: 100%; min-height: 50px; height: 50px; resize:vertical"
+                                                  class="form-control box-tag"></textarea>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="col" style="width: 260px; margin: auto; text-align: center; border: 2px dotted var(--main-color-1)">
+                                            <label>Number of people reached</label>
+                                            <h2 class="text-success" style="margin-top: 10px"><b id="show_NumberOfPeopleReached">0</b></h2>
+                                        </div>
+
+                                        <input type="hidden" name="NumberOfPeopleReached" id="NumberOfPeopleReached" />
+                                        <input type="hidden" name="AdsId" id="AdsId" value="" />
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12" style="padding-bottom:20px">
+                                        <label>Message <span style="color:red">*</span> <i class="text-primary fa fa-exclamation-circle" data-toggle="tooltip" data-placement="right" title="Message for send to Customer"></i></label>
+                                        <textarea id="Message" name="Message" maxlength="150" style="max-width: 100%; min-height: 100px; resize:vertical" class="form-control textarea-countlength" required></textarea>
+                                        <div class="pull-right" id="count_char">
+                                            <span id="current">0</span>
+                                            <span id="maximum">/150</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12" style="margin-bottom: 10px">
+                                        <label>Attachment</label><br />
+                                        <div id="attachment-show">
+                                        </div>
+                                        <p class="col-md-12" style="border:1px dotted red; padding:3px; text-align:center; display: none" id="loading_upload_file">
+                                            <img style="height:50px;margin-left:0" alt="picture" src="/Content/ajax-loaders/loading-partial.gif" />
+                                        </p>
+
+                                        <div class="group-attachment">
+                                            <span class="btn btn-success fileinput-button">
+                                                <i class="glyphicon glyphicon-plus"></i>
+                                                <span>Add image...</span>
+                                                <input id="add_attachment"
+                                                       accept=".jpg, .jpeg, .gif, .png"
+                                                       type="file" name="files" multiple="">
+                                            </span>
+                                            <i style="color: red">(* maximum size 5MB)</i>
+                                        </div>
+                                        <input id="Attachment" name="Attachment" type="hidden" value="" class="form-control" />
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-default btn-flat pull-left" data-dismiss="modal">Close</button>
+                                <div class="btn-for-detail-ads" hidden>
+                                    <button type="button" class="btn btn-primary btn-flat pull-right" onclick="actionEditAds()" id="btn-edit-ads"><i class="fa fa-pencil-square-o" aria-hidden="true"></i> Edit</button>
+                                    <button type="button" class="btn btn-info btn-flat pull-right" style="margin: 0 10px 0 0" id="btn_send_ads" onclick="sendSMSAds(this)">
+                                        <i class="fa fa-paper-plane-o" aria-hidden="true"></i> Send
+                                        <img id="loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                                    </button>
+                                    <button type="button" class="btn btn-warning btn-flat pull-right" style="margin: 0 10px 0 0" id="btn_cancel_ads" onclick="changeStatus('Cancel', this)">
+                                        <i class="fa fa-ban" aria-hidden="true"></i> Cancel
+                                        <img id="loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                                    </button>
+                                    <button type="button" class="btn btn-secondary btn-flat pull-right" style="margin: 0 10px 0 0; display: none" id="btn_draft_ads" onclick="changeStatus('Draft', this)">
+                                        <i class="fa fa-refresh" aria-hidden="true"></i> Draft
+                                        <img id="loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                                    </button>
+                                    <button type="button" class="btn btn-danger btn-flat pull-right" style="margin: 0 10px 0 0" onclick="removeads()"><i class="fa fa-trash" aria-hidden="true"></i> Remove</button>
+                                </div>
+                                <div class="btn-for-save-ads" hidden>
+                                    <button type="submit" value="save" name="btnSubmit" class="btn btn-primary btn-flat pull-right" @*onclick="submitSave(false)"*@ id="btn-save-ads">Save</button>
+                                    <button type="submit" value="send" name="btnSubmit" class="btn btn-info btn-flat pull-right" style="margin: 0 10px 0 0" id="btn_send_ads" @*onclick="submitSave(true, this)"*@>
+                                        <i class="fa fa-paper-plane-o" aria-hidden="true"></i> Send
+                                        <img id="loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="pleaseWaitDialog" tabindex="-1" role="dialog" data-backdrop="static" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4>Sending...</h4>
+            </div>
+            <div class="modal-body">
+                <div class="progress">
+                    <div class="progress-bar progress-bar-info progress-bar-striped active" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0">
+                        <span class="sr-only">100% Complete (success)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section style
+{
+    <link href="~/Content/smartwizard/smart_wizard.min.css" rel="stylesheet" type="text/css" />
+    <link href="~/Content/smartwizard/smart_wizard_theme_arrows.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/content/admin/plugins/iCheck/all.css" />
+    <link href="~/Content/Admin/plugins/bootstrap-inputtag/bootstrap-tagsinput.css" rel="stylesheet" />
+}
+
+@section script
+{
+    <script src="~/Content/smartwizard/jquery.smartWizard.min.js" type="text/javascript"></script>
+    <script src="~/Content/Admin/plugins/bootstrap-inputtag/bootstrap-tagsinput.js"></script>
+
+    <script>
+        var _readyChange = false;
+        var _sendNow = false;
+        var _dataFile = [];
+        $(function () {
+            $('#smartwizard').smartWizard({
+                selected: 0,
+                theme: 'arrows',
+                autoAdjustHeight: true,
+                transitionEffect: 'fade',
+                showStepURLhash: false,
+                cycleSteps: false,
+                toolbarSettings: {
+                    showNextButton: false, // show/hide a Next button
+                    showPreviousButton: false, // show/hide a Previous button
+                },
+                anchorSettings: {
+                    enableAnchorOnDoneStep: false // Bật / Tắt điều hướng các bước đã thực hiện
+                },
+                keyboardSettings: {
+                    keyNavigation: false, // Enable/Disable keyboard navigation(left and right keys are used if enabled)
+
+                },
+            });
+            $("#form_create_campaign").ajaxForm(function (data) {
+                overlayOff();
+                if (data[0]) { //call api thanh cong
+                    noty({ "text": data[1], "layout": "topRight", "type": "success" });
+                    if (data[2] != null) { //update khi create new
+                        $("#data_campaign").DataTable().ajax.reload();
+                        $('#smartwizard').smartWizard("next");
+                        $('.btn-for-save-ads').show();
+                        $('#CompaignName').append(`<option value="${data[2]}">${data[3]}</option>`);
+                        $('#modal_create_campaign #CompaignName').val(data[2]).trigger('change');
+                        _readyChange = true;
+                    }
+                    else { //edit thi close modal thoi
+                        $("#data_campaign").DataTable().ajax.reload();
+                        $('#modal_create_campaign').modal("hide");
+                        $('#smartwizard').smartWizard("reset");
+                        $('#form_create_campaign').trigger("reset");
+                        $('#form_create_ads').trigger("reset");
+                    }
+                } else { //call api fail
+                    noty({ "text": data[1], "layout": "topRight", "type": "error" });
+                }
+            });
+            $("#form_create_ads").ajaxForm(async function (data) {
+                overlayOff();
+                if (data[0]) {
+                    noty({ "text": data[1], "layout": "topRight", "type": "success" });
+                    _readyChange = false;
+
+                    if ($("#form_create_ads").find('button.clicked').prop('value') == 'send') {
+                        if (confirm(data[1] + ", are you want to Send message?") == true) {
+                            if (data[2].NumberOfPeopleReached == 0) {
+                                noty({ "text": "Can not send. Please add more merchant.", "layout": "topRight", "type": "warning" });
+                                return;
+                            }
+
+                            //show progress bar
+                            $('#pleaseWaitDialog').modal({ keyboard: false });
+                            $('.progress-bar').css("width", '1%');
+                            let count = 100;
+                            for (let i = 0; i != data[2].NumberOfPeopleReached && i != -1;) {
+                                await $.ajax({
+                                    url: '/adscampaign/SendSMSToMerchant',
+                                    type: "post",
+                                    data: {
+                                        AdsId: data[2].Id,
+                                        startNumber: i,
+                                        countNumber: count
+                                    }
+                                }).done(function (datax) {
+                                    if (datax[0]) {
+                                        i = datax[1];
+                                        $('.progress-bar').css("width", `${datax[1] * 100 / data[2].NumberOfPeopleReached}%`);
+                                        if (datax[1] == data[2].NumberOfPeopleReached || datax[1] == -1) {
+                                            if (datax[2] != '' && datax[2] != null)
+                                                noty({ "text": "Done. Some customer sent error.", "layout": "topRight", "type": "warning" });
+                                            else
+                                                noty({ "text": "Done. Sent success", "layout": "topRight", "type": "success" });
+                                            $('#pleaseWaitDialog').modal("hide");
+                                            $('#modal_create_campaign').modal("hide");
+                                            //$("#data_ads").DataTable().ajax.reload();
+                                        }
+                                    }
+                                    else {
+                                        i = datax[1];
+                                        noty({ "text": datax[2], "layout": "topRight", "type": "warning" });
+                                        $('#pleaseWaitDialog').modal("hide");
+                                    }
+                                }).fail(function () {
+                                    $(elemt).find("#loading").hide();
+                                    $('#pleaseWaitDialog').modal("hide");
+                                    alert("Oops! Something went wrong. Sent failure.");
+                                    i = -1
+                                })
+                            }
+                            $("#loading").hide();
+                        }
+                    }
+
+                    $('#modal_create_campaign').modal("hide");
+                    $('#smartwizard').smartWizard("reset");
+                    $('#form_create_campaign').trigger("reset");
+                    $('#form_create_ads').trigger("reset");
+                    $("#data_ads").DataTable().ajax.reload();
+                    _sendNow = false;
+                } else {
+                    noty({ "text": data[1], "layout": "topRight", "type": "error" });
+                }
+            });
+            $('.textarea-countlength').keyup(function () {
+                var characterCount = $(this).val().length,
+                    current = $('#current'),
+                    maximum = $('#maximum'),
+                    theCount = $('#count_char');
+                current.text(characterCount);
+                if (characterCount < 100)
+                {
+                    current.css('color', '#666');
+                }
+                else
+                {
+                    current.css('color', '#990606');
+                    maximum.css('color', '#990606');
+                    theCount.css('font-weight', 'normal');
+                }
+            });
+        })
+
+        $(document).on('click', '#form_create_ads button', function () {
+            $('#form_create_ads button').removeClass('clicked');
+            $(this).addClass('clicked');
+        });
+
+
+        function submitSave(isSend, elemt) {
+            _sendNow = isSend;
+            if (isSend) {
+                if (confirm("Are you want to Send message?") == true) {
+                    overlayOn();
+                    $("#form_create_ads").submit();
+                }
+            }
+            else {
+                overlayOn();
+                $("#form_create_ads").submit();
+            }
+        }
+
+        function updateNumberReached() {
+            if (!_readyChange) return;
+            let resources = $("#Resource").select2('data').map(c => c.id).join(",");
+            let license = $("#LicenseType").select2('data').map(c => c.id).join(",");
+            let state = $("#State").select2('data').map(c => c.id).join(",");
+            let zipcode = $("#Zipcode").val();
+            let additional = $("#Additional").val();
+            $.ajax({
+                url: `/adscampaign/publicnumberreached`,
+                type: "post",
+                data: { 'resources': resources, 'licences': license, 'states': state, 'zipcodes': zipcode, 'additional': additional },
+                success: function (data) {
+                    $("#show_NumberOfPeopleReached").html(data[1]);
+                    $("#NumberOfPeopleReached").val(data[1]);
+                    if (data[0] != true) {
+                        noty({ "text": data[2], "layout": "topRight", "type": "error" });
+                    }
+                },
+            })
+        }
+
+        function UpdatePhoneAds(el) {
+            const regex = /(\d[\s-]?)?[\(\[\s-]{0,2}?\d{3}[\)\]\s-]{0,2}?\d{3}[\s-]?\d{4}/ig;
+            var Additional = $(el).val();
+            let m;
+            while ((m = regex.exec(Additional)) !== null) {
+                // This is necessary to avoid infinite loops with zero-width matches
+                if (m.index === regex.lastIndex) {
+                    regex.lastIndex++;
+                }
+                    // The result can be accessed through the `m`-variable.
+                    m.forEach((match, groupIndex) => {
+                        $('#Additional').tagsinput('add', match);
+                    });
+            }
+            updateNumberReached();
+            $(el).val("");
+        }
+
+        $('#Additional').on('itemRemoved', function (event) {
+            updateNumberReached();
+        });
+        //update input Aditional from <list>(xxx) xxx xxxx
+        $('#Additional').tagsinput('input').$input.on("keydown change", function search(e) {
+            if (e.type == "change") {
+                UpdatePhoneAds(this);
+            }
+            else {
+                if (e.keyCode == 13) {
+                    UpdatePhoneAds(this);
+                }
+            }
+        });
+       
+
+       
+        $('#add_attachment').on("change", function () {
+            $('#loading_upload_file').show(300);
+            var formdata = new FormData();
+            var fileInput = document.getElementById('add_attachment');
+            for (i = 0; i < fileInput.files.length; i++)
+            {
+                _dataFile.push("/Upload/Other/" + fileInput.files[i].name);
+                formdata.append(fileInput.files[i].name, fileInput.files[i]);
+            }
+
+            //Creating an XMLHttpRequest and sending
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/Upload/OriginUpload');
+            xhr.send(formdata);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4) {
+                    if (xhr.status == 200) {
+                        var data = JSON.parse(xhr.response);
+                        if (data[0]) {
+                            var Success = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"success"}');
+                            noty(Success);
+                            let _temp = [..._dataFile];
+                            $('#Attachment').val(_temp.join('|'));
+                            reload_uploadfile();
+                        }
+                        else {
+                            $('#loading_upload_file').hide();
+                            var Error = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"error"}');
+                            noty(Error);
+                        }
+                    }
+                    else if (xhr.status == 413) {
+                        $('#loading_upload_file').hide();
+                        var Error = $.parseJSON('{"text":"Error: File size exceeded maximum length", "layout":"topRight", "type":"error"}');
+                        noty(Error);
+                    }
+                    else {
+                        $('#loading_upload_file').hide();
+                        var Error = $.parseJSON('{"text":"' + xhr.statusText + '", "layout":"topRight", "type":"error"}');
+                        noty(Error);
+                    }
+                }
+            }
+            return;
+        });
+
+
+        function reload_uploadfile(isDetail = false) {
+            $('#attachment-show').empty();
+            for (i = 0; i < _dataFile.length; i++) {
+                if ($('input[name="OldAttachment"]').map(function () { return this.value; }).get().join('|').lastIndexOf(_dataFile[i]) >= 0) continue;
+                let avatar = "";
+                if (_dataFile[i].lastIndexOf(".pdf") >= 0) {
+                    avatar = "/upload/img/pdf.png";
+                }
+                else if (_dataFile[i].lastIndexOf(".doc") >= 0 || _dataFile[i].lastIndexOf(".doc") >= 1) {
+                    avatar = "/upload/img/word.png";
+                }
+                else if (_dataFile[i].lastIndexOf(".xls") >= 0 || _dataFile[i].lastIndexOf(".xls") >= 1) {
+                    avatar = "/upload/img/excel.jpg";
+                }
+                else if (_dataFile[i].lastIndexOf(".jpeg") >= 0 || _dataFile[i].lastIndexOf(".jpg") >= 0 ||
+                    _dataFile[i].lastIndexOf(".png") >= 0 || _dataFile[i].lastIndexOf(".gif") >= 0 ||
+                    _dataFile[i].lastIndexOf(".bmp") >= 0) {
+                    avatar = _dataFile[i];
+                }
+                else
+                    avatar = "/upload/img/no_image.jpg";
+                var html = `<p class="col-md-12" style="border:1px dotted red; padding:3px" id="file_${_dataFile[i]}">
+                                        <img style="height:40px;margin-left:0" alt="picture" src="${avatar}" />
+                                        <i style="padding-left:5px">${_dataFile[i]}</i>
+                                        <a style="padding-left:10px" href="../../Upload/other/${_dataFile[i]}" target="_blank" data-toggle="tooltip" class="pull-right" title="View file">
+                                            <i class="glyphicon glyphicon-zoom-in"></i>
+                                        </a>
+                                        <a style="padding-left:10px; ${isDetail == true ? 'display:none' : ''}" onclick="reject_file('${_dataFile[i]}')" data-toggle="tooltip" class="pull-right btn-icon-remove-file" title="Delete file">
+                                            <i class="glyphicon glyphicon-trash"></i>
+                                        </a>
+                                        &nbsp; <img src="/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                                    </p>`;
+                $('#attachment-show').append(html);
+            }
+
+            $('#Attachment').val(_dataFile.filter(c => c != "" && c != null).join('|'));
+            if (_dataFile.length == 0) {
+                var html = `<p style="padding-left: 20px"><i class="fa fa-exclamation-triangle" aria-hidden="true"></i> No attachment</p>`;
+                $('#attachment-show').append(html);
+            }
+            $('#loading_upload_file').hide();
+        }
+        function reject_file(fname) {
+            _dataFile = _dataFile.filter(f => f != fname);
+            reload_uploadfile();
+        }
+    </script>
+}
+
+<style type="text/css">
+    .fileinput-button {
+        position: relative;
+        overflow: hidden;
+        display: inline-block;
+    }
+
+        .fileinput-button input {
+            position: absolute;
+            top: 0;
+            right: 0;
+            margin: 0;
+            opacity: 0;
+            -ms-filter: 'alpha(opacity=0)';
+            font-size: 200px !important;
+            direction: ltr;
+            cursor: pointer;
+        }
+</style>

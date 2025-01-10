@@ -1,0 +1,148 @@
+﻿@model Enrich.DataTransfer.EmailTemplateContent
+@using EnrichcousBackOffice.Models
+@using EnrichcousBackOffice.Models.CustomizeModel
+@{
+    string ElementId = ViewData["ElementId"]?.ToString();
+    var groups = new WebDataModel().T_EmailTemplateGroup.ToList();
+
+
+    //Hướng dẫn sử dụng
+    //--Html
+    //@Html.Partial("_EmailTemplateSelectPartial", EmailTemplateContent , new ViewDataDictionary { { "ElementId", "Id_of_element_get_content" } })
+    //--Show modal
+    //$('#modal_select_et').modal('show');
+}
+
+<div class="modal" id="modal_select_et" tabindex="-1" role="dialog" data-element-custom="">
+    <div class="modal-dialog" role="document" style="width:100%; max-width: 800px">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Select email template</h3>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" style="min-height:400px">
+
+                <div class="row" style="margin:0px;">
+
+                    <div class="col-md-4" style="padding:0px;margin-bottom: 20px">
+                        <select class="form-control" id="etGroup">
+                            <option value="0">--All groups--</option>
+                            @foreach (var group in groups)
+                            {
+                                <option value="@group.Id">@group.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-6" style="padding:0px; margin:0px">
+                        <input type="text" class="form-control" id="etName" placeholder="Search subject name">
+                    </div>
+                    <div class="col-md-2 pull-right" style="padding:0px; margin:0px">
+                        <button class="btn btn-primary" onclick="SearchEmailTemplate()">
+                            <i class="fa fa-search"></i> Search
+
+                        </button>
+                        <img id="loading" style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                    </div>
+                </div>
+                <div id="ListEmailPartial" style="max-height:600px; overflow-x:hidden; overflow-y:auto">
+
+                </div>
+                <div style="text-align:center">
+                    <img class="loading" src="~/Content/ajax-loaders/loading-partial.gif" />
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    $(function () {
+        SearchEmailTemplate();
+    })
+    function ShowContent(Id) {
+        $('#btn_' + Id).toggleClass('fa-caret-down fa-caret-up');
+        overlayOn();
+        $.ajax({
+            method: "POST",
+            url: "/EmailTemplate/GetEmailContent",
+            data: { Id },
+            dataType: "json"
+        })
+            .done(function (data) {
+                $('#collapse_' + Id).html(data);
+                overlayOff();
+            })
+            .fail(function () {
+                var Error = $.parseJSON('{"text":"Get content failure!", "layout":"topRight", "type":"error"}');
+                noty(Error);
+            })
+    }
+    function SelectEmailtemplate(Id){
+        $('#btn_' + Id).toggleClass('fa-caret-down fa-caret-up');
+        $.ajax({
+            method: "POST",
+            url: "/EmailTemplate/GetEmailContentReplaced",
+            data: {
+                Id,
+                "COMPANY_ADDRESS": "@Model.COMPANY_ADDRESS",
+                "COMPANY_EMAIL": "@Model.COMPANY_EMAIL",
+                "COMPANY_NAME": "@Model.COMPANY_NAME",
+                "MERCHANT_BUSINESS_NAME": "@Model.MERCHANT_BUSINESS_NAME",
+                "MERCHANT_OWNER_NAME": "@Model.MERCHANT_OWNER_NAME",
+                "YOUR_EMAIL": "@Model.YOUR_EMAIL",
+                "YOUR_NAME": "@Model.YOUR_NAME",
+                "YOUR_PHONE": "@Model.YOUR_PHONE"
+            },
+            dataType: "json"
+        })
+            .done(function (data) {
+                //$('#ElementId').html(data);
+                let elementView = $('#modal_select_et').data("element-custom");
+                $('#modal_select_et').data("element-custom", "");
+                if (elementView === "") {
+                    elementView = '@ElementId';
+                }
+                if ($('#cke_'+elementView).length) {
+                    CKEDITOR.instances[elementView].setData(data);
+                }
+                else {
+                    $('#'+elementView).html(data);
+                }
+                $('#modal_select_et').modal('hide');
+            })
+            .fail(function () {
+                var Error = $.parseJSON('{"text":"Get content failure!", "layout":"topRight", "type":"error"}');
+                noty(Error);
+            })
+    }
+    function SearchEmailTemplate() {
+            $("#ListEmailPartial").html('');
+            $('.loading').show();
+            group = $('#etGroup').val();
+            name = $('#etName').val();
+            $.ajax({
+                method: "POST",
+                url: "/EmailTemplate/SearchSelect",
+                data: { group, name },
+                dataType: "html"
+            })
+                .done(function (data) {
+                    $("#ListEmailPartial").html(data);
+                })
+                .fail(function () {
+                    alert("search fail!");
+                })
+                .always(function () {
+                    $('.loading').hide();
+                })
+        }
+</script>

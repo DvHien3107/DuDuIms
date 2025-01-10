@@ -1,0 +1,169 @@
+﻿@model EnrichcousBackOffice.Models.C_SalesLead
+
+@{
+    ViewBag.Title = "Import Sale Lead";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+<section class="content-header">
+    <h1>
+        Import Sale lead
+    </h1>
+    <ol class="breadcrumb">
+        <li>
+            <a href="/home"><i class="fa fa-dashboard"></i> Home</a>
+        </li>
+        <li> <i class="fa fa-credit-card"></i> Sale</li>
+        <li> <i class="fa fa-file-o"></i> Import sale lead</li>
+    </ol>
+</section>
+
+<section class="content">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="box box-primary">
+                <div class="box-header">
+                    <span class="btn btn-success fileinput-button">
+                        <i class="glyphicon glyphicon-plus"></i>
+                        <span>Choice your files...</span>
+                        <input id="add_attachment" type="file" accept=".xlsx, .xls, .csv" name="files">
+                    </span>
+                    <span class="label label-default" id="fileName" style="display: none; margin-left: 10px"></span>
+                    <a href="/salelead/" class="btn btn-default pull-right"><i class="fa fa-arrow-left"></i> Go back</a>
+                </div>
+                <!-- /.box-header -->
+
+                <div class="box-body">
+                    <div class="progress">
+                        <div id="import_sales_progess" class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                        </div>
+                    </div>
+                    <div id="import_report" style="margin-top: 10px;">
+                        <span>Total: <b id="total_number">0</b> records | </span>
+                        <span>Success: <b id="success_number" style="color: green">0</b> records | </span>
+                        <span>Fail: <b id="failed_number" style="color: red">0</b> records</span>
+                    </div><br />
+                    <div id="loading_upload_file" style=" display: none">
+                        <p style="border:1px dotted red; padding:3px; text-align:center; margin-top: 10px;">
+                            <img style="height:100px;margin-left:0" alt="picture" src="/Content/ajax-loaders/loading-partial.gif" />
+                        </p>
+                    </div>
+                    <div id="saleslead_import" style="display: none">
+                    </div>
+                </div>
+                <!-- /.box-body -->
+
+            </div>
+            <!-- /.box -->
+        </div>
+
+    </div>
+
+    <div id="addmember_modal" class="modal fade modal-select-member-outside" role="dialog">
+        <div class="modal-dialog" style="background:white;">
+            <!-- Modal content-->
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Assigned To</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        @if (true)
+                        {
+                            <div class="row text-center" style="margin-bottom:5px">
+                                <button style="width:100px" class="btn btn-select-assigned btn-salesperson active" onclick="LoadAssignBySalesPerson()">Sales Person</button>
+                                <button style="width:100px" class="btn btn-select-assigned btn-team" onclick="LoadAssignByTeam()">Team</button>
+                            </div>
+                        }
+                        <select class="assign-select" id="assign-select" data-type="SalesPerson" multiple="multiple" name="SalesPerson">
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn_save_import"
+                            onclick="save_data_import(false)"
+                            data-dismiss="modal" aria-label="Close"
+                            style="float:left;color:white" >Unassigned</button>
+                    <button type="button" class="btn btn-primary btn_save_import"
+                            onclick="save_data_import(true)"
+                            data-dismiss="modal" aria-label="Close"
+                            id="btn-assignto-save" disabled>Assigned</button>
+                    <button type="button" class="btn btn-default"
+                            data-dismiss="modal" aria-label="Close">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<script>
+    var countRecods = 0;
+    $('#add_attachment').on("change", function () {
+        $('#loading_upload_file').show();
+        $('#saleslead_import').hide();
+        $('#saleslead_import').html("");
+        $('#save_data').hide();
+
+        $('#total_number').html(0);
+        $('#success_number').html(0);
+        $('#failed_number').html(0);
+
+        $("#import_sales_progess").attr("aria-valuenow", 0);
+        $("#import_sales_progess").css("width", 0);
+        $("#import_sales_progess").html("");
+
+        var formdata = new FormData();
+        var fileInput = document.getElementById('add_attachment');
+        for (i = 0; i < fileInput.files.length; i++) {
+            formdata.append(fileInput.files[i].name, fileInput.files[i]);
+            $("#fileName").html(fileInput.files[i].name).show();
+        }
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/SaleLead/ImportFile');
+        xhr.send(formdata);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                var data = xhr.response;
+                $('#saleslead_import').show();
+                $("#saleslead_import").html(data);
+                //$('#save_data').show();
+            }
+            if (xhr.readyState == 4 && xhr.status == 413) {
+                $("#fileName").html("").hide();
+                noty({ "text": 'File size exceeded maximum length', "layout": "topRight", "type": 'warning' });
+            }
+            $('#fileName').html();
+            $('#loading_upload_file').hide();
+            $('#add_attachment').val(null);
+        }
+        return false;
+    });
+</script>
+
+
+<style type="text/css">
+    .fileinput-button {
+        position: relative;
+        overflow: hidden;
+        display: inline-block;
+    }
+
+        .fileinput-button input {
+            position: absolute;
+            top: 0;
+            right: 0;
+            margin: 0;
+            opacity: 0;
+            -ms-filter: 'alpha(opacity=0)';
+            font-size: 200px !important;
+            direction: ltr;
+            cursor: pointer;
+        }
+</style>

@@ -1,0 +1,58 @@
+﻿@using System.Web.Mvc.Html
+@using Enrich.DataTransfer
+@model EnrichcousBackOffice.Models.T_TicketFeedback
+
+@{
+    EmailTemplateContent replace = ViewBag.EmailTemplateData;
+    string controller = ViewData["fb_edit_controller"].ToString().ToLower();
+   
+
+}
+<form role="form" class="form-horizontal" action="/ticket_new/EditFeedback" method="post" enctype="multipart/form-data" name="fb_edit_form">
+    <input type="hidden" value="@Model.TicketId" name="fb_ticketId" />
+    <input type="hidden" value="@Model.Id" name="feedbackId" />
+    <input type="hidden" value="@ViewBag.urlback" name="urlback" />
+    <input type="hidden" value="@controller" name="_controller" />
+    <input type="hidden" value="@Model.MentionMemberNumbers" id="UpdateFb_MentionMemberNumbers" name="MentionMemberNumbers"  />
+
+    <div class="pull-right">
+        <a class="btn btn-default" onclick="$('#modal_select_et').data('element-custom', 'fb_edit_content') && $('#modal_select_et').modal('show')">Select templates</a>
+    </div>
+    <div class="clearfix"></div>
+    <div>
+        <textarea id="fb_edit_content" name="fb_edit_content" class="ckeditor" required>@Model.Feedback</textarea>
+    </div>
+    <br />
+
+    <div class="form-group">
+        <label class="col-sm-3 control-label">Publish/Private</label>
+        <div class="col-sm-4">
+            <select name="globalStatus" class="form-control">
+                <option value="private">Private</option>
+                <option value="publish">Publish</option>
+            </select>
+            <script>
+                $("form[name=fb_edit_form] select[name=globalStatus] option[value='@Model.GlobalStatus']").prop('selected', true)
+            </script>
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="col-sm-3 control-label"></label>
+        <div class="col-sm-9">
+            @Html.Partial("_UploadMoreFilesPartial", ViewBag.attachments as List<EnrichcousBackOffice.Models.UploadMoreFile>, new ViewDataDictionary() { { "upload", true }, { "prefix", "editFeedBack" } })
+            @*@Html.Partial("_UploadMoreFilesPartial", Model.Attachments, new ViewDataDictionary { { "upload", true }, { "suffix", "_edit" }, { "feedbackId", Model.Id } })*@
+        </div>
+    </div>
+
+    <button onclick="overlayOn()" type="submit" class="btn btn-primary btn-block">Save</button>
+</form>
+<script>
+
+   
+ 
+
+    $("#gmt-feedback-edit").html("("+moment().format("Z")+")");
+
+   
+    loadform_submit();
+</script>

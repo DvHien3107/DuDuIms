@@ -1,0 +1,205 @@
+﻿@using EnrichcousBackOffice.Models
+@{
+    ViewBag.Title = "Index";
+    Layout = null;
+    O_Orders order = ViewBag.Order;
+    List<Order_Products> Products = ViewBag.OrderProducts;
+    C_Customer merchant = ViewBag.Merchant;
+    var db = new WebDataModel();
+}
+<html>
+<head>
+    <link rel="stylesheet" href="/content/admin/bower_components/bootstrap/dist/css/bootstrap.min.css">
+    <link href="/Content/noty/jquery.noty.css" rel="stylesheet">
+</head>
+<body>
+    <div style="width:1000px; max-width:100%; margin:auto; background-color: white">
+        <div class="col-md-12">
+
+        </div>
+    </div>
+    <link href="~/Content/Payment/style.css" rel="stylesheet" />
+</body>
+</html>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Payment Form Enrichcous</title>
+    <!-- for-mobile-apps -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link href="~/Content/Payment/style.css" rel="stylesheet" />
+    @*<link href='//fonts.googleapis.com/css?family=Fugaz+One' rel='stylesheet' type='text/css'>
+        <link href='//fonts.googleapis.com/css?family=Alegreya+Sans:400,100,100italic,300,300italic,400italic,500,500italic,700,700italic,800,800italic,900,900italic' rel='stylesheet' type='text/css'>
+        <link href='//fonts.googleapis.com/css?family=Open+Sans:400,300,300italic,400italic,600,600italic,700,700italic,800,800italic' rel='stylesheet' type='text/css'>*@
+    <script src="/Content/Admin/bower_components/jquery/dist/jquery.min.js"></script>
+    <script src="/Content/noty/jquery.noty.js"></script>
+    <script src="/content/admin/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+
+</head>
+<body>
+    <div class="row" style="width:800px; max-width:100%; margin:auto">
+        <h1 class="h1">Payment Form</h1>
+        <div class="col-md-12" style="border: solid 1px #eee; min-height:200px; padding: 30px">
+            <h3 class="h3">Merchant Information</h3>
+            <div class="info">
+                <div class="col-md-6">
+                    <label>Company:</label> <p>@(merchant.BusinessName?.ToUpper())</p><br />
+                </div>
+                <div class="col-md-6">
+                    <label>Phone:</label> <p>@(merchant.BusinessPhone)</p><br />
+                </div>
+                <div class="col-md-6">
+                    <label>Email:</label> <p>@(merchant.BusinessEmail)</p><br />
+                </div>
+                <div class="col-md-6">
+                    <label>Address:</label> <p>@(merchant.BusinessCity), @(db.Ad_USAState.Find(merchant.BusinessState)?.name), @(merchant.BusinessCountry)<p><br />
+                </div>
+            </div>
+            <h3 class="h3">Order infomation</h3>
+            <div class="info">
+                <div class="col-md-6">
+                    <label>Created:</label> <p>
+                        <span id="localtime-@order.Id">
+                            <script>convertLocalTime("" + "@order.Id", "@order.CreatedAt")</script>
+                        </span>
+                    </p><br />
+                    <label>By:</label> <p>@(order.CreatedBy)</p><br />
+                </div>
+                <div class="col-md-6">
+                    <label>Sale:</label> <p>@(!string.IsNullOrEmpty(order.SalesMemberNumber) ? order.SalesName + " (#" + order.SalesMemberNumber + ")" : "----") </p><br />
+                    <label>Total payment:</label> <p>@(order.GrandTotal??0)</p><br />
+                </div>
+                <div class="col-md-12">
+                    <label>Product:</label>
+                    <table class="table" style="margin-top:10px">
+                        <tr style="background-color:#F5F5F5">
+                            <th>Product name</th>
+                            <th>Price</th>
+                            <th>Quantity</th>
+                            <th>Total</th>
+                        </tr>
+                        @foreach (var product in Products)
+                        {
+                            <tr>
+                                <td>@product.ProductName</td>
+                                <td>@product.Price</td>
+                                <td>@product.Quantity</td>
+                                <td>@product.TotalAmount</td>
+                            </tr>
+                        }
+                        <tr style="background-color:#F5F5F5">
+                            <td colspan="3">Total</td>
+                            <td>@Products.Sum(p => p.TotalAmount)</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-md-12">
+                    <label>Service:</label>
+                    <table class="table" style="margin-top:10px">
+                        <tr style="background-color:#F5F5F5">
+                            <th>Product name</th>
+                            <th>Price</th>
+                            <th>Quantity</th>
+                            <th>Total</th>
+                        </tr>
+                        @foreach (var product in Products)
+                        {
+                            <tr>
+                                <td>@product.ProductName</td>
+                                <td>@product.Price</td>
+                                <td>@product.Quantity</td>
+                                <td>@product.TotalAmount</td>
+                            </tr>
+                        }
+                        <tr style="background-color:#F5F5F5">
+                            <td colspan="3">Total</td>
+                            <td>@Products.Sum(p => p.TotalAmount)</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <h3 class="h3">Payment infomation</h3>
+            <div class="info">
+                <form id="PaymentForm" action="/Payload/SendPayment" method="post">
+                    <input type="hidden" name="code" value="@ViewBag.Code" />
+                    <div class="form-group  col-md-6">
+                        <h5>Card number <span style="color:red">*</span></h5>
+                        <input type="text" name="card_number" class="form-control" required />
+                    </div>
+                    <div class="form-group col-md-6">
+                        <h5>Card type <span style="color:red">*</span></h5>
+                        @{ string[] Cardtypes = { "VISA", "VISA DEBIT", "ELECTRON", "MASTERCARD", "DEBIT MASTERCARD", "MAESTRO", "LASER", "AMEX", "DINERS", "JCB", "DISCOVER", "CUP SECUREPAY" };}
+                        <select name="card_type" class="form-control">
+                            @foreach (var type in Cardtypes)
+                            {
+                                <option value="@type">@type</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="form-group col-md-6">
+                        <h5>Card holder name <span style="color:red">*</span></h5>
+                        <input type="text" name="card_holder_name" class="form-control" required />
+                    </div>
+                    <div class="form-group col-md-2">
+                        <h5>CVV <span style="color:red">*</span></h5>
+                        <input type="password" pattern="[0-9]{3,4}" title="CVV must have 3-4 digits!" name="cvv" class="form-control" required />
+                    </div>
+                    <div class="form-group  col-md-4">
+                        <h5>Card expiry <span style="color:red">*</span></h5>
+                        <input type="text" name="card_expiry" pattern="[0-9]{4}" placeholder="MMYY" class="form-control" required />
+                    </div>
+                    <div class="form-group col-md-6">
+                        <h5>Email</h5>
+                        <input type="text" name="email" class="form-control" />
+                    </div>
+                    <div class="form-group col-md-6">
+                        <h5>Phone</h5>
+                        <input type="text" name="phone" class="form-control" />
+                    </div>
+                    <button class="btn btn-primary" type="submit">Submit</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <style>
+        .h1 {
+            font-size: 35px;
+            text-align: center;
+            text-transform: uppercase;
+            color: #B3E03F;
+            margin-bottom: 25px;
+            font-family: 'Fugaz One', cursive;
+        }
+
+        .h3 {
+            font-size: 26px;
+            margin-bottom: 15px;
+            color: #3AD5A0;
+            font-weight: 500;
+            font-family: 'Alegreya Sans', sans-serif;
+        }
+
+        .info {
+            color: #435964;
+            font-size: 13px;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        p, td {
+            color: #2e6da4;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.form/4.2.2/jquery.form.min.js"></script>
+    <script type="text/javascript">
+        $('#PaymentForm').ajaxForm(function (data) {
+            alert(data[1]);
+        });
+
+    </script>
+</body>
+</html>
+
+

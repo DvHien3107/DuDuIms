@@ -1,0 +1,264 @@
+﻿@model EnrichcousBackOffice.Models.T_EmailTemplate
+@using EnrichcousBackOffice.Models
+@{
+    List<T_EmailTemplateGroup> groups = ViewBag.Groups;
+}
+<section class="content-header">
+    <h1>
+        Create ticket template
+        <small>Email Templates</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Dashboard</a></li>
+        <li><i class="fa fa-hashtag"></i> Admin</li>
+        <li>Email Templates</li>
+        <li class="active">Create ticket template</li>
+    </ol>
+</section>
+
+<!-- Main content -->
+<section class="content">
+    <div class="row">
+
+        @if (TempData["e"] != null)
+        {
+            <div class="alert alert-warning alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+            </div>
+        }
+        else if (TempData["s"] != null)
+        {
+            <div class="alert alert-success alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+            </div>
+        }
+
+        <div class="col-md-12" style="margin:auto">
+            <div class="box box-primary" style="min-height:300px">
+                <div class="box-header ">
+                    <h3 class="box-title">@ViewBag.title</h3>
+                    <div class="pull-right box-tools">
+                        <a href="/emailtemplate"><i class="fa fa-arrow-left"></i> Go back</a>
+                        @*<button type="button" onclick="addeditpage()" class="btn btn-primary" data-toggle="tooltip" title="Add new" data-original-title="Add new">
+                                <i class="fa fa-plus"> New Asset</i>
+                            </button>*@
+                    </div>
+                </div>
+                <div class="box-body">
+                    <div class="col-md-8">
+                        <form id="saveform" action="/EmailTemplate/Save" method="post">
+                            <input type="hidden" name="Id" value="@Model.Id" />
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label class="control-label ">Groups</label>
+                                    <select id="TemplateGroupId" name="TemplateGroupId" class="form-control">
+                                        <option selected value="0">-- Select Groups --</option>
+                                        @foreach (var group in groups)
+                                        {
+                                            <option value="@group.Id" @if (group.Id == Model.TemplateGroupId) { @Html.Raw("selected") }>@group.Name</option>
+                                        }
+                                    </select>
+
+                                </div>
+                                <div class="col-md-4">
+                                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#AddGroup" style="margin-top:25px">Add New</button>
+                                    <button type="button" class="btn btn-primary" onclick="editgroup()" style="margin-top:25px; margin-left:1px">Edit</button>
+                                </div>
+                            </div>
+                            <div class="row" style="margin-left:0px">
+                                <label style="margin-top:20px">Subject</label>
+                                <input type="text" class="form-control" name="Name" required placeholder="Enter Subject" value="@Model.Name">
+                                <label style="margin-top:20px">Content</label>
+                                <textarea id="Content" class="form-control" name="_Content">@Html.Raw(Model.Content)</textarea>
+                                <button type="submit" class="btn btn-default" style="float:right; margin:10px" name="submit" value="close">Save &amp; close</button>
+                                <button type="submit" class="btn btn-primary" style="float:right; margin:10px">Save</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="col-md-4">
+                        <h3 class="box-title">Tags</h3>
+                        <ul class="list-group" style="height: 650px; overflow-x:auto">
+                            <li class="list-group-item">
+                                <b id="MerchantName">{@EnrichcousBackOffice.AppLB.UserContent.EMAIL_TEMPLATE_TAB.MERCHANT_OWNER_NAME}</b>
+                                <br />Name of merchant owner
+                                <button type="button" class="btn btn-success" style="float:right; margin-top:-17px" onclick="copyToClipboard('#MerchantName',this)">Copy</button>
+                            </li>
+                            <li class="list-group-item">
+                                <b id="BusinessName">{@EnrichcousBackOffice.AppLB.UserContent.EMAIL_TEMPLATE_TAB.MERCHANT_BUSINESS_NAME}</b>
+                                <br />Business name
+                                <button type="button" class="btn btn-success" style="float:right; margin-top:-17px" onclick="copyToClipboard('#BusinessName',this)">Copy</button>
+                            </li>
+                            <li class="list-group-item">
+                                <b id="ComanyName">{@EnrichcousBackOffice.AppLB.UserContent.EMAIL_TEMPLATE_TAB.COMPANY_NAME}</b>
+                                <br />Name of your company
+                                <button type="button" class="btn btn-success" style="float:right; margin-top:-17px" onclick="copyToClipboard('#ComanyName',this)">Copy</button>
+                            </li>
+                            <li class="list-group-item">
+                                <b id="CompanyEmail">{@EnrichcousBackOffice.AppLB.UserContent.EMAIL_TEMPLATE_TAB.COMPANY_EMAIL}</b>
+                                <br />Email of your company
+                                <button type="button" class="btn btn-success" style="float:right; margin-top:-17px" onclick="copyToClipboard('#CompanyEmail',this)">Copy</button>
+                            </li>
+                            <li class="list-group-item">
+                                <b id="CompanyAddress">{@EnrichcousBackOffice.AppLB.UserContent.EMAIL_TEMPLATE_TAB.COMPANY_ADDRESS}</b>
+                                <br />Address of your company
+                                <button type="button" class="btn btn-success" style="float:right; margin-top:-17px" onclick="copyToClipboard('#CompanyAddress',this)">Copy</button>
+                            </li>
+                            <li class="list-group-item">
+                                <b id="YourName">{@EnrichcousBackOffice.AppLB.UserContent.EMAIL_TEMPLATE_TAB.YOUR_NAME}</b>
+                                <br />Your name
+                                <button type="button" class="btn btn-success" style="float:right; margin-top:-17px" onclick="copyToClipboard('#YourName',this)">Copy</button>
+                            </li>
+                            <li class="list-group-item">
+                                <b id="YourPhone">{@EnrichcousBackOffice.AppLB.UserContent.EMAIL_TEMPLATE_TAB.YOUR_PHONE}</b>
+                                <br />Your phone
+                                <button type="button" class="btn btn-success" style="float:right; margin-top:-17px" onclick="copyToClipboard('#YourPhone',this)">Copy</button>
+                            </li>
+                            <li class="list-group-item">
+                                <b id="YourEmail">{@EnrichcousBackOffice.AppLB.UserContent.EMAIL_TEMPLATE_TAB.YOUR_EMAIL}</b>
+                                <br />Your Email
+                                <button type="button" class="btn btn-success" style="float:right; margin-top:-17px" onclick="copyToClipboard('#YourEmail',this)">Copy</button>
+                            </li>
+                        </ul>
+
+                    </div>
+
+                </div>
+
+                @*Modal Add Group*@
+                <div class="modal fade" id="AddGroup" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="AddGroup_title">Add New Group</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <input type="text" class="form-control" id="GroupName" placeholder="Enter Group Name">
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                <button type="button" class="btn btn-primary" onclick="savegroup()">Add</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @*Modal Edit Group*@
+                <div class="modal fade" id="EditGroup" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="EditGroup_title">Edit Group</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <input type="text" class="form-control" id="GroupName-edit" placeholder="Enter Group Name">
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                <button type="button" class="btn btn-primary" onclick="savegroup($('select[name=TemplateGroupId] option:selected').val())">Save</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</section>
+@section script{
+    <script src="~/Content/Admin/bower_components/ckeditor/ckeditor.js"></script>
+    <script type="text/javascript">
+        //Copy function
+        function copyToClipboard(element, btn) {
+
+            var $temp = $("<input>");
+            $("body").append($temp);
+            $temp.val($(element).text()).select();
+            document.execCommand("copy");
+            $temp.remove();
+            $(".copied").addClass("btn-success").removeClass("btn-primary copied").html("Copy");
+            $(btn).addClass("copied btn-primary").removeClass("btn-success").html("Copied");
+        }
+
+        $(function () {
+            CKEDITOR.replace('Content');
+            CKEDITOR.config.height = 400;
+            
+            $('#saveform').submit(function () {
+                if ($('#TemplateGroupId').val() == "0") {
+                    var Error = $.parseJSON('{"text":"Email template group is required!", "layout":"topRight", "type":"error"}');
+                    noty(Error);
+                    return false;
+                }
+            });
+            $("*").bind('copy', function () {
+                $(".copied").addClass("btn-success").removeClass("btn-primary copied").html("Copy");
+            }); 
+
+        })
+        function savegroup(id = null) {
+            var groupname;
+            if (id == null)
+                groupname = $("#GroupName").val();
+            else
+                groupname = $("#GroupName-edit").val()
+            $.ajax({
+                method: "POST",
+                url: "/EmailTemplate/savegroup",
+                data: { "gn": groupname, id },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    if (data[0] == true) {
+                        var Success = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"success"}');
+                        noty(Success);
+                        if (id == null) {
+                            $('#AddGroup').modal('hide');
+                        }
+                        else {
+                            $("select[name='TemplateGroupId'] option:selected").remove();
+                            $('#EditGroup').modal('hide');
+                        }
+
+
+                        //$("select[name='TemplateGroupId']").remove();
+                        var opt = new Option(groupname, data[2]["Id"], false, true);
+                        $("select[name='TemplateGroupId']").append(opt);
+                        $("#GroupName").val("");
+                    }
+                    else {
+                        var error = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"error"}');
+                        noty(error);
+                    }
+                })
+                .fail(function () {
+                })
+
+        }
+
+        function editgroup() {
+            var id = $("select[name='TemplateGroupId'] option:selected").val();
+            if (id == "0") {
+                var error = $.parseJSON('{"text":"' + "You must select a group first!" + '", "layout":"topRight", "type":"error"}');
+                noty(error);
+            }
+            else {
+                var name = $("select[name='TemplateGroupId'] option:selected").text();
+                $('#GroupName-edit').val(name);
+                $('#EditGroup').modal('show');
+            }
+
+        }
+
+    </script>
+
+}

@@ -1,0 +1,41 @@
+﻿
+<content>
+    <div class="box box-primary box-solid" style="border-radius:unset">
+        <div class="box-header with-border">
+            <h4 class="box-title">Support Log</h4>
+        </div>
+        <div class="box-body">
+            <div class="detail-sales-lead" style="margin: auto;float: none;padding: 0px 10px 10px 0;text-align: right;display: flex;flex-wrap: wrap;">
+                <button type="button" onclick="new_appoiment('@ViewBag.SalesLeadId')" class="btn bg-purple pull-left" style="color:white;margin-left:auto"><i class="fa fa-calendar" aria-hidden="true"></i> Add Appoiment</button>&nbsp;
+                <button type="button" style="color:white" onclick="new_log('@ViewBag.SalesLeadId')" class="btn  btn-primary pull-left"><i class="fa fa-check-square" aria-hidden="true"></i> Update Note/Status</button>
+            </div>
+            <div @*style="padding: 1rem;-webkit-box-shadow: 0 1px 5px 0 rgb(0 0 0 / 30%);box-shadow: 0 1px 5px 0 rgb(0 0 0 / 30%);border-radius: 1rem;"*@>
+                <div id="LogHistory_Wrapper">
+                    @Html.Partial("_LogHistoryPartial")
+                </div>
+                <div class="loadding-history" style="display:none; position: absolute;right: 50%;top: 50%;transform: translate(-50%, -50%);color: #797979;">
+                    <svg class="circular" viewBox="25 25 50 50">
+                        <circle class="path" cx="50" cy="50" r="20" fill="none" stroke-width="2" stroke-miterlimit="10" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+
+    <style>
+        #add_addon_popup tr td {
+            background: white;
+        }
+
+        #add_addon_popup td {
+            white-space: normal;
+        }
+
+        .input-group {
+            position: relative;
+            display: table !important;
+            border-collapse: separate;
+        }
+    </style>
+</content>

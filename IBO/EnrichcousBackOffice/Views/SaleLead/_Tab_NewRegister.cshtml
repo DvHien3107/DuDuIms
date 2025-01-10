@@ -1,0 +1,604 @@
+﻿@{
+    var access = EnrichcousBackOffice.AppLB.Authority.GetAccessAuthority();
+    bool permissionManagesSaleLead = (access.Any(k => k.Key.Equals("sales_lead_manage")) == true && access["sales_lead_manage"] == true);
+    bool? showteam = ViewBag.ShowTeam as bool?;
+    List<EnrichcousBackOffice.Models.P_Member> members = ViewBag.ListMember;
+    var Team = ViewBag.Team as List<EnrichcousBackOffice.Models.P_Department>;
+    var ShowSalesPerson = ViewBag.ShowSalesPerson as bool?;
+    bool showAssigned = (access.Any(k => k.Key.Equals("sales_lead_assigned")) == true && access["sales_lead_assigned"] == true);
+    bool showDelete = (access.Any(k => k.Key.Equals("sales_lead_delete")) == true && access["sales_lead_delete"] == true);
+}
+<link href="~/Content/DualListMulti/multi.min.css" rel="stylesheet" />
+<style>
+    #dataTable_state tr.selected {
+        background-color: #00a65a;
+        color: #fff;
+    }
+
+    .state-label span {
+        cursor: pointer;
+    }
+
+    .state-label i:hover {
+        color: whitesmoke;
+        cursor: pointer;
+    }
+
+    .no-select {
+        -webkit-touch-callout: none; /* iOS Safari */
+        -webkit-user-select: none; /* Safari */
+        -khtml-user-select: none; /* Konqueror HTML */
+        -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+        user-select: none; /* Non-prefixed version, currentlysupported by Chrome and Opera */
+    }
+
+    .action-datatable {
+        left: -100%;
+        background: #e8e8e8;
+    }
+
+    .action-datatable li button {
+        display: inline-block;
+        color: white;
+        width: 100%;
+    }
+
+    .multi-wrapper a {
+        color: #000;
+    }
+
+    .btn-select-assigned {
+        color: #28a745;
+        background-color: #ffffff;
+        border-color: #28a745;
+        outline: none;
+        width: 85px;
+        border-radius: 2px;
+    }
+
+    .btn-select-assigned:focus {
+        outline: none !important;
+    }
+
+    .btn-select-assigned:hover, .btn-select-assigned.active {
+        color: #fff;
+        background-color: #28a745;
+        border-color: #28a745;
+    }
+</style>
+
+<section class="content">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="box box-default" style="border:1px solid #ddd">
+                <div class="box-header with-border" style="background: #f5f5f5">
+                    <h3 class="box-title"></h3>
+                    <div class="box-tools pull-right">
+                        <a class="btn btn-sm btn-info btn-header-lead" onclick="export_excel_ri()" style="font-size:12px; margin-left:5px">
+                            <i class="fa fa-file-excel-o"></i> Export excel <img id="img_load_excel" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                        </a>
+                        @*<a class="btn btn-sm btn-info btn-header-lead" onclick="export_excel()" style="font-size:12px; margin-left:5px">
+                                    <i class="fa fa-file-excel-o"></i> Export Excel <img id="img_load_excel" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                            </a>*@
+                    </div>
+                </div>
+                <div>
+                   
+                    <div class="box-body salelead-list">
+                        <div class="row" style="margin:0px">
+                            <form id="search_form">
+                                <div class="row form-inline filter-group">
+                                    <div class="col-md-3 col-sm-6 form-group" style="margin-bottom:5px">
+                                        <div class="input-group" style="width:100%">
+                                            <div class="input-group-addon">
+                                               From Date
+                                                <div class="ico-help" title="The from date for the search."><i class="fa fa-question-circle"></i></div>
+                                            </div>
+                                            <input type="text" id="FromDate" name="FromDate" class="form-control datepicker" value="@ViewBag.From" readonly />
+                                        </div>
+                                        <!-- /.input group -->
+                                    </div>
+
+                                    <div class="col-md-3 col-sm-6 form-group" style="margin-bottom:5px">
+                                        <div class="input-group" style="width:100%">
+                                            <div class="input-group-addon">
+                                                To Date
+                                                <div class="ico-help" title="The to date for the search."><i class="fa fa-question-circle"></i></div>
+                                            </div>
+                                            <input type="text" id="ToDate" name="ToDate" class="form-control datepicker" value="@ViewBag.To" readonly />
+                                        </div>
+                                        <!-- /.input group -->
+                                    </div>
+
+                                    <div class="col-md-3 col-sm-6 form-group" style="margin-bottom:5px">
+                                        <div class="input-group" style="width:100%">
+                                            <div class="input-group-addon">
+                                                State
+                                                <div class="ico-help" title="Search by State"><i class="fa fa-question-circle"></i></div>
+                                            </div>
+                                            <div class="form-control change-search" id="State-div" style="text-align:center;min-width:30%" name="State-div">
+                                                <span class="label state-label" data-value="@ViewBag.S_State" data-name="@(string.IsNullOrEmpty(ViewBag.S_State) ? "All" : ViewBag.S_State)" style="background-color:#21ab4a"><span onclick="showModalState()">@(string.IsNullOrEmpty(ViewBag.S_State) ? "All" : ViewBag.S_State) </span></span>
+                                            </div>
+                                        </div>
+                                        <!-- /.input group -->
+                                    </div>
+
+                                    <div class="col-md-3 col-sm-6 form-group" style="margin-bottom:5px">
+                                        <div class="input-group" style="width:100%">
+                                            <div class="input-group-addon">
+                                                Status
+                                                <div class="ico-help" title="Search by Status"><i class="fa fa-question-circle"></i></div>
+                                            </div>
+                                            <select class="form-control change-search" id="Status" name="Status">
+                                                <option value="" style="font-weight:bold">All</option>
+                                                @foreach (var s in ViewBag.InteractionStatus as List<SelectListItem>)
+                                                {
+                                                    <option value="@s.Value" @(ViewBag.S_Status == s.Value ? "selected" : "") >@s.Text</option>
+                                                }
+                                            </select>
+                                        </div>
+                                        <!-- /.input group -->
+                                    </div>
+
+                                    @if (showteam.GetValueOrDefault())
+                                    {
+                                        <div class="col-md-3 col-sm-6 form-group" style="margin-bottom:5px">
+                                            <div class="input-group" style="width:100%">
+                                                <div class="input-group-addon">
+                                                    Team
+                                                    <div class="ico-help" title="Search by Sales Team"><i class="fa fa-question-circle"></i></div>
+                                                </div>
+                                                <select class="form-control member-in-dept select2"  style="width:100%" id="Team" name="Team">
+                                                    <option value="">All</option>
+                                                    @foreach (var item in Team)
+                                                    {
+                                                        <option value="@item.Id" @(ViewBag.S_Team == item.Id.ToString() ? "selected" : "")>@item.Name</option>
+                                                    }
+                                                </select>
+                                            </div>
+                                            <!-- /.input group -->
+                                        </div>
+                                    }
+
+                                    @if (ShowSalesPerson.GetValueOrDefault())
+                                    {
+                                        <div class="col-md-3 col-sm-6 form-group" style="margin-bottom:5px">
+                                            <div class="input-group" style="width:100%">
+                                                <div class="input-group-addon">
+                                                    Sales Person
+                                                    <div class="ico-help" title="Search by Sales Person"><i class="fa fa-question-circle"></i></div>
+                                                </div>
+                                                <select class="form-control member-in-dept select2 change-search"  style="width:100%" id="Member" name="Member">
+                                                    <option value="">All</option>
+                                                    <option value="Unassigned">Unassigned</option>
+                                                    @foreach (var item in members)
+                                                    {
+                                                        <option value="@item.MemberNumber" @(ViewBag.S_Member == item.MemberNumber ? "selected" : "")>@item.FullName #@item.MemberNumber</option>
+                                                    }
+                                                </select>
+                                            </div>
+                                            <!-- /.input group -->
+                                        </div>
+                                    }
+
+                                    <div class="col-md-3 col-sm-6 form-group" style="margin-bottom:5px">
+                                        <div class="input-group" style="width:100%">
+                                            <div class="input-group-addon">
+                                                Search By
+                                                <div class="ico-help" title="Search by Contact Name , Salon Name , Email , Phone "><i class="fa fa-question-circle"></i></div>
+                                            </div>
+                                            <input type="text" class="form-control change-search" id="SearchText" name="SearchText" placeholder="Name | Email | Phone ..." value="@ViewBag.S_SearchText" />
+                                        </div>
+                                        <!-- /.input group -->
+                                    </div>
+
+                                    <div class="col-md-3 col-sm-4 form-group">
+                                        <button type="button" class="btn btn-primary btn-flat" id="search_submit" name="search_submit">
+                                            <i class="fa fa-search"></i>
+                                            Search
+                                            <img id="search_loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        @*summary*@
+                        <div style="display: flex; font-weight: 600; font-size: 17px; margin: 15px 0px;">
+                            <div id="total-record"></div>
+                        </div>
+
+                        <div class="col-lg-12" style="position:absolute;right:0px">
+                            @if (showDelete)
+                            {
+                                <button class="btn btn-danger btn-sm ml-2 pull-right btn-delete-outside btn-assigned-custom" id="btn-delete-outside" style="color:white">Delete</button>
+                            }
+                            @if (showAssigned)
+                            {
+                                <button class="btn btn-warning btn-sm ml-2 pull-right btn-assigned-outside btn-assigned-custom" style="color:white;margin-right:5px">Assigned</button>
+                            }
+                        </div>
+                        <div id="List_Account">
+                            <table id="dataTable" style="width: 100%;border-collapse: collapse;" class="table table-hover table-bordered table-striped dataTable sale-lead">
+                                <thead>
+                                    <tr>
+                                        <th class="no-sort" width="10px">#</th>
+                                        <th>Name</th>
+                                        <th>State</th>
+                                        <th>Last Update</th>
+                                        <th>Type</th>
+                                        <th>Note</th>
+                                        <th>Status</th>
+                                        <th width="200px"></th>
+                                        @if (showAssigned || showDelete)
+                                        {
+                                            <th><input id="mastercheckbox" type="checkbox" /></th>
+                                        }
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- /.box -->
+        </div>
+    </div>
+</section>
+<div id="partial_detail">
+
+</div>
+@Html.Partial("_Partial_LogPopup")
+@Html.Partial("_Partial_AppoimentPopup")
+<!--Filter State-->
+<div class="modal fade" style="width:100%;visibility:hidden;display:block" id="state-search">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Filter State</h4>
+            </div>
+            <div class="modal-body">
+                <div id="modal-content">
+                    <label class="no-select" id="Include-undefined" style="display:none;position:absolute; padding:5px 10px; border: 1px solid #ddd"><input type="checkbox" name="state_selected" data-name="Include undefined" class="selectState Other" id="Other" value="Other" style="transform: translate(-2px,2px);"> Include undefined</label>
+                    <table style="width:100%;" id="dataTable_state" class="table table-hover table-bordered table-striped">
+                    </table>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                <button type="button" onclick="submitSearchState()" class="btn btn-primary">Search</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+
+<div id="addmember_modal" class="modal fade modal-select-member-outside" role="dialog">
+    <div class="modal-dialog" style="background:white;">
+        <!-- Modal content-->
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+            <h4 class="modal-title">Assigned To</h4>
+        </div>
+        <div class="modal-body">
+            <div class="row">
+                <div class="col-md-12">
+                
+                    <div class="row text-center" style="margin-bottom:5px">
+                        <button style="width:30%" class="btn btn-select-assigned btn-salesperson active" onclick="LoadAssignBySalesPerson()">Sales Person</button>
+                        @if (showteam == true)
+                        {
+                             <text>
+                                |
+                                <button style = "width:30%" class="btn btn-select-assigned btn-team" onclick="LoadAssignByTeam()">Team</button>
+                             </text>
+                        }
+                    </div>
+                   
+                        <select class="assign-select" id="assign-select" data-type="SalesPerson" multiple="multiple" name="SalesPerson">
+                        </select>
+                    </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" id="btn-submit-unassign-outsite" style="float:left;color:white" class="btn-assigned btn btn-warning btn-submit-assign-outsite">UnAssigned</button>
+            <button type="button" id="btn-submit-assign-outsite" class="btn-assigned btn btn-primary btn-submit-assign-outsite" disabled>Assigned</button>
+            <button type="button" data-dismiss="modal" aria-label="Close" id="btn-submit-assign-outsite" class="btn-assigned btn btn-default btn-submit-assign-outsite">Close</button>
+        </div>
+    </div>
+</div>
+<div class="loading" style="display:none;position: fixed;top: 50%;left: 50%;transform: translate(-50%, -50%);z-index:99999;">
+    <img src="/Content/ajax-loaders/loading2.gif" width="60">
+</div>
+<script>
+        $(".datepicker").datepicker({
+            changeMonth: true,
+            changeYear: true,
+            yearRange: '1950:2050'
+        });
+        //load data datatable
+        var t = $(".dataTable").DataTable({
+            "language": {
+                "processing": '<img src="/Content/ajax-loaders/loading2.gif" width="60px" />',
+                "paginate": {
+                    "first": '<i class="fa fa-angle-double-left" aria-hidden="true"></i>',
+                    "last": '<i class="fa fa-angle-double-right" aria-hidden="true"></i>',
+                    "next": '<i class="fa fa-angle-right" aria-hidden="true"></i>',
+                    "previous": '<i class="fa fa-angle-left" aria-hidden="true"></i>'
+                },
+            },
+            //"columnDefs": [{
+            //    "targets": 'no-sort',
+            //    "orderable": false,
+            //}],
+            'paging': true,
+            "pageLength": 10,
+            "serverSide": true, // for process server side
+            "processing": true, // for show progress bar
+            'lengthChange': true,
+            'searching': false,
+            //'ordering': false,
+            'stateSave': true,
+            'info': false,
+            "scrollX": true,
+            'autoWidth': true,
+            "order": [[4, "desc"]],
+            "ajax": {
+                "url": "/SaleLead/NewRegister_LoadList",
+                "type": "POST",
+                "datatype": "json",
+                data: function (data) {
+                    data.ToDate = $('#ToDate').val();
+                    data.FromDate = $('#FromDate').val();
+                    data.SearchText = $('#SearchText').val();
+                    data.Page = "NewRegister"
+                    var states = [];
+                    $(".state-label").each(function () {
+                        states.push($(this).attr("data-value"));
+                    });
+                    data.State = states.toString();
+                    data.Team = $('#Team').val();
+                    data.Status = $('#Status').val();
+                    data.SalesPerson = $('#Member').val();
+                    return data;
+                },
+                'dataSrc': function (data) {
+                    $('#total-record').html('Total Record : ' + data.recordsTotal);
+                    return data.data;
+                }
+            },
+            'fnCreatedRow': function (nRow, aData, iDataIndex) {
+                $(nRow).css('background-color', aData.Color);
+                $(nRow).attr('id', 'tr_' + aData.Id.toString());
+                $(nRow).attr('data-slId', aData.Id.toString());
+            },
+            "columns": [
+                {
+                    "className": 'text-center open-detail',
+                    "data": function () { return "" },
+                    "width": '10',
+                    "orderable": false
+                },
+                {
+                    "name": "L_SalonName",
+                    "render": function (data, type, row) {
+                    var html = '<span style="color:grey">Salon Name: <b  class="text-success">' + row["L_SalonName"] + '</b></span><br/>';
+                        html +=  '<span style="color:grey">Contact: <b class="text-primary"> ' + (row["L_ContactName"] ?? 'N/A') + '</b> </span><br/>';
+                        html +=  '<span style="color:grey">Phone: <b class="text-primary"> ' + (row["L_Phone"] ?? 'N/A') + '</b> </span><br/>';
+                        html +=  '<span style="color:grey">Email: <b class="text-primary"> ' + (row["L_Email"] ?? 'N/A') + '</b> </span>';
+                         html += '<div style="display: flex;flex-wrap: wrap;">';
+                        if (row["AssignedSalesPerson"] != '') {
+                            html += '<span style="display:block;width:100%;"><i  class="fa fa-user bg-default"  style="color : #333 !important ;width: 19px;text-align:center;padding: 3px 5px;font-size: 12px;border-radius: 50%;" aria-hidden="true"></i>  <b>' + row["AssignedSalesPerson"] + '</b></span></br>';
+                        }
+                        else if (row["AssignedTeam"] != '') {
+                            html += '<span style="color : #333 !important ;display:block;margin-top:2px;"><i style="width: 20px;text-align:center;padding: 3px 3px;font-size: 13px;border-radius: 50%;" class="fa fa-users bg-default" aria-hidden="true"></i>  <b>' + row["AssignedTeam"] + '</b></span></br>';
+                        }
+                        html += '</div>';
+                        return html;
+
+                     
+                    },
+                    "className":"open-detail"
+                },
+                {
+                    "data": "L_State",
+                    "name": "L_State",
+                    "className": "open-detail"
+                },
+
+                {
+                    "name": "LastUpdate",
+                    "render": function (data, type, row) {
+                        if (row["UpdateAt"] !== "") {
+                            return '<span>' + moment(row["UpdateAt"]).format("MMM DD YYYY <br/> h:mm:ss A") + '</span>';
+                        }
+                        else {
+                            return '';
+                        }
+                    },
+                    "type": "date",
+                    "className": "open-detail"
+                },
+                {
+                    "name": "L_CreateTrialAt",
+                    "render": function (data, type, row) {
+                        var html = "";
+                        if (row["StatusVerify"]) {
+
+                            html += '<span class="label label-warning" style="color: white;padding: 3px 5px;">Waiting For Verification</span>';
+                            if (row["License_Name"] != "") {
+                                html += '<br/><label class="label bg-maroon">' + row["License_Name"] + '</label>';
+                            }
+                            html += '<br/><span style="color: #999;font-size:12px"><i class="fa fa-clock-o"></i>&nbsp;' + row["TimeSendMail"] + '</span>';
+                        }
+                        else {
+                            html += "<span class='label label-primary' style='color: white;padding: 3px 5px;'>New Subscribe</span>";
+                            if (row["License_Name"] != "") {
+                                html += '<br/><label class="label bg-maroon">' + row["License_Name"] + '</label>';
+                            }
+                            html += '<br/><span style="color: #999;font-size:12px"><i class="fa fa-clock-o"></i>&nbsp;' + moment(row["RelativeTime"]).fromNow() + '</span>';
+                        }
+                        //if (row["L_Product"] != "" && row["L_Product"]!= "N/A") {
+                        //    html += '<br/><label class="label label-primary">' + row["L_Product"] + '</label>';
+                        //}
+                      
+                        return html;
+                    },
+                    "className": "open-detail"
+                },
+              
+                {
+                    "name": "Note",
+                    "render": function (data, type, row) {
+                        if (row["Note"] !== '') {
+                            var TitleNote = row["Note"];
+                            if (row["Note"].length > 100) {
+                                TitleNote = row["Note"].substring(0, 100) + "...";
+                            }
+                            return '<label class="appoint-note">' + TitleNote + '</label><br /><i>' + moment(row["NoteTime"]).format("MMM DD YYYY, h:mm:ss A") + '</i>'
+                        }
+                        return "";
+                    },
+                    "className": "open-detail"
+                },
+                {
+                    "name": "InteractionStatus",
+                    "render": function (data, type, row) {
+                        var html = '';
+                        if (row["InteractionStatus"] != "N/A" && row["InteractionStatus"] != "") {
+                            html += '<span class="label bg-olive" style="color: white;padding: 3px 5px;">' + row["InteractionStatus"] + '</span>'
+                        }
+                        if (row["InteractionStatus"] != "N/A" && row["InteractionStatus"] != "" && row["CallOfNumber"] != "") {
+                            html += ' - '
+                        }
+                        if (row["CallOfNumber"] != "") {
+                            html += '<span>' + row["CallOfNumber"] + ' called</span>';
+                        }
+                        return html;
+                    },
+                    "className": "open-detail"
+                },
+                {
+                    "render": function (data, type, row) {
+                        return '<button type="button" class="btn btn-sm btn-info" onclick="showDetailLog(\'' + row["Id"] +'\')">Detail</button> ';
+                    },
+                    "className":"text-center",
+                    "width": 'auto',
+                    "orderable": false,
+                },
+                   @if (showAssigned || showDelete)
+                       {
+                       <text>
+                {
+                    "render": function (data, type, row) {
+                        return '<input class="select_membernumber" name="membernumber" type="checkbox" value="' + row["Id"] + '"> ';
+                    },
+                    "width": '10',
+                    "orderable": false,
+                },
+                </text>
+                       }
+            ]
+
+        });
+        t.on('draw.dt', function () {
+            var PageInfo = $('#dataTable').DataTable().page.info();
+            t.column(0, { page: 'current' }).nodes().each(function (cell, i) {
+                cell.innerHTML = i + 1 + PageInfo.start;
+            });
+        });
+
+
+    //function LoadStatusAutocomplete() {
+    //    $.ajax({
+    //        method: "Get",
+    //        url: "/SaleLead/LoadInteraction_Status",
+    //        dataType: "json"
+    //    })
+    //        .done(function (data) {
+    //            $("#Status").autocomplete({
+    //                source: data,
+    //                minLength: 0,
+    //                change: function () {
+    //                    $(".dataTable").DataTable().ajax.reload();
+    //                }
+    //            }).focus(function () {
+    //                $(this).autocomplete('search', $(this).val())
+    //            });;
+
+    //        })
+    //}
+    //LoadStatusAutocomplete();
+        // search state
+    var tableState = $("#dataTable_state").DataTable({
+        "language": {
+            "processing": '<img src="/Content/ajax-loaders/loading2.gif" width="60px" />',
+        },
+        "scrollY": "300px",
+        "scrollCollapse": true,
+        "paging": false,
+        //'paging': true,
+        //"pageLength": 10,
+        "serverSide": false, // for process server side
+        "processing": true, // for show progress bar
+        'lengthChange': false,
+        'searching': true,
+        //'ordering': false,
+        'stateSave': true,
+        'info': false,
+        'autoWidth': true,
+        "order": [],
+        "ajax": {
+            "url": "/SaleLead/LoadState_NewRegister",
+            "type": "POST",
+            "datatype": "json",
+            "data": {"Page":"NewRegister"},
+            'dataSrc': function (data) {
+                if (data.showOtherState) {
+                    $('#Include-undefined').show();
+                }
+                return data.data;
+            }
+        },
+        "columns": [
+            {
+                "data": "Code",
+                "title": "Code",
+            },
+            {
+                "data": "Name",
+                "title": "Name",
+            },
+            {
+                "data": "Number",
+                "title": "Lead Total",
+            },
+            {
+                "title": '<input id="mastercheckbox-state" type="checkbox"/>',
+                "orderable": false,
+                "render": function (data, type, row) {
+                    return '<input type="checkbox" onclick="on_state_selected(this)"  class="selectState ' + row["Code"] + '"  id="' + row["Code"] + '" data-name="' + row["Name"] + '" value="' + row["Code"] + '">';
+                },
+                "className": "text-center"
+            },
+        ],
+    });
+
+    $(document).ready(function () {
+        $('.ico-help').tooltip();
+    });
+</script>
+
+<script src="~/Content/Admin/plugins/input-mask/jquery.inputmask.js"></script>
+<script src="~/Content/DualListMulti/multi.custom.js"></script>
+<script src="~/Scripts/SalesLead/RI.Common.js"></script>
+

@@ -1,0 +1,152 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.CustomizeModel.OrderProgress_view>
+@{
+    List<EnrichcousBackOffice.Models.CustomizeModel.ProductPicture> product_pic = ViewBag.ProductPicture;
+    var db = new EnrichcousBackOffice.Models.WebDataModel();
+}
+
+@foreach (var bd in Model)
+{
+    <tr>
+        <td style="padding: 10px 0px">
+            <table style="width: 100%">
+                @if (bd.BundleId != null)
+                {
+                    var b = db.I_Bundle.Find(bd.BundleId);
+                    <tr>
+                        <td colspan="2" style="width:80px; padding:5px 20px; border:1px solid #ddd;">
+                            <Label class="text-danger">Package: #@b.BundleCode-@b.Name</Label>
+                        </td>
+                    </tr>
+                }
+
+                @foreach (var m in bd.Contains)
+                {
+                    <tr class="model_item" data-devicerequired="@m.DeviceRequired" id="model_item_@m.ModelCode.Replace(' ', '_')" style="padding-bottom:10px">
+                        <td style="width:80px;padding-left:20px; border:1px solid #ddd; border-right:none">
+                            <img onerror="this.onerror=null; this.src='/Upload/Img/no_image.jpg'" width="80" class="model_img" src="@m.Picture">
+                        </td>
+                        <td style="padding:10px; border:1px solid #ddd; border-left:none">
+                            <div class="col-md-8">
+                                <span class="text-success">
+                                    <b>@m.ProductName</b>
+                                </span><br />
+                                Model: <b>@m.ModelName</b><br />
+                                Color: <b>@(!string.IsNullOrEmpty(m.Color) ? m.Color : "N/A")</b>
+                            </div>
+                            <div class="col-md-4 view_only">
+                                <div class="input-group" style="padding-bottom:5px">
+
+                                    <span class="input-group-addon">Price: $</span>
+                                    <input class="form-control model_price" type="number" readonly
+                                           value="@(m.Price * m.Quantity)" style="height:28px; text-align:right;padding-right:5px" />
+                                </div>
+                                <div class="input-group" style="padding-bottom:5px">
+                                    <span class="input-group-addon">Qty</span>
+                                    <input class="qty_input form-control" readonly
+                                           type="number" value="@m.Quantity" style="height:28px; text-align:right; padding-right:5px" />
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="row">
+                                    <div class="col-md-5">
+                                        <select id="option_type_@m.OrderProductId" name="option_type_@m.OrderProductId" class="select2 form-control" onchange="changeOptionDevice('@m.OrderProductId')">
+                                            <option value="inv">Inventory Number</option>
+                                            <option value="ser">Serial Number</option>
+                                            <option value="cus" @(!string.IsNullOrEmpty(m.List_cuss) ? "selected" : "")>Custom</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-7">
+                                        <div class="div-inv-select-@m.OrderProductId" @(string.IsNullOrEmpty(m.List_cuss) ? "" : "hidden")>
+                                            <select name="inv_numbers_@m.OrderProductId" class="inv_numbers select2 form-control" onchange="btnSaveChange()" multiple data-maximum-selection-length="@m.Quantity" style="width:100%">
+                                                @foreach (var inv in m.List_invs)
+                                                {
+                                                    <option value="@inv" @if (!string.IsNullOrEmpty(m.Invs_selected) && m.Invs_selected.Split(',').Contains(inv)) { @Html.Raw("selected") }>
+                                                        #@inv
+                                                    </option>
+                                                }
+                                            </select>
+                                        </div>
+                                        <div class="div-ser-select-@m.OrderProductId" hidden>
+                                            <select name="ser_numbers_@m.OrderProductId" class="ser_numbers select2 form-control" multiple data-maximum-selection-length="@m.Quantity" style="width:100%;">
+                                                @foreach (var ser in m.List_sers)
+                                                {
+                                                    if (!string.IsNullOrEmpty(ser))
+                                                    {
+                                                        <option value="@ser" @if (!string.IsNullOrEmpty(m.Sers_selected) && m.Sers_selected.Split(',').Contains(ser)) { @Html.Raw("selected") }>
+                                                            #@ser
+                                                        </option>
+                                                    }
+                                                }
+                                            </select>
+                                        </div>
+                                        <div class="div-cus-select-@m.OrderProductId" @(string.IsNullOrEmpty(m.List_cuss) ? "hidden" : "")>
+                                            <input name="cus_numbers_@m.OrderProductId" value="@m.List_cuss"
+                                                      data-role="tagsinput" class="form-control box-tag list_cus_number" max-tag="@m.Quantity" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </table>
+        </td>
+    </tr>
+}
+
+<script>
+    $(".inv_numbers").select2();
+    $('.inv_numbers').on('select2:select', function (e) {
+        var data = e.params.data;
+        var sl = $('.inv_numbers').not($(this));
+        sl.find("option[value=" + data.id + "]").prop("disabled", "disabled");
+        sl.select2();
+    });
+    $('.inv_numbers').on('select2:unselect', function (e) {
+        var data = e.params.data;
+        var sl = $('.inv_numbers').not($(this));
+        sl.find("option[value=" + data.id + "]").prop("disabled", "");
+        sl.select2();
+    });
+
+    $(".ser_numbers").select2();
+    $('.ser_numbers').on('select2:select', function (e) {
+        var data = e.params.data;
+        var sl = $('.ser_numbers').not($(this));
+        sl.find("option[value=" + data.id + "]").prop("disabled", "disabled");
+        sl.select2();
+    });
+    $('.ser_numbers').on('select2:unselect', function (e) {
+        var data = e.params.data;
+        var sl = $('.ser_numbers').not($(this));
+        sl.find("option[value=" + data.id + "]").prop("disabled", "");
+        sl.select2();
+    });
+
+    $('.list_cus_number').tagsinput({
+        tagClass: 'label label-primary',
+        confirmKeys: [13],
+        allowDuplicates: false,
+        //maxTags: $('.list_cus_number').attr("max-tag")
+    });
+
+    function changeOptionDevice(id) {
+        let type = $('#option_type_' + id).val();
+        if (type == 'ser') {
+            $('.div-ser-select-' + id).show();
+            $('.div-inv-select-' + id).hide();
+            $('.div-cus-select-' + id).hide();
+        }
+        else if (type == 'inv') {
+            $('.div-ser-select-' + id).hide();
+            $('.div-inv-select-' + id).show();
+            $('.div-cus-select-' + id).hide();
+        }
+        else {
+            $('.div-ser-select-' + id).hide();
+            $('.div-inv-select-' + id).hide();
+            $('.div-cus-select-' + id).show();
+        }
+        btnSaveChange();
+    }
+</script>

@@ -1,0 +1,323 @@
+﻿@model EnrichcousBackOffice.Models.CustomizeModel.MerchantFormView
+@using EnrichcousBackOffice.Models
+@{
+    var list_orders = ViewBag.ListOrder as List<O_Orders>;
+}
+
+<!--div list group-->
+<div class="col-md-12">
+    <div class="row">
+        <div class="box box-primary box-solid" id="upload_box" style="border-radius:unset">
+            <div class="box-header with-border bg-blue">
+                <h4 class="box-title">Uploaded attachments</h4>
+                <div class="pull-right box-tools">
+                </div>
+            </div>
+            <div class="box-body">
+                <button type="button" class="btn btn-sm btn-success btn-flat pull-right" onclick="AddMoreFile('@Model.Code','@Model.Name')" style="margin-bottom:10px">
+                    <i class="fa fa-plus"></i> Add document
+                    <img id="addmorefile_loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                </button>
+                <table class="table table-bordered table-responsive table-hover">
+                    <thead>
+                        <tr>
+                            <th style="width:5px">Status</th>
+                            <th>PDF file name</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.List_pdf.Count > 0)
+                        {
+                            foreach (var form in Model.List_pdf.OrderByDescending(x => x.UpdateAt ?? x.CreateAt))
+                            {
+                                var orderCode = list_orders.Where(o => o.Id == form.OrderId).FirstOrDefault()?.OrdersCode;
+
+                                <tr id="tr_@form.Id" onclick="ViewForSend('view','@form.Id', '@(form.TemplateName?.Split('(')[0]?.Trim() + "|" + form.MerchantCode + "|" + orderCode)'@((form.TemplateName=="DEJAVOO Z11 DATA SHEET")?", true":""))" style="cursor:pointer" title="@form.TemplateName">
+                                    <td>
+                                        @if (form.Status.Equals("completed", StringComparison.OrdinalIgnoreCase))
+                                        {@Html.Raw("<span class='label label-primary'>Signed</span>")}
+                                    else if (form.Status.Equals("sent", StringComparison.OrdinalIgnoreCase))
+                                    {@Html.Raw("<span class='label label-success'>Sent</span>")}
+                                else if (form.Status.Equals("delivered", StringComparison.OrdinalIgnoreCase))
+                                {@Html.Raw("<span class='label'  style='background-color:deepskyblue'>Delivered</span>")}
+                            else
+                            {@Html.Raw("<span class='label label-warning'>Uploaded</span>")}
+                                    </td>
+                                    <td>
+                                        @if (form.TemplateName.Length > 40)
+                                        {
+                                            <span style="color:dodgerblue; font-weight:bold">@(form.TemplateName.Substring(0, 40))...</span>
+                                        }
+                                        else
+                                        {
+                                            <span style="color:dodgerblue; font-weight:bold">@(form.TemplateName)</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="2">
+                                    <center><span>No file</span></center>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<!--/.End div list group-->
+<!--div list email has beem sent-->
+<div class="col-md-12">
+    <div class="row">
+        <div class="box box-primary box-solid" id="upload_box" style="border-radius:unset">
+            <div class="box-header with-border bg-blue">
+                <h4 class="box-title">Outgoing emails</h4>
+                <div class="pull-right box-tools">
+                </div>
+            </div>
+            <div class="box-body">
+                @Html.Partial("_Partial_OutgoingEmail", Model)
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modal_choose_template">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Choose Template</h4>
+            </div>
+            <div class="modal-body">
+                <form id="add_more_file_form" action="/Page/MerchantFormHandle/GetFileUrl" method="post">
+                    <input type="hidden" id="merchant_code" name="merchantCode" />
+                    <input type="hidden" id="merchant_name" name="merchantName" />
+                    <input type="hidden" id="pdf_key" name="Key" />
+                    <input type="hidden" id="merchant_form_id" name="merchantFormId" />
+                    <input type="hidden" name="nuvei_type" />
+                    <div class="form-group">
+                        <label class="control-label">
+                            Template: <span style="color:red">*</span>&nbsp;
+                            <img id="template_loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                        </label>
+                        <select class="form-control" id="list_template" name="templateName" onchange="LoadOrder()">
+                            <option value="">--Select--</option>
+                            <option value="BANK CHANGE FORM">BANK CHANGE FORM</option>
+                            <option value="CHANGE REQUEST FORM">CHANGE REQUEST FORM</option>
+                            <option value="" disabled>--------------------------------</option>
+                            <option value="One-Time Payment ACH">ONE-TIME PAYMENT ACH</option>
+                            <option value="Recurring Payment ACH">RECURRING PAYMENT ACH</option>
+                            <option value="Refund">REFUND</option>
+                            <option value="" disabled>--------------------------------</option>
+                            <option value="DEJAVOO Z11 DATA SHEET">DEJAVOO</option>
+                            <option value="" disabled>--------------------------------</option>
+                            @*<option value="Nuvei">NUVEI AGREEMENT</option>*@
+                            <option value="Priority Merchant Agreement_ Flat Rate">Priority Merchant Agreement_ Flat Rate</option>
+                            <option value="Priority Merchant Agreement_ IC+">Priority Merchant Agreement_ IC+</option>
+                            <option value="Priority Merchant Agreement_ Tiered">Priority Merchant Agreement_ Tiered</option>
+                            @*<option value="RequestForm">VAR SHEET REQUEST</option>*@
+                        </select>
+                    </div>
+                    <div class="form-group" id="div_list_order" style="display:none">
+                        <label class="control-label">
+                            Order: <span style="color:red">*</span>&nbsp;
+                            <img id="order_loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                        </label>
+                        <select class="form-control" id="list_order" name="orderCode" onchange="change_order()" @*onchange="LoadTerminal()"*@>
+                            <option value="">--Select--</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="div_period" style="display:none">
+                        <label class="control-label">
+                            Period:&nbsp;
+                            <img id="period_loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                        </label>
+                        <select class="form-control" id="choose_period" name="period">
+                            <option value="MONTHLY">MONTHLY</option>
+                            <option value="QUATERLY">QUATERLY</option>
+                            <option value="YEARLY">YEARLY</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="div_list_terminal" style="display:none">
+                        <label class="control-label">Terminal: <span style="color:red">*</span></label>
+                        <select class="form-control" id="list_terminal" name="list_terminal">
+                            <option value="">--Select--</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="addfile_btn" class="btn btn-primary" onclick="AddFile()">
+                    Add File <img id="addfile_loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                </button>
+
+                <button id="createfile" type="button" class="btn btn-primary" onclick="CreateNewPDF()">
+                    Create
+                    <img id="createfile_loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                </button>
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="modal_PDFfile">
+    <div class="modal-dialog" style="width:80%; max-width:1000px; margin-top:10px; margin-bottom:10px">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="PDFfile_name"></h4>
+                <input type="hidden" name="hd_pdf_file_name" />
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="Id_PDFfile" />
+                <input type="hidden" id="merchant_form_id" />
+                <ul class="nav nav-tabs">
+                    <li id="li_pdf_unsigned" class="active"><a data-toggle="tab" href="#pdf_unsigned">Unsigned file</a></li>
+                    <li id="li_pdf_signed"><a data-toggle="tab" href="#pdf_signed">Signed file</a></li>
+                </ul>
+                <div class="tab-content">
+                    <div id="pdf_unsigned" class="tab-pane fade in active">
+                        <iframe id="PDFfile_url" style="width:100%; height: 65vh"></iframe>
+                    </div>
+                    <div id="pdf_signed" class="tab-pane fade">
+                        <iframe id="PDFfile_sign_url" style="width:100%; height: 65vh"></iframe>
+                    </div>
+                </div>
+                <div class="modal-footer" style="padding: 10px 0">
+                    @*<button type="button" id="btn_sendmerchant" class="btn btn-primary pull-left pdf_btn" onclick="SendToMerchant()">
+                            <span id="btn-send-title">Send to merchant </span><img id="sendfile_loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                        </button>*@
+                    @*<button type="button" id="btn_save_nuvei_pdf" class="btn btn-primary pull-left pdf_btn" onclick="SaveNuveiPDF()">
+                            <span id="btn-send-title">Save </span><img id="save_loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                        </button>*@
+                    <button type="button" id="update_dejavo" class="btn btn-primary pull-left pdf_btn" onclick="UpdateFile()">
+                        Update File <img id="update_dejavooz11_loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                    </button>
+                    @*<div class="input-group">
+                            <input id="uploadfile" class="form-control" type="file" />
+                            <button type="button" class="input-group-btn btn btn-warning" onclick="$('#uploadfile').trigger('click')">
+                                <i class="fa fa-upload"></i> Upload Updated PDF
+                            </button>
+                        </div>*@
+                    <form id="upload_update_file" class="col-md-4" style="padding:0" method="post" action="/merchantFormhandle/UploadUpdatedPdf">
+                        <input type="hidden" name="templatename" />
+                        <input type="hidden" name="merchantCode" />
+                        <div class="input-group pull-left upload_f" style="display:none">
+                            <div class="input-group-btn">
+                                <button type="button" class="btn btn-default" style="margin-left:0" onclick="$('.upload_f').toggle()">
+                                    <i class="fa fa-close"></i>
+                                </button>
+                            </div>
+                            <div class="input-group">
+
+                                <input id="uploadfile" name="upload_file" class="form-control" type="file" accept="application/pdf" />
+                                @*<div class="input-group-addon">
+                                        <label><input type="checkbox" /> Signed</label>
+                                    </div>*@
+                            </div>
+                            <div class="input-group-btn">
+                                <button type="submit" class="btn btn-warning">
+                                    <i class="fa fa-upload" style="color:#fff"></i>
+                                </button>
+
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-warning upload_f pull-left btn-flat" onclick="$('#uploadfile').trigger('click'),$('.upload_f').toggle()">
+                            <i class="fa fa-upload"></i> Upload PDF
+                        </button>
+                    </form>
+
+                    <button type="button" class="btn btn-success btn-flat" onclick="savechangedownload()">
+                        <i class="fa fa-download"></i> Download your changes
+                    </button>
+                    @*<button type="button" class="btn btn-primary btn-flat" onclick="download_pdf()">
+                        <i class="fa fa-download"></i> Download PDF
+                    </button>*@
+                    <button type="button" class="btn btn-default btn-flat" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="~/Scripts/merchant_form.js"></script>
+<script>
+    //Edit Merchant
+    function update_merchant(_id, _update, tabname = null) {
+        $.ajax({
+            method: "POST",
+            url: "/merchantman/GetMerchantInfo",
+            data: { id: _id, update: _update },
+            dataType: "html"
+        })
+            .done(function (data) {
+                $("#merchant_popup").html(data);
+                $("#modal-merchant").modal('show');
+                if (tabname != null) {
+                    $('#' + tabname).trigger('click');
+                }
+            })
+            .fail(function () {
+                alert("Oops! Something went wrong");
+                $("#modal-merchant").modal('hide');
+
+            })
+            .always(function () {
+                //$("#loading").hide();
+            });
+    }
+
+    //save edit merchant completed
+    function SaveComplete(data) {
+
+        if (data[0] == true) {
+            $('#modal-merchant').modal('toggle');
+            var Success = $.parseJSON('{"text":"' + data[2] + '", "layout":"topRight", "type":"success"}');
+            noty(Success);
+        }
+        else {
+            var Error = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"error"}');
+            noty(Error);
+        }
+
+    }
+
+    //save change & download pdf
+    function savechangedownload() {
+        $("#PDFfile_url").get(0).contentWindow.print();
+    }
+
+    ///
+    function Load() {
+
+    }
+    $(function () {
+        $('#modal_PDFfile').on('hidden.bs.modal', function () {
+            ChangeTab();
+        });
+        $("#upload_update_file").submit(function () {
+            $('[name="templatename"]').val($("#list_template").val());
+            $('[name="merchantCode"]').val($("#merchant_code").val());
+        })
+        $("#upload_update_file").ajaxForm(function (data) {
+            if (data[0]) {
+                $("#modal_choose_template").modal("hide");
+                $('.upload_f').toggle();
+                Load();
+                success(data[1]);
+                ViewForSend('view', data[2], `${$("#list_template").val()}|${$("#merchant_code").val()}|`);
+            } else {
+                error(data[1]);
+            }
+        })
+    })
+</script>

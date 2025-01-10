@@ -1,0 +1,242 @@
+﻿@model  EnrichcousBackOffice.Models.CustomizeModel.DemoSchedulerEventModel
+    @{ 
+        System.Collections.ObjectModel.ReadOnlyCollection<TimeZoneInfo> TimeZoneList = TimeZoneInfo.GetSystemTimeZones();
+    }
+<div class="modal fade" id="modal-event-demo-scheduler">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+            <form id="form-event-demo-scheduler" method="post" action="/DemoScheduler/InsertOrUpdateEvent">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"  aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                    <h4 id="modal-department-title" class="modal-title">
+                       @(!string.IsNullOrEmpty(Model.Id)? "Update Demo Scheduler | "+Model.Name : "Create Demo Scheduler")
+                    </h4>
+                </div>
+                <div class="modal-body" style="display:inline-block">
+                    <input type="hidden" name="Id" value="@Model.Id" />
+                    <input type="hidden" name="DemoSchedulerId" value="@Model.DemoSchedulerId" />
+                    <input type="hidden" name="MemberNumber" value="@Model.MemberNumber" />
+                    <input type="hidden" name="CustomerCode" value="@Model.CustomerCode" />
+                    <input type="hidden" name="TimeZone" value="@Model.TimeZone" />
+                    <input type="hidden" name="TimeZoneNumber" value="@Model.TimeZoneNumber" />
+                    <div class="form-group col-sm-12">
+                        <label class="control-label col-sm-1" style="padding:0px" for="Title"></label>
+                        <div class="col-sm-11" style="padding:0px">
+                            <a class="ui big label">
+                                <i class="fa fa-globe" aria-hidden="true"></i>
+                                TimeZone : <span>@ViewBag.TimeZone</span>
+                            </a>
+                            @*<select name="TimeZone" id="TimeZone" class="select2 TimeZoneCrud" style="width:100%;border:none;border-bottom:1px solid" required>
+
+                    @foreach (var item in TimeZoneList.ToList())
+                    {
+                        <option value="@item.Id" @(Model.TimeZone == item.Id ? "selected" : "")>@item.DisplayName</option>
+                    }
+                </select>*@
+                        </div>
+                    </div>
+                    <div class="form-group col-sm-12">
+                        <label class="control-label col-sm-1" style="padding:0px" for="Title"></label>
+                        <div class="col-sm-11" style="padding:0px">
+                            <input type="text" class="form-control" placeholder="Enter Title" value="@Model.Name" required id="Name" name="Name">
+                        </div>
+                    </div>
+                    @*<div class="form-group col-sm-12">
+            <label class="control-label col-sm-1" style="padding:0px" for="TimeZone"></label>
+            <div class="col-sm-11" style="padding:0px">
+                <select class="form-control select2" name="TimeZone" id="TimeZone">
+                    <option value="">N/A</option>
+                    @foreach (var item in Model.AvailabelTimeZone)
+                    {
+                        <option value="@item.Value">@item.Text</option>
+                    }
+                </select>
+            </div>
+        </div>*@
+                    <div class="form-group col-sm-12">
+                        <label class="control-label col-sm-1" style="padding:0px" for="StartTime"><i class="fa fa-calendar-times-o" aria-hidden="true"></i></label>
+                        <div class="col-sm-11" style="padding:0px">
+                            <div style="display:flex">
+                                <input type="text" class="form-control" value="@(String.Format("{0:g}", Model.StartTime))" name="StartTime" id="StartTime" placeholder="Start Time" />
+                                <span style="display: block;padding: 0px 13px;line-height: 35px;">To</span>
+                                <input type="text" class="form-control" value="@(String.Format("{0:g}", Model.EndTime))" name="EndTime" id="EndTime" placeholder="End Time" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group col-sm-12">
+                        <label class="control-label col-sm-1" style="padding:0px" for="SalonName"><i class="fa fa-user-o" aria-hidden="true"></i></label>
+                        <div class="col-sm-11" style="padding:0px">
+                            <input type="text" readonly class="form-control" value="@Model.SalonName" id="SalonName" placeholder="Enter Salon Name" name="SalonName">
+                        </div>
+                    </div>
+
+                    <div class="form-group col-sm-12">
+                        <label class="control-label col-sm-1" style="padding:0px" for="Location"><i class="fa fa-map-marker" aria-hidden="true"></i></label>
+                        <div class="col-sm-11" style="padding:0px">
+                            <input type="text" class="form-control" id="Location" value="@Model.Location" placeholder="Enter Location" name="Location">
+                        </div>
+                    </div>
+                    <div class="form-group col-sm-12">
+                        <label class="control-label col-sm-1" style="padding:0px" for="REF">REF</label>
+                        <div class="col-sm-11" style="padding:0px">
+                            <textarea class="form-control" placeholder="Enter REF" id="REF" name="REF" rows="2">@Model.REF</textarea>
+                        </div>
+                    </div>
+                    <div class="form-group col-sm-12">
+                        <label class="control-label col-sm-1" style="padding:0px" for="Note"><i class="fa fa-sticky-note-o" aria-hidden="true"></i></label>
+                        <div class="col-sm-11" style="padding:0px">
+                            <textarea class="form-control" placeholder="Enter Comment" id="Description" name="Description" rows="4">@Model.Description</textarea>
+                        </div>
+                    </div>
+
+                    @*<div class="form-group  col-sm-12">
+
+                <label for="Attendees">Attendees :</label>
+
+                <select class="form-group" name="Attendees" style="width:100%" id="Attendees" multiple>
+                </select>
+
+        </div>*@
+                    <div class="form-group col-sm-12">
+                        <label class="control-label col-sm-1" style="padding:0px" for="Status">Status</label>
+                        <div class="col-sm-11" style="padding:0px">
+                            <select name="Status" id="Status" class="Status form-control" style="width:100%">
+                                <option value="">Demo Scheduler</option>
+                                <option value="1" @(Model.Status == 1 ? "selected" : "")>Completed</option>
+                                <option value="0" @(Model.Status == 0 ? "selected" : "")>Cancel</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+               
+                <div class="modal-footer">
+                    <div class="row">
+                        <div class="col-md-12">
+                            @*@if (!string.IsNullOrEmpty(Model.Id))
+                            {
+                                <button type="button" class="btn btn-danger pull-left" onclick="deleteEvent('@Model.Id', '@Model.MemberNumber')">
+                                    Delete
+                                    <img class="loading-delete" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none">
+                                </button>
+                            }*@
+
+                            <button type="submit" class="btn btn-primary">
+                                Submit
+                                <img class="loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none">
+                            </button>
+                            <button type="button" class="btn btn-default" style="margin-right:auto;" data-dismiss="modal" aria-label="Close">
+                                Close
+                            </button>
+                        </div>
+                     
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    var DemoSchedulerId = '@Model.DemoSchedulerId';
+        $("#StartTime").datetimepicker({
+        sideBySide: true
+    });
+    $("#EndTime").datetimepicker({
+        sideBySide: true,
+        //widgetPositioning: {
+        //    horizontal: 'right',
+        //}
+    });
+    //$(".select2").select2();
+    //$("#Attendees").select2();
+
+    $("#form-event-demo-scheduler").submit(function (e) {
+        e.preventDefault(); // avoid to execute the actual submit of the form.
+        var form = $(this);
+        var url = form.attr('action');
+        var btn = form.find('[type="submit"]');
+        var loading = form.find('.loading');
+        $(loading).show();
+        $(btn).attr('disabled', true);
+        $.ajax({
+            type: "POST",
+            url: url,
+            data: form.serialize(), // serializes the form's elements.
+            success: function (data) {
+                if (data.status) {
+                    $("#modal-event-demo-scheduler").modal("hide");
+                    let MsgSuccess = $.parseJSON('{"text":"' + data.message + '", "layout":"topRight", "type":"success"}');
+                    noty(MsgSuccess);
+                    refesh_event();
+                    localStorage.setItem('Demoscheduler-ChangeDataDetail', true);
+                    //showDetail(DemoSchedulerId);
+                    //UpdateRow(DemoSchedulerId);
+                    //$('.demo-scheduler').DataTable().columns.adjust();
+                }
+                else {
+                    if (data.message === "This account's google authorization has expired") {
+                        $("#modal-event-demo-scheduler").modal("hide");
+                        refesh_resource();
+                        refesh_event();
+                        let MsgError = $.parseJSON('{"text":"The google authorization of this account has expired, Please verify google authorization again!", "layout":"topRight", "type":"warning"}');
+                        noty(MsgError);
+                    }
+                    else {
+                        let MsgError = $.parseJSON('{"text":"' + data.message + '", "layout":"topRight", "type":"error"}');
+                        noty(MsgError);
+                    }
+                }
+            },
+           
+            complete: function () {
+                $(loading).hide();
+                $(btn).attr('disabled', false);
+            },
+        });
+
+
+    });
+    function deleteEvent(EventId, MemberNumber) {
+        if (confirm("are you sure delete this event !")) {
+            $(".loading-delete").show();
+            $.ajax({
+                type: "POST",
+                url: "/DemoScheduler/DeleteEvent",
+                data: { EventId, MemberNumber }, // serializes the form's elements.
+                success: function (data) {
+                    if (data.status) {
+                        $("#modal-event-demo-scheduler").modal("hide");
+                        let MsgSuccess = $.parseJSON('{"text":" delete success", "layout":"topRight", "type":"success"}');
+                        noty(MsgSuccess);
+                        refesh_event();
+                        localStorage.setItem('Demoscheduler-ChangeDataDetail', true);
+                        //showDetail(DemoSchedulerId);
+                        //UpdateRow(DemoSchedulerId);
+                      
+                    }
+                    else {
+                        if (data.message === "This account's google authorization has expired") {
+                            $("#modal-event-demo-scheduler").modal("hide");
+                            refesh_resource();
+                            refesh_event();
+                            let MsgError = $.parseJSON('{"text":"The google authorization of this account has expired, Please verify google authorization again!", "layout":"topRight", "type":"warning"}');
+                            noty(MsgError);
+                        }
+                        else {
+                            let MsgError = $.parseJSON('{"text":"' + data.message + '", "layout":"topRight", "type":"error"}');
+                            noty(MsgError);
+                        }
+                      
+                    }
+
+                },
+                complete: function () {
+                    $(".loading-delete").hide();
+                },
+            });
+        }
+       
+
+    }
+</script>

@@ -1,0 +1,7 @@
+staging-checkin.ezpos.co
+staging-login.ezpos.co
+staging.ezpos.co shortlink
+staging-manage.ezpos.co
+staging-slice.ezpos.co
+staging-smartcheckin.ezpos.co
+http://localhost:8080/swagger/   -->API POS

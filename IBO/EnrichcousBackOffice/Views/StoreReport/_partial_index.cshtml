@@ -1,0 +1,58 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.CustomizeModel.StoreReportView>
+<thead>
+    <tr>
+        <th>#</th>
+        <th>Merchant</th>
+        <th>Product</th>
+        <th>Duration</th>
+        <th>Period</th>
+        <th>Auto renew</th>
+
+    </tr>
+</thead>
+<tbody>
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>@item.store.StoreCode</td>
+            <td>
+                <b class="text-info">@item.bussiness</b><br />
+                <span>Owner: @item.owner</span><br />
+                <span>Phone: @item.phone</span>
+            </td>
+            <td>@item.store.Productname</td>
+            <td>
+                <span id="localtime-@item.store.Id">
+                    <script>convertLocalTime("@item.store.Id", "@item.store.EffectiveDate", "MMMddyyyy")</script>
+                </span><br />
+                <span id="localtime-RenewDate-@item.store.Id">
+                    <script>convertLocalTime("RenewDate-" + "@item.store.Id", "@item.store.RenewDate", "MMMddyyyy")</script>
+                </span>
+                @if (item.store.RenewDate.HasValue)
+                {
+                    if (DateTime.Now.Date > item.store.RenewDate.Value)
+                    {
+                        <label class="label animate-flicker" style="background-color:red"> Expired</label>
+                    }
+                    else
+                    if (DateTime.Now.Date.AddDays(10) > item.store.RenewDate.Value)
+                    {
+                        <label class="label animate-flicker" style="background-color:#ff3e00"> Nearly expired</label>
+                    }
+                    else
+                    if (DateTime.Now.Date.AddDays(30) > item.store.RenewDate.Value)
+                    {
+                        <label class="label label-warning animate-flicker"> Nearly expired</label>
+                    }
+                }
+            </td>
+            <td>@item.store.Period</td>
+            <td>
+                @if (item.store.AutoRenew == true)
+                {<label class="label label-success">Yes</label>}
+            </td>
+
+
+        </tr>
+    }
+</tbody>

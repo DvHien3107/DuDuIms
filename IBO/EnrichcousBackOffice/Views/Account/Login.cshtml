@@ -1,0 +1,246 @@
+﻿
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Login - Enrichcous IMS</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!--===============================================================================================-->
+    <link rel="icon" type="image/png" href="/content/login/images/icons/favicon.ico" />
+    <!--===============================================================================================-->
+    @*<link rel="stylesheet" type="text/css" href="/content/login/vendor/bootstrap/css/bootstrap.min.css">*@
+    <!--===============================================================================================-->
+    <link rel="stylesheet" type="text/css" href="/content/login/fonts/font-awesome-4.7.0/css/font-awesome.min.css">
+    <!--===============================================================================================-->
+    <link rel="stylesheet" type="text/css" href="/content/login/fonts/Linearicons-Free-v1.0.0/icon-font.min.css">
+    <!--===============================================================================================-->
+    <link rel="stylesheet" type="text/css" href="/content/login/vendor/animate/animate.css">
+    <!--===============================================================================================-->
+    <link rel="stylesheet" type="text/css" href="/content/login/vendor/css-hamburgers/hamburgers.min.css">
+    <!--===============================================================================================-->
+    <link rel="stylesheet" type="text/css" href="/content/login/vendor/animsition/css/animsition.min.css">
+    <!--===============================================================================================-->
+    <link rel="stylesheet" type="text/css" href="/content/login/vendor/select2/select2.min.css">
+    <!--===============================================================================================-->
+    <link rel="stylesheet" type="text/css" href="/content/login/vendor/daterangepicker/daterangepicker.css">
+    <!--===============================================================================================-->
+    <link rel="stylesheet" type="text/css" href="/content/login/css/util.css">
+    <link rel="stylesheet" type="text/css" href="/content/login/css/main.css">
+    <!--===============================================================================================-->
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+
+</head>
+<body>
+
+    <div class="limiter">
+        <div class="container-login100">
+            <div class="wrap-login100">
+
+                <div class="login100-form-title" style="background-image: url(/content/login/images/bg-01.jpg);">
+                    <span class="login100-form-title-1">
+                        Đăng Nhập
+                    </span>
+                </div>
+
+                @if (TempData["error"] != null)
+                {
+                    <div class="alert alert-warning alert-dismissible">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                        <span><i class="icon fa fa-warning"></i> @TempData["error"]</span>
+                    </div>
+                }
+
+                <ul class="nav nav-tabs">
+                    <li class="active"><a data-toggle="tab" href="#home">Nhân Viên</a></li>
+                    <li><a data-toggle="tab" href="#menu1">Đối Tác</a></li>
+                </ul>
+
+                <div class="tab-content">
+                    <div id="home" class="tab-pane fade in active">
+
+                        <form class="login100-form validate-form" action="/account/loginsubmit" method="post">
+                            <input type="hidden" name="ReturnURL" value="@Request["ReturnURL"]" />
+                            <div class="wrap-input100 validate-input m-b-26" data-validate="Email is required">
+                                <span class="label-input100">Email</span>
+                                <input class="input100" type="email" name="email" placeholder="Nhập email">
+                                <span class="focus-input100"></span>
+                            </div>
+
+                            <div class="wrap-input100 validate-input m-b-18" data-validate="Password is required">
+                                <span class="label-input100">Mật khẩu</span>
+                                <input class="input100" type="password" name="password" placeholder="Nhập mật khẩu">
+                                <span class="focus-input100"></span>
+                            </div>
+
+                            <div class="flex-sb-m w-full p-b-30">
+                                <div class="contact100-form-checkbox">
+                                    <input class="input-checkbox100" id="ckb1" type="checkbox" name="remember-me">
+                                    <label class="label-checkbox100" for="ckb1">
+                                        Ghi nhớ
+                                    </label>
+                                </div>
+
+                                <div>
+                                    <a onclick="javascript:$('#modal-default').modal()" href="#" class="txt1">
+                                        Quên mật khẩu?
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div class="container-login100-form-btn">
+                                <button class="login100-form-btn" type="submit">
+                                    Đăng Nhập
+                                </button>
+                            </div>
+                        </form>
+
+
+                    </div>
+                    <div id="menu1" class="tab-pane fade">
+                        <form class="login100-form validate-form" action="/account/loginsubmit" method="post">
+
+                            <div>
+                                Đang cập nhật...
+                            </div>
+
+                        </form>
+                    </div>
+
+                </div>
+
+                <div>
+                    <a href="/account/register" class="btn btn-primary center-block"><i class="glyphicon glyphicon-arrow-right"></i> Trở Thành Đối Tác</a>
+
+                </div>
+
+            </div>
+        </div>
+
+        @*<div class="version">Ver @System.Configuration.ConfigurationManager.AppSettings["IMSVersion"]</div>*@
+    </div>
+
+
+    <!--popup-->
+    <div class="modal fade in" id="modal-default">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header center-block">
+                    <div class="pull-right">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">×</span>
+                            </button>
+                        </div>
+
+                    <h4 class="modal-title">Bạn có quên mật khẩu ?</h4>
+                </div>
+                <div class="modal-body">
+                    <div>
+                        <p>Chúng tôi sẽ giúp bạn.</p>
+                        <p>Vui lòng cung cấp email tài khoản của bạn, chúng tôi sẽ gửi lại mật khẩu của bạn.</p>
+                        <p class="form-group has-feedback">
+                            <input type="email" id="email_forgotpass" class="form-control" placeholder="Email" required>
+                            <span class="glyphicon glyphicon-envelope form-control-feedback"></span>
+                        </p>
+                    </div>
+                    <div style="display:none" id="divSucc" class="alert alert-success alert-dismissible">
+                        <h4><i class="icon fa fa-check"></i> Gửi thành công</h4>
+                        <span>Vui lòng kiểm tra hộp thư của bạn. Nếu không tìm thấy, hãy thử tìm kiếm trong thư mục SPAM.</span>
+
+                    </div>
+                    <div class="alert alert-warning alert-dismissible" style="display:none" id="divErr">
+                        <h4><i class="icon fa fa-warning"></i> Gửi thất bại!</h4>
+                        <span>Rất tiếc, Chúng tôi gặp sự cố khi gửi, Vui lòng kiểm tra email của bạn và thử lại sau</span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="btForgotPass" class="btn btn-primary">
+                        Gửi &nbsp;&nbsp;
+                        <img id="loading" style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                    </button>
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!--===============================================================================================-->
+    <script src="/content/login/vendor/jquery/jquery-3.2.1.min.js"></script>
+    <!--===============================================================================================-->
+    <script src="/content/login/vendor/animsition/js/animsition.min.js"></script>
+    <!--===============================================================================================-->
+    @*<script src="/content/login/vendor/bootstrap/js/popper.js"></script>
+        <script src="/content/login/vendor/bootstrap/js/bootstrap.min.js"></script>*@
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+
+    <!--===============================================================================================-->
+    <script src="/content/login/vendor/select2/select2.min.js"></script>
+    <!--===============================================================================================-->
+    <script src="/content/login/vendor/daterangepicker/moment.min.js"></script>
+    <script src="/content/login/vendor/daterangepicker/daterangepicker.js"></script>
+    <!--===============================================================================================-->
+    <script src="/content/login/vendor/countdowntime/countdowntime.js"></script>
+    <!--===============================================================================================-->
+    <script src="/content/login/js/main.js"></script>
+
+    <script type="text/javascript">
+        $("#btForgotPass").click(function () {
+            var email = $("#email_forgotpass").val();
+            if (email != "") {
+
+                $(this).attr("disabled", true);
+                $("#loading").show();
+
+                $.ajax({
+                    url: "/account/checkforgotpass/",
+                    type: "post",
+                    datatype: "json",
+                    contenttype: "application/json",
+                    data: { "email": email }
+
+                }).done(function (data) {
+                    //alert(data[1]);
+                    //console.log(data);
+                    if (data[0] == true) {
+                        $("#divSucc").show();
+                        $("#divErr").hide();
+                        $("#divSucc  span").html(data[1]);
+                    }
+                    else {
+                        $("#divSucc").hide();
+                        $("#divErr").show();
+                        $("#divErr  span").html(data[1]);
+                    }
+
+                    $("#email_forgotpass").val("");
+
+                })
+                    .fail(function () { $("#divErr").show(); $("#divErr  span").html('Ooop! Something went wrong. Please try again later'); $("#loading").hide(); $("#btForgotPass").removeAttr("disabled"); })
+                    .always(function () { $("#loading").hide(); $("#btForgotPass").removeAttr("disabled"); });
+            }
+
+
+
+        });
+    </script>
+
+</body>
+</html>

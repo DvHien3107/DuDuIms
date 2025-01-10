@@ -1,0 +1,251 @@
+﻿
+<style>
+    .fc-axis.fc-widget-content > span {
+        text-transform: uppercase;
+    }
+
+    .fc-today {
+        background: transparent !important; /* hack. because demo will always start out on current day */
+    }
+
+    .avatar-member-resource {
+        width: 40px;
+    }
+
+    #calendar {
+        max-width: 1100px;
+        margin: 40px auto;
+    }
+</style>
+<input type="hidden" id="calendarMemberNumber" value="@ViewBag.MemberNumber" />
+<input type="hidden" id="calendarDemoSchedulerId" value="@ViewBag.DemoSchedulerId" />
+<div class="modal fade" id="modal-calendar-demo-scheduler">
+    <div class="modal-dialog modal-lg" style="width:95%;" role="document">
+        <div class="modal-content" style="height:96vh;overflow-y:scroll;border-radius:5px;">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" onclick="FetchReloadData()" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <h4 style="margin:0px">@ViewBag.MemberName Calendar | Demo Scheduler For Salon : @ViewBag.SalonName</h4>
+            </div>
+            <div class="modal-body">
+                <div id='calendar' style="width:100%">
+
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+</div>
+
+<script>
+
+    var calendar;
+    var date_now = '@(ViewBag.DefaultDate)';
+    var date = new Date();
+    var d = date.getDate();
+    var m = date.getMonth();
+    var y = date.getFullYear();
+        function renderCalendar() {
+            //var d = new Date();
+            //var m = (d.getMonth() + 1) >= 10 ? (d.getMonth() + 1) : '0' + (d.getMonth() + 1);
+            //var da = d.getDate() >= 10 ? d.getDate() : '0' + d.getDate();
+            //var date_now = d.getFullYear() + "-" + m + "-" + da;
+            var calendarEl = document.getElementById('calendar');
+            calendar = new FullCalendar.Calendar(calendarEl, {
+
+                customButtons: {
+                        myCustomButton: {
+                                     text: '+ Add Appointment',
+                                    click: function () {
+                        new_event();
+                        }
+                    },
+                    //ShowAllEventButton: {
+            //    text: 'View All Events',
+            //    click: function () {
+            //        window.location.href = "/home?show_all_event=true"
+            //    }
+            //},
+            //ShowMyEventButton: {
+            //    text: 'My Events Only',
+            //    click: function () {
+            //        window.location.href = "/home?show_all_event=false"
+            //    }
+            //}
+        },
+                headerToolbar: {
+                     left: 'prev,next today myCustomButton',
+                    center: 'title',
+                    right: 'resourceTimeGridWeek,resourceTimeGridDay'
+                },
+                eventMouseEnter: function (info) {
+                    //var tooltip = new Tooltip(info.el, {
+                    //    title: "123 \n 123",
+                    //    placement: 'top',
+                    //    trigger: 'hover',
+                    //    container: 'body',
+                    //});
+                },
+                initialView: 'resourceTimeGridDay',
+                resources: '/DemoScheduler/getMemberBySupportDeparment',
+                resourceLabelContent: function (renderInfo) {
+                    $(renderInfo.el).html(renderInfo.resource.title);
+                },
+                resourceLabelContent: (info) => {
+
+                    return { html: info.resource.title }
+                },
+                eventMouseout: function () {
+                    console.log('event mouseout');
+                },
+                height: 'auto',
+                defaultDate: date_now,
+                navLinks: true, // can click day/week names to navigate views
+                selectable: true,
+                selectHelper: true,
+                selectMirror: true,
+                dayMinWidth: 200,
+                editable: true,
+                //slotDuration: '00:15:00',
+                minTime: '09:00:00',
+                maxTime: '21:00:00',
+                select: function (arg) {
+                  new_event(arg.start, arg.end);
+                    calendar.unselect()
+                },
+
+                eventLimit: true, // allow "more" link when too many events
+                eventClick: function (info) {
+                    info.el.style.borderColor = 'red';
+                    view_update_event(info.event.id);
+                    info.el.style.borderColor = '';
+                },
+                eventResize: function (info) {
+                    if (!confirm("Is this okay?")) {
+                      info.revert();
+                    }
+                    else {
+                        update_start_end_event(info);
+                    }
+                },
+
+                eventDrop: function (info) {
+                    info.revert();
+                        info.el.style.borderColor = 'red';
+                        view_update_event(info.event.id, info.event.start,info.event.end);
+                        info.el.style.borderColor = '';
+
+                },
+
+            // events: function (fetchInfo, successCallback, failureCallback) {
+            //jQuery.ajax({
+            //    type: 'POST',
+            //    url: '/DemoScheduler/GetAllEventCalendarByUser',
+            //    data: {
+            //        MemberNumber: $("#calendarMemberNumber").val(),
+            //    },
+            //    success: function (events) {
+            //        successCallback(events);
+            //    }
+            //});
+            //    },
+
+
+                //events: {
+            //    url: '/Home/GetAllEventCalendarByUser',
+            //    method: 'POST',
+            //    extraParams: {
+            //        username: $("#calendarUsername").val(),
+            //    },
+            //    failure: function () {
+            //        alert('there was an error while fetching events!');
+            //    },
+
+            //}
+
+        });
+            calendar.render();
+        }
+          renderCalendar();
+    function new_event(start, end) {
+        var MemberNumber = $("#calendarMemberNumber").val();
+        var DemoSchedulerId = $("#calendarDemoSchedulerId").val();
+            $.ajax({
+                type: "POST",
+                url: "/DemoScheduler/ShowEventPopup",
+                data: { MemberNumber, DemoSchedulerId},
+                dataType: "html",
+                success: function (data) {
+                    $("#render-modal-event-calendar").html(data);
+                    $("#modal-event-demo-scheduler").modal("show");
+                    $.post("/demoscheduler/getclienttimezone", { id: Intl.DateTimeFormat().resolvedOptions().timeZone }, function (data) {
+                        $(".TimeZoneCrud").val(data).change();
+                    });
+                    $("#form-event-demo-scheduler").find("#StartTime").val(moment(new Date(start)).format("MM/DD/YYYY h:mm A")).change();
+                    $("#form-event-demo-scheduler").find("#EndTime").val(moment(new Date(end)).format("MM/DD/YYYY h:mm A")).change();
+                }
+            });
+        }
+           function view_update_event(id, start=null, end=null) {
+            var MemberNumber = $("#calendarMemberNumber").val();
+            var DemoSchedulerId = $("#calendarDemoSchedulerId").val();
+            $.ajax({
+            type: "POST",
+                url: "/DemoScheduler/ShowEventPopup",
+                data: { "DemoSchedulerId": DemoSchedulerId, "MemberNumber": MemberNumber, "EventId": id },
+                dataType: "html",
+                success: function (data) {
+                    $("#render-modal-event-calendar").html(data);
+                    $("#modal-event-demo-scheduler").modal("show");
+                    if (start !== null) {
+                        $("#form-event-demo-scheduler").find("#StartTime").val(moment(new Date(start)).format("MM/DD/YYYY h:mm A")).change();
+
+                    };
+                    if (end !== null) {
+                        $("#form-event-demo-scheduler").find("#EndTime").val(moment(new Date(end)).format("MM/DD/YYYY h:mm A")).change();
+                    }
+                }
+            });
+        }
+        function resetForm() {
+            $("#create_or_update_form").find("#Id").val("");
+            $("#create_or_update_form").find("#Title").val("");
+            $("#create_or_update_form").find("#StartTime").val("");
+            $("#create_or_update_form").find("#EndTime").val("");
+            $("#create_or_update_form").find("#Location").val("");
+            $("#create_or_update_form").find("#Note").val("");
+            $("#create_or_update_form").find("#Attendees").val("");
+        }
+        function CreateOrUpdateSubmit() {
+            $.ajax({
+                type: "POST",
+                url: "/DemoScheduler/InsertOrUpdateEvent",
+                data: $("#create_or_update_form").serialize() + "&username=" + $("#calendarUsername").val(),
+                dataType: "Json",
+                success: function (result) {
+                    $("#create_or_update_modal").modal('hide');
+                    localStorage.setItem('Demoscheduler-ChangeDataDetail',true);
+                    refesh_event();
+                }
+            });
+        }
+        //$(function () {
+        //    // Reference the hub.
+        //    var hubNotif = $.connection.calendarHub;
+        //    $.connection.hub.start();
+        //    // Start the connection.
+        //    //$.connection.hub.start().done(function () {
+        //    //    //loadList();
+        //    //});
+        //    // Notify while anyChanges.
+        //    hubNotif.client.updatedData = function () {
+        //        refesh_event();
+        //    };
+        //});
+        function refesh_event() {
+            calendar.refetchEvents();
+    }
+
+</script>

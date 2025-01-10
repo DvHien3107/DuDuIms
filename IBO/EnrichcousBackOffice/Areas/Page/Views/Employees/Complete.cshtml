@@ -1,0 +1,179 @@
+﻿
+@model EnrichcousBackOffice.Models.P_Member
+@{
+    Layout = "~/Areas/Page/Views/Shared/_EmployeeLayout .cshtml";
+    ViewBag.Title = "Update Information | IMS System";
+    string picture;
+    if (string.IsNullOrWhiteSpace(Model.Picture))
+    {
+        if (Model.Gender?.Equals("Male", StringComparison.InvariantCultureIgnoreCase) == true)
+        {
+            picture = "/Upload/Img/Male.png";
+        }
+        else
+        {
+            picture = "/Upload/Img/Female.png";
+        }
+    }
+    else
+    {
+        picture = Model.Picture;
+    }
+
+    string identity_card_image_before;
+    if (string.IsNullOrWhiteSpace(Model.IdentityCardImageBefore))
+    {
+        identity_card_image_before = "/Upload/Img/no_image.jpg";
+    }
+    else
+    {
+        identity_card_image_before = Model.IdentityCardImageBefore;
+    }
+
+
+    string identity_card_image_after;
+    if (string.IsNullOrWhiteSpace(Model.IdentityCardImageAfter))
+    {
+        identity_card_image_after = "/Upload/Img/no_image.jpg";
+    }
+    else
+    {
+        identity_card_image_after = Model.IdentityCardImageAfter;
+    }
+}
+
+
+
+<div class="page-body">
+    <div id="progress-title" class="">
+        <h2>CONFIRMATION</h2>
+    </div>
+    <div class="contianer">
+        <div class="row" id="header-progress">
+            <div class="col-md-6 col-sm-6 col-xs-2">
+                <a href="/" class="btn btn-sm btn-default" data-toggle="tooltip" title="" data-original-title="Go back">
+                    <i class="fa fa-arrow-left"></i> Back to IMS
+                </a>
+            </div>
+
+            <div class="col-md-6 col-sm-6 col-xs-10">
+                <div class="ticket-progress">
+                    <ul>
+                        <li class="">
+                            <a>Information</a>
+                        </li>
+                        <li class="active-step">
+                            <a> Completed</a>
+                        </li>
+
+                    </ul>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <section class="box-centent">
+        <form id="form_save_member" role="form" action="/Page/Employees/Complete" method="post" class="form-horizontal">
+            @Html.AntiForgeryToken()
+            @Html.HiddenFor(x=>x.Id)
+            <input type="hidden" value="@ViewBag.Key" name="key" />
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12 text-center" id="review_pic0">
+                            <img class="avatar-img" src="@picture"  style="height: 120px; margin-left: 0; margin: auto; width: 120px; object-fit: cover;" alt="xem trước" />
+                    </div>
+
+                </div>
+                <div class="row">
+
+                    <div class="col-md-12 box-confirm" id="review_pic0">
+
+                        <div>
+                            <div class="title-name">
+                                <p>
+                                    <i class="fa fa-user"></i>   Full name:
+                                </p>
+                            </div>
+                            <div class="confirm-text">
+                                <p>@Model.FullName</p>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="title-name">
+                                <p>
+                                    <i class="fa fa-venus-mars"></i>  Gender:
+                                </p>
+                            </div>
+                            <div class="confirm-text">
+                                <p>@Model.Gender</p>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="title-name">
+                                <p>
+                                    <i class="fa fa-birthday-cake"></i> Birthday:
+                                </p>
+                            </div>
+                            <div class="confirm-text">
+                                <p>@(Model.Birthday?.ToString("MM/dd/yyyy"))</p>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="title-name">
+                                <p>
+                                    <i class="fa fa-phone"></i> Phone:
+                                </p>
+                            </div>
+                            <div class="confirm-text">
+                                <p>@(Model.CellPhone)</p>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="title-name">
+                                <p>
+                                    <i class="fa  fa-street-view"></i> Address:
+                                </p>
+                            </div>
+                            <div class="confirm-text">
+                           
+                                <p>@(Model.Address +", "+Model.City+", "+ ViewBag.State + ", " + ViewBag.Country + ", " +Model.ZipCode)</p>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="title-name">
+                                <p>
+                                    <i class="fa fa-credit-card"></i> Identity card:
+                                </p>
+                            </div>
+                            <div class="confirm-text">
+                                <p style="border:none"> @Model.IdentityCardNumber</p>
+                                <img src="@identity_card_image_before" style="width:250px;height:170px;margin-left:0;margin-right:20px;" />
+                                <img src="@identity_card_image_after" style="width: 250px; height: 170px; margin-left: 0 " />
+                            </div>
+                        </div>
+                     
+
+                    </div>
+
+                </div>
+              
+
+            </div>
+            <div class="modal-footer">
+                <a href="/Page/Employees?key=@ViewBag.Key" class="btn btn-previous btn-custom">Previous</a>
+                <button type="submit"  class="btn btn-success btn-submit" style="float:right">Complete</button>
+            </div>
+
+        </form>
+    </section>
+
+</div>
+
+
+
+@section scripts{
+
+}
+

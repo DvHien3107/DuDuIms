@@ -1,0 +1,929 @@
+﻿@using Enrichcous.Payment.Mxmerchant.Config.Enums
+@using EnrichcousBackOffice.Areas.PaymentGate.ModelsView.DTO
+@using EnrichcousBackOffice.Models
+@using Inner.Libs.Helpful
+@model EnrichcousBackOffice.Models.C_Customer
+@{
+    var isAgent = ViewBag.AgentAction ?? false;
+    List<Ad_Country> country = ViewBag.country ?? new List<Ad_Country>();
+    List<Ad_USAState> states = ViewBag.states ?? new List<Ad_USAState>();
+    List<C_CustomerCard> cards = ViewBag.credit ?? new List<C_CustomerCard>();
+    List<C_CustomerCard> expired_cards = ViewBag.expired_credit ?? new List<C_CustomerCard>();
+    List<C_CustomerCard> deactive_cards = ViewBag.deactive_credit ?? new List<C_CustomerCard>();
+    var default_card = cards.FirstOrDefault(card => card.IsDefault);
+    List<Transaction_view> Transactions = ViewBag.Transaction ?? new List<Transaction_view>();
+    decimal? discount = 0;
+    decimal? tax = 0;
+    var goBack = ViewBag.HadHistory ?? false;
+    var host = $"{HttpContext.Current.Request.Url.Scheme}://{HttpContext.Current.Request.Url.Authority}";
+    bool authFlag = ViewBag.Auth ?? false;
+    ViewBag.page_width = "1200px";
+
+    ViewBag.ActionLogin = "/PaymentGate/Card/Login";
+}
+@section content_page_style {
+    <link rel="stylesheet" href="~/Areas/PaymentGate/Content/page/pay.css" />
+    <link href="//cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css" rel="stylesheet" />
+    <link href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css" rel="stylesheet">
+    <style>
+        @@media (max-width: 767.98px) {
+            /*#invoice-div {
+            overflow-y: auto;
+        }*/
+            .btn {
+                -webkit-user-select: auto !important;
+                -moz-user-select: auto !important;
+                -ms-user-select: auto !important;
+                user-select: auto !important;
+            }
+
+            #invoice-view {
+                width: 150% !important;
+                margin: -13% -25%;
+            }
+
+            #invoice-div {
+                transform: scale(.7);
+            }
+            #new_credit {
+                max-height: 100% !important;
+            }
+        }
+
+        .form-control:read-only {
+            background-color: transparent !important;
+            border: none;
+        }
+
+        ._text#CardNumber:read-only::placeholder {
+            color: #007bff !important;
+            opacity: 1; /* Firefox */
+        }
+
+        ._text:not(#CardNumber):read-only::placeholder {
+            color: #111 !important;
+            opacity: 1; /* Firefox */
+        }
+
+        ._text:not(:read-only)::placeholder {
+            color: #999 !important;
+            opacity: 1; /* Firefox */
+        }
+
+        ._input > ._text:read-only ~ ._label > span {
+            display: none;
+        }
+
+        ._input > ._text:not(:read-only) ~ ._label > span {
+            display: inline;
+        }
+
+        #card_info {
+            padding: 5px;
+            margin-bottom: 10px;
+            margin-right: 0px;
+            background-color: #eee
+        }
+
+            #card_info > div {
+                margin-bottom: 3px;
+            }
+
+            #card_info > ._input {
+                margin-bottom: 0px;
+            }
+
+            #card_info > .col-md-3,
+            #card_info > .col-md-4,
+            #card_info > .col-md-5,
+            #card_info > .col-md-6,
+            #card_info > .col-md-7,
+            #card_info > .col-md-8,
+            #card_info > .col-md-12 {
+                margin: 0;
+                padding: 1px 3px;
+            }
+
+        #btn_group .toggle-group label {
+            padding: 4px 8px;
+        }
+
+        #btn_group .toggle-group span {
+            padding: 0;
+            display: none;
+        }
+    </style>
+}
+@section content_page_script{
+
+    @if (isAgent)
+    {
+        return;
+    }
+    <script src="~/Areas/PaymentGate/Content/plugins/bootstrap/bootstrap.min.js"></script>
+    <script src="~/Scripts/jquery.form.min.js"></script>
+    <script src="~/Content/Admin/bower_components/datatables.net/js/jquery.dataTables.min.js"></script>
+    <script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
+    <!-- InputMask -->
+    <script src="~/Content/Admin/plugins/input-mask/jquery.inputmask.js"></script>
+    <script src="~/Content/Admin/plugins/input-mask/jquery.inputmask.date.extensions.js"></script>
+    <script src="~/Content/Admin/plugins/input-mask/jquery.inputmask.extensions.js"></script>
+    <script>
+        let table = $(".dataTable").DataTable({
+            order: [[1, "desc"]],
+                    columnDefs: [{
+                        targets: 0,
+                searchable: true,
+                visible: false
+                    }]
+        });
+        function select_credit(el, cardId) {
+            $(".credit_card").not(el).removeClass("active");//.find(".fa-check-circle").hide();
+            $(el).addClass("active");//.find(".fa-check-circle").show();
+            table.columns(0).search(cardId).draw();
+            $('#card_info_show').animate({ marginRight: 0, opacity: 0 }, 200, function () { $('#card_info_show').hide() });
+        }
+        function show_credit(cardId)
+        {
+            $(".credit_card").not("#" + cardId).removeClass("active");//.find(".fa-check-circle").hide();
+            $("#" + cardId).addClass("active");//.find(".fa-check-circle").show();
+            table.columns(0).search(cardId).draw();
+            overlay(true);
+                $.ajax({
+                    method: "POST",
+                    url: "/PaymentGate/Card/GetCardInfo",
+                    data: { cardId },
+                    dataType: "json"
+                })
+                .done(function (data) {
+                    if (data[0]) {
+                        let card_active = data[1].Active;
+                        let card_default = data[1].IsDefault;
+                        $("#CardId").val(data[1].Id);
+                        $("#card_active").bootstrapToggle(card_active === true ? 'on' : 'off');
+                        $("#card_default").bootstrapToggle(card_default === true ? "on" : "off");
+                        $("#CardNumber").attr("placeholder", data[1].CardNumber);
+                        $("#CardExpiry").val(data[1].CardExpiry);
+                        $("#CardEmail").val(data[1].CardEmail);
+                        $("#CardPhone").val(data[1].CardPhone);
+                        $("#CardHolderName").val(data[1].CardHolderName);
+                        $("#CardAddressStreet").val(data[1].CardAddressStreet);
+                        $("#CardCity").val(data[1].CardCity);
+                        $("#CardCountry").val(data[1].CardCountry);
+                        $("#CardCountry_read").val(data[1].CardCountry);
+                        $("#CardState_select").val(data[1].CardState);
+                        $("#CardState_input").val(data[1].CardState);
+                        $("#CardZipCode").val(data[1].CardZipCode);
+                        $("#card_info .cardIcon").attr('class', `cardIcon ${data[1].CardType}`)
+                        if (card_default) {
+                            $("#card_active").closest(".toggle.btn").hide();
+                        } else {
+                            $("#card_active").closest(".toggle.btn").show();
+                        }
+                        close_edit();
+                        if (card_active && data[2]) {
+                            $("#card_default").closest(".toggle.btn").show();
+                        } else {
+                            $("#card_default").closest(".toggle.btn").hide();
+                        }
+
+                        $("#card_info input").trigger("blur");
+                        $("#card_info select").trigger("change");
+
+                        $("#btn_group").show();
+                        $('#card_info_show').show();
+                        $('#card_info_show').animate({ marginRight: '33%', opacity: 1 }, 200);
+                        $("body").children().on("mousedown", function (event) {
+                            if (!$(event.target).closest(".edit_btn, #card_info_show, #overlay").length) {
+                                $('#card_info_show').animate({ marginRight: 0, opacity: 0 }, 200, function () { $('#card_info_show').hide() });
+                                $("body").unbind(event);
+                            }
+                        })
+                        $("._text").each(function () {
+                            if ($(this).val() != "") {
+                                $(this).next("._label").addClass("is_valid");
+                            } else {
+                                $(this).next("._label").removeClass("is_valid");
+                            }
+                        })
+                    } else {
+                        if(data[1].responseText.startsWith("Please login first")) {
+                            $("#login").modal("show");
+                        } else {
+                            noty({ "text": data[1], "layout": "topRight", "type": "error" });
+                        }
+                    }
+                })
+                .fail(function (err) {
+                    if(err.responseText.startsWith("Please login first") || err.status === 403) {
+                        $("#login").modal("show");
+                    } else {
+                        noty({ "text": data[1], "layout": "topRight", "type": "error" });
+                    }
+                })
+                .always(function () {
+                    overlay(false);
+                });
+            }
+        function addNewCard() {
+            //$("#new_credit input[type='text']").each((i, el)=>{
+            //    $(el).attr("required", true);
+            // });
+            $("#new_credit").show();
+            $("#pay_slide").animate({ marginLeft: "-100%" }, 300);
+            }
+            function prev() {
+            $("#pay_slide").animate({ marginLeft: "0px" }, 300);
+            // $("#new_credit input[type='text']").each((i, el)=>{
+            //     $(el).removeAttr('required');
+            //  });
+        }
+
+        function show_order(order, invoice_date, pay_date, status, total, noty, order_pending) {
+            let src = $("#invoice-view").data("src").replace("%code%", order);
+            $("#invoice-view").attr("src", src);
+            $('#Invoice .invoice_code').html(order);
+            $('#Invoice .invoice_date').html(invoice_date);
+            $('#Invoice .pay_date').html(pay_date);
+            $('#Invoice .invoice_status').html(status);
+            $('#Invoice .total').html("$" + total);
+            $('#Invoice .invoice_status').toggleClass("label-success", (status == 'Approved' || status == 'Success'));
+            $('#Invoice .invoice_status').toggleClass("label-danger", (status != 'Approved' && status != 'Success'));
+            if (status == 'Declined') {
+                $('#Invoice .declined_noty').html(noty).show()
+            } else {
+                $('#Invoice .declined_noty').hide();
+            }
+            $("#pay_invoice_btn").toggle(order_pending);
+            $('#Invoice').modal('show');
+        }
+
+        function close_edit() {
+            $("#CardNumber").val("");
+            $("#CardCSC").val("");
+            //$("#card_info").find(":input").prop("readonly", true);
+        }
+
+        function save_edit() {
+            let Id = $("#CardId").val();
+            let CardNumber = $("#CardNumber").val();
+            let CardExpiry = $("#CardExpiry").val();
+            let CardEmail = $("#CardEmail").val();
+            let CardPhone = $("#CardPhone").val();
+            let CardCSC = $("#CardCSC").val();
+            //let CardFirstName = $("#CardFirstName").val();
+       //let CardLastName = $("#CardLastName").val();
+            let CardHolderName = $("#CardHolderName").val();
+            let CardAddressStreet = $("#CardAddressStreet").val();
+            //let CardCity = $("#CardCity").val();
+            //let CardCountry = $("#CardCountry").val();
+            //let CardState = CardCountry.toLowerCase() === "united states" ? $("#CardState_select").val() : $("#CardState_input").val();
+            let CardZipCode = $("#CardZipCode").val();
+            //if (CardNumber.length < 4) {
+            //    noty({ "text": "Please fill your Card number!", "layout": "topRight", "type": "warning" });
+            //    $("#CardNumber").focus();
+            //    return;
+            //}
+            console.log(CardExpiry);
+            var requireds = $("#card_info_show input[required]");
+            for (var i = 0; i < requireds.length;i++ ) {
+                if (!$(requireds[i]).val()) {
+                    noty({ "text": "Please fill all required fields!", "layout": "topRight", "type": "warning" });
+                    $(requireds[i]).focus();
+                    return;
+                }
+            }
+
+            if (!CardExpiry || CardExpiry.indexOf('_') != -1) {
+                noty({ "text": "Please fill your Card expiry!", "layout": "topRight", "type": "warning" });
+                $("#CardExpiry").focus();
+                return;
+            }
+            //else if (CardCSC.length !== 3 && CardCSC.length !== 4) {
+  t         //    noty({ "text": "Please fill your CardCSC!", "layout": "topRight", "type": "warning" });
+            //    $("#CardCSC").focus();
+            //    return;
+            //}
+            overlay(true);
+            $.ajax({
+                method: "POST",
+                url: "/PaymentGate/Card/SaveEditCard",
+                data: { Id, CardNumber, CardExpiry, CardHolderName, CardEmail, CardPhone, CardAddressStreet, /*CardCity, CardCountry, CardState,*/ CardZipCode },
+                dataType: "json"
+            })
+            .done(function (data) {
+                if (data[0]) {
+                    noty({ "text": "Change status completed", "layout": "topRight", "type": "success" });
+                    $(".credit_card.active").trigger("click");
+                    el_card_change($("#" + Id), data[1], data[2]);
+                } else {
+                    noty({ "text": data[1], "layout": "topRight", "type": "warning" });
+                    $(".credit_card.active").trigger("click");
+                }
+            })
+            .fail(function () {
+            })
+            .always(function () {
+                overlay(false);
+            });
+        }
+
+        $(document).ready(() => {
+            @if (authFlag == false)
+            {<text>
+                $("#login").modal("show");
+                $(".payment-content").css({ "filter": "blur(5px)" });
+            </text>}
+
+            @if (cards.Count == 0)
+            {<text>
+                $(".btn-slide-new-card").trigger("click");
+                $(".btn-prev-list-card").hide();
+            </text>}
+
+            $(".credit_card.active").trigger("click");
+            $(".pay-with-new-card").click(() => {
+                $("input[name='CardId']").val("");
+             });
+            //$(".credit_card.active").trigger("click");
+            //$("#card_info").find(":input").prop("readonly", true);
+
+            $('#CardExpiry,#new_card_expiry').inputmask('99/99', { showMaskOnHover: false});
+            $('.CardCSC').inputmask({ "mask": "9", "repeat": 4, "greedy": false , showMaskOnHover: false });
+
+            $("#card_active").closest(".toggle.btn").hide();
+            //change status
+            $('#card_active').next(".toggle-group").on("click", function (e) {
+                let id = $("#CardId").val();
+                let e_card = $("#"+id);
+                let active = !$("#card_active").prop('checked');
+                overlay(true);
+                    $.ajax({
+                    method: "POST",
+                        url: "/PaymentGate/Card/ChangeStatusCard",
+                        data: { id, active },
+                        dataType: "json"
+                    })
+                    .done(function (data) {
+                    if (data[0]) {//{success, active, expiry}
+                        noty({ "text": "Change status completed", "layout": "topRight", "type": "success" });
+                        el_card_change(e_card, data[1], data[2]);
+                        $(".credit_card.active").trigger("click");
+                    } else {
+                        noty({ "text": data[1], "layout": "topRight", "type": "warning" });
+                        $(".credit_card.active").trigger("click");
+                    }
+                })
+                .fail(function () {})
+                .always(function () {
+                    overlay(false);
+                });
+            });
+
+            $('#card_default').next(".toggle-group").on("click", function () {
+                if (!$("#card_default").is(":checked")) {
+                    let cardId = $("#CardId").val();
+                    overlay(true);
+                    $.ajax({
+                        method: "POST",
+                        url: "/PaymentGate/Pay/ChangeDefaultCard",
+                        data: { cardId },
+                        dataType: "json"
+                    })
+                    .done(function (data) {
+                        if (data[0]) {
+                            noty({ "text": "Set default card completed", "layout": "topRight", "type": "success" });
+                            $(".credit_card:not(.active)").find(".fa-check-circle").remove();
+                            $("#" + cardId).append("<i class=\"fa fa-check-circle\"></i>");
+                            // $(".credit_card.active").trigger("click");
+                        } else {
+                            noty({ "text": "fail: " + data[1], "layout": "topRight", "type": "error" });
+                            $("#card_default").bootstrapToggle("off");
+                        }
+                    })
+                    .fail(function () {
+                    })
+                    .always(function () {
+                        overlay(false);
+                    });
+                } else {
+                    $("#card_default").bootstrapToggle("off");
+                }
+            });
+            $("#expired_cards_box").on("click", function (event) {
+                if (!$(event.target).closest("#expired_cards").length) {
+                    $("#expired_cards").slideToggle(300);
+                }
+            });
+            $("#deactive_cards_box").on("click", function (event) {
+                if (!$(event.target).closest("#deactive_cards").length) {
+                    $("#deactive_cards").slideToggle(300);
+                }
+            });
+            show_card_box();
+
+            //onchange country
+            $("#pay_slide [name=CardCountry]").on("change", function () {
+                if (($(this).val()||"").toLowerCase() === "united states") {
+                    $("#pay_slide select[name=CardState]").removeAttr("disabled").closest(".col-md-6").show();
+                    $("#pay_slide input[name=CardState]").attr("disabled", true).closest(".col-md-6").hide();
+                } else {
+                    $("#pay_slide input[name=CardState]").removeAttr("disabled").closest(".col-md-6").show();
+                    $("#pay_slide select[name=CardState]").attr("disabled", true).closest(".col-md-6").hide();
+                }
+            });
+            $("#CardCountry").on("change", function () {
+                if (($(this).val()||"").toLowerCase() === "united states") {
+                    $("#CardState_select").closest(".col-md-4").show();
+                    $("#CardState_input").closest(".col-md-4").hide();
+                } else {
+                    $("#CardState_input").closest(".col-md-4").show();
+                    $("#CardState_select").closest(".col-md-4").hide();
+                }
+            });
+        });
+        function el_card_change(e_card, active, valid_date) {
+            let e_card_row = e_card.closest(".credit_card_row");
+            //if (#=> deactive card)
+            if (active === false && !e_card.closest("#deactive_cards").length) {
+                e_card_row.appendTo("#deactive_cards");
+                e_card.removeClass("btn-outline-primary").removeClass("btn-outline-warning").addClass("btn-outline-danger");
+                if (!$("#deactive_cards").is(":visible")) {
+                    $("#deactive_cards").slideDown(200);
+                }
+            }
+            //if (# => expired card)
+            if (active === true && valid_date === false && !e_card.closest("#expired_cards").length) {
+                e_card_row.appendTo("#expired_cards");
+                e_card.removeClass("btn-outline-danger").removeClass("btn-outline-primary").addClass("btn-outline-warning");
+                if (!$("#expired_cards").is(":visible")) {
+                    $("#expired_cards").slideDown(200);
+                }
+            }
+
+            //if (# => active card)
+            if (active === true && valid_date === true && !e_card.closest("#active_cards").length) {
+                e_card_row.appendTo("#active_cards");
+                e_card.removeClass("btn-outline-danger").removeClass("btn-outline-warning").addClass("btn-outline-primary");
+            }
+
+            show_card_box();
+        }
+        function show_card_box() {
+            if ($("#deactive_cards").find(".credit_card").length) {
+                if (!$("#deactive_cards_box").is(":visible")) {
+                    $("#deactive_cards_box").show();
+                }
+            } else if ($("#deactive_cards_box").is(":visible")) {
+                $("#deactive_cards_box").hide();
+            }
+
+            if ($("#expired_cards").find(".credit_card").length) {
+                if (!$("#expired_cards_box").is(":visible")) {
+                    $("#expired_cards_box").show();
+                }
+            } else if ($("#expired_cards_box").is(":visible")) {
+                $("#expired_cards_box").hide();
+            }
+        }
+
+        function checkCardType(el) {
+            $(el).parent("div._input").find(".cardIcon").attr('class', `cardIcon ${CardType($(el).val())}`)
+        }
+    </script>
+}
+
+@section content_header{
+
+    @if (isAgent)
+    {
+        return;
+    }
+    <div class="col-md-12" style="padding:0;">
+
+        <div class="col-md-8 header-left" style="padding:0; padding-right:30px; padding-top:10px; float:left;">
+            @*@if (goBack)
+            {*@
+                <button class="btn btn-sm btn-outline-primary" style="border:none;margin-right:10px" onclick="history.back()"><i class="fa fa-arrow-left"></i><b> Back</b></button>
+            @*}*@
+            <b>Transaction history</b>
+            @*<button type="button" class="btn btn-sm" onclick="document.getElementById('invoice-view').contentWindow.print()" style="float: left"><i class="fa fa-print"></i> Print</button>*@
+
+        </div>
+        <div class="col-md-4 header-right" style="text-align:right; float:right; margin-top:6px">
+            <div style="float:right; padding-top:10px"><span>Wellcome, <b>@(Model?.BusinessName ?? Model?.OwnerName)</b>!</span></div>
+        </div>
+    </div>
+}
+
+@section content_left {
+    @if (isAgent)
+    {
+        return;
+    }
+    <div class="col-md-8 content-left custom-scroll" style="margin:10px 0; overflow-y: auto;max-height: 75vh;">
+
+        @*<div class="form-control">
+                <label>Card Number:</label><label></label>
+            </div>*@
+
+        <div>
+            <table class="table dataTable">
+                <thead>
+                    <tr>
+                        <th></th>
+                        @*<th>At</th>*@
+                        <th>Invoice #</th>
+                        @*<th>Type</th>*@
+                        <th>Amount</th>
+                        <th>Status</th>
+
+                    </tr>
+                </thead>
+                <tbody id="list_his">
+                    @foreach (var t in Transactions)
+                    {
+                        <tr>
+                            <td>@t.Card_id</td>
+
+                            <td>
+                                <b><a href="#" onclick="show_order('@t.order', '@(t.createAt.HasValue?t.createAt.Value.ToString("MMM dd, yyyy"):"")', '@(t.invoice_date.HasValue?t.invoice_date.Value.ToString("MMM dd, yyyy"):"")', '@(t.status)', '@(t.amount)', '@t.noty', @(t.order_pending?"true":"false"))" style="color:dodgerblue">#@t.order</a></b>
+                                <br />
+                                @( Html.Raw(t.createAt.Value.ToString("MMM dd, yyyy")))
+                            </td>
+                            @*<td>@t.type</td>*@
+                            <td>$@t.amount</td>
+                            <td>
+                                @if (t.status == "Success" || t.status == "Approved")
+                                {
+                                    <label class="label label-success">Success</label>
+                                }
+                                else
+                                {
+                                    <label class="label label-warning">Fail</label>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@section content_right {
+    @if (isAgent)
+    {
+        return;
+    }
+    <div id="card_info_show" style="position:absolute;right:0; margin-right:0;opacity:0; background-color: #fff; width:33%; display:none; z-index:9999">
+
+        <div id="card_info" class="row" style="font-size:16px; border: 1px solid lightgray; border-radius:5px;padding: 20px;">
+            <div class="col-md-12" style="margin-bottom:10px">
+                <button class="btn btn-default btn-sm" onclick="$('#card_info_show').animate({ marginRight: 0, opacity: 0 }, 200, function () { $('#card_info_show').hide() })" style="float:right; margin-right: -20px; margin-top:-20px; height: 25px"><i class="fa fa-close" style="vertical-align:top"></i></button>
+            </div>
+            <input type="hidden" id="CardId" value="" />
+            <div class="col-md-12 pull-left">
+                <div class="_input" style="width:100%">
+                    <div class="card-view creditCardInput" style="padding: 0;line-height: unset;top: 20px;left: 5px;">
+                        <i class="fa fa-credit-card pull-left" style="margin-top:2px;position: absolute;font-size: 20px;"></i>
+                        <div class="cardIcon @(default_card?.CardType)"></div>
+                    </div>
+                    <input class="_text req" type="number" id="CardNumber" readonly style="text-indent: 25px;font-weight:bolder;font-size:17px; color:#007bff" placeholder="@(default_card?.CardNumber)" />
+                    <span class="_label" style="left: 40px">Card number</span>
+                </div>
+            </div>
+            <div class="col-md-6 pull-left">
+                <div class="_input">
+                    <input class="_text req" id="CardExpiry" name="CardExpiry" required value="@(default_card?.CardExpiry)" />
+                    <span class="_label">Expired (MM/YY) <span style="color:red">*</span></span>
+                </div>
+            </div>
+            <div class="col-md-6 pull-left">
+                <div class="_input">
+                    <input class="_text req CardCSC" id="CardCSC" readonly placeholder="****" />
+                    <span class="_label">CSC <span style="color:red">*</span></span>
+                </div>
+            </div>
+            <div class="col-md-12 pull-left">
+                <div class="_input">
+                    <input class="_text" id="CardHolderName" name="CardHolderName" required value="@(default_card?.CardHolderName)" autocomplete="nope" />
+                    <span class="_label">Holder Name <span style="color:red">*</span></span>
+                </div>
+            </div>
+            <div class="col-md-12 pull-left">
+                <div class="_input">
+                    <input class="_text" id="CardAddressStreet" name="CardAddressStreet" required value="@(default_card?.CardAddressStreet)" autocomplete="nope" />
+                    <span class="_label">Street address <span style="color:red">*</span></span>
+                </div>
+            </div>
+            <div class="col-md-6 pull-left">
+                <div class="_input">
+                    <input class="_text" id="CardZipCode" name="CardZipCode" required value="@(default_card?.CardZipCode)" autocomplete="nope" />
+                    <span class="_label">Postal code <span style="color:red">*</span></span>
+                </div>
+            </div>
+
+            @*<div class="col-md-6 pull-left">
+                    <div class="_input">
+                        <input class="_text"  id="CardCity" name="CardCity" value="@(default_card?.CardCity)" autocomplete="nope"/>
+                        <span class="_label">City</span>
+                    </div>
+                </div>*@
+            @*<div class="col-md-6 pull-left">
+                    <div class="_input">
+                        <input class="_text"  id="CardState_input" value="@(default_card?.CardState)" autocomplete="nope"/>
+                        <span class="_label">State</span>
+                    </div>
+                </div>*@
+            @*<div class="col-md-6 pull-left">
+                    <div class="_input">
+                        <select class="_text" id="CardState_select">
+                            @foreach (var state in states)
+                            {
+                                <option value="@state.abbreviation">@state.name</option>
+                            }
+                        </select>
+                        <span class="_label">State</span>
+                    </div>
+                </div>*@
+            <!--<div class="col-md-6 pull-right">
+                <div class="_input">-->
+            @*<input class="_text"  id="CardCountry_read" value="@(default_card?.CardCountry)" />*@
+            <!--<select class="_text" id="CardCountry" name="CardCountry">
+                        @foreach (var c in country)
+                        {
+                            <option value="@c.Name" @if (c.Name.Equals(default_card?.CardCountry ?? "United States")) { @Html.Raw("selected") }>@c.Name</option>
+                        }
+                    </select>
+                    <span class="_label">Country</span>
+                </div>
+            </div>-->
+
+            <div class="col-md-6 pull-left">
+                <div class="_input">
+                    <input class="_text" id="CardPhone" name="CardPhone" value="@(default_card?.CardPhone)" autocomplete="nope" />
+                    <span class="_label">Phone</span>
+                </div>
+            </div>
+            <div class="col-md-12 pull-left">
+                <div class="_input">
+                    <input class="_text" id="CardEmail" name="CardEmail" value="@(default_card?.CardEmail)" autocomplete="nope" />
+                    <span class="_label">Email</span>
+                </div>
+            </div>
+
+            <div class="col-md-12 pull-left">
+                <button type="button" id="btn_save" onclick="save_edit()" class="btn btn-primary pull-right"><i class="fa fa-check"></i> Save</button>
+            </div>
+
+            <div id="btn_group" class="col-md-12 pull-left" style="@(default_card==null?"display:none;":"") border-top: 1px solid lightgray;padding-top:10px; margin-top:10px">
+                <input type="checkbox" id="card_active" checked="@(default_card?.Active==true?"true":"false")" data-toggle="toggle" data-width="100" data-height="29" data-size="small" data-onstyle="danger" data-offstyle="success" data-on="Deactive" data-off="Active">
+                <input type="checkbox" id="card_default" checked="@(default_card?.IsDefault==true?"true":"false")" data-toggle="toggle" data-width="110" data-height="29" data-size="small" data-onstyle="primary" data-offstyle="secondary" data-on="Default" data-off="Make default">
+            </div>
+
+        </div>
+    </div>
+    <div class="col-md-4 content-right" style="padding:0; padding-top:10px">
+        <div class="col-md-12" style="padding:0; overflow-x:hidden;">
+            <div id="pay_slide" style="width:200%">
+                <form action="/PaymentGate/Card/AddNewCard" method="post">
+                    <input type="hidden" name="CardId" value="@(cards.FirstOrDefault(card => card.IsDefault)?.Id)" />
+                    <input type="hidden" name="CustomerCode" value="@(Model?.CustomerCode)" />
+                    <div class="col-md-6 custom-scroll" style='float:left;max-height: 75vh; overflow-y: auto; @if (cards.Count == 0){ @Html.Raw("display: none;")}'>
+                        <div id="active_cards" style="text-align:center; ">
+                            @foreach (var card in cards)
+                            {
+                                <div class="credit_card_row">
+                                    <div class="col-10 btn btn-outline-primary pull-left credit_card @if (card.IsDefault){ @Html.Raw("active")}" onclick="select_credit(this, '@card.Id')" style="margin-bottom:10px"
+                                         id="@card.Id" data-status="active">
+                                        <div class="card-view creditCardInput" style="width: fit-content;float: left;padding: 0;line-height: unset;">
+                                            <i class="fa fa-credit-card pull-left" style="margin:2px 0;position: absolute;font-size: 20px;"></i>
+                                            <div class="cardIcon @(Ext.EnumParse<ECardType>(card.CardType).Code<string>())"></div>
+                                        </div>
+                                        <b>@card.CardNumber<span class="label label-warning" style="margin-left: 10px;@if (card.IsDefault == false){ @Html.Raw("display:none;")}">default</span></b>
+                                    </div>
+                                    <div class="col-2 pull-right" style="margin:0; padding:0;padding-left:10px;">
+                                        <button type="button" class="btn btn-outline-warning edit_btn" onclick="show_credit('@card.Id')" style="width:100%"> <i class="fa fa-pencil"></i></button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        <div id="deactive_cards_box" class="btn btn-default" style="width:100%; margin-bottom:10px">
+                            <i class="fa fa-caret-down"></i> Deactive Cards
+                            <div id="deactive_cards" style="text-align:center; display:none; background-color:#fff">
+                                @foreach (var card in deactive_cards)
+                                {
+
+                                    <div class="credit_card_row">
+                                        <div class="col-md-10 btn btn-outline-danger credit_card pull-left" onclick="select_credit(this, '@card.Id')" data-status="deactive" style="margin-bottom:10px"
+                                             id="@card.Id">
+                                            <div class="card-view creditCardInput" style="width: fit-content;float: left;padding: 0;line-height: unset;">
+                                                <i class="fa fa-credit-card pull-left" style="margin:2px 0;position: absolute;font-size: 20px;"></i>
+                                                <div class="cardIcon @(Ext.EnumParse<ECardType>(card.CardType).Code<string>())"></div>
+                                            </div>
+                                            <b>@card.CardNumber<span class="label label-warning" style="margin-left: 10px;@if (card.IsDefault == false){ @Html.Raw("display:none;")}">default</span></b>
+                                        </div>
+                                        <div class="col-md-2 pull-right" style="margin:0; padding:0;padding-left:10px;">
+                                            <button type="button" class="btn btn-outline-warning edit_btn" onclick="show_credit('@card.Id')" style="width:100%"> <i class="fa fa-pencil"></i></button>
+                                        </div>
+                                    </div>
+                                }
+
+                            </div>
+                        </div>
+                        <div id="expired_cards_box" class="btn btn-default" style="width:100%;">
+                            <i class="fa fa-caret-down"></i> Expried Cards
+                            <div id="expired_cards" style="text-align:center; display:none; background-color:#fff">
+                                @foreach (var card in expired_cards)
+                                {
+                                    <div class="credit_card_row">
+                                        <div class="col-md-10 btn btn-outline-warning credit_card pull-left" onclick="select_credit(this, '@card.Id')" data-status="expired" style="margin-bottom:10px"
+                                             id="@card.Id">
+                                            <div class="card-view creditCardInput" style="width: fit-content;float: left;padding: 0;line-height: unset;">
+                                                <i class="fa fa-credit-card pull-left" style="margin:2px 0;position: absolute;font-size: 20px;"></i>
+                                                <div class="cardIcon @(Ext.EnumParse<ECardType>(card.CardType).Code<string>())"></div>
+                                            </div>
+                                            <b>@card.CardNumber<span class="label label-warning" style="margin-left: 10px;@if (card.IsDefault == false){ @Html.Raw("display:none;")}">default</span></b>
+                                            @*<i class="fa fa-credit-card pull-left" style="margin-top:4px;"></i>
+                                                <b> @card.CardNumber </b>*@
+                                        </div>
+                                        <div class="col-md-2 pull-right" style="margin:0; padding:0;padding-left:10px;">
+                                            <button type="button" class="btn btn-outline-warning edit_btn" onclick="show_credit('@card.Id')" style="width:100%"> <i class="fa fa-pencil"></i></button>
+                                        </div>
+                                    </div>
+
+                                }
+
+                            </div>
+                        </div>
+
+                        <div style="text-align:center; margin:5px auto; clear:both">
+                            <b style=" background-color: #fff; padding: 2px;">--------------------------------------</b>
+                        </div>
+                        <button type="button" class="btn btn-success btn-slide-new-card" style="width:100%; font-weight:bold" data-value="new" onclick="addNewCard()">Add new card</button>
+                    </div>
+                    <div id="new_credit" class="col-md-6 custom-scroll" style="float:right;max-height: 75vh; overflow-y: auto; display: none;">
+                        <input type="hidden" name="CardId" value="" />
+                        <div style="padding:5px">
+                            <lable class="btn btn-sm btn-outline-primary btn-prev-list-card" style="border:none" onclick="prev()"><i class="fa fa-arrow-left"></i><b> Back</b></lable>
+                            @if (cards.Count == 0)
+                            {
+                                @Html.Raw("Input your first card!")
+                            }
+                        </div>
+                        <div class="creditCardInput" style="height:40px; width:100%; border: solid 1px #e3e3e3; border-radius:5px; background-color:#f2f3f4; margin-bottom:10px">
+                            <div class="cardIcon VISA"></div>
+                            <div class="cardIcon AMEX"></div>
+                            <div class="cardIcon MASTERCARD"></div>
+                            <div class="cardIcon ELECTRON"></div>
+                            <div class="cardIcon MAESTRO"></div>
+                            <div class="cardIcon JCB"></div>
+                            <div class="cardIcon DISCOVER"></div>
+                        </div>
+                        <div class="_input">
+                            <div class="card-view creditCardInput" style="padding: 0;line-height: unset;top: 20px;left: 5px;">
+                                <i class="fa fa-credit-card pull-left" style="margin-top:2px;position: absolute;font-size: 20px;"></i>
+                                <div class="cardIcon"></div>
+                            </div>
+                            <input style="text-indent: 25px" class="_text req" type="number" name="CardNumber" value="" required onchange="checkCardType(this)" />
+                            <span class="_label" style="left: 40px">Card number <span style="color:red">*</span></span>
+                        </div>
+                        <div class="col-md-6" style="float:left; padding-left:0; padding-right:3px">
+                            <div class="_input">
+                                <input class="_text req" id="new_card_expiry" name="CardExpiry" value="" required />
+                                <span class="_label">Expired (MM/YY) <span style="color:red">*</span></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6" style="float:left;  padding-left:3px; padding-right:0">
+                            <div class="_input">
+                                <input class="_text CardCSC" name="CardCSC" value="" required />
+                                <span class="_label">CSC <span style="color:red">*</span></span>
+                            </div>
+                        </div>
+                        <div class="col-md-12" style="float:left; padding-left:0; padding-right:3px">
+                            <div class="_input">
+                                <input class="_text" name="CardHolderName" value="" autocomplete="off" required />
+                                <span class="_label">Holder Name <span style="color:red">*</span></span>
+                            </div>
+                        </div>
+
+
+                        <hr />
+                        <div style="text-align:center; margin-top: -20px;">
+                            <b style=" background-color: #fff; padding: 5px;">-----------------------------------</b>
+                        </div>
+                        <div class="col-md-12" style="float:left; padding:0">
+                            <div class="_input">
+                                <input class="_text" name="CardAddressStreet" value="@(Model?.SalonAddress1)" autocomplete="nope" />
+                                <span class="_label">Street address <span style="color:red">*</span></span>
+                            </div>
+                        </div>
+                        @*<div class="col-md-6" style="float:left;  padding-left:0; padding-right:3px">
+                                <div class="_input">
+                                    <input class="_text"  name="CardCity" value="@(Model?.SalonCity)" autocomplete="nope"/>
+                                    <span class="_label">City <span style="color:red">*</span></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6" style="float:left;display:none; padding-left:0; padding-right:3px">
+                                <div class="_input">
+                                    <input class="_text"  name="CardState" disabled value="@(Model?.SalonState)" autocomplete="nope"/>
+                                    <span class="_label">State</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6" style="float:left;  padding-left:0; padding-right:3px">
+                                <div class="_input">
+                                    <select class="_text" name="CardState">
+                                        @foreach (var state in states)
+                                        {
+                                            <option value="@state.abbreviation" @if (state.abbreviation.Equals(Model?.SalonState)) { @Html.Raw("selected") }>@state.name</option>
+                                        }
+                                    </select>
+                                    <span class="_label">State</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6 _input" style="float:left; padding-left:0; padding-right:3px">
+                                <select class="_text" name="CardCountry">
+                                    @foreach (var c in country)
+                                    {
+                                        <option value="@c.Name" @if (c.Name.Equals(Model?.BusinessCountry ?? "United States")) { @Html.Raw("selected") }>@c.Name</option>
+                                    }
+                                </select>
+                                <span class="_label">Country/Region</span>
+                            </div>*@
+                        <div class="col-md-6" style="float:right;  padding-left:3px; padding-right:0">
+                            <div class="_input">
+                                <input class="_text" name="CardZipCode" value="@(Model?.SalonZipcode)" autocomplete="nope" />
+                                <span class="_label">Postal code <span style="color:red">*</span></span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6" style="float:left; padding:0">
+                            <div class="_input">
+                                <input class="_text" name="CardPhone" value="" autocomplete="nope" />
+                                <span class="_label">Phone number</span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-12" style="float:left; padding:0">
+                            <div class="_input">
+                                <input class="_text " name="CardEmail" value="" autocomplete="nope" />
+                                <span class="_label">Email</span>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary pay-with-new-card" style="width:100%; font-weight:bold">Submit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="modal fade" id="Invoice" role="dialog">
+    <div class="modal-dialog modal-content" style="min-width:700px">
+        <div class="modal-header">
+            <div class="modal-title pull-left"><h4>View Invoice</h4></div>
+            <button type="button" class="btn btn-sm btn-warning" style="float:right; margin-left:20px" onclick="document.getElementById('invoice-view').contentWindow.print()"><i class="fa fa-print"></i> Print</button>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="modal-body" style="">
+            <div class="col-md-12" style=" background-color: #f3f3f3;text-align:center; padding:20px 10px">
+                <table class="table" style="width:100%; max-width:400px; margin:auto;margin-top:10px">
+                    <tbody>
+                        <tr>
+                            <td style="text-align:left">Invoice</td>
+                            <td style="text-align:right" >#<span class="invoice_code"></span></td>
+                        </tr>
+                        <tr>
+                            <td style="text-align:left">Invoice Date</td>
+                            <td style="text-align:right" class="invoice_date"></td>
+                        </tr>
+                        <tr>
+                            <td  style="text-align:left" colspan="2">
+                                <span class="pull-left">Status</span><span class=" pull-right"><label class="invoice_status label"></label></span><br />
+                                <i class="declined_noty" style="font-size:.7em; color:red; padding:0;display:block"></i>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="text-align:left">Paid Date</td>
+                            <td style="text-align:right" class="pay_date"></td>
+                        </tr>
+                        <tr style="border-top: 1px solid gray">
+                            <th style="text-align:left">Total</th>
+                            <th style="text-align:right" class="total"></th>
+                        </tr>
+                    </tbody>
+                </table>
+                <button id="show_invoice_btn" class="btn btn-outline-dark" style="border-radius:20px; margin:auto;width:400px; max-width:100%" onclick="$('#invoice-view').toggle(200);$('#show_invoice_btn').toggleClass('active')">View Invoice</button>
+                <div id="invoice-div" style="padding-top: 10px;">
+                    <iframe width='100%' height='100%' style="border: none; height: 450px;display:none" id="invoice-view" data-src='@host/order/ImportInvoiceToPDF?_code=%code%&flag=Invoice'></iframe>
+                </div>
+                <button id="pay_invoice_btn" class="btn btn-outline-success" style="border-radius:20px; margin:auto;width:400px; max-width:100%;" onclick="window.location.href=('/PaymentGate/Card/gotoPayment?OrdersCode='+$('#Invoice .invoice_code').text())">Pay</button>
+
+            </div>
+        </div>
+    </div>
+</div>

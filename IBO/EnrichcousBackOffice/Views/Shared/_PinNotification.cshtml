@@ -1,0 +1,219 @@
+﻿<style>
+    .pin-notification {
+        position: absolute;
+        top: 0;
+        right: 0;
+        padding-top: 50px;
+        background: white;
+        min-height: 100%;
+        width: 256px;
+        z-index: 999;
+        border-left: 1px solid #e0e0e0;
+    }
+
+    .pin-tab-notification-content ul {
+        list-style: none;
+     
+        padding-left: 0px;
+    }
+    .pin-notification-wrapper {
+        width: 100%;
+        max-height: calc(100vh - 140px) !important;
+        overflow-x:hidden;
+        overflow-y:scroll;
+    }
+    .fixed-pin-notification {
+        position: fixed;
+        width: 256px;
+        top: 0px;
+    }
+    .pin-notification-wrapper::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    /* Track */
+        .pin-notification-wrapper::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 5px;
+        }
+
+    /* Handle */
+        .pin-notification-wrapper::-webkit-scrollbar-thumb {
+            background: #adadad;
+            border-radius: 5px;
+        }
+
+        /* Handle on hover */
+            .pin-notification-wrapper::-webkit-scrollbar-thumb:hover {
+                background: #adadad;
+            }
+        .pin-notification-wrapper .notification-item:hover .notification-more-button{
+            margin:0px;
+        }
+        .pin-notification-wrapper .notification-item .notification-more-button {
+            float: right;
+        }
+        .pin-notification-wrapper .notification-item {
+            padding-bottom: 5px;
+            border-bottom: 1px solid #f4f4f4;
+            margin-bottom: 5px;
+            padding-right: 5px;
+        }
+     .pin-notification-wrapper a{
+         color:#444;
+    }
+        .pin-notification-wrapper .notification-mark-read-icon {
+            top: 11px;
+            left: 5px;
+        }
+        .pin-notification-wrapper .update-ticket-notification-wrapper{
+            margin-bottom:4px;
+        }
+        .pin-notification-wrapper .notifications-groups{
+            font-size:16px;
+        }
+    .pin-notification-wrapper b{
+        font-weight:600;
+    }
+        .pin-notification-wrapper .notification-more-button{
+            position:absolute;
+            top:0;
+            right:0;
+        }
+        .pin-notification-wrapper .update-ticket-notification {
+            padding: 0px 0px;
+        }
+        .pin-notification-wrapper .notification-time{
+            float:none;
+            margin-bottom:3px;
+        }
+    .nav-tabs-notification li {
+        font-size: 15px !important;
+        background-color: white !important;
+    }
+    .nav-tabs-notification li:not(.active) {
+       border:none !important;
+    }
+    .nav-tabs-notification  .tab-nav-item-notification a {
+        padding: 10px 15px !important;
+    }
+</style>
+<div id="pin-notification-main-wrapper" class="pin-notification">
+    <div id="notification-content" class="nav-tabs-custom" style="padding:0px;margin-top:3px;">
+        <ul class="nav nav-tabs nav-tabs-notification">
+               <li data-type="all" class="tab-nav-item-notification"><a href="#tab_1" data-toggle="tab">All</a></li>
+            <li data-type="unread" class="tab-nav-item-notification"><a href="#tab_2" data-toggle="tab">Unread (<span><span id="count-unread"></span></span>)</a></li>
+            <li data-type="read" class="tab-nav-item-notification"><a href="#tab_3" data-toggle="tab">Read</a></li>
+          
+            <li class="pull-right"><a id="pin-notification-button" style="transform: rotate(0deg); -ms-transform: rotate(0deg);transform: translateY(5px);margin-right:15px;" title="unpin notification"  href="#" class="text-muted"><i class="fa fa-thumb-tack" aria-hidden="true"></i></a></li>
+        </ul>
+        <div style="padding:0px;">
+            <div class="tab-notification-content pin-tab-notification-content">
+                <ul class="menu pin-notification-wrapper notification-wrapper">
+                    <li><a id="markAllRead" onclick="markAllRead()" href="#">Mark as all read</a></li>
+
+                    <li class="loader-content-noti">
+                        <div class="animated-background">
+                            <div class="background-masker header-top"></div>
+                            <div class="background-masker header-left"></div>
+                            <div class="background-masker header-right"></div>
+                            <div class="background-masker header-bottom"></div>
+                            <div class="background-masker subheader-left"></div>
+                            <div class="background-masker subheader-right"></div>
+                            <div class="background-masker subheader-bottom"></div>
+                            <div class="background-masker content-top"></div>
+                            <div class="background-masker content-first-end"></div>
+                            <div class="background-masker content-second-line"></div>
+                            <div class="background-masker content-second-end"></div>
+                            <div class="background-masker content-third-line"></div>
+                            <div class="background-masker content-third-end"></div>
+                        </div>
+                    </li>
+                    <li class="loader-content-noti">
+                        <div class="animated-background">
+                            <div class="background-masker header-top"></div>
+                            <div class="background-masker header-left"></div>
+                            <div class="background-masker header-right"></div>
+                            <div class="background-masker header-bottom"></div>
+                            <div class="background-masker subheader-left"></div>
+                            <div class="background-masker subheader-right"></div>
+                            <div class="background-masker subheader-bottom"></div>
+                            <div class="background-masker content-top"></div>
+                            <div class="background-masker content-first-end"></div>
+                            <div class="background-masker content-second-line"></div>
+                            <div class="background-masker content-second-end"></div>
+                            <div class="background-masker content-third-line"></div>
+                            <div class="background-masker content-third-end"></div>
+                        </div>
+                    </li>
+                    <li class="loader-content-noti">
+                        <div class="animated-background">
+                            <div class="background-masker header-top"></div>
+                            <div class="background-masker header-left"></div>
+                            <div class="background-masker header-right"></div>
+                            <div class="background-masker header-bottom"></div>
+                            <div class="background-masker subheader-left"></div>
+                            <div class="background-masker subheader-right"></div>
+                            <div class="background-masker subheader-bottom"></div>
+                            <div class="background-masker content-top"></div>
+                            <div class="background-masker content-first-end"></div>
+                            <div class="background-masker content-second-line"></div>
+                            <div class="background-masker content-second-end"></div>
+                            <div class="background-masker content-third-line"></div>
+                            <div class="background-masker content-third-end"></div>
+                        </div>
+                    </li>
+                    <li class="loader-content-noti">
+                        <div class="animated-background">
+                            <div class="background-masker header-top"></div>
+                            <div class="background-masker header-left"></div>
+                            <div class="background-masker header-right"></div>
+                            <div class="background-masker header-bottom"></div>
+                            <div class="background-masker subheader-left"></div>
+                            <div class="background-masker subheader-right"></div>
+                            <div class="background-masker subheader-bottom"></div>
+                            <div class="background-masker content-top"></div>
+                            <div class="background-masker content-first-end"></div>
+                            <div class="background-masker content-second-line"></div>
+                            <div class="background-masker content-second-end"></div>
+                            <div class="background-masker content-third-line"></div>
+                            <div class="background-masker content-third-end"></div>
+                        </div>
+                    </li>
+                    <li class="loader-content-noti">
+                        <div class="animated-background">
+                            <div class="background-masker header-top"></div>
+                            <div class="background-masker header-left"></div>
+                            <div class="background-masker header-right"></div>
+                            <div class="background-masker header-bottom"></div>
+                            <div class="background-masker subheader-left"></div>
+                            <div class="background-masker subheader-right"></div>
+                            <div class="background-masker subheader-bottom"></div>
+                            <div class="background-masker content-top"></div>
+                            <div class="background-masker content-first-end"></div>
+                            <div class="background-masker content-second-line"></div>
+                            <div class="background-masker content-second-end"></div>
+                            <div class="background-masker content-third-line"></div>
+                            <div class="background-masker content-third-end"></div>
+                        </div>
+                    </li>
+                    <li class="notification-nodata" style="padding: 10px;display: none;margin-top:20px;width: 100%;">
+                        <span>No notifications to display </span>
+                    </li>
+                </ul>
+            </div>
+      
+        </div>
+       
+    </div>
+   
+</div>
+<script>
+    $(window).bind('scroll', function () {
+        if ($(window).scrollTop() > 50) {
+            $('#notification-content').addClass('fixed-pin-notification');
+        } else {
+            $('#notification-content').removeClass('fixed-pin-notification');
+        }
+    });
+</script>

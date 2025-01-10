@@ -1,0 +1,185 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.CustomizeModel.T_SupportTicketKB_custom>
+@using EnrichcousBackOffice.Models.CustomizeModel
+@{
+    List<T_TicketCategory_custom> ListCategory = ViewBag.TicketCategory;
+
+    ViewBag.Title = "Knowledge base";
+
+}
+
+<style type="text/css">
+    .active-pink-2 input[type=text]:focus:not([readonly]) {
+        border-bottom: 1px solid #f48fb1;
+        box-shadow: 0 1px 0 0 #f48fb1;
+    }
+
+    .active-pink input[type=text] {
+        border-bottom: 1px solid #f48fb1;
+        box-shadow: 0 1px 0 0 #f48fb1;
+    }
+
+    .active-purple-2 input[type=text]:focus:not([readonly]) {
+        border-bottom: 1px solid #ce93d8;
+        box-shadow: 0 1px 0 0 #ce93d8;
+    }
+
+    .active-purple input[type=text] {
+        border-bottom: 1px solid #ce93d8;
+        box-shadow: 0 1px 0 0 #ce93d8;
+    }
+
+    .active-cyan-2 input[type=text]:focus:not([readonly]) {
+        border-bottom: 1px solid #4dd0e1;
+        box-shadow: 0 1px 0 0 #4dd0e1;
+    }
+
+    .active-cyan input[type=text] {
+        border-bottom: 1px solid #4dd0e1;
+        box-shadow: 0 1px 0 0 #4dd0e1;
+    }
+
+    .active-cyan .fa, .active-cyan-2 .fa {
+        color: #4dd0e1;
+    }
+
+    .active-purple .fa, .active-purple-2 .fa {
+        color: #ce93d8;
+    }
+
+    .active-pink .fa, .active-pink-2 .fa {
+        color: #f48fb1;
+    }
+</style>
+<section class="content-header">
+    <h1>
+        @ViewBag.Title
+        <small>Support</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li><i class="fa fa-life-ring"></i> Support</li>
+        <li class="active">@ViewBag.Title</li>
+    </ol>
+</section>
+<!-- Main content -->
+<section class="content">
+    <div class="row">
+        @if (TempData["error"] != null)
+        {
+            <div class="alert alert-warning alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-warning"></i> @TempData["error"]</span>
+            </div>
+        }
+        else if (TempData["success"] != null)
+        {
+            <div class="alert alert-success alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-check"></i> @TempData["success"]</span>
+            </div>
+        }
+
+
+
+        <div class="col-md-12">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">@ViewBag.Title</h3>
+                </div>
+                <div class="box-body">
+                    <div class="col-md-12">
+
+                        <!-- Search form -->
+                        <div class="col-md-9">
+                            <div class="md-form active-cyan active-cyan-2">
+                                <input class="form-control" type="text" id="inputSearch" placeholder="Search by ticket Id, ticket name...">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-default" type="button" onclick="Search($('#inputSearch').val())">Search</button>
+
+                        </div>
+                       
+                    </div>
+
+                    <div class="col-md-12"  style="margin-top:20px;">
+                        <!--List parent category-->
+                        <div id="partial_list_category">
+
+                            @Html.Partial("_PartialKB", Model)
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<script type="text/javascript">
+    $(function () {
+       
+        if (window.location.href.search(/goback/g) > 0) {
+
+            var search_content = sessionStorage.getItem("searchKB");
+            if (search_content) {
+                $("#inputSearch").val(search_content);
+                Search(search_content);
+            }
+
+        }
+
+
+        $("#inputSearch").keyup(function (e) {
+            if (e.keyCode == 13) {
+                Search($(this).val());
+            }
+        });
+
+    });
+
+    function SeeAllClick(CateId, Deylay) {
+
+        $('.HideSee-' + CateId).toggle(Deylay);
+        var btn = $('#btnsee-' + CateId);
+        btn.toggleClass('seeingall');
+        if (btn.hasClass('seeingall'))
+            btn.text('Show less...<<');
+        else
+            btn.text('>>Show all...');
+    }
+
+
+    function Search(SearchText) {
+
+        
+        //save "show all" category
+        var see = $(".PartialCateId");
+        //var list = [];
+        //for (var i = 0; i < see.length; i++) {
+        //    if ($('#btnsee-'+see[i].value).hasClass('seeingall'))
+        //        list.push(see[i].value);
+        //}
+        $.ajax({
+            method: "POST",
+            url: "/kb/SearchKB",
+            data: { SearchText },
+            dataType: "html"
+        })
+            .done(function (data) {
+                $('#partial_list_category').empty();
+                $('#partial_list_category').html(data);
+                //load "show all" category
+                //for (var i = 0; i < list.length; i++) {
+                //    SeeAllClick(list[i], 0);
+                //}
+
+                sessionStorage.setItem("searchKB", SearchText);
+
+            })
+            .fail(function () {
+                alert("Oops! Something went wrong");
+                $("#modal-default").modal('hide');
+            })
+    }
+</script>
+

@@ -1,0 +1,263 @@
+﻿@model EnrichcousBackOffice.Models.C_CustomerSupportingInfo
+@using EnrichcousBackOffice.Models
+@using Newtonsoft.Json
+@{
+    C_Customer Customer = ViewBag.Customer as C_Customer;
+    List<C_CustomerContact> contacts = ViewBag.Contacts;
+    List<Order_Products> Hardwares = ViewBag.Hardwares as List<Order_Products>;
+    List<Store_Services> Services = ViewBag.Services as List<Store_Services>;
+
+}
+
+<style>
+    .panel_fieldset {
+        margin-top: 10px;
+        /*  border: 1px dotted var(--main-color-1);
+        background-color: #ffffff;*/
+    }
+
+    .name_fieldset {
+        padding: 0px 20px;
+        font-size: 1.2em;
+        display: inline-block;
+        transform: translateY(-9px);
+        background-color: #ffffff;
+        color: #076aa4;
+    }
+</style>
+<div class="box box-primary box-solid" style="border-radius:unset">
+    <div class="box-header with-border">
+        <h4 class="box-title">Support Info</h4>
+    </div>
+    <div class="box-body">
+        <div @*id="" style="padding: 1rem;-webkit-box-shadow: 0 1px 5px 0 rgb(0 0 0 / 30%);box-shadow: 0 1px 5px 0 rgb(0 0 0 / 30%);border-radius: 1rem;"*@>
+            <div class="" style="overflow: auto; padding: 0 15px;">
+                <button class="btn btn-warning pull-right" onclick="update_merchant('@ViewBag.CustomerID', true, 'mn_supporting')"><i class="fa fa-pencil-square-o" aria-hidden="true"></i> Update</button>
+                <div class="row panel_fieldset">
+                    <span class="name_fieldset">Salon</span><br />
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label class="control-label">Login email:</label><span>
+                                @(Customer.MangoEmail ?? "___") / <span id="Password_hidden_ov">******</span>
+                                <i class="fa fa-eye eye-icon-password-ov" onclick="show_pass_customer_ov()" style="color:#258e4f; cursor:pointer"></i>
+                            </span>
+                        </div>
+                    </div>
+                    @*<div class="col-md-6">
+                <div class="form-group">
+                    <label class="control-label">Password:</label>
+                    <span id="Password_hidden">******</span>
+                    <i class="fa fa-eye eye-icon-password" onclick="show_pass_customer()" style="color:#258e4f; cursor:pointer"></i>
+                </div>
+            </div>*@
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label class="control-label">Remote login:</label>
+                            @if (!string.IsNullOrEmpty(Model.RemoteLogin))
+                            {
+                                <span id="Remote_hidden_ov">******</span>
+                                <i class="fa fa-eye eye-icon-remote-ov" onclick="show_remote_customer_ov()" style="color:#258e4f; cursor:pointer"></i>
+                            }
+                            else
+                            {
+                                <span>N/A</span>
+                            }
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label class="control-label">Account Manager:</label>
+                            @if (!string.IsNullOrEmpty(Customer.MemberNumber))
+                            {
+                                <span>#@Customer.MemberNumber - @(Customer.FullName??"N/A")</span>
+                            }
+                            else
+                            {
+                                <span>N/A</span>
+                            }
+
+                        </div>
+                    </div>
+                </div>
+                <hr />
+                <div class="row panel_fieldset">
+                    <span class="name_fieldset">Contact</span><br />
+                    <div class="col-md-12">
+                        <table class="table table-hover table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Authorization/Relationship</th>
+                                    <th>Email</th>
+                                    <th>Phone number</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>@Customer.ContactName</td>
+                                    <td><span class="label label-default">Owner</span></td>
+                                    <td>@Customer.Email</td>
+                                    <td>@Customer.CellPhone</td>
+                                </tr>
+                                @foreach (var con in contacts)
+                                {
+                                    <tr>
+                                        <td>@con.Name</td>
+                                        <td>
+                                            @foreach (var re in con.Authorization.Split(','))
+                                            {
+                                                <span class="label label-default">@re</span>
+                                            }
+                                        </td>
+                                        <td>@con.Email</td>
+                                        <td>@con.PhoneNumber</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <hr />
+                <div class="row panel_fieldset">
+                    <div class="col-lg-12">
+                        <span class="name_fieldset">Services</span><br />
+                        <table class="table table-hover table-striped">
+                            <thead>
+                                <tr>
+                                    <th style="width:40%">Name</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var har in Services)
+                                {
+                                    <tr>
+                                        <td>
+                                            <b>@har.Productname</b><br />
+                                            @if (@har.Type == "license")
+                                            {
+                                                <label class="label label-primary" style="text-transform: capitalize">@har.Type</label>
+                                            }
+                                            else
+                                            {
+                                                <label class="label label-warning" style="text-transform: capitalize">@har.Type</label>
+                                            }
+
+                                        </td>
+                                        <td style="vertical-align:middle">
+                                            <span class="label label-success">Active</span>
+                                        </td>
+                                        <td>
+                                            <span>Effective date: @har.EffectiveDate.Value.ToString("MMM dd, yyyy")</span>
+                                            @if (har.RenewDate.HasValue)
+                                            {
+
+                                                <span>- </span> @har.RenewDate.Value.ToString("MMM dd, yyyy")
+                                                <br />
+                                                <label class="label label-default">Monthly</label>
+                                            }
+                                            else
+                                            {
+                                                <br />
+                                                <label class="label label-default">Onetime</label>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <hr />
+                <div class="row panel_fieldset">
+                    <span class="name_fieldset">Hardware</span><br />
+                    <div class="col-md-12">
+                        <table class="table table-hover table-striped">
+                            <thead>
+                                <tr>
+                                    <th style="width:40%">Product name</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var har in Hardwares)
+                                {
+                                    <tr>
+                                        <td>@har.ProductName</td>
+                                        <td>
+                                            @{
+                                                var productNumbers = (har.InvNumbers ?? har.SerNumbers ?? har.CusNumbers ?? "").Split(',').Where(s => !string.IsNullOrWhiteSpace(s));
+                                            }
+                                            @foreach (var num in productNumbers.Take(5))
+                                            {
+                                                <span class="label label-default label-product-number">@num</span>
+                                            }
+                                            @if (productNumbers.Count() == 0)
+                                            {
+                                                <span>N/A</span>
+                                            }
+                                            else if (productNumbers.Count() > 5)
+                                            {
+                                                <span class="btn btn-link" data-toggle="tooltip" title="@string.Join(", ", productNumbers)">more...</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                                @foreach (var har in (Model.MoreHardware ?? string.Empty).Split('|').Where(s => !string.IsNullOrWhiteSpace(s)))
+                                {
+                                    var hardware = JsonConvert.DeserializeObject<Order_Products>(har);
+                                    <tr id="more_product_@hardware.Id">
+                                        <td>@hardware.ProductName</td>
+                                        <td>@hardware.CusNumbers</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <hr />
+                <div class="row panel_fieldset">
+                    <span class="name_fieldset">Other information</span><br />
+                    <div class="col-md-12">
+                        <table class="table table-hover table-striped">
+                            <thead>
+                                <tr>
+                                    <th style="width:40%">Name</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var note in (Model.OtherNotes ?? string.Empty).Split('|').Where(s => !string.IsNullOrWhiteSpace(s)))
+                                {
+                                    var itemNote = (note ?? string.Empty).Split(',');
+                                    <tr id="other_note_@itemNote.First()">
+                                        <td class="breakline">@itemNote.Skip(1).First()</td>
+                                        <td class="breakline">@itemNote.Last()</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function show_pass_customer_ov() {
+        $('.eye-icon-password-ov').toggleClass('fa-eye fa-eye-slash');
+        if ($('#Password_hidden_ov').html() == '******')
+            $('#Password_hidden_ov').html('@Customer.Password');
+        else
+            $('#Password_hidden_ov').html('******');
+    }
+    function show_remote_customer_ov() {
+        $('.eye-icon-remote-ov').toggleClass('fa-eye fa-eye-slash');
+        if ($('#Remote_hidden_ov').html() == '******')
+            $('#Remote_hidden_ov').html('@Model.RemoteLogin');
+        else
+            $('#Remote_hidden_ov').html('******');
+    }
+</script>

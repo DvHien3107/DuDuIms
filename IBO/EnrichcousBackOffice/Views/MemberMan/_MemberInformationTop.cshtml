@@ -1,0 +1,100 @@
+﻿@model EnrichcousBackOffice.Models.P_Member
+@using EnrichcousBackOffice.Models
+@using EnrichcousBackOffice.AppLB
+
+@{
+ 
+    var memLevel = ViewBag.MemLevel as P_MemberLevel;
+    var listDistributor = ViewBag.ListEmployees as List<P_Member>;
+ 
+    var cMem = Authority.GetCurrentMember();
+    Dictionary<string, bool> p = ViewBag.p;
+
+    string picture;
+    if (string.IsNullOrWhiteSpace(Model.Picture))
+    {
+        if (Model.Gender?.Equals("Male", StringComparison.InvariantCultureIgnoreCase) == true)
+        {
+            picture = "/Upload/Img/Male.png";
+        }
+        else
+        {
+            picture = "/Upload/Img/Female.png";
+        }
+    }
+    else
+    {
+        picture = Model.Picture;
+    }
+}
+<div class="box-body box-profile">
+    <div class="row" style="display:flex; align-items:center">
+        <div class="col-md-4">
+            @if (string.IsNullOrEmpty(Model.Picture) == true)
+            {
+                if (Model?.Gender == "Male")
+                {
+                    <img class="profile-user-img img-responsive img-circle" src="/Upload/Img/Male.png" alt="User profile picture">
+                }
+                else
+                {
+                    <img class="profile-user-img img-responsive img-circle" src="/Upload/Img/Female.png" alt="User profile picture">
+                }
+            }
+            else
+            {
+                <img class="profile-user-img img-responsive img-circle" style="height:100px;object-fit:cover" src="@picture" alt="User profile picture">
+            }
+            <h3 class="profile-username text-center">@Model.FullName <br /><span style="font-size:12px;font-style:italic"> (#@Model.MemberNumber)</span></h3>
+           
+        </div>
+        <div class="col-md-8">
+            <table class="table table-bordered">
+                <tr>
+                    <th style="text-align:left;vertical-align:top;width:150px"><b>IMS ID</b></th>
+                    <td style="text-align:right">#@Model.MemberNumber</td>
+                </tr>
+                <tr>
+                    <th style="text-align:left;vertical-align:top;width:150px"><b>DEPARTMENT</b></th>
+                    <td style="text-align:right">@Model.DepartmentName</td>
+                </tr>
+                <tr>
+                    <th style="text-align:left;vertical-align:top"><b>BASE SALARY</b></th>
+                    <td style="text-align:right">@(Model.BaseSalary?.ToString("$#,##0.##"))</td>
+                </tr>
+                <tr>
+                    <th style="text-align:left;vertical-align:top"><b>ACCESS RIGHT</b></th>
+                    <td style="text-align:right">@Model.RoleName</td>
+                </tr>
+                <tr>
+                    <th style="text-align:left"><b>TEAMS</b></th>
+                    <td style="text-align:right">0</td>
+                </tr>
+                <tr>
+                    <th style="text-align:left"><b>LEVEL</b></th>
+                    <td style="text-align:right">
+                        @if (Model.MemberType == "distributor")
+                        {
+                            if (cMem.RoleCode.Contains("admin") == true || (p.Any(k => k.Key.Equals("partners_promotelevel")) == true && p["partners_promotelevel"] == true))
+                            {
+                                <span class="pull-right" style="color:red; cursor:pointer" onclick="$('#modal-default').modal('show');" data-toggle="tooltip" title="Promote level" data-original-title="Promote level">
+                                    &nbsp;&nbsp;
+                                    <i class="fa fa-long-arrow-up"></i>
+                                </span>
+                            }
+                            <a class="pull-right">Level #@(memLevel?.LevelNumber) - @(memLevel?.LevelName)</a>
+                        }
+                        else
+                        {
+                            <a class="pull-right">---</a>
+                        }
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+    </div>
+
+
+
+</div>

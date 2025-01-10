@@ -1,0 +1,174 @@
+﻿@using EnrichcousBackOffice.Models
+@using EnrichcousBackOffice.ViewControler
+@{
+    System.Collections.ObjectModel.ReadOnlyCollection<TimeZoneInfo> tz = TimeZoneInfo.GetSystemTimeZones();
+    List<C_SalesLead_Status> leadStatus = SaleLeadViewService.SalesLeadStatuses();
+}
+<div class="modal fade in" id="appoiment_popup" role="dialog" style="display: none; padding-right: 17px;">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <form id="appoiment_form" action="/salelead/appoimentsave" method="post">
+                <div class="modal-header">
+                    <button style="font-size:19px" type="button" class="close" data-dismiss="modal"><i class="fa fa-close"></i></button>
+                    <h4 class="modal-title" style="margin-right:50px;margin-bottom:1rem"></h4>
+                    <select name="schedule_timezone" style="width:70%;border:none;border-bottom:1px solid" required="">
+                        @foreach (var item in tz.Where(t => t.Id.Equals("SE Asia Standard Time")).ToList())
+                        {
+                            <option value="@item.DisplayName">@item.DisplayName</option>
+                        }
+                    </select>
+                </div>
+                <div id="loading_over" style="width: 100%; height: 100%;position: absolute;top: 0;left: 0;opacity: 0.3; background-color:grey; z-index:999;display:none">
+                    <img style="margin:40% auto; display:block; height:50px" src="/Content/ajax-loaders/loading-partial.gif">
+                </div>
+                <input type="hidden" id="lead_id" name="lead_id" />
+                <input type="hidden" name="appointment_id" />
+                <input type="hidden" name="Type" value="Event" />
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-9">
+                            <div class="form-group">
+                                <label>Title :</label>
+                                <input class="form-control" type="text" name="title" required="">
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label>Date :</label><br />
+                                <div class="form-group">
+                                    <input class="form-control datepicker" style="width:155px; display:inline !important" name="date" readonly placeholder="MM/dd/yyyy" required>
+                                     &nbsp;&nbsp;&nbsp;
+                                    <input class="form-control" name="hours" type="number" min="0" max="12" maxlength="2" style="width:80px;display:inline" placeholder="hh" required=""> :
+                                    <input class="form-control" name="minute" type="number" min="0" max="59" style="width:80px;display:inline" placeholder="mm" required="">
+                                    <select class="form-control" name="am_pm" style="width:80px;display:inline">
+                                        <option value="AM">AM</option>
+                                        <option value="PM">PM</option>
+                                    </select>
+                                </div>
+                                </div>
+                            </div>
+
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label>Description :</label>
+                                <textarea id="desc" class="form-control" wrap="soft" name="description" rows="5"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="btn-group btn-group-toggle pull-left update_event_flag" data-toggle="buttons">
+                        <label class="btn btn-secondary active btn-default">
+                            <input type="radio" name="event_done" id="event_done_0" value="0" autocomplete="off" checked>Pending
+                        </label>
+                        <label class="btn btn-secondary btn-default">
+                            <input type="radio" name="event_done" id="event_done_1" value="1" autocomplete="off"> Visited
+                        </label>
+                    </div>
+                    <button name="btnsubmit" value="save" type="submit" class="btn btn-primary" onsubmit="$('#loading_over').show()">Save</button>
+                    <button data-dismiss="modal" class="btn btn-default">Close</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    $(function () {
+        $("body").delegate(".datepicker", "focusin", function () {
+            $(this).datepicker();
+        });
+    });
+
+    function new_appoiment(code) {
+
+        $("#appoiment_popup").find("form").resetForm();
+        $("#appoiment_popup").find('[name=appointment_id]').val(null);
+        $("textarea[name=description]").html("");
+        $.post("/home/getclienttimezone", { id: Intl.DateTimeFormat().resolvedOptions().timeZone }, function (data) {
+            $("select[name=schedule_timezone]").val(data).trigger('change');
+        });
+        $("#event_done_0").prop("checked", true);
+        $("#event_done_0").parent().addClass("active");
+        $("#event_done_1").parent().removeClass("active");
+        $("#appoiment_popup").find('[name=lead_id]').val(code);
+        $("#appoiment_popup").find(".modal-title").html("<i class='fa fa-bell'></i> New Appoiment");
+        $("#appoiment_popup").modal("show");
+    }
+    function edit_appointment(code, appointment_id, img_loading_id) {
+        if (img_loading_id) {
+            $("#" + img_loading_id).show();
+        }
+        $.ajax({
+            method: "POST",
+            url: "/salelead/getAppoimentInfo",
+            data: { appointment_id },
+            dataType: "json"
+        })
+            .done(function (data) {
+                if (data[0]) {
+                    var h = Number(data[1].StartEvent.substring(11, 13));
+                    var ap = "AM";
+                    if (h > 12) {
+                        ap = "PM";
+                        h = h - 12;
+                    }
+
+                    $("#appoiment_popup").find("form").resetForm();
+                    $("#appoiment_popup").find('[name=lead_id]').val(code);
+                    $("select[name=schedule_timezone]").val(data[1].TimeZone).trigger('change');
+                    $("input[name=title]").val(data[1].Name);
+                    $("input[name=date]").val(data[1].StartEvent.substring(0, 10));
+                    $("input[name=hours]").val(h);
+                    $("input[name=minute]").val(data[1].StartEvent.substring(14, 16));
+                    $("select[name=am_pm]").val(ap);
+
+                    $("#span_ticket").empty();
+                    $("textarea[name=description]").html(data[1].Description);
+                    if (data[1].Done == "1") {
+                        $("#event_done_1").prop("checked", true);
+                        $("#event_done_1").parent().addClass("active");
+                        $("#event_done_0").parent().removeClass("active");
+                    }
+                    else {
+                        $("#event_done_0").prop("checked", true);
+                        $("#event_done_0").parent().addClass("active");
+                        $("#event_done_1").parent().removeClass("active");
+                    }
+
+                    $("#lastUpdated").html(data[1].LastUpdateBy);
+                    $(".update_event_flag").show();
+
+                    $("#appoiment_popup").find('[name=appointment_id]').val(data[1].Id);
+                    $("#appoiment_popup").find(".modal-title").html("<i class='fa fa-bell'></i> Update Appoiment");
+                    $("#appoiment_popup").modal("show");
+                } else {
+                    noty({ "text": data[1], "layout": "topRight", "type": "error" });
+                }
+            })
+            .fail(function () {
+
+                alert("edit_appointment fail");
+            })
+            .always(function () {
+                $("#" + img_loading_id).hide();
+            });
+    }
+    $("#appoiment_form").ajaxForm(function (data) {
+        if (data[0]) {
+            noty({ "text": data[1], "layout": "topRight", "type": "success" });
+            HandleTicketTab.RefreshHistoryLog();
+            $("#appoiment_popup").modal("hide");
+        } else {
+            noty({ "text": data[1], "layout": "topRight", "type": "error" });
+        }
+        $('#loading_over').hide();
+    })
+</script>
+
+<style>
+    .ui-datepicker {
+        position: relative;
+        z-index: 10000 !important;
+    }
+</style>

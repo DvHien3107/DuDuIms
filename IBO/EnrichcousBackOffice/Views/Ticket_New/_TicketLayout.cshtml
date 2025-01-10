@@ -1,0 +1,295 @@
+﻿@{
+    var detectIframe = Request.Params["mode"] == "iframe";
+    if (detectIframe)
+    {
+        Layout = "~/Views/Shared/_LayoutIframe.cshtml";
+    }
+    else
+    {
+        Layout = "~/Views/Shared/_Layout.cshtml";
+    }
+
+    var access = EnrichcousBackOffice.AppLB.Authority.GetAccessAuthority();
+    var Page = ViewBag.Page as string;
+    string PageDeployment = "DeploymentTicket";
+    string PageSupportTicket = "SupportTicket";
+    string PageDevelopmentsTicket = "DevelopmentsTicket";
+
+
+    var AccessDeployment = ViewBag.AccessDeployment as bool?;
+    var AccessSupport = ViewBag.AccessSupport as bool?;
+    var AccessDevelopments = ViewBag.AccessDevelopments as bool?;
+}
+
+@RenderSection("script", false)
+@RenderSection("style", false)
+@RenderSection("headscript", false)
+
+<style type="text/css">
+   
+    .label.label-outlined {
+        border-width: 1px;
+        border-style: solid;
+        white-space:normal;
+        background-color: transparent !important;
+    }
+        .label.label-outlined span{
+            white-space:nowrap;
+        }
+    .label-type{
+        white-space:nowrap !important;
+    }
+    .label-status, .label-type {
+        margin-top: 3px;
+        margin-right: 3px;
+        padding: 4px 5px;
+        display: inline-block;
+    }
+    .mt-1 {
+        margin-top: 0.5rem;
+        display: inline-block;
+    }
+        .label.label-outlined.label-primary {
+        border-color: #2196F3;
+        color: #2196F3 !important;
+    }
+
+        .label.label-outlined.label-secondary {
+            border-color: #323a45;
+            color: #323a45 !important;
+        }
+
+        .label.label-outlined.label-info {
+            border-color: #29B6F6;
+            color: #29B6F6
+        }
+
+        .label.label-outlined.label-success {
+            border-color: #64DD17;
+            color: #64DD17
+        }
+
+        .label.label-outlined.label-warning {
+            border-color: #FFD600;
+            color: #FFD600
+        }
+
+        .label.label-outlined.label-danger {
+            border-color: #ef1c1c;
+            color: #ef1c1c !important;
+        }
+    .timeline>li>.timeline-item>.timeline-header{
+     font-size:15px;
+    }
+    .select ul li.option {
+        background-color: #DEDEDE;
+        box-shadow: 0px 1px 0 #DEDEDE, 0px -1px 0 #DEDEDE;
+        -webkit-box-shadow: 0px 1px 0 #DEDEDE, 0px -1px 0 #DEDEDE;
+        -moz-box-shadow: 0px 1px 0 #DEDEDE, 0px -1px 0 #DEDEDE;
+    }
+    .tranfer-signature {
+        border-top: 1px solid #cacaca;
+        padding-top: 7px;
+    }
+    .breadcrumb > li + li:before {
+        padding: 0 0px;
+    }
+
+    .select ul li.option {
+        z-index: 1;
+        padding: 5px;
+        display: none;
+        color: white;
+        list-style: none;
+        padding: 6px 12px;
+    }
+
+    .select ul li:first-child {
+        display: block;
+        color: black;
+    }
+
+    .select ul li {
+        cursor: pointer;
+    }
+
+    .nav-tabs-custom-ticket {
+        background: #ecf0f5;
+        padding: 10px 10px 0px 10px;
+        margin-bottom: 0;
+    }
+
+    .tab-content {
+        background: white;
+        position: relative;
+    }
+
+    .breadcrumb {
+        background-color: transparent;
+        margin-bottom: 0px;
+    }
+
+    .nav-tabs-custom-ticket > ul > li.tab-nav-item {
+        font-size: 17px;
+        font-weight: 500;
+    }
+
+    ul.cke_autocomplete_panel .photo {
+        display: inline-block;
+        vertical-align: middle;
+        height: 30px;
+        width: 30px;
+        border-radius: 50%;
+        object-position: center !important;
+        object-fit: cover !important;
+    }
+
+    .bullet {
+        padding-left: 5px;
+        padding-right: 5px;
+        color: #b7b7b7;
+    }
+
+    .cke_autocomplete_panel .username {
+        padding-left: 5px;
+    }
+
+    .cke_autocomplete_panel .fullname {
+        padding-left: 5px;
+        color: #b7b7b7;
+    }
+
+    .sdk-contents .cke {
+        margin: 0;
+    }
+
+    .sdk-contents button.send {
+        width: 100px;
+        height: 35px;
+        border: none;
+        border-radius: 5px;
+        background-color: #0287D0;
+        color: #fafafa;
+        margin-top: 8px;
+        margin-bottom: 16px;
+        float: right;
+        cursor: pointer;
+    }
+
+        .sdk-contents button.send:hover {
+            background-color: #027abc
+        }
+
+    .sdk-contents a.mailto-user {
+        color: #b7b7b7;
+        text-decoration: underline;
+    }
+
+        .sdk-contents a.mailto-user:hover {
+            color: #a0a0a0;
+        }
+
+    .sdk-contents p.post-content {
+        margin: 0;
+        line-height: 19px;
+    }
+    .content-header h1{
+        font-size:20px;
+    }
+
+    .wrapper-update {
+        background-color: #d2d6de78;
+        max-height: 180px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        -webkit-line-clamp: 4;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        max-width: 250px;
+    }
+
+        .wrapper-update p {
+            margin: 0px !important;
+        }
+
+        .wrapper-update img, .read-more-update img {
+            max-width: 100px !important;
+            height: 60px !important;
+            object-fit: cover;
+            object-position: center;
+        }
+        .wrapper-update video, .read-more-update video, .wrapper-update iframe, .read-more-update iframe {
+            max-width: 320px !important;
+            object-fit: cover;
+            object-position: center;
+        }
+
+    .read-more-update {
+        position: relative;
+        display: inline-block;
+        color: var(--main-color-1);
+        font-size: 13px;
+        padding: 3px 0px;
+        cursor: pointer;
+    }
+
+        .read-more-update .content_tooltip {
+            visibility: hidden;
+            min-width: 325px;
+            background-color: #555;
+            color: #fff;
+            border-radius: 6px;
+            padding: 5px 3px;
+            font-size: 13px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            max-width: 330px;
+            left: -24px;
+            transform: translate(-22%,-13px);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+            .read-more-update .content_tooltip p {
+                padding: 0px;
+            }
+
+
+            .read-more-update .content_tooltip::after {
+                content: "";
+                position: absolute;
+                top: 100%;
+                left: 50%;
+                margin-left: -5px;
+                border-width: 5px;
+                border-style: solid;
+                border-color: #555 transparent transparent transparent;
+            }
+
+    .updated-td:hover .content_tooltip {
+        visibility: visible;
+        opacity: 1;
+    }
+    .bootstrap-datetimepicker-widget table td span{
+        height: 59px;
+        line-height: 59px;
+    }
+</style>
+
+<div class="nav-tabs-custom-ticket nav-tabs-custom">
+    <ul class="nav nav-tabs">
+       
+        <li class="pull-right">
+            @if (IsSectionDefined("breadcrumb"))
+            {
+                @RenderSection("breadcrumb")
+            }
+        </li>
+
+    </ul>
+    <div class="tab-content">
+        @RenderBody()
+    </div>
+    <!-- /.tab-content -->
+</div>

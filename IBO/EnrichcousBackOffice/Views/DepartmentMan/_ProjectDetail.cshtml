@@ -1,0 +1,788 @@
+﻿@model  EnrichcousBackOffice.Models.CustomizeModel.Project.ProjectDetailModel
+@using EnrichcousBackOffice.Models;
+@using EnrichcousBackOffice.AppLB;
+
+@{
+    List<P_Member> members = (ViewBag.member ?? new List<P_Member>());
+
+    List<P_Department> deparments = (ViewBag.deparments ?? new List<P_Department>());
+
+    var DevelopmentBuildInCode = EnrichcousBackOffice.Utils.IEnums.BuildInCodeProject.Development_Ticket.ToString();
+    var DeploymentBuildInCode = EnrichcousBackOffice.Utils.IEnums.BuildInCodeProject.Deployment_Ticket.ToString();
+    var SupportBuildInCode = EnrichcousBackOffice.Utils.IEnums.BuildInCodeProject.Support_Ticket.ToString();
+}
+<div class="modal fade" id="project-detail">
+    <div class="modal-dialog" style="width:800px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">@Model.ProjectName</h4>
+            </div>
+
+            <div class="modal-body">
+                <div>
+                    <div class="panel panel-default project-info-panel" style="margin-top:20px;">
+                        <div class="panel-heading">
+                            <b>Version</b>
+                            <button class="btn btn-sm btn-success  pull-right" onclick="new_project_version()" style="transform:translateY(-5px)">
+                                <i class="fa fa-plus"></i> Add
+                            </button>
+                        </div>
+                        <div class="panel-body">
+                            <table id="version_table" class="table  table-hover table-bordered table-striped" style="margin-bottom:0">
+                                <thead>
+                                    <tr style="background-color: var(--main-color-1); color:white">
+                                        <th>Name</th>
+                                        <th>Active</th>
+                                        <th>Description</th>
+                                        <th>Order</th>
+                                        <th data-orderable="false" width="100px"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var ver in Model.Versions.OrderBy(m => m.Name))
+                                    {
+
+                                    <tr id="version_@ver.Id">
+                                        <td data-name="name">
+                                            @ver.Name
+                                        </td>
+                                        <td data-name="active">
+                                          @Html.Raw(ver.Active != false ? "<i class='fa fa-check text text-success'></i>" : "<i class='fa fa-times text text-danger'></i>")
+                                        </td>
+                                        <td data-name="description">
+                                            @ver.Description
+                                        </td>
+                                        <td data-name="order">
+                                            @ver.Order
+                                        </td>
+                                        <td style="text-align:center;">
+                                            <button class="btn btn-warning btn-sm" onclick="edit_project_version('@ver.Id')"><i class="fa fa-pencil"></i></button>
+                                            <button class="btn btn-danger btn-sm" onclick="delete_project_version('@ver.Id')"><i class="fa fa-trash"></i></button>
+                                        </td>
+                                    </tr>
+                                    }
+                                </tbody>
+
+                            </table>
+                        </div>
+                    </div>
+
+
+                    <div class="panel panel-default project-info-panel" style="margin-top:20px;">
+                        <div class="panel-heading">
+                            <b>Stage</b>
+                            <button class="btn btn-sm btn-success pull-right" onclick="new_stage()" style="transform:translateY(-5px)">
+                                <i class="fa fa-plus"></i> Add
+                            </button>
+                        </div>
+                        <div class="panel-body">
+                            <table id="stage_table" class="table table-hover table-bordered table-striped">
+                                <thead>
+                                    <tr style="background-color: var(--main-color-1); color:white">
+                                        <th>Name</th>
+                                        <th>Active</th>
+                                      
+                                        <th>Description</th>
+                                        <th>Order</th>
+                                        <th data-orderable="false" width="100px"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var stage in Model.Stages.OrderBy(m => m.Name))
+                                    {
+
+                                    <tr id="stage_@stage.Id">
+                                        <td data-name="name">
+                                            @stage.Name
+                                        </td>
+                                        <td data-name="active">
+                                            @Html.Raw(stage.Active!=false? "<i class='fa fa-check text text-success'></i>": "<i class='fa fa-times text text-danger'></i>")
+                                        </td>
+                                       
+                                        <td data-name="description">
+                                            @stage.Desc
+                                        </td>
+                                        <td data-name="order">
+                                            @stage.DisplayOrder
+                                        </td>
+                                        <td style="text-align:center;">
+                                            <button class="btn btn-warning btn-sm" onclick="edit_stage('@stage.Id')"><i class="fa fa-pencil"></i></button>
+
+                                            <button class="btn btn-danger btn-sm" onclick="delete_stage('@stage.Id')"><i class="fa fa-trash"></i></button>
+                                        </td>
+                                    </tr>
+
+                                    }
+                                </tbody>
+
+                            </table>
+                        </div>
+                    </div>
+
+                    <div>
+
+                    </div>
+                </div>
+
+
+
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+
+            </div>
+
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+
+<div id="stage_form_modal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <form action="/ProjectManagement/Stage_save" method="post" class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">New stage</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <input name="project_id" hidden value="@Model.ProjectId" />
+                        <input name="id" hidden />
+                        <div class="form-group">
+                            <label>Name <span class="text-red">*</span></label>
+                            <input name="name" class="form-control" />
+                        </div>
+                    
+                      
+                        <div class="form-group">
+                            <label>Order</label>
+                            <input name="order" type="number" min="0" step="1" class="form-control" />
+                        </div>
+                        <div class="form-group">
+                            <label>Description</label>
+                            <textarea name="description" class="form-control" rows="4" style="resize:none"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="stage_version">Active</label>
+                            <input name="active" value="true"  type="checkbox" id="stage_version" style="transform: translate(7px, 2px);" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="version_form_modal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <form action="/ProjectManagement/ProjectVersionSave" method="post" class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">New Version </h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label>Name<span class="text-red">*</span></label>
+                            <input name="name" class="form-control" required />
+                            <input type="hidden" name="project_id" value="@Model.ProjectId" />
+                            <input type="hidden" name="versionId" />
+                        </div>
+                        <div class="form-group">
+                            <label>Order</label>
+                            <input name="order" type="number" min="0" step="1" class="form-control" />
+                        </div>
+
+                        <div class="form-group">
+                            <label>Description</label>
+                            <textarea name="description" rows="3" class="form-control"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="active_version">Active</label>
+                            <input name="active" value="true" type="checkbox" id="active_version" style="transform: translate(7px, 2px);" />
+                        </div>
+                        <label>Notes: </label> <a class="btn btn-sm" onclick="add_note()"><i class="fa fa-plus"></i> Add note</a>
+                        <div id="notes_list" class="row custom-scroll" style="max-height: 65vh; overflow-y:auto; padding:0 15px">
+                        </div>
+                        <template id="note_template">
+                            <div class="note" style="width: 0px;  transition: width .5s;overflow: hidden; padding-bottom:10px">
+                                <div class="input-group">
+                                    <div class="input-group-addon handle"><i class="fa fa-arrows"></i></div>
+                                    <input class="form-control note_title" name="note_title{i}" placeholder="Note title *" required />
+                                    <div class="input-group-btn"><button type="button" class="btn btn-flat btn-outline-danger" tabindex="-1" onclick="remove_note(this)"><i class="fa fa-close"></i></button></div>
+                                </div>
+                                <input class="form-control note_order" type="hidden" name="note_order{i}" value="{i}" />
+                                <textarea class="form-control note_content" name="note_content{i}" style="resize: vertical; margin-top: -1px" rows="3" placeholder="Note content"></textarea>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+
+                <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="addmember_modal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <form action="/ProjectManagement/Select_members" method="post" class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Select Members</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="input-group">
+                            <span class="input-group-addon">Project version</span>
+                            <select id="version_select" name="project_version" class="form-control" onchange="load_member()">
+                                <option value="">---Select version---</option>
+                                @foreach (var v in Model.Versions)
+                                {
+                                    <option class="project_version" data-project="@v.ParentId" value="@(v.Id)">
+                                        @v.Name
+                                    </option>
+                                }
+                            </select>
+                            <script>$("#version_select").on("change", function () { if ($(this).val()) { $(".select_member").slideDown() } else { $(".select_member").slideUp() } })</script>
+                        </div>
+                        <div class="select_member" style="display:none">
+                            <hr />
+                            <input id="stage_id" name="stage_id" type="hidden" />
+                            <div class="input-group">
+                                <span class="input-group-addon">Department</span>
+                                <select id="department" class="form-control">
+                                    <option value="all">---All Department---</option>
+                                    @foreach (var d in deparments)
+                                    {
+                                        <option value="@(d.GroupMemberNumber)">
+                                            @d.Name
+                                        </option>
+                                    }
+                                </select>
+                            </div>
+                            <select id="select_members" multiple="multiple" name="Members">
+                                @foreach (var m in members)
+                                {
+                                    <option value="@m.MemberNumber">@m.FullName - @m.MemberNumber</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                <button type="submit" class="btn btn-primary select_member" style="display:none">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="~/Scripts/Sortable.js"></script>
+<script src="~/Content/DualListMulti/multi.js"></script>
+<script>
+
+    $('.select2').select2();
+    function loadVersionDatatable() {
+        $("#version_table").DataTable({
+            "language": {
+                "processing": '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>',
+                "paginate": {
+                    "first": '<i class="fa fa-angle-double-left" aria-hidden="true"></i>',
+                    "last": '<i class="fa fa-angle-double-right" aria-hidden="true"></i>',
+                    "next": '<i class="fa fa-angle-right" aria-hidden="true"></i>',
+                    "previous": '<i class="fa fa-angle-left" aria-hidden="true"></i>'
+                },
+            },
+            "pageLength": 100,
+            'lengthChange': false,
+            'searching': true,
+            "stateSave": true,
+            'paging': true,
+            'order': [],
+            'info': false,
+            'ordering': true,
+        })
+    }
+    loadVersionDatatable();
+
+    function loadStageDatatable() {
+        $("#stage_table").DataTable({
+            "language": {
+                "processing": '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>',
+                "paginate": {
+                    "first": '<i class="fa fa-angle-double-left" aria-hidden="true"></i>',
+                    "last": '<i class="fa fa-angle-double-right" aria-hidden="true"></i>',
+                    "next": '<i class="fa fa-angle-right" aria-hidden="true"></i>',
+                    "previous": '<i class="fa fa-angle-left" aria-hidden="true"></i>'
+                },
+            },
+            "pageLength": 100,
+            'lengthChange': false,
+            'searching': true,
+            "stateSave": true,
+            'paging': true,
+            'order': [],
+            'info': false,
+            'ordering': true,
+        })
+    }
+    loadStageDatatable();
+
+    $("#stage_form_modal").on("submit", function () {
+        overlayOn();
+    });
+    $("#stage_form_modal").ajaxForm(function (data) {
+
+        if (data[0]) {
+            success(data[1]);
+            if (data[2]) {
+                $("#stage_table").DataTable().destroy();
+                var html = `<tr id="stage_${data[3].Id}">
+                                            <td data-name="name">
+                                               ${data[3].Name}
+                                            </td>
+                                            <td data-name="active">
+                                               ${data[3].Active != false ? "<i class='fa fa-check text text-success'></i>" : "<i class='fa fa-times text text-danger'></i>"}
+                                            </td>
+                                            
+                                            <td data-name="description">
+                                               ${data[3].Desc||""}
+                                            </td>
+                                             <td data-name="order">
+                                               ${data[3].DisplayOrder||""}
+                                            </td>
+                                            <td style="width: 120px;text-align:center;">
+                                                <button class="btn btn-warning btn-sm" onclick="edit_stage('${data[3].Id}')"><i class="fa fa-pencil"></i></button>
+                                                <button class="btn btn-danger btn-sm" onclick="delete_stage('${data[3].Id}')"><i class="fa fa-trash"></i></button>
+                                            </td>
+                                        </tr>`;
+
+                $("#stage_table tbody").prepend(html);
+                loadStageDatatable();
+            }
+            else {
+                $("#stage_table").DataTable().destroy();
+                if (data[3].LeaderNumber) {
+                    $(`#stage_${data[3].Id}`).find('[data-name=leader]').html(data[3].LeaderName + " (#" + data[3].LeaderNumber + ")");
+                }
+                else
+                {
+                    $(`#stage_${data[3].Id}`).find('[data-name=leader]').html("");
+                }
+              
+                $(`#stage_${data[3].Id}`).find('[data-name=active]').html(data[3].Active != false ? "<i class='fa fa-check text text-success'></i>" : "<i class='fa fa-times text text-danger'></i>");
+                $(`#stage_${data[3].Id}`).find('[data-name=name]').html(data[3].Name);
+                $(`#stage_${data[3].Id}`).find('[data-name=description]').html(data[3].Desc??"");
+                $(`#stage_${data[3].Id}`).find('[data-name=order]').html(data[3].DisplayOrder??"");
+                loadStageDatatable();
+
+            }
+
+            $('#stage_form_modal').modal('hide');
+        }
+        else {
+            error(data[1]);
+            console.log(data);
+        }
+        overlayOff();
+    });
+    $("#addmember_modal").on("submit", function () {
+        overlayOn();
+    });
+    $("#addmember_modal").ajaxForm(function (data) {
+        if (data[0]) {
+            success(data[1]);
+            $("#addmember_modal").modal("hide");
+            show_subs(data[2], true);
+        } else {
+            error(data[1]);
+        }
+        overlayOff();
+    });
+    $("#select_members").multi({
+        non_selected_header: 'Members',
+        selected_header: 'Member in Stage'
+    });
+    $("#department").on("change", function () {
+        var dep = this.value;
+        $("#select_members option.hidden").removeClass("hidden");
+        if (dep != "all") {
+            $("#select_members option").each(function () {
+                if (!dep.includes($(this).val())) {
+                    $(this).addClass("hidden");
+                }
+            });
+        }
+        $("#select_members").trigger("change");
+    });
+        
+    $('[data-toggle="tooltip"]').tooltip();
+    $("#version_form_modal").ajaxForm(function (data) {
+        if (data[0]) {
+            success(data[1]);
+            if (data[2]) {
+                $("#version_table").DataTable().destroy();
+                var html = `<tr id="version_${data[3].Id}">
+                                            <td data-name="name">
+                                               ${data[3].Name}
+                                            </td>
+                                             <td data-name="active">
+                                               ${data[3].Active != false ? "<i class='fa fa-check text text-success'></i>" : "<i class='fa fa-times text text-danger'></i>"}
+                                            </td>
+                                            <td data-name="description">
+                                               ${data[3].Description||""}
+                                            </td>
+                                            <td data-name="order">
+                                               ${data[3].Order||""}
+                                            </td>
+                                            <td style="width: 120px;text-align:center;">
+                                                <button class="btn btn-warning btn-sm" onclick="edit_project_version('${data[3].Id}')"><i class="fa fa-pencil"></i></button>
+                                                <button class="btn btn-danger btn-sm" onclick="delete_project_version('${data[3].Id}')"><i class="fa fa-trash"></i></button>
+                                            </td>
+                                        </tr>`;
+
+                $("#version_table tbody").prepend(html);
+                loadVersionDatatable();
+            }
+            else {
+                $("#version_table").DataTable().destroy();
+                //  $(".project_version[data-id=" + data[3].Id + "] .name").html(data[3].Name);
+                $(`#version_${data[3].Id}`).find('[data-name=active]').html(data[3].Active != false ? "<i class='fa fa-check text text-success'></i>" : "<i class='fa fa-times text text-danger'></i>");
+                $(`#version_${data[3].Id}`).find('[data-name=order]').html(data[3].Order??"");
+                $(`#version_${data[3].Id}`).find('[data-name=name]').html(data[3].Name??"");
+                $(`#version_${data[3].Id}`).find('[data-name=description]').html(data[3].Description??"");
+
+                loadVersionDatatable();
+
+            }
+
+            $('#version_form_modal').modal('hide');
+        } else {
+            error(data[1]);
+            console.log(data);
+        }
+    })
+
+    $("#notes_list").disableSelection();
+    new Sortable($("#notes_list")[0], {
+        handle: '.handle',
+        animation: 150,
+        ghostClass: 'grabbing_note',
+        onSort: function (evt) {
+            $(".note").each(function (index) {
+                $(this).find(".note_order").val(index);
+            })
+        },
+    });
+    function add_note() {
+        var new_note = $($('#note_template').html().replace(/{i}/g, $('#notes_list .note').length)).appendTo($('#notes_list'));
+        new_note.css('width', '100%');
+        new_note.find(".note_title").focus();
+        $("#notes_list").scrollTop($("#notes_list")[0].scrollHeight);
+
+    }
+    function remove_note(_el) {
+        var el = $(_el).closest(".note");
+        if ((!el.find(".note_title").val() && !el.find("note_content").val()) || confirm("Do you really to remove this note?")) {
+            el.hide(300).find('input').val('').removeAttr('required');
+        }
+    }
+    function new_project_version() {
+        $("#notes_list").empty();
+        $('#version_form_modal input[name=name]').val("");
+        $('#version_form_modal input[name=versionId]').val("");
+        $('#version_form_modal input[name=active]').prop('checked', true);
+        
+        $('#version_form_modal [name=description]').val("");
+        $('#version_form_modal input[name=order]').val("");
+        $('#version_form_modal .modal-title').html("New Version");
+        $('#version_form_modal').modal('show');
+    }
+    function edit_project_version(versionId) {
+        overlayOn();
+        // var versionId = $(el).parent(".project_version").data("id");
+        $.ajax({
+            method: "POST",
+            url: "/ProjectManagement/ProjectVersionLoad",
+            data: { versionId },
+            dataType: "json"
+        })
+            .done(function (data) {
+                if (data[0]) {
+
+                     $("#notes_list").empty();
+                    $('#version_form_modal input[name=name]').val(data[1].version.Name);
+                    $('#version_form_modal [name=description]').val(data[1].version.Description);
+                    $('#version_form_modal [name=order]').val(data[1].version.Order);
+                    $('#version_form_modal input[name=versionId]').val(versionId);
+                    $('#version_form_modal input[name=active]').prop('checked', data[1].version.Active ?? true);
+                    $('#version_form_modal .modal-title').html($('.project.active .pj_name').text() + " - Edit Version \"" + data[1].version.Name + "\"");
+                    $('#version_form_modal').modal('show');
+
+                    for (var i in data[1].notes) {
+                        var note = data[1].notes[i];
+                        var note_el = $($('#note_template').html().replace(/{i}/g, $('#notes_list .note').length)).appendTo($('#notes_list'));
+                        note_el.css('width', '100%');
+                        note_el.find(".note_title").val(note.Name);
+                        note_el.find(".note_content").val(note.Content);
+                    }
+                } else {
+                    error(data[1]);
+                    console.log(data);
+                }
+            })
+            .fail(function () {
+                alert("unselect member fail!");
+            })
+            .always(function () {
+                overlayOff();
+            });
+    }
+    function delete_project_version(versionId) {
+        if (confirm("Are you sure delete this version ?")) {
+
+            $.ajax({
+                method: "POST",
+                url: "/ProjectManagement/ProjectVersionDelete",
+                data: { versionId },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    if (data[0]) {
+                        success(data[1]);
+                        $("#version_table").DataTable().destroy();
+                        $("#version_" + versionId).remove();
+                        loadVersionDatatable();
+
+                    } else {
+                        error(data[1]);
+                        console.log(data);
+                    }
+                })
+                .fail(function () {
+                    alert("delete_project_version fail!");
+                })
+                .always(function () {
+                });
+        }
+    }
+
+    function new_stage() {
+        $('#stage_form_modal [name="id"]').val("");
+        $('#stage_form_modal [name="description"]').val("");
+    
+        $('#stage_form_modal [name="name"]').val("");
+        $('#stage_form_modal [name="order"]').val("");
+        $('#stage_form_modal input[name=active]').prop('checked',true);
+        $('#stage_form_modal').modal("show");
+    }
+    function edit_stage(id) {
+        event.stopPropagation();
+        overlayOn();
+        $.ajax({
+            method: "POST",
+            url: "/ProjectManagement/getStage",
+            data: { id },
+            dataType: "json"
+        })
+            .done(function (data) {
+                if (data[0]) {
+                    $("#stage_form_modal .modal-title").html("EDIT STAGE");
+                    $('[name="id"]').val(id);
+                    $('[name="description"]').val(data[1].Desc);
+                    $('[name="order"]').val(data[1].DisplayOrder);
+                    $('#stage_form_modal input[name=active]').prop('checked', data[1].Active ?? true);
+                   
+                    $('[name="name"]').val(data[1].Name);
+                    $('#stage_form_modal').modal("show");
+                } else {
+                    error(data[1]);
+                    console.log(data);
+                }
+            })
+            .fail(function () {
+                alert("rename_pj fail!");
+            })
+            .always(function () {
+                overlayOff();
+            });
+    }
+    function delete_stage(id) {
+        event.stopPropagation();
+        if (confirm("Deleting this stage will also delete all of its related information. Are you sure?")) {
+            overlayOn();
+            $.ajax({
+                method: "POST",
+                url: "/ProjectManagement/Delete_Stage",
+                data: { id },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    if (data[0]) {
+                        success(data[1]);
+                        $("#stage_table").DataTable().destroy();
+                        $("#stage_" + id).remove();
+                        loadStageDatatable();
+                    } else {
+                        error(data[1]);
+                        console.log(data);
+                    }
+                })
+                .fail(function () {
+                    alert("delete stage fail!");
+                })
+                .always(function () {
+                    overlayOff();
+                });
+        }
+    }
+
+</script>
+<link href="~/Content/DualListMulti/multi.min.css" rel="stylesheet" />
+<style>
+    #notes_list .input-group-addon {
+        cursor: grab;
+    }
+
+        #notes_list .input-group-addon:active:hover {
+            cursor: grabbing;
+        }
+
+    .grabbing_note .handle {
+        background-color: #c8ebfb;
+    }
+
+    req::after {
+        content: "*";
+        color: red;
+        font-weight: bold;
+    }
+
+    .btn-outline-danger {
+        border-color: #dc3545 !important;
+    }
+    /* #notes_list .note:nth-child(even) {
+            padding-left: 50px;
+        }
+
+        #notes_list .note:nth-child(odd) {
+            padding-right:50px;
+        }*/
+    .project_version {
+        margin-right: 5px;
+        margin-bottom: 5px;
+    }
+
+    .delete_project_version:hover {
+        color: darkblue;
+    }
+
+    .multi-wrapper .non-selected-wrapper, .multi-wrapper .selected-wrapper {
+        height: 400px;
+    }
+
+        .multi-wrapper .non-selected-wrapper .selected {
+            display: none;
+        }
+
+    .multi-wrapper a {
+        color: #000;
+    }
+
+    .stage td {
+        vertical-align: middle !important;
+    }
+
+    tr.strikeout {
+        text-decoration: line-through;
+    }
+
+    .stage .fa {
+        cursor: pointer;
+    }
+
+        .stage .fa.fa-plus {
+            display: inherit;
+        }
+
+        .stage .fa.fa-minus {
+            display: none;
+        }
+
+    .stage.active > tr:first-child {
+        background-color: #d9ecf6;
+    }
+
+        .stage.active > tr:first-child:hover {
+            background-color: #c8d9e2;
+        }
+
+    .stage.active .fa.fa-plus {
+        display: none;
+    }
+
+    .stage.active .fa.fa-minus {
+        display: inherit;
+    }
+
+    .option_btn_dropdown {
+        margin: -7px -10px;
+    }
+
+    .option_btn {
+        padding: 10px;
+        cursor: pointer;
+        border-radius: 5px;
+        display: none;
+    }
+
+        .option_btn:hover {
+            background-color: #0002;
+        }
+
+
+    .dropdown-menu {
+        box-shadow: 5px 10px 8px #888888;
+    }
+
+        .dropdown-menu li a {
+            padding: 10px;
+        }
+
+
+    /*  .list_mem {
+        overflow-y: auto;
+        max-height: 500px;
+    }*/
+
+    .btn_row_hover {
+        visibility: hidden;
+        opacity: 0;
+        transition: opacity 0.5s;
+    }
+
+    tr:hover > td > .btn_row_hover {
+        visibility: visible;
+        opacity: 1;
+    }
+</style>

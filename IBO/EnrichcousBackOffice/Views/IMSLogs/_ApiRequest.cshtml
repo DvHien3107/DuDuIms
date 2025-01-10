@@ -1,0 +1,166 @@
+﻿<!-- Main content -->
+<section class="content">
+    @*<input type="hidden" id="logHistory" value="@logJson" />*@
+    <div class="row">
+        <div class="col-sm-6">
+            <form id="form-api-request" class="box" method="post" action="/IMSLogs/SendApi">
+                <div class="box-header">
+
+                    <div style="display:flex">
+                        <select class="form-control" name="Method" style="width:150px;border-right:none" required>
+                            <option value="get">GET</option>
+                            <option value="post">POST</option>
+
+                        </select>
+                        <!-- /btn-group -->
+                        <input type="text" placeholder="Url" name="Url" class="form-control" style="margin-right:1px;" required>
+                        <button type="submit" id="submit_btn" class="btn btn-success btn-sm">Send <img id="submit_loading" style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" /></button>
+                    </div>
+                </div>
+
+                <div class="box-body">
+                    <label style="font-weight:normal">
+                       Json Request:
+                    </label>
+                    <pre contenteditable="true" name="JsonResponse" style="max-height:800px;padding:5px 20px;min-height:500px;overflow-y:auto;color:white" id="json-param" class="form-control">   
+                    </pre>
+                </div>
+            </form>
+     
+        </div>
+        <div class="col-sm-6">
+            <div>
+                <div class="box">
+                    <div class="box-header" style="padding: 17px;">
+                     
+                        <h3 class="box-title" id="title-response">Response</h3>
+                        <div class="box-tools pull-right status-box" style="display:none;transform: translateY(11px);">
+                            <span>Status: </span>
+                            <label type="button" id="status-code" class="label label-success">
+                         
+                            </label>
+
+                        </div>
+                    </div>
+                    <!-- /.box-header -->
+                    <div class="box-body">
+                        <div id="response-content" style="display:none">
+                            <label style="font-weight:normal">
+                                Json Response:
+                            </label>
+                            <pre contenteditable="true" style="max-height:800px;padding:5px 20px;min-height:500px;overflow-y:auto;color:white" id="json-response" class="form-control">   
+                            </pre>
+                        </div>
+                      
+                        <div id="not-found" style="max-height:800px;padding:5px 20px;min-height:500px;overflow-y:auto;color:white;position:relative;font-size:15px;">
+                            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color: #868688;text-align:center;">
+                                <i style="font-size:20px" class="fa fa-exclamation-circle" aria-hidden="true"></i>
+                                <span style="display:block">Hit Send to get a response !</span>
+                            </div>
+
+                        </div>
+                    </div>
+                 
+                </div>
+              
+            </div>
+        </div>
+        <!-- /.col -->
+    </div>
+    <!-- /.row -->
+</section>
+<style>
+    #json-param table{
+        color:white !important;
+    }
+</style>
+<link href="~/Content/Jsonviewer/jquery.json-viewer.css" type="text/css" rel="stylesheet" />
+<script src="~/Content/Jsonviewer/jquery.json-editor.min.js"></script>
+<script type="text/javascript">
+    var editor = new JsonEditor('#json-param', JSON.parse("{}"));
+    var editorResponse = new JsonEditor('#json-response', JSON.parse("{}"));
+    $("#json-param").focusout(function () {
+        refreshJson();
+    })
+
+    $("#form-api-request").submit(function (e) {
+        e.preventDefault(); // avoid to execute the actual submit of the form.
+    
+        try {
+            editor.get();
+        } catch (ex) {
+            var options = $.parseJSON('{"text":"' + 'Wrong JSON Format: ' + ex + '","layout":"topRight","type":"warning"}');
+            noty(options);
+            $("#json-param").css("border", "1px solid red")
+            return false;
+        }
+        $("#submit_loading").show();
+        $("#submit_btn").attr("disabled", true);
+        var form = $(this);
+        var url = form.attr('action');
+        $.ajax({
+            type: "POST",
+            url: url,
+            data: {
+                'Method': form.find('[name="Method"]').val(),
+                'Url': form.find('[name="Url"]').val(),
+                'JsonRequest': JSON.stringify(editor.get()),
+            }, // serializes the form's elements.
+            success: function (data) {
+                if (data.status) {
+                    
+                    $("#not-found").hide();
+                    $("#response-content").show();
+                    $(".status-box").show();
+                    if (data.response.Success == true) {
+                        var options = $.parseJSON('{"text":"api request success","layout":"topRight","type":"success"}');
+                        noty(options);
+                        $("#status-code").removeClass("label-danger").addClass("label-success");
+                        $("#status-code").html("200 OK");
+                    }
+                    else {
+                        var options = $.parseJSON('{"text":"api request error","layout":"topRight","type":"error"}');
+                        noty(options);
+                        $("#status-code").removeClass("label-success").addClass("label-danger");
+                        $("#status-code").html(data.response.StatusCode);
+                    }
+                    $("#title-response").html(data.response.Url);
+                    $("#title-response").css("font-size","14px");
+                    if (data.response.JsonResponse != "") {
+                        editorResponse.load(JSON.parse(data.response.JsonResponse));
+                    }
+                    else {
+                        editorResponse.load(JSON.parse("{}"));
+                    }
+                 
+                }
+                else {
+                    var options = $.parseJSON('{"text":"' + data.message + '","layout":"topRight","type":"error"}');
+                    noty(options);  
+                }
+            },
+            error: function (xhr) {
+                alert("Error occured.please try again");
+            },
+            complete: function () {
+                $("#submit_loading").hide();
+                $("#submit_btn").attr("disabled", false);
+            },
+        });
+    })
+
+    function refreshJson() {
+
+        try {
+            editor.load(editor.get());
+            $("#json-param").css("border", "none")
+        } catch (ex) {
+            var options = $.parseJSON('{"text":"' + 'Wrong JSON Format: ' + ex+'","layout":"topRight","type":"warning"}');
+            noty(options);
+            $("#json-param").css("border","1px solid red")
+            return false;
+        }
+       
+    }
+  
+</script>

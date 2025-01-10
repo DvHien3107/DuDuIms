@@ -1,0 +1,433 @@
+﻿@*@model EnrichcousBackOffice.Models.C_CustomerSupportingInfo*@
+@using EnrichcousBackOffice.Models
+@using Newtonsoft.Json
+@using Inner.Libs.Helpful
+@{
+    C_Customer Customer = ViewBag.Customer as C_Customer;
+    List<C_CustomerContact> contacts = ViewBag.AddContact;
+    List<Store_Services> Services = ViewBag.Services as List<Store_Services>;
+    List<Order_Products> Hardwares = ViewBag.Hardwares as List<Order_Products>;
+    C_CustomerSupportingInfo SPInfo = ViewBag.SupportingInfo as C_CustomerSupportingInfo;
+    string SalesPersonName = ViewBag.SalesPersonName as string;
+    string SalesPersonNumber = ViewBag.SalesPersonNumber as string;
+    var AllOptionEnum = ViewBag.EnumValues as List<EnumValue>;
+}
+
+<div class="col-md-12" style="padding: 0">
+    <div class="box box-primary box-solid" style="border-radius:unset">
+        <div class="box-header with-border" onclick="collapseInfo()">
+            <h4 class="box-title">Support Info</h4>
+
+        </div>
+        <div style="position: absolute; top: 10px; right: 10px;">
+            <button class="btn btn-default btn-xs pull-right collapse_info" onclick="collapseInfo()" style="margin-left:10px;"><i class="fa fa-chevron-down" aria-hidden="true"></i></button>
+            <button class="btn btn-warning btn-xs" onclick="update_merchant('@ViewBag.CustomerID', true, 'mn_supporting')"><i class="fa fa-pencil-square-o" aria-hidden="true"></i> Update</button>
+        </div>
+
+        <div class="box-body">
+            <div style="border-radius: 1rem;">
+                <div class="nav-tabs-custom custom-scroll body-support-info" style="overflow: auto; padding: 15px; height: 320px; margin-bottom: 0">
+                    <div class="row panel_fieldset">
+                        <div class="col-md-4">
+                            <span class="name_fieldset">Salon</span><br />
+                            <div class="form-group">
+                                <label class="control-label">Login Email:</label><span>
+                                    @(Customer.MangoEmail ?? "___") / <span id="Password_hidden_ov">******</span>
+                                    <i class="fa fa-eye eye-icon-password-ov" onclick="show_pass_customer_ov()" style="color:#258e4f; cursor:pointer"></i>
+                                </span>
+                            </div>
+                            @*<div class="form-group">
+            <label class="control-label">Remote Login:</label>
+            @if (!string.IsNullOrEmpty(SPInfo.RemoteLogin))
+            {
+                <span id="Remote_hidden_ov">******</span>
+                <i class="fa fa-eye eye-icon-remote-ov" onclick="show_remote_customer_ov()" style="color:#258e4f; cursor:pointer"></i>
+            }
+            else
+            {
+                <span>N/A</span>
+            }
+        </div>*@
+                            <div class="form-group">
+                                <label class="control-label">Sales Person:</label>
+                                @if (!string.IsNullOrEmpty(SalesPersonName))
+                                {
+                                    <span>#@SalesPersonNumber - @(SalesPersonName ?? "N/A")</span>
+                                }
+                                else
+                                {
+                                    <span>N/A</span>
+                                }
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label">Account Manager:</label>
+                                @if (!string.IsNullOrEmpty(Customer.MemberNumber))
+                                {
+                                    <span>#@Customer.MemberNumber - @(Customer.FullName??"N/A")</span>
+                                }
+                                else
+                                {
+                                    <span>N/A</span>
+                                }
+                            </div>
+                            @*<div class="form-group">
+            <div class="form-group">
+                <label class="control-label">First Invoice Date:</label>
+                <span>@(Customer.BusinessStartDate.HasValue ? Customer.BusinessStartDate.Value.ToString("MMM dd, yyyy"):"N/A")</span>
+            </div>
+        </div>*@
+                            <div class="form-group">
+                                <div class="form-group">
+                                    <label class="control-label">Go-live Date:</label>
+                                    <span>@(Customer.GoLiveDate.HasValue ? Customer.GoLiveDate.Value.ToString("MMM dd, yyyy"):"N/A")</span>
+
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <div class="form-group">
+                                    <label class="control-label">Cancel Date:</label>
+                                    <span>@(Customer.CancelDate.HasValue?Customer.CancelDate.Value.ToString("MMM dd, yyyy"):"N/A")</span>
+
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <div class="form-group">
+                                    <label class="control-label">ClickUp Task:</label>
+                                    @if (@ViewBag.ClickUpId != null)
+                                    {
+                                        <a href="https://app.clickup.com/t/@ViewBag.ClickUpId" target="_blank">@ViewBag.ClickUpId</a>
+                                    }
+                                    else
+                                    {
+                                        <span>N/A</span>
+                                    }
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="col-md-4">
+                            <span class="name_fieldset">Package</span><br />
+                            <div class="form-group">
+                                <label class="control-label">MID: </label><span> @(Customer.TerminalStatus==true?(Customer.MID??"___"):"___")</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label">License Name: </label><span> @(Services.FirstOrDefault(x=>x.Type=="license")?.Productname??"___")</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label">Processing Partner:</label><span> @(!string.IsNullOrEmpty(Customer.Processor)? AllOptionEnum.FirstOrDefault(x=> x.Namespace == EnrichcousBackOffice.Utils.IEnums.MerchantOptionEnum.Processor.Code<string>() &&  x.Value==Customer.Processor)?.Name: "___")</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label">POS Structure:</label><span> @(!string.IsNullOrEmpty(Customer.POSStructure)? AllOptionEnum.FirstOrDefault(x=> x.Namespace == EnrichcousBackOffice.Utils.IEnums.MerchantOptionEnum.POSStructure.Code<string>() &&  x.Value==Customer.POSStructure)?.Name: "___")</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label">Device Name:</label><span> @(!string.IsNullOrEmpty(Customer.DeviceName)? AllOptionEnum.FirstOrDefault(x=> x.Namespace == EnrichcousBackOffice.Utils.IEnums.MerchantOptionEnum.DeviceName.Code<string>() &&  x.Value==Customer.DeviceName)?.Name: "___")</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label">Device Setup Structure:</label><span> @(!string.IsNullOrEmpty(Customer.DeviceSetupStructure)? AllOptionEnum.FirstOrDefault(x=> x.Namespace == EnrichcousBackOffice.Utils.IEnums.MerchantOptionEnum.DeviceSetupStructure.Code<string>() &&  x.Value==Customer.DeviceSetupStructure)?.Name: "___")</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label">Device Note:</label><span> @(!string.IsNullOrEmpty(Customer.DeviceNote)? Customer.DeviceNote: "___")</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <span class="name_fieldset">Contact</span><br />
+                            <div class="form-group">
+                                <label class="control-label">Owner Name: </label><span> @Customer.ContactName <span class="label label-default">Owner</span></span>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label">Owner Email: </label><span> @Customer.Email</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label">Owner Phone: </label><span> @Customer.CellPhone</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label">Salon Phone: </label><span> @Customer.SalonPhone</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label">Manager Phone: </label><span> @Customer.ManagerPhone</span>
+                            </div>
+                        </div>
+                    </div>
+                    <hr />
+                    @*<div class="row panel_fieldset">
+                        <div class="col-md-12">
+                            <div class="row">
+                                <div class="col-sm-6">
+
+                                </div>
+                                <div class="col-sm-6">
+
+                                </div>
+                                <div class="col-sm-6">
+
+                                </div>
+                            </div>*@
+                    @*<table class="table table-hover table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Authorization/Relationship</th>
+                                        <th>Email</th>
+                                        <th>Phone number</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            @Customer.ContactName
+                                        <span class="label label-default">Owner</span>
+                                    </td>
+                                    <td></td>
+                                    <td>@Customer.Email</td>
+                                    <td>@Customer.CellPhone</td>
+                                </tr>
+                                @foreach (var con in contacts)
+                                {
+                                    <tr>
+                                        <td>@con.Name</td>
+                                        <td>
+                                            @foreach (var re in con.Authorization.Split(','))
+                                            {
+                                                <span class="label label-default">@re</span>
+                                            }
+                                        </td>
+                                        <td>@con.Email</td>
+                                        <td>@con.PhoneNumber</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>*@
+                    @*</div>
+                        </div>
+                        <hr />*@
+                    <div class="row panel_fieldset">
+                        <div class="col-lg-12">
+                            <span class="name_fieldset">Services</span><br />
+                            <table class="table table-hover table-striped">
+                                <thead>
+                                    <tr>
+                                        <th style="width:40%">Name</th>
+                                        <th>Status</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var har in Services)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <b>@har.Productname</b><br />
+                                                @if (@har.Type == "license")
+                                                {
+                                                    <label class="label label-primary" style="text-transform: capitalize">@har.Type</label>
+                                                }
+                                                else
+                                                {
+                                                    <label class="label label-warning" style="text-transform: capitalize">@har.Type</label>
+                                                }
+
+                                            </td>
+                                            <td style="vertical-align:middle">
+                                                <span class="label label-success">Active</span>
+                                            </td>
+                                            <td>
+                                                <span>Effective date: @har.EffectiveDate.Value.ToString("MMM dd, yyyy")</span>
+                                                @if (har.RenewDate.HasValue)
+                                                {
+
+                                                    <span>- </span> @har.RenewDate.Value.ToString("MMM dd, yyyy")
+                                                    <br />
+                                                    <label class="label label-default">Monthly</label>
+                                                }
+                                                else
+                                                {
+                                                    <br />
+                                                    <label class="label label-default">Onetime</label>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <hr />
+                    <div class="row panel_fieldset">
+                        <div class="col-lg-6">
+                            <span class="name_fieldset">Hardware</span><br />
+                            <table class="table table-hover table-striped">
+                                <thead>
+                                    <tr>
+                                        <th style="width:40%">Name</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var har in Hardwares)
+                                    {
+                                        <tr>
+                                            <td>@har.ProductName</td>
+                                            <td>
+                                                @{
+                                                    var productNumbers = (har.InvNumbers ?? har.SerNumbers ?? har.CusNumbers ?? "").Split(',').Where(s => !string.IsNullOrWhiteSpace(s));
+                                                }
+                                                @foreach (var num in productNumbers.Take(5))
+                                                {
+                                                    <span class="label label-default label-product-number">@num</span>
+                                                }
+                                                @if (productNumbers.Count() == 0)
+                                                {
+                                                    <span>N/A</span>
+                                                }
+                                                else if (productNumbers.Count() > 5)
+                                                {
+                                                    <span class="btn btn-link" data-toggle="tooltip" title="@string.Join(", ", productNumbers)">more...</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                    @foreach (var har in (SPInfo.MoreHardware ?? string.Empty).Split('|').Where(s => !string.IsNullOrWhiteSpace(s)))
+                                    {
+                                        var hardware = JsonConvert.DeserializeObject<Order_Products>(har);
+                                        <tr>
+                                            <td>@hardware.ProductName</td>
+                                            <td>@hardware.CusNumbers</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="col-lg-6">
+                            <span class="name_fieldset">Other information</span><br />
+                            <table class="table table-hover table-striped">
+                                <thead>
+                                    <tr>
+                                        <th style="width:40%">Name</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+
+                                    @foreach (var note in (SPInfo.OtherNotes ?? string.Empty).Split('|').Where(s => !string.IsNullOrWhiteSpace(s)))
+                                    {
+                                        var itemNote = (note ?? string.Empty).Split(',');
+                                        <tr id="other_note_@itemNote.First()">
+                                            <td class="breakline">@itemNote.Skip(1).First()</td>
+                                            <td class="breakline">@itemNote.Last()</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    @*<hr />
+                        <div class="row panel_fieldset">
+                            <div class="col-md-6">
+                                <span class="name_fieldset">Other information</span><br />
+                                <table class="table table-hover table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th style="width:40%">Name</th>
+                                            <th>Description</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+
+                                        @foreach (var note in (SPInfo.OtherNotes ?? string.Empty).Split('|').Where(s => !string.IsNullOrWhiteSpace(s)))
+                                        {
+                                            var itemNote = (note ?? string.Empty).Split(',');
+                                            <tr id="other_note_@itemNote.First()">
+                                                <td class="breakline">@itemNote.Skip(1).First()</td>
+                                                <td class="breakline">@itemNote.Last()</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>*@
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="col-md-6" style="padding-left: 0">
+    <div class="box box-primary box-solid" style="border-radius:unset">
+        <div class="box-header with-border">
+            <h4 class="box-title">Support Logs</h4>
+        </div>
+        <div class="box-body">
+            <div class="" style="border-radius: 1rem;">
+                <div id="LogHistory_Wrapper">
+                    <div class="detail-sales-lead" style="margin: auto;float: none;padding: 0px 10px 10px 0;text-align: right;display: flex;flex-wrap: wrap;">
+                        <button type="button" onclick="new_appoiment('@ViewBag.SalesLeadId')" class="btn bg-purple pull-left" style="color:white;margin-left:auto"><i class="fa fa-calendar" aria-hidden="true"></i> Add Appoiment</button>&nbsp;
+                        <button type="button" style="color:white" onclick="new_log('@ViewBag.SalesLeadId')" class="btn  btn-primary pull-left"><i class="fa fa-check-square" aria-hidden="true"></i> Update Note/Status</button>
+                    </div>
+                    @Html.Partial("_LogHistoryPartial")
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="col-md-6" style="padding: 0">
+    <div class="box box-primary box-solid" style="border-radius:unset">
+        <div class="box-header with-border">
+            <h4 class="box-title">Tickets</h4>
+        </div>
+        <div class="box-body">
+            <div class="" style="border-radius: 1rem;">
+                <div class="nav-tabs-custom custom-scroll" style="overflow-y: auto; padding: 0 15px; height: calc(80vh + 44px); max-height: calc(80vh + 44px); margin-bottom: 0">
+                    @Html.Partial("_SubPartial_Ticket", ViewBag.ticketlist as List<T_SupportTicket>)
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@Html.Partial("_Partial_AppoimentPopup")
+@Html.Partial("_Partial_LogPopup")
+
+<script>
+    function show_pass_customer_ov() {
+        $('.eye-icon-password-ov').toggleClass('fa-eye fa-eye-slash');
+        if ($('#Password_hidden_ov').html() == '******')
+            $('#Password_hidden_ov').html('@Customer.Password');
+        else
+            $('#Password_hidden_ov').html('******');
+    }
+    function show_remote_customer_ov() {
+        $('.eye-icon-remote-ov').toggleClass('fa-eye fa-eye-slash');
+        if ($('#Remote_hidden_ov').html() == '******')
+            $('#Remote_hidden_ov').html('@SPInfo.RemoteLogin');
+        else
+            $('#Remote_hidden_ov').html('******');
+    }
+
+    function collapseInfo() {
+        if ($('.collapse_info .fa').hasClass('fa-chevron-down')) $('.body-support-info').animate({ height: '560px' });
+        else $('.body-support-info').animate({ height: '320px' });
+        $('.collapse_info .fa').toggleClass('fa-chevron-down fa-chevron-up')
+    }
+</script>
+
+<style>
+    .panel_fieldset {
+        margin: 10px 0px 0 0;
+        /*border: 1px dotted var(--main-color-1);*/
+        /*background-color: #ffffff;*/
+    }
+
+    .name_fieldset {
+        padding: 0px 0px;
+        font-size: 1.2em;
+        display: inline-block;
+        transform: translateY(-9px);
+        background-color: #ffffff;
+        color: #076aa4;
+        margin: 0 0 0 -20px;
+    }
+</style>

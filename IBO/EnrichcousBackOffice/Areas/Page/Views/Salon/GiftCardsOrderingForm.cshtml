@@ -1,0 +1,351 @@
+﻿@model EnrichcousBackOffice.Areas.Page.Models.GiftCardsOrderingFormModel
+@{
+    Layout = "~/Areas/Page/Views/Shared/_Questionare_Layout.cshtml";
+    ViewBag.Title = "Gift Cards Ordering Form";
+}
+
+<div class="container forms-form">
+    <div class="logo">
+        <img src="~/Areas/Page/Content/img/logo.png" />
+    </div>
+    <h1>Gift Cards Ordering Form</h1>
+    <span style="font-style:italic;margin-bottom:1rem;display:inline-block;">This form is used for ordering gift cards.</span>
+    @if (TempData["error"] != null)
+    {
+        <div class="alert alert-warning alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <span><i class="icon fa fa-warning"></i> @TempData["error"]</span>
+        </div>
+    }
+    else if (TempData["success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <span><i class="icon fa fa-check"></i> @TempData["success"]</span>
+        </div>
+    }
+    <style>
+        .img-paking {
+            height: 250px;
+            width: 250px;
+        }
+
+        .img-display img {
+            object-fit: contain;
+            display: block;
+            max-width: 250px;
+            max-height: 250px;
+        }
+
+
+        .custom-file-upload {
+            margin-top: 15px;
+            background: #2b97e6;
+            color: white;
+            padding: 7px 10px;
+            font-size: 14px;
+        }
+
+            .custom-file-upload i {
+                padding-right: 7px;
+            }
+
+        .view-name-img {
+            width: 200px !important;
+            height: 28px !important;
+        }
+    </style>
+    @using (Html.BeginForm("GiftCardsOrderingForm", "Salon", FormMethod.Post, new { enctype = "multipart/form-data", @class = "form-item", @id = "GiftCardsOrderingForm" }))
+    {       
+        @Html.AntiForgeryToken()
+        @Html.ValidationSummary()
+        @Html.HiddenFor(m => m.Id)
+        @Html.HiddenFor(m => m.CustomerId)
+
+    <div class="row">
+        <div class="form-group col-md-5">
+            <label for="ContactName">Point of contact:<span class="offscreen">*</span></label>
+            <input type="text" id="ContactName" class="form-control" name="ContactName" value="@Model.ContactName" placeholder="Name" required>
+        </div>
+        <div class="form-group col-md-3">
+            <label for="ContactPhone">Phone number:<span class="offscreen">*</span></label>
+            <input type="text" id="ContactPhone" class="form-control" name="ContactPhone" value="@Model.ContactPhone" placeholder="Phone" required>
+        </div>
+        <div class="form-group col-md-4">
+            <label for="ContactEmail">Email:<span class="offscreen">*</span></label>
+            <input type="text" id="ContactEmail" class="form-control" name="ContactEmail" value="@Model.ContactEmail" placeholder="Email" required>
+        </div>
+        <div class="col-md-12">
+            <span style="font-style:italic;">Final decision maker on giftcards</span>
+        </div>
+    </div>
+    <div class="row">
+        <div class="form-group col-md-12">
+            <label for="BusinessName">Business Name (shown on gift card):<span class="offscreen">*</span></label>
+            <input type="text" id="BusinessName" class="form-control" name="BusinessName" value="@Model.BusinessName" placeholder="Business Name" required>
+        </div>
+    </div>
+    <div class="row">
+        <div class="form-group col-md-12">
+            <label for="SalonAddress1">
+                Business Address (shown on gift card):<span class="offscreen">*</span>
+            </label>
+            <div class="row">
+                <div class="col-md-6">
+                    <input type="text" id="SalonAddress1" class="form-control" name="SalonAddress1" value="@Model.SalonAddress1" placeholder="Business Address 1" required>
+                </div>
+                <div class="col-md-6">
+                    <input type="text" id="SalonAddress2" class="form-control" name="SalonAddress2" value="@Model.SalonAddress2" placeholder="Business Address 2">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="form-group col-md-4">
+            <input type="text" id="SalonCity" class="form-control" name="SalonCity" value="@Model.SalonCity" placeholder="City" required>
+        </div>
+        <div class="form-group col-md-4">
+            @Html.DropDownListFor(m => m.SalonState, Model.ListState, "Select State", new { @class = "form-control", @required = "" })
+        </div>
+        <div class="form-group col-md-4">
+            <input type="text" id="ZipCode" class="form-control" name="ZipCode" value="@Model.ZipCode" placeholder="Zip Code" required>
+        </div>
+    </div>
+    <div class="row">
+        <div class="form-group col-md-6">
+            <div>
+                <label for="ShowSalonHours">Do you want to display business hours?</label>
+            </div>
+            <div class="form-check-inline">
+                <label class="label-radio">
+                    <input type="radio" class="input-radio" name="ShowSalonHours" value="0" onclick="$('#Salon_Hour  ').slideUp('slow')" @(string.IsNullOrEmpty(Model.SalonHours) ? "checked" : "")> No
+                </label>
+            </div>
+            <div class="form-check-inline">
+                <label class="label-radio">
+                    <input type="radio" class="input-radio" name="ShowSalonHours" value="1" onclick="$('#Salon_Hour').slideDown('slow')" @(!string.IsNullOrEmpty(Model.SalonHours) ? "checked" : "")> Yes
+                </label>
+            </div>
+
+            <div id="Salon_Hour" @(string.IsNullOrEmpty(Model.SalonHours) ? "style=display:none" : "")>
+                <textarea class="form-control" id="SalonHours" name="SalonHours" placeholder="Business hours" wrap="soft" rows="3">@Model.SalonHours</textarea>
+
+            </div>
+        </div>
+        <div class="form-group col-md-6">
+            <label for="ProductCode">Quantity:<span class="offscreen">*</span></label>
+            @Html.DropDownListFor(m => m.ProductCode, Model.ListProduct, "Select Quantity", new { @class = "form-control", @required = "" })
+        </div>
+    </div>
+  
+    <div class="row">
+        <div class="col-md-5">
+            <div class="row">
+                <div class="col-md-6 form-group">
+                    <label for="FrontDesign">Front Design:<span class="offscreen">*</span></label>
+                    <input type="text" id="FrontDesign" class="form-control" name="FrontDesign" value="@Model.FrontDesign" placeholder="Front" required>
+                </div>
+                <div class="col-md-6 form-group">
+                    <label for="BackDesign">Back Design<span class="offscreen">*</span></label>
+                    <select class="form-control" name="BackDesign" id="BackDesign" required>
+                        <option value="">N/A</option>
+                        <option value="B01" @(Model.BackDesign=="B01"?"selected":"")>B01</option>
+                        <option value="B02" @(Model.BackDesign=="B02"?"selected":"")>B02</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-7">
+            <div class="row">
+                <div class="form-group col-md-6">
+                    <label for="FrontDesignFiles">Front Design (optional from catalog)</label>
+
+                    <label class="custom-file-upload" style="margin-top:0px;">
+                        <input type="file" id="FrontDesignFiles" onchange="uploadFrontDesignFiles(this)" class="upload-input" name="FrontDesignFiles" value="@Model.FrontDesignFiles" style="display:none" />
+                        <i class="fas fa-file-upload"></i> Select file
+                    </label>
+                    <div id="FrontDesignFiles_Name" class="BackDesignFiles_Name">
+
+                        @if (!string.IsNullOrEmpty(Model.FrontDesignFiles))
+                        {
+                            if (Model.FrontDesignFiles.ToLower().EndsWith(".png") || Model.FrontDesignFiles.ToLower().EndsWith(".jpg"))
+                            {
+                                <img class="type_img" src="@Model.FrontDesignFiles" width="100" />
+                                <span class="type_file" style="display:none">
+                                    <i class="fas fa-file" style="font-size:30px;color:#6c6c6c;vertical-align:sub;"></i>
+                                </span>
+                            }
+                            else
+                            {
+                                <img class="type_img" src="" width="100" />
+                                <span class="type_file">
+                                    <i class="fas fa-file" style="font-size:30px;color:#6c6c6c;vertical-align:sub;"></i>
+                                </span>
+                            }
+
+
+                            <div id="file_name_FrontDesignFiles" style="display:inline-block">
+                                @(!string.IsNullOrEmpty(Model.FrontDesignFiles) ? Model.FrontDesignFiles.Substring(Model.FrontDesignFiles.LastIndexOf('/')+1):"")
+                            </div>
+                            <a class="download-frontfiles" href="/Upload/DownloadFile_?file=@Model.FrontDesignFiles"><i class="fas fa-download"></i> </a>
+                        }
+                        else
+                        {
+                            <img class="type_img" src="" width="100" />
+                            <span class="type_file" style="display:none">
+                                <i class="fas fa-file" style="font-size:30px;color:#6c6c6c;vertical-align:sub;"></i>
+                            </span>
+                            <div id="file_name_FrontDesignFiles" style="display:inline-block">
+
+                            </div>
+                        }
+                        </div>
+                        <script>
+                            function uploadFrontDesignFiles(el) {
+                                $('#file_name_FrontDesignFiles').html(el.files && el.files.length ? el.files[0].name : '');
+                                var file = el.files[0];
+                                var fileType = file["type"];
+                                var validImageTypes = ["image/gif", "image/jpeg", "image/png"];
+                                if ($.inArray(fileType, validImageTypes) < 0) {
+
+                                    $('#FrontDesignFiles_Name').find('.type_file').show();
+                                    $('#FrontDesignFiles_Name').find('.type_img').hide();
+                                }
+                                else {
+                                    $('#FrontDesignFiles_Name').find('.type_file').hide();
+                                    var FR = new FileReader();
+                                    FR.addEventListener("load", function (e) {
+                                        $('#FrontDesignFiles_Name').find('img').attr("src", e.target.result);
+                                    });
+                                    FR.readAsDataURL(el.files[0]);
+                                    $('#FrontDesignFiles_Name').find('.type_img').show();
+                                }
+                                $(".download-frontfiles").remove();
+                            }
+                        </script>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label for="BackDesignFiles">Back Design (optional from catalog)</label>
+
+                        <label class="custom-file-upload" style="margin-top:0px;">
+                            <input type="file" id="BackDesignFiles" onchange="uploadBackDesignFiles(this)" class="upload-input" name="BackDesignFiles" value="@Model.BackDesignFiles" style="display:none" />
+                            <i class="fas fa-file-upload"></i> Select file
+                        </label>
+                        <div id="BackDesignFiles_Name" class="BackDesignFiles_Name">
+                            @if (!string.IsNullOrEmpty(Model.BackDesignFiles))
+                            {
+                                if (Model.BackDesignFiles.ToLower().EndsWith(".png") || Model.BackDesignFiles.ToLower().EndsWith(".jpg"))
+                                {
+                                    <img class="type_img" src="@Model.BackDesignFiles" width="100" />
+                                    <span class="type_file" style="display:none">
+                                        <i class="fas fa-file" style="font-size:30px;color:#6c6c6c;vertical-align:sub;"></i>
+                                    </span>
+                                }
+                                else
+                                {
+                                    <img class="type_img" src="" width="100" />
+                                    <span class="type_file">
+                                        <i class="fas fa-file" style="font-size:30px;color:#6c6c6c;vertical-align:sub;"></i>
+                                    </span>
+                                }
+
+
+                                <div id="file_name_BackDesignFiles" style="display:inline-block">
+                                    @(!string.IsNullOrEmpty(Model.BackDesignFiles)? Model.BackDesignFiles.Substring(Model.BackDesignFiles.LastIndexOf('/')+1):"")
+                                </div>
+                                <a class="download-backfiles" href="/Upload/DownloadFile_?file=@Model.BackDesignFiles"><i class="fas fa-download"></i> </a>
+                            }
+                            else
+                            {
+                                <img class="type_img" src="" width="100" />
+                                <span class="type_file" style="display:none">
+                                    <i class="fas fa-file" style="font-size:30px;color:#6c6c6c;vertical-align:sub;"></i>
+                                </span>
+                                <div id="file_name_BackDesignFiles" style="display:inline-block">
+
+                                </div>
+                            }
+                        </div>
+
+
+                        <script>
+                            function uploadBackDesignFiles(el) {
+                                $('#file_name_BackDesignFiles').html(el.files && el.files.length ? el.files[0].name : '');
+                                var file = el.files[0];
+                                var fileType = file["type"];
+                                var validImageTypes = ["image/gif", "image/jpeg", "image/png"];
+                                if ($.inArray(fileType, validImageTypes) < 0) {
+
+                                    $('#BackDesignFiles_Name').find('.type_file').show();
+                                    $('#BackDesignFiles_Name').find('.type_img').hide();
+                                }
+                                else {
+                                    $('#BackDesignFiles_Name').find('.type_file').hide();
+                                    var FR = new FileReader();
+                                    FR.addEventListener("load", function (e) {
+                                        $('#BackDesignFiles_Name').find('img').attr("src", e.target.result);
+                                    });
+                                    FR.readAsDataURL(el.files[0]);
+                                    $('#BackDesignFiles_Name').find('.type_img').show();
+                                }
+                                $(".download-backfiles").remove();
+                            }
+                        </script>
+                    </div>
+
+                </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="form-group col-md-12">
+            <label for="Note">Comment and/or notes for Sales:</label>
+            <textarea class="form-control" id="Note" name="Note" placeholder="Note" wrap="soft" rows="3">@Model.Note</textarea>
+        </div>
+    </div>
+    <div class="row">
+        <div class="form-group col-md-12">
+            <button type="submit" class="btn btn-warning" style="width: 100px;">Submit</button>
+        </div>
+    </div>
+}
+</div>
+<style type="text/css">
+    .ui-autocomplete {
+        max-height: 145px;
+        overflow-y: auto;
+        background-color: white;
+        border: 1px solid #cccccc;
+        width: 251px !important;
+    }
+    .select2-container .select2-selection--single {
+        height: 34px;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 34px;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow b {
+        margin-top: 1px;
+    }
+</style>
+
+@section script{
+    <script src="~/Scripts/upload_and_review.js"></script>
+    <script>
+        $('#SalonState').select2({
+            placeholder: "State",
+        });
+        $('#ProductCode').select2({
+            placeholder: "Quantity",
+            "language": {
+                "noResults": function () {
+                    return "No quantity found";
+                }
+            },
+        });
+        $('#BackDesign').select2({
+            placeholder: "Back",
+            minimumResultsForSearch: -1
+        });
+    </script>
+}
+

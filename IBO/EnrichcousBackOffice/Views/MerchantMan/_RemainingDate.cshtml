@@ -1,0 +1,75 @@
+﻿@{
+    int? Remaning = ViewBag.Remaning;
+}
+@if (ViewBag.DueDate == null)
+{
+    var EffectiveDate = ViewBag.EffectiveDate as DateTime?;
+    if (ViewBag.EffectiveDate != null && EffectiveDate > DateTime.UtcNow)
+    {
+        <label id="remaining_day" class="label label-warning" style="font-size: 16px">Active on: @(EffectiveDate?.ToString("MMM dd, yyyy"))</label>
+        <label id="remaining_day" class="label" style="background-color: #00CC00; font-size: 16px">Remaining days: @Remaning day@(Remaning>1?"s":"")</label>
+    }
+    else
+    {
+        if (Remaning > 0 && Remaning < 365 * 10)
+        {
+            <label id="remaining_day" class="label" style="background-color: #00CC00; font-size: 16px">Remaining days: @Remaning day@(Remaning>1?"s":"")</label>
+        }
+        else if (Remaning >= 365 * 10)
+        {
+            <label id="remaining_day" class="label" style="background-color: #00CC00; font-size: 16px">Remaining days: Life time</label>
+        }
+        else if (Remaning <= 0)
+        {
+            <label id="remaining_day" class="label" style="background-color: #EE0000; font-size: 16px">Remaining days: Expires</label>
+        }
+        else
+        {
+
+
+            <label id="remaining_day" class="label label-default" style="font-size: 16px">Remaining days: N/A</label>
+            if (ViewBag.CancelDate == null)
+            {
+                <button type="button" onclick="markAsCancel()" class="btn btn-sm btn-danger"><i class="fa fa-times" aria-hidden="true"></i> Mark Cancel</button>
+            }
+            else
+            {
+                <label class="label label-danger">Canceled</label>
+            }
+
+        }
+    }
+}
+else
+{
+    if (DateTime.Parse(ViewBag.DueDate.ToString("MMM dd, yyyy")).Date < DateTime.UtcNow)
+    {
+        <label class="label label-danger" style="font-size: 16px">Payment Later - @ViewBag.DueDate.ToString("MMM dd, yyyy")</label>
+    }
+    else
+    {
+        <label class="label label-primary" style="font-size: 16px">Payment Later - @ViewBag.DueDate.ToString("MMM dd, yyyy")</label>
+    }
+}
+<script>
+    function markAsCancel() {
+        if (confirm("Are you sure you want to cancel this merchant?")) {
+            var url = '@Url.Action("MarkMerchantIsCanceled", "MerchantMan")';
+            var code = '@ViewBag.CustomerCode';
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: { CustomerCode: code },
+                success: function (data) {
+                    getRemainingDate();
+                    var Success = $.parseJSON('{"text":"Cancel Merchant success", "layout":"top", "type":"success"}');
+                    noty(Success);
+                },
+                error: function (data) {
+                    var Error = $.parseJSON('{"text":"Cancel Merchant fail", "layout":"top", "type":"error"}');
+                    noty(Error);
+                }
+            });
+        }
+    }
+</script>

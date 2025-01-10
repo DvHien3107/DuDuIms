@@ -1,0 +1,337 @@
+body {
+    font-family: sans-serif;
+    font-size: 15px;
+}
+
+h4 {
+    font-family: 'Roboto', sans-serif;
+}
+
+#overlay {
+    position:fixed;
+    width: 100%;
+    height: 100vh;
+    background: rgba(255, 255, 255, 0.3);
+    z-index:9999;
+    opacity: 0;
+    display:none;
+}
+
+    #overlay img {
+        height:100px;
+        width:100px;
+        margin:auto;
+        margin-top: 45vh;
+        display:block;
+    }
+
+._input {
+    height: 48px;
+    max-height: 50px;
+    margin-bottom: 10px;
+}
+
+._input > ._text:focus {
+    border: solid 1px #009cde;
+    outline: none;
+    box-shadow: 0 0 0 1.5pt #009cde;
+}
+    ._input > ._text:focus ~ ._label,
+    .is_valid,
+    ._input > ._text:placeholder-shown ~ ._label,
+    ._input > ._text:not(:focus):read-only ~ ._label {
+        top: -48px !important;
+        bottom: 10px !important;
+        left: 15px !important;
+        font-size: 13px !important;
+        opacity: 1 !important;
+    }
+
+._input > ._text:focus ~ ._label {
+    color: #0070ba;
+}
+
+._input > ._text:focus::placeholder {
+    color: #666;
+}
+
+.is_valid {
+    color: #6c7378 !important;
+}
+
+    ._input > ._text {
+        padding-bottom: 6px;
+        padding-top: 20px;
+        color: #000;
+        font-size: 15.2px;
+        border: 1px solid rgb(197, 204, 209);
+        border-radius: 5px;
+        float: left;
+        font-family: 'Roboto', sans-serif;
+        width: 100%;
+        box-shadow: none;
+        -webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
+        -moz-box-sizing: border-box; /* Firefox, other Gecko */
+        box-sizing: border-box; /* Opera/IE 8+ */
+    }
+    ._input > input._text:read-only {
+        border:none;
+    }
+    ._input > input._text {
+        padding-left: 15px;
+    }
+
+._input > select._text {
+    padding-left: 10px;
+}
+
+._label {
+    position: relative;
+    pointer-events: none;
+    color: #8e9397;
+    left: 15px;
+    top: -34px;
+    transition: 0.3s ease all;
+    font-family: 'Roboto', sans-serif;
+    font-weight: 700;
+}
+
+input::placeholder {
+    color: transparent;
+}
+
+.creditCardInput {
+    padding: 10px;
+}
+
+.creditCardInput .cardIcon {
+    background: url("../Images/sprite_logos_wallet_v10_1x.png") no-repeat 0 100px;
+    height: 22px;
+    margin-right: 5px;
+    float: left;
+    width: 32px;
+    padding: 0 4px 0 0
+}
+
+.card-view.creditCardInput {
+    position: relative;
+}
+
+.card-view.creditCardInput .cardIcon {
+    padding: 0 4px 0 0;
+    position: absolute;
+    margin-top: 2px;
+}
+
+.creditCardInput .cardIcon.ELO {
+    background-position: 0 -713px
+}
+
+.creditCardInput .cardIcon.CUP {
+    background-position: 0 -837px
+}
+
+.creditCardInput .cardIcon.VISA {
+    background-position: 0 -31px
+}
+
+.creditCardInput .cardIcon.RUPAY {
+    background-image: url(https://www.paypalobjects.com/images/checkout/hermes/rupay_logo.svg);
+    background-position: 0 0;
+    background-size: 32px 20px;
+    background-repeat: no-repeat
+}
+
+.creditCardInput .cardIcon.MASTERCARD {
+    background-position: 0 -62px
+}
+
+.creditCardInput .cardIcon.HIPER {
+    background-position: 0 -682px
+}
+
+.creditCardInput .cardIcon.HIPERCARD {
+    background-position: 0 -744px
+}
+
+.creditCardInput .cardIcon.AMEX {
+    background-position: 0 -93px;
+    margin-right: -5px
+}
+
+.creditCardInput .cardIcon.JCB {
+    background-position: 0 -527px
+}
+
+.creditCardInput .cardIcon.ELECTRON {
+    background-position: 0 -217px
+}
+
+.creditCardInput .cardIcon.MAESTRO, .creditCardInput .cardIcon.SWITCH {
+    background-position: 0 -248px
+}
+
+.creditCardInput .cardIcon.DISCOVER {
+    background-position: 0 -124px
+}
+
+.creditCardInput .cardIcon.CBNATIONALE {
+    background-position: 0 -310px
+}
+
+.creditCardInput .cardIcon.CETELEM {
+    background-position: 0 -465px
+}
+
+.creditCardInput .cardIcon.COFIDIS {
+    background-position: 0 -651px;
+    margin-right: -5px
+}
+
+.creditCardInput .cardIcon.COFINOGA {
+    background-position: 0 -341px
+}
+
+.creditCardInput .cardIcon.QIWI {
+    background-position: 0 -806px;
+    width: 30px
+}
+
+.container {
+    border-radius: 5px;
+    box-shadow: 5px 5px 5px 5px rgba(203, 203, 222, 0.2);
+}
+
+.custom-scroll::-webkit-scrollbar {
+    width: 7px;
+    background-color: #f1f1f1;
+}
+
+.custom-scroll::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+    border-radius: 10px;
+    background-color: #f1f1f1;
+}
+.custom-scroll::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+    background-color: var(--main-color-1);
+}
+.custom-scroll::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+.header-left, .header-right {
+    border-bottom: 1px solid #e5e5e5;
+}
+.content-left, .content-right {
+    float:left;
+}
+
+.card {
+    border: none;
+}
+.card-header {
+    background-color: #aad3ea
+}
+.card-title {
+    margin: 0;
+}
+.card-body {
+    padding: 0;
+}
+.card table {
+    margin: 0;
+}
+
+
+@keyframes flickerAnimation {
+    30% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0;
+    }
+
+    70% {
+        opacity: 1;
+    }
+}
+
+@-o-keyframes flickerAnimation {
+    30% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0;
+    }
+
+    70% {
+        opacity: 1;
+    }
+}
+
+@-moz-keyframes flickerAnimation {
+    30% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0;
+    }
+
+    70% {
+        opacity: 1;
+    }
+}
+
+@-webkit-keyframes flickerAnimation {
+    30% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0;
+    }
+
+    70% {
+        opacity: 1;
+    }
+}
+.animate-flicker {
+    -webkit-animation: flickerAnimation 1s infinite;
+    -moz-animation: flickerAnimation 1s infinite;
+    -o-animation: flickerAnimation 1s infinite;
+    animation: flickerAnimation 1s infinite;
+}
+.label-danger {
+    background-color: #cf0303;
+}
+.label-warning {
+    background-color: #f0ad4e;
+}
+.label-success {
+    background-color: #1caa23;
+}
+.label-primary {
+    background-color: #007bff;
+}
+.label {
+    display: inline;
+    padding: .2em .6em .3em;
+    font-size: 75%;
+    font-weight: 700;
+    line-height: 1;
+    color: #fff;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: .25em;
+}
+.btn-default {
+    color: #333;
+     background-color: #fff; 
+     border-color: #ccc; 
+}

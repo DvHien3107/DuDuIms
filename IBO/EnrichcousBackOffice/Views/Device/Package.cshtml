@@ -1,0 +1,514 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.CustomizeModel.I_Bundle_view>
+@using EnrichcousBackOffice.Models;
+@{
+    ViewBag.Title = "Device dashboard";
+    List<I_Bundle> list_history = ViewBag.history;
+
+    Dictionary<string, bool> p = ViewBag.p;
+}
+
+<section class="content-header">
+    <h1>
+        Package
+        <small>Deployment</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li><i class="fa fa-truck"></i> Deployment</li>
+        <li class="active">Package</li>
+    </ol>
+</section>
+@*<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>*@
+<!-- Main content -->
+<section class="content">
+    @if (TempData["e"] != null)
+    {
+        <div class="alert alert-warning alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+        </div>
+    }
+    else if (TempData["s"] != null)
+    {
+        <div class="alert alert-success alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+        </div>
+    }
+    <div class="row">
+        <div class="col-md-12">
+            <div class="box box-primary">
+                <div class="box-body">
+
+                    @*<a class="btn btn-primary" style="float:right; margin-left: 10px" onclick="pickup_a_bundle_modal()"><i class="fa fa-inbox"></i> Pick up a bundle</a>
+                    *@
+                    @*<a class="btn btn-success" style="float:right; margin-left: 10px" onclick="show_order_bundle()"><i class="fa fa-plus"></i> Create order bundle</a>*@
+
+                    <div id="BUNDLEHARDWARE" class="tab-pane fade in" style="padding-top:10px">
+                        <a class="btn btn-success" style="margin-bottom: 10px" onclick="show_modal_bundle()"><i class="fa fa-plus"></i> Create new package</a>
+                        <a class="btn btn-warning pull-right" style="margin-bottom: 10px" onclick="ConvertToPdf()"><i class="fa fa-file-pdf-o"></i> Export PDF <img id="cr_pdf_load_img" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" /></a>
+                        <table id="package_list" class="table table-bordered table-striped">
+                            @Html.Partial("_Partial_DashboardBundle", Model)
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @*<div class="col-md-3 stick">
+            <div class="box box-warning">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Notification</h3>
+                </div>
+                <!-- /.box-header -->
+                <div class="box-body" style="height:80vh; overflow: auto">
+                    <div id="List_history">
+                        @foreach (var item in list_history)
+                        {
+                            <div id="history_@item.Id" class="col-md-12 history_item" style="border: 1px solid orange; padding:10px; margin-bottom:10px">
+                                    <div class="pull-left">
+                                        <b><a style="color:#337ab7" onclick="update_package(@item.Id,'@item.Status')">Order: #@item.OrderCode</a></b><br />
+                                        <label>Merchant:</label> @item.MerchantName<br />
+                                        <label style="color:gray">Bundle: #@item.BundleCode</label>
+
+                                    </div>
+                                    <div class="pull-right">
+                                        <i class="pull-right">
+                                            @if (item.UpdateAt.HasValue)
+                                            {@item.UpdateAt.Value.ToString("MMM dd,yyyy hh:mmtt")}
+                                        </i><br />
+                                        <i class="pull-right">by <b>@item.UpdateBy</b></i><br />
+                                        <i class="pull-right">@item.Status</i><br />
+                                    </div>
+                                </div>
+                        }
+                    </div>
+                    <button type="button" class="btn btn-block btn-flat btn-success" id="add_history" onclick="load_more_history()" style="@if (!ViewBag.canViewMore) { @Html.Raw("display:none")}">
+                        View more...<img id="load_history_img" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                    </button>
+                </div>
+            </div>
+            </div>*@
+    </div>
+</section>
+<div class="modal fade" id="Edit_bundle" role="dialog">
+    <div class="modal-dialog" style="width:1200px; max-width:100%">
+        <!-- Modal content-->
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Modal Header</h4>
+            </div>
+            <div class="modal-body" style=" overflow:auto">
+                <div class="col-md-6" style=" height:100%; max-height:75vh;  overflow:auto;">
+                    <form id="Save_bunlde_form" action="/device/SaveBundle" method="post">
+                        <h3>Package Info</h3>
+                        <input type="hidden" id="bundle_id" name="bundle_id" />
+                        <div class="col-md-12 form-group" style="margin-top:10px">
+                            <label>Name <span style="color: red"> *</span></label>
+                            <input class="form-control" type="text" id="bundle_name" name="bundle_name" required />
+                        </div>
+                        <div class="col-md-12 form-group">
+                            <label>Model <span style="color: red">*</span></label>
+                            <div class="col-md-12" style="padding: 10px; border: dotted 1px orange; min-height:50px">
+                                <table class="table-striped" style="width:100%">
+                                    <tbody id="list_model_selected"></tbody>
+                                    <tbody>
+                                        <tr>
+                                            <td colspan="2" style="border: 1px solid #ddd;">
+                                                <div class="col-md-12 label-primary" style="font-size:16px; border-radius:0px; width:100%; padding:10px 20px">
+                                                    PACKAGE TOTAL:<b style="float:right"> <span id="package_total"></span>$</b>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="col-md-12 form-group">
+                            <label>Note</label>
+                            <textarea id="bundle_info" name="bundle_info" class="ck" style="width:100%; resize:vertical" rows="4"> </textarea>
+                        </div>
+                        <button type="submit" style="display:none"></button>
+                    </form>
+                </div>
+                <div class="col-md-6" style="border-left: dotted 1px green;max-height:75vh; min-height:100%;  overflow:auto;">
+                    <h3>Model select</h3>
+                    <div class="col-md-12">
+                        <hr />
+                        <div style="text-align:center; margin-top:-32px"><label style="background-color:#fff">Model</label></div>
+                    </div>
+
+                    <form id="Search_device_select">
+                        <div class="input-group">
+                            <span class="input-group-addon">
+                                Product line
+                            </span>
+                            <select class="form-control" id="select_line" onchange="search_product('')">
+                                <option value="">-All-</option>
+                                @foreach (var line in ViewBag.list_line)
+                                {
+                                    <option value="@line.Code">@line.Name</option>
+                                }
+                            </select>
+                            @*<input class="form-control" type="text" id="search_text_product" placeholder="Product" />
+        <span class="input-group-btn"><button class="btn btn-default" type="submit">Search</button></span>*@
+
+                        </div>
+                    </form>
+                    <img id="search_product_img" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                    <div id="product_select_list"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="save_bundle()">
+                    Save
+                    <img id="save_bundle_img" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                </button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+<div class="modal fade" id="modal_PDF">
+
+    <div class="modal-dialog" style="width:80%; max-width:1000px;">
+        <div class="modal-content">
+
+            <div class="modal-body">
+                <div>
+                    <div id="modal_PDF_over" style="width: 100%; height: 100%; position: absolute; top: 0px; left: 0px; opacity: 0.5; background-color: white; z-index: 9; display: none;">
+                        <img style="margin:auto; display:block; height:200px" src="/Content/ajax-loaders/loading-partial.gif">
+                    </div>
+                    <iframe id="PDFfile" style="width:100%; height: 80vh"></iframe>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!--datatables-->
+<link rel="stylesheet" href="~/content/admin/bower_components/datatables.net-bs/css/dataTables.bootstrap.min.css">
+<script src="~/content/admin/bower_components/datatables.net/js/jquery.dataTables.min.js"></script>
+<script src="~/content/admin/bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js"></script>
+
+<!--/.End-->
+<script src="~/Scripts/slidebar.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.form/4.2.2/jquery.form.min.js"></script>
+<script src="~/Content/Admin/bower_components/ckeditor/ckeditor.js"></script>
+<link href="~/Content/progress-tracker.css" rel="stylesheet" />
+@*<script src="~/Scripts/Device_Dashboard.js"></script>*@
+
+<style type="text/css">
+    #tab_btn a {
+        border-radius: 0px;
+        border-top-right-radius: 20px;
+        border-bottom: 0px;
+        padding: 10px 20px;
+    }
+
+    a:focus, a:hover {
+        cursor: pointer;
+        text-decoration: none !important;
+    }
+
+    .tb_list_device td {
+        padding: 0px !important;
+    }
+
+    #bd_list_device td {
+        padding: 0px !important;
+    }
+
+    .sticky {
+        position: fixed;
+        top: 0;
+        right: 0;
+        width: 22%;
+    }
+</style>
+<script>
+    $(function () {
+        $('#package_list').dataTable({
+            "order": [0, "desc"]
+        });
+
+        $(".tag_btn").on("click", function () {
+            $(this).parent().find(".btn-primary").removeClass("btn-primary");
+            $(this).addClass("btn-primary");
+        })
+        $("#Search_device_select").on("submit", function () {
+            search_product($('#search_text_product').val());
+            return false;
+        });
+    });
+    function load_bundle() {
+        $('#loading_tab').show();
+        $.ajax({
+            method: "POST",
+            url: "/device/LoadBundleTable",
+            data: {},
+            dataType: "html"
+        })
+            .done(function (data) {
+                $("#package_list").html(data);
+                $('#loading_tab').hide();
+            })
+            .fail(function () {
+            })
+            .always(function () {
+            });
+    }
+    function show_modal_bundle(id = null) {
+        $.ajax({
+            method: "POST",
+            url: "/device/loadBundle",
+            data: { id },
+            dataType: "json"
+        })
+            .done(function (data) {
+                if (data[0]) {
+                    $("#bundle_id").val(data[1]["Id"]);
+                    $("#bundle_name").val(data[1]["Name"]);
+                    $("#bundle_info").html(data[1]["Info"]);
+                    $("#list_model_selected").html(data[2]);
+                    if (id) {
+                        $('#Edit_bundle .modal-title').html("Edit Package");
+                    } else {
+                        $('#Edit_bundle .modal-title').html("New Package");
+                    }
+                    //disable các option model đã có trong bundle
+                    $('#Edit_bundle').modal('show');
+                    search_product("",data[3]);
+                    refresh_package_total();
+                }
+                else {
+
+                    noty({ "text": data[1], "layout": "topRight", "type": "error" });
+                }
+            })
+            .fail(function () {
+            })
+            .always(function () {
+            });
+
+    }
+    function search_product(text, models_disable =null) {
+
+        var line = $("#select_line").val();
+        $.ajax({
+            method: "POST",
+            url: "/device/SearchProduct_bundle",
+            data: { line, text },
+            dataType: "json"
+        })
+            .done(function (data) {
+                if (data[0] == true) {
+                    $("#product_select_list").html(data[1]);
+                    $('#loading_tab').hide();
+                    //$('.model_vendor').select2();
+                    //$('.model_color').select2();
+                    $('.select_model').select2();
+                    if (models_disable) {
+                        for (var i in models_disable) {
+                            $(".select_model").find("option[value='" + models_disable[i] + "']").attr("disabled", true).prop("selected", false).closest(".select_model").select2();
+                        }
+                    
+                    }
+                    //for (var i = 0; i < data[2].length; i++) {
+                    //    var item = data[2][i];
+                    //    var select = $('#product_' + item["ProductCode"] + ' .model_vendor');
+                    //    if (select.find("option[value=" + item["VendorId"] + "]").length == 0) {
+                    //        var newOption = new Option(item["VendorName"], item["VendorId"], false, false);
+                    //        select.append(newOption);
+                    //    }
+
+                    //}
+                    //$('.model_vendor').on("change", function () {
+                    //    var e_product = $(this).closest(".product_item");
+                    //    var product_code = e_product.find(".product_code").val();
+                    //    var vendor_id = $(this).val();
+                    //    e_product.find(".model_color").empty();
+                    //    for (var i = 0; i < data[2].length; i++) {
+                    //        var item = data[2][i];
+                    //        if (item["ProductCode"] == product_code && item["VendorId"] == vendor_id) {
+                    //            if (item["Color"]) {
+                    //                var newOption = new Option(item["Color"], item["Color"], false, false);
+                    //                e_product.find(".model_color").append(newOption);
+                    //            } else {
+                    //                var newOption = new Option("Default", "", true, true);
+                    //                e_product.find(".model_color").prepend(newOption);
+                    //            }
+                    //        }
+                    //    }
+                    //    $('.model_color').trigger('change');
+                    //})
+
+                    //$('.model_color').on("change", function () {
+                    //    var e_product = $(this).closest(".product_item");
+                    //    var product_code = e_product.find(".product_code").val();
+                    //    var vendor_id = e_product.find(".model_vendor").val();
+                    //    var color = $(this).val();
+                    //    for (var i = 0; i < data[2].length; i++) {
+                    //        var item = data[2][i];
+                    //        if (item["ProductCode"] == product_code && item["VendorId"] == vendor_id && item["Color"] == color) {
+                    //            e_product.find(".product_img").attr("src", item["Picture"] || "/Upload/Img/no_image.jpg");
+                    //            break;
+                    //        }
+                    //    }
+                    //})
+                    //$('.model_vendor').trigger('change');
+
+                }
+            })
+            .fail(function () {
+            })
+            .always(function () {
+            });
+    }
+    function select_model(product_code) {
+        //_Partial_ListProduct btn
+        var e_product = $("#product_" + product_code);
+
+        var model_code = e_product.find(".select_model").val();
+        if (!model_code) {
+            noty({ "text": "Please select model", "layout": "topRight", "type": "error" });
+            return false;
+        }
+        e_product.find(".loading_img").show();
+        $.ajax({
+            method: "POST",
+            url: "/device/SelectModelBundle",
+            data: { model_code },
+            dataType: "json"
+        })
+            .done(function (data) {
+                if (data[0] == true) {
+                    $("#list_model_selected").append(data[1]);
+                    refresh_package_total();
+                    e_product.find(".select_model").find("option[value='" + model_code + "']").attr("disabled", true).prop("selected", false);
+                    e_product.find(".select_model").select2();
+                }
+                else {
+                    noty({ "text": data[1], "layout": "topRight", "type": "error" });
+                }
+            })
+            .fail(function () {
+                alert("select_model fail");
+            })
+            .always(function () {
+                e_product.find(".loading_img").hide();
+            });
+    }
+    function refresh_package_total() {
+        var package_total = 0;
+        $(".model_item").each(function () {
+            package_total += parseFloat($(this).find('.model_total').html());
+        });
+        $("#package_total").html(package_total);
+    }
+    function unselect_model(model_code) {
+        var e_model = $("#model_item_" + model_code.replace(/ /g, "_"));
+        e_model.find(".model_img").show();
+        $.ajax({
+            method: "POST",
+            url: "/device/unSelectModelBundle",
+            data: { model_code },
+            dataType: "json"
+        })
+            .done(function (data) {
+                if (data[0] == true) {
+                    e_model.remove();
+                    var e_option = $(".select_model").find("option[value='" + model_code + "']:disabled");
+                    var e_select = e_option.closest(".select_model");
+                    e_option.attr("disabled", false);
+                    if (!e_select.val()) {
+                        
+                        e_option.prop("selected", true);
+                    }
+                    e_select.select2();
+                    refresh_package_total();
+                }
+                else {
+                    noty({ "text": data[1], "layout": "topRight", "type": "error" });
+                }
+            })
+            .fail(function () {
+                alert("select_model fail");
+            })
+            .always(function () {
+                e_model.find(".model_img").hide();
+            });
+    }
+    function save_bundle() {
+        if (!$('#bundle_name').val()) {
+            noty({ "text": "Package name is required!", "layout": "topRight", "type": "error" });
+            return false;
+        }
+        $("#Save_bunlde_form").ajaxForm(function (data) {
+            if (data[0]) {
+                noty({ "text": "Package saved!", "layout": "topRight", "type": "success" });
+                $('#Edit_bundle').modal('hide');
+                load_bundle();
+            }
+            else {
+                noty({ "text": data[1], "layout": "topRight", "type": "error" });
+            }
+        });
+        $("#Save_bunlde_form").submit();
+    }
+    function delete_bundle(id) {
+        if (confirm("Do you want to delete this package?")) {
+            $.ajax({
+                method: "POST",
+                url: "/device/delete_bundle",
+                data: { id },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    if (data[0]) {
+                        noty({ "text": data[1], "layout": "topRight", "type": "success" });
+                        load_bundle();
+                    } else {
+                        noty({ "text": data[1], "layout": "topRight", "type": "error" });
+                    }
+                })
+                .fail(function () {
+                })
+                .always(function () {
+                });
+        }
+    }
+    function ConvertToPdf() {
+        $("#modal_PDF_over").show();
+        $("#modal_PDF").modal("show");
+        $("#cr_pdf_load_img").show();
+        $.ajax({
+            method: "POST",
+            url: "/device/ConvertToPdf",
+            dataType: "json"
+        })
+            .done(function (data) {
+                if (data[0]) {
+                    $('#PDFfile').prop("src", data[1]);
+                    noty({ "text": "Pdf Create completed!", "layout": "topRight", "type": "success" });
+                } else {
+                    noty({ "text": data[1], "layout": "topRight", "type": "error" });
+                    $("#modal_PDF").modal("hide");
+                }
+                $("#modal_PDF_over").hide();
+            })
+            .fail(function () {
+            })
+            .always(function () {
+                $("#cr_pdf_load_img").hide();
+            });
+    }
+</script>

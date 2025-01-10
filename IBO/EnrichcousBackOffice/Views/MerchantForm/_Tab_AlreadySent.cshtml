@@ -1,0 +1,235 @@
+﻿
+<div class="box" style="border-top:none;">
+    <div class="box-header no-padding">
+        <button type="button" class="btn btn-primary btn-sm pull-right" onclick="loadFormAlreadyDetail()">
+            <i class="fa fa-plus"></i> Send a new form
+        </button>
+    </div>
+    <div class="box-body no-padding">
+        <div class="row filter-group" id="search_form">
+            <div class="col-md-3 col-sm-6 form-group">
+                <div class="input-group" style="width:100%">
+                    <div class="input-group-addon">
+                        Status
+                    </div>
+                    <select class="form-control change-search" id="Status" name="Status">
+                        <option value="" style="font-weight:bold" >All</option>
+                        <option value="0" style="font-weight:bold;" class="text-dark">Created</option>
+                        <option value="1" style="font-weight:bold;" class="text-info">Sent</option>
+                        <option value="2" style="font-weight:bold;" class="text-success">Submited</option>
+                    </select>
+                </div>
+                <!-- /.input group -->
+            </div>
+            <div class="col-md-6 col-sm-6 form-group">
+                <div class="input-group" style="width:100%">
+                    <div class="input-group-addon">
+                        Search By
+                    </div>
+                    <input type="text" class="form-control change-search" id="SearchText" name="SearchText" placeholder="Form library | Customer | Subject | EmailCC ..." value="" />
+                </div>
+                <!-- /.input group -->
+            </div>
+        </div>
+        <hr />
+        <div class="col-12">
+            <table id="form_already_list" class="table table-bordered table-striped" data-order='[[ 0, "desc" ]]' style="width: 100%">
+                <thead>
+                    <tr>
+                        <th>Form library</th>
+                        <th>Customer</th>
+                        <th>Subject</th>
+                        <th>Content Addon</th>
+                        <th>Status</th>
+                        <th>History</th>
+                        <th style="width:150px"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="already_form_modal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content"></div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $('#form_already_list').DataTable({
+            "language": {
+                "processing": '<img src="/Content/ajax-loaders/loading2.gif" width="60px" />',
+                "paginate": {
+                    "first": '<i class="fa fa-angle-double-left" aria-hidden="true"></i>',
+                    "last": '<i class="fa fa-angle-double-right" aria-hidden="true"></i>',
+                    "next": '<i class="fa fa-angle-right" aria-hidden="true"></i>',
+                    "previous": '<i class="fa fa-angle-left" aria-hidden="true"></i>'
+                },
+            },
+            "pageLength": 10,
+            "serverSide": true, // for process server side
+            "processing": true, // for show progress bar
+            'paging': true,
+            'lengthChange': true,
+            'searching': false,
+            'ordering': true,
+            'info': false,
+            'autoWidth': true,
+            'stateSave': false,
+            'columnDefs': [
+                { orderable: false, targets: 6 }
+            ],
+            "ajax": {
+                "url": "/merchantform/loadlistformalready",
+                "type": "POST",
+                "datatype": "json",
+                data: function (data) {
+                    data.SearchText = $('#SearchText').val();
+                    data.Status = $('#Status').val();
+                    data.SalePerson = $('#SalePerson').val();
+                    return data;
+                },
+                'dataSrc': function (data) {
+                    return data.data;
+                }
+            },
+            'fnCreatedRow': function (nRow, aData, iDataIndex) {
+                //$(nRow).attr('onclick', `load_invoice('${aData.Customer.CustomerCode}', $(this))`);
+            },
+            "columns": [
+                {
+                    "name": "TemplateCode",
+                    "render": function (data, type, row) {
+                        let html = `<b style="cursor:pointer" onclick="previewForm('${row["f"].Id}', '${row["f"].TemplateCode}')" data-toggle="tooltip" title="Form Preview">#${row["f"].TemplateCode}</b><br/>`;
+                        return html;
+                    },
+                    "className": 'align-middle',
+                },
+                {
+                    "name": "CustomerCode",
+                    "render": function (data, type, row) {
+                        let html = `<b><a href="/merchantman/detail/${row["c"].Id}" target="_black">
+                                    <span style="color:#333333">#${row["c"].CustomerCode}</span></br>
+                                    <span class="text-primary">${row["c"].BusinessName}</span></a></b>`;
+                        return html;
+                    },
+                    "className": 'align-middle',
+                },
+                {
+                    "name": "Subject",
+                    "render": function (data, type, row) {
+                        let html = `<p>${row["fd"].Subject}</p>`;
+                        return html;
+                    },
+                    "className": 'align-middle',
+                },
+                {
+                    "name": "ContentAddon",
+                    "render": function (data, type, row) {
+                        let html = '';
+                        if (row["fd"].EmailCC) html += `CC: <i>${row["fd"].EmailCC}</i></br>`
+                        html += `<p>${row["fd"].ContentAddon}</p>`;
+                        return html;
+                    },
+                    "className": 'align-middle',
+                },
+                {
+                    "name": "Status",
+                    "render": function (data, type, row) {
+                        let html = '';
+                        if (row["fd"].Status == 2) html = `<label class="label label-success">Submited</label>`;
+                        else if (row["fd"].Status == 1) html = `<label class="label label-info">Sent</label>`;
+                        else html = `<label class="label label-default">Created</label>`;
+                        return html;
+                    },
+                },
+                {
+                    "name": "History",
+                    "render": function (data, type, row) {
+                        let html = '';
+                        if (row["fd"].SubmitedAt != null && row["fd"].SubmitedAt != '') {
+                            let offset = moment().utcOffset();
+                            html = moment.utc(row["fd"].SubmitedAt).utcOffset(offset).format("MMM DD, YYYY");
+                            html += ` by ${row["fd"].SubmitedBy}`;
+                        }
+                        else if (row["fd"].SentAt != null && row["fd"].SentAt != '') {
+                            let offset = moment().utcOffset();
+                            html = moment.utc(row["fd"].SentAt).utcOffset(offset).format("MMM DD, YYYY");
+                            html += ` by ${row["fd"].SentBy}`;
+                        }
+                        else if (row["fd"].CreatedAt != null && row["fd"].CreatedAt != '') {
+                            let offset = moment().utcOffset();
+                            html = moment.utc(row["fd"].CreatedAt).utcOffset(offset).format("MMM DD, YYYY");
+                            html += ` by ${row["fd"].CreatedBy}`;
+                        }
+                        return html;
+                    },
+                    "className": 'align-middle',
+                },
+                {
+                    "name": "Action",
+                    "render": function (data, type, row) {
+                        let html = '';
+                        html += `<a href="/MerchantForm/Render?key=${row["fd"].Id}&code=${row["fd"].CustomerCode}" target="_blank" class="btn btn-primary btn-sm" style="margin-right:3px"><i class="fa fa-eye" aria-hidden="true"></i> View form</a>`;
+                        if (row["fd"].Status < 2) html += `<button class="btn btn-warning btn-sm" onclick="loadFormAlreadyDetail('${row["fd"].Id}')"><i class="fa fa-pencil-square-o"></i> Edit</button>`;
+                        return html;
+                        //<button class="btn btn-info btn-sm" type="button" onclick="previewForm('${row["f"].Id}', '${row["f"].TemplateCode}', '${row["f"].CustomerCode}')"><i class="fa fa-envelope-o"></i> Send</button>
+                    },
+                    "className": 'align-middle',
+                }
+            ]
+        })
+
+        $('#search_form').on('change paste', 'input, select, textarea', function () {
+            $('#form_already_list').DataTable().ajax.reload();
+        });
+
+    });
+
+    function loadFormAlreadyDetail(id = "") {
+        overlayOn();
+        $.ajax({
+            method: "get",
+            url: `/merchantform/detailformalready?id=${id}`
+        }).done(function (data) {
+            $('#already_form_modal .modal-content').html(data);
+            $('#already_form_modal').modal();
+        }).fail(function (data) {
+            var mess = $.parseJSON('{"text":"' + data.statusText + '", "layout":"topRight", "type":"error"}');
+            noty(mess);
+        }).always(function () {
+            overlayOff();
+        });
+    }
+
+    function removeAlreadyForm(id, code) {
+        if (confirm('Are you sure that you want to delete?')) {
+            overlayOn();
+            $.ajax({
+                method: "get",
+                url: `/merchantform/deleteformalready?id=${id}`
+            }).done(function (data) {
+                if (data[0]) {
+                    var mess = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"success"}');
+                    noty(mess);
+                    $('#save_already_form').modal('hide');
+                    $('#form_already_list').DataTable().ajax.reload();
+                }
+                else {
+                    var mess = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"error"}');
+                    noty(mess);
+                }
+            }).fail(function (data) {
+                var mess = $.parseJSON('{"text":"' + data.statusText + '", "layout":"topRight", "type":"error"}');
+                noty(mess);
+            }).always(function () {
+                overlayOff();
+            });
+        }
+    }
+
+</script>

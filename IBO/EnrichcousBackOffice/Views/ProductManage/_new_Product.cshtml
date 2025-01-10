@@ -1,0 +1,71 @@
+﻿@model EnrichcousBackOffice.Models.O_Product
+@{
+    var _access = EnrichcousBackOffice.AppLB.Authority.GetAccessAuthority();
+    var accessAdd = (_access.Any(k => k.Key.Equals("products_addnewdevice")) == true && _access["products_addnewdevice"] == true);
+    var accessDelete = (_access.Any(k => k.Key.Equals("products_deletedevice")) == true && _access["products_deletedevice"] == true);
+    var accessEdit = (_access.Any(k => k.Key.Equals("products_updatedevice")) == true && _access["products_updatedevice"] == true);
+}
+<tr id="prod_@Model.Code" class="hover" onclick="$('#models_@Model.Code').toggle(100);$('#form_edit_product').hide(300)">
+    <td>
+        <b style="color:green" class="prod_name">@Model.Name</b>
+    </td>
+    <td class="prod_line">
+        @ViewBag.Linename
+    </td>
+    <td class="prod_num_model">
+        0
+    </td>
+    <td class="prod_des">
+        @Model.Description
+    </td>
+    <td>
+        @if (accessEdit)
+        {
+            <button type="button" class="btn btn-sm btn-warning edit_product" style="padding:5px 10px;color:white" onclick="edit_product('@Model.Code')"><i class="fa fa-pencil-square-o"></i> Edit</button>
+        }
+        @if (accessDelete)
+        {
+            <button type="button" onclick="deleteProduct('@Model.Code')" class="btn btn-sm btn-danger editmodel" style="padding:5px 10px"><i class="fa fa-trash" aria-hidden="true"></i> Delete</button>
+        }
+        </td>
+</tr>
+<tr class="prod_edit">
+    <td colspan="6" id="edit_@Model.Code" style="padding:0; border:none"></td>
+</tr>
+<tr id="models_@Model.Code" style="display:none">
+    <td colspan="5" style="padding-left:50px;border:none;">
+        <div style="max-height:500px; overflow-y:auto">
+            <table style="width: 100%;background-color:#fff; ">
+                <thead style="background-color: #aad3ea">
+                    <tr>
+                        <th>Model #</th>
+                        <th>Image</th>
+                        <th>Vendor</th>
+                        <th>Color</th>
+                        <th>Price</th>
+                        <th>Status</th>
+                        <th>Device Required</th>
+                        <th>Merchant Onboarding</th>
+                        <th>Edit</th>
+                    </tr>
+                </thead>
+                <tbody style="">
+                </tbody>
+            </table>
+        </div>
+        <div class="col-md-12" style="text-align:center; padding:0">
+            @if (accessAdd)
+            {
+                <a class="btn btn-default btn-flat fa fa-plus" style="padding:10px; width:100%; color: #0094ff" onclick="new_model('@Model.Code')">
+                    <b> New model</b>
+                </a>
+            }
+        </div>
+        <div id="new_model_@Model.Code"></div>
+    </td>
+</tr>
+<script>
+    $('.edit_product,.editmodel').click(function (e) {
+        e.stopPropagation();
+    });
+</script>

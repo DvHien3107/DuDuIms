@@ -1,0 +1,471 @@
+@using EnrichcousBackOffice.Models
+@using EnrichcousBackOffice.ViewModel
+@using EnrichcousBackOffice.Utils
+@using EnrichcousBackOffice.Utils.IEnums
+@using Inner.Libs.Helpful
+@model EnrichcousBackOffice.ViewModel.StoreProfile
+@{
+    Store_Services main = ViewBag.main;
+    Dictionary<string, int> addons = ViewBag.addons;
+    bool reactive = ViewBag.reactive ?? false;
+    string merchant_ims_version = ViewBag.merchant_ims_version;
+    var feature_pos = ViewBag.features_pos ?? null;
+   // var BaseService = ViewBag.BaseService as List<StoreBaseService>;
+}
+@if (Model?.StoreId == null || main?.Id == null)
+{
+    <div class="box box-primary box-solid store-profile" style="border-radius:unset">
+        <div class="box-header with-border">
+            <h4 class="box-title">Store profile <b></b></h4>
+        </div>
+        <div class="box-body">
+            @if (TempData["error"] != null)
+            {
+                <div class="alert alert-warning alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                    <span><i class="icon fa fa-warning"></i> @TempData["error"]</span>
+                </div>
+            }
+            else if (Model == null)
+            {<text>
+                    The store has not yet activated the mango pos system or no plans are activated.
+            </text>}
+        else if (main == null)
+        {<text>
+                Please active Main-Product Plan first!
+        </text>}
+        </div>
+    </div>
+    return;
+}
+
+
+<div class="box box-primary box-solid store-profile" style="border-radius:unset">
+    <div class="box-header with-border">
+    </div>
+    <div class="box-body">
+        @* POS Info *@
+        <h4>Salon Infomation</h4>
+        <div class="col-md-12">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group row-info">
+                        <label class="control-label">Store Id </label><span> <b>#@(Model.StoreId ?? "___")</b></span>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="col-md-12 row-info" style="padding-left:0">
+                        <label class="control-label">Account login </label><span> @(Model.Email ?? "___") / ****** </span>
+                        @if ((ViewBag.actionActive ?? false) == false)
+                        {
+                            @*<button class="btn btn-sm btn-default reset-password" style="height: 25px;line-height: 10px;float: right">
+                                    RESET PASSWORD <img style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                                </button>*@
+                            <button class="btn btn-sm btn-default" onclick="$('#reset_pass_form').slideToggle(300), $('[name=reset_type][value=auto_pass]').trigger('click'),$('.set_pass input,#email_cc').val('')"
+                                    style="height: 25px;line-height: 10px;float: right">
+                                RESET PASSWORD <img style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                            </button>
+                            <div id="reset_pass_form" class="col-md-offset-7 col-md-5 pull-left" style="margin-top:3px;border: 1px outset var(--main-color-1); border-radius: 5px; background-color:#fff; padding: 20px; display:none">
+                                <label class="text-primary" style="padding: 10px 0">RESET PASSWORD</label>
+                                <a class="pull-right fa fa-close" style="padding:5px" onclick="$('#reset_pass_form').slideUp(300)"></a>
+                                <div class="form-group">
+                                    <label style="cursor:pointer"> <input type="radio" name="reset_type" value="auto_pass" checked /> Auto generate password</label><br />
+                                    <label style="cursor:pointer"> <input type="radio" name="reset_type" value="set_pass" /> I will set a new pasword</label>
+                                </div>
+                                <div class="form-group set_pass" style="display:none">
+                                    <label>New Password <span class="text-red">*</span></label>
+                                    <input id="new_pass" class="form-control" placeholder="New Password" type="password" autocomplete="off" />
+                                </div>
+                                <div class="form-group set_pass" style="display:none">
+                                    <label>Confirm Password <span class="text-red">*</span></label>
+                                    <input id="confirm_pass" class="form-control" placeholder="Confirm Password" type="password" autocomplete="off" />
+                                </div>
+                                <div class="form-group">
+                                    <label>Notify to email(CC): </label>
+                                    <input class="form-control" id="email_cc" placeholder="notify to email" />
+                                    <span style="color:darkgreen">(Account login to mango pos will be sent(CC) to this email)</span>
+                                </div>
+                                <div class="form-group">
+                                    <label style="cursor:pointer"> <input type="checkbox" name="require_change" checked /> Salon must change password at next logon.</label><br />
+                                </div>
+                                <div class="form-group">
+                                    <label style="cursor:pointer"> <input type="checkbox" name="is_sendNoty" checked /> Notify Email will be send to merchant.</label><br />
+                                </div>
+                                <a class="pull-right btn btn-primary" onclick="reset_pass_submit()">Submit <img id="reset_password_imgload" style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" /></a>
+                            </div>
+
+                        }
+                    </div>
+                </div>
+            </div>
+            @if (ViewBag.actionActive == true)
+            {
+                <div class="row">
+                    <div class="col-md-12" style="padding-top:15px;">
+                        <div class="form-group">
+                            @if (ViewBag.SMSWarning)
+                            {
+                                <div class="alert alert-warning" style="background-color: white !important; color: #e08e0b !important">
+                                    <span>
+                                        <i class="icon fa fa-warning"></i> Merchant have activated the unlimited SMS services, if activated this service will deactivate the unlimited SMS services. Are you sure you want to activate this services?
+                                    </span>
+                                </div>
+                            }
+                            @*@if (string.IsNullOrEmpty(main.Product_Code_POSSystem))
+                                {
+
+                                    <label class="label label-success">version 2</label>
+                                }
+                                else
+                                {
+                                    <label class="label label-warning">version 1</label>
+                                }*@
+
+                            @*<select data-allow-clear="true" data-placeholder="Please select version ..." class="form-control" id="ims_version" style="width: 300px; float:left"
+                                        @if (!string.IsNullOrEmpty(merchant_ims_version)) { @Html.Raw("disabled") }>
+                                    <option value=""></option>
+                                    @foreach (var v in Enum.GetValues(typeof(IMSVersion)).Cast<IMSVersion>().ToList())
+                                    {
+                                        <option @(merchant_ims_version == v.Code<string>() ? "selected" : "")>@v.Text()</option>
+                                    }
+                                </select>*@
+                            <button class="btn btn-md btn-warning store-active pull-right" style="color: white;">
+                                APPROVE ACTIVE <img style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+            <hr />
+        </div>
+
+        <ul class="nav nav-tabs">
+            <li id="tab_mango_services" class="active">
+                <a data-toggle="tab" href="#mango_services">
+                    <h4 style="margin: 0">Mango Services <b></b></h4>
+                </a>
+            </li>
+            @if (merchant_ims_version != "v1")
+            {
+                <li id="tab_mango_features">
+                    <a data-toggle="tab" href="#mango_features">
+                        <h4 style="margin: 0">Mango Features <b></b></h4>
+                    </a>
+                </li>
+            }
+        </ul>
+
+        @* Licenses Info *@
+        <h4>Licenses Infomation</h4>
+        <div class="col-md-12">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group row-info">
+                        <label class="control-label">Main Subscription </label><span> <b>@(main.Productname ?? "___")</b></span>
+                        @if (main.RenewDate < DateTime.Today)
+                        {
+                            <span class="label label-danger" style="float: right">Expires</span>
+                        }
+                        else
+                        {
+                            switch (main.Active)
+                            {
+                                case 1:
+                                    <span class="label label-success" style="float: right">Active</span>
+                                    break;
+                                case 0:
+                                    <span class="label label-danger" style="float: right">DeActive</span>
+                                    break;
+                                case -1:
+                                    <span class="label label-warning" style="float: right">Waiting</span>
+                                    break;
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-12 tab-content">
+
+            <div id="mango_services" class="tab-pane row tab-pane fade in active">
+                @{
+                   // var smsBaseService = BaseService.Where(x => x.KeyName == "SMS").FirstOrDefault();
+
+                    string FormatRemainingSMS(int value)
+                    {
+                        string result = "0";
+                        if (value > 10000000|| value < 0)
+                        {
+                            result = "Unlimited";
+                        }
+                        else
+                        {
+                            result = value.ToString();
+                        }
+                        return result;
+                    }
+                }
+                @foreach (var license in Model.Licenses ?? new List<Licenses>())
+                {
+                    <div class="col-md-12">
+                        <div class="form-group row-info">
+                            <label class="control-label"> <b>@(license.LicenseCode ?? "___")</b></label>
+                            @*<span class="text text-@(license.Status == "active" ? "success" : "danger")"> @(license.Status ?? "___")</span>*@
+                        </div>
+                    </div>
+                    if (license.LicenseCode == "SMS")
+                    {
+
+                        <div class="col-md-12" style="padding-left: 30px">
+                            <div class="form-group row-info">
+                                <span class="control-label">The remaining amount </span>
+                                <span>
+                                    @(license != null ? FormatRemainingSMS(int.Parse(license.Count_current)) : "N/A")
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-12" style="padding-left: 30px">
+                            <div class="form-group row-info">
+                                <span class="control-label">Maximum number </span>
+                                <span>
+                                    @(license != null ? FormatRemainingSMS(int.Parse(license.Count_limit)) : "N/A")
+                                </span>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="col-md-12" style="padding-left: 30px">
+                            <div class="form-group row-info">
+                                <span class="control-label">The remaining amount </span>
+                                <span>
+                                    @(string.IsNullOrEmpty(license.Count_current) ? "0" : license.Count_current =="-1"? "unlimited" : license.Count_current)
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-12" style="padding-left: 30px">
+                            <div class="form-group row-info">
+                                <span class="control-label">Maximum number </span>
+                                <span>
+                                    @(string.IsNullOrEmpty(license.Count_limit) ? "0" : license.Count_limit == "-1" ? "unlimited" : license.Count_limit)
+                                    @if (addons != null && addons.ContainsKey(license.LicenseCode) && reactive == false && addons[license.LicenseCode] > 0)
+                                    {
+                                        <span style="font-size: 20px;float: right;color: blue;" class="text text-primary"><b>+@(addons[license.LicenseCode])</b></span>
+                                    }
+                                    else if (addons != null && addons.ContainsKey(license.LicenseCode) && reactive == false && addons[license.LicenseCode] == -1)
+                                    {
+                                        <span style="font-size: 18px;float: right;color: blue;" class="text text-primary"><b>unlimited</b></span>
+                                    }
+                                </span>
+                            </div>
+                        </div>
+                    }
+
+                    <div class="col-md-12" style="padding-left: 30px">
+                        <div class="form-group row-info">
+                            <span class="control-label">End Date </span>
+                            <span>
+
+                                @(license.End_period == null ? "N/A" : AppFunc.ParseTime(license.End_period, "dd MMM, yyyy"))
+                            </span>
+                        </div>
+                    </div>
+                    if (!string.IsNullOrEmpty(license.Link))
+                    {
+                        <div class="col-md-12" style="padding-left: 30px">
+                            <div class="form-group row-info">
+                                <span class="control-label">Link </span>
+                                <span>
+                                    @license.Link
+                                </span>
+                            </div>
+                        </div>
+                    }
+                    if ((license.PairCodes?.Count ?? 0) > 0)
+                    {
+                        <div class="col-md-12" style="padding-left: 30px">
+                            <div class="form-group row-info">
+                                <span class="control-label">Pair Code </span>
+
+                                @foreach (var pairing in license.PairCodes)
+                                {
+                                    if (pairing.PairingStatus == "READY_TO_PAIR")
+                                    {
+                                        <span class='label label-success' data-toggle="tooltip" title="READY TO PAIR">@pairing.PairingCode</span>
+                                    }
+                                    else
+                                    {
+                                        <span class='label label-danger' data-toggle="tooltip" title="PAIRED">@pairing.PairingCode</span>
+                                    }
+                                }
+
+                            </div>
+                        </div>}
+                }
+            </div>
+
+            @if (merchant_ims_version != "v1" && feature_pos != null)
+            {
+                <div id="mango_features" class="tab-pane row fade in">
+                    @foreach (var fea in feature_pos)
+                    {
+                        <div class="col-md-12">
+                            <div class="form-group row-info">
+                                <label class="control-label"> <b>@(fea.LicenseCode ?? "___")</b></label>
+                                @*<span class="text text-@(license.Status == "active" ? "success" : "danger")"> @(license.Status ?? "___")</span>*@
+                            </div>
+                        </div>
+                        <div class="col-md-12" style="padding-left: 30px">
+                            @if (fea.LicenseType.ToLower().Contains("count"))
+                            {
+                                <div class="form-group row-info">
+                                    <span class="control-label">Maximum number </span>
+                                    <span>
+                                        @(fea.Count_limit.Split(',')[0])
+                                    </span>
+                                    @if (!fea.Count_limit.Split(',')[1].Equals("null") && !fea.Count_limit.Split(',')[1].Equals("0"))
+                                    {
+                                        <span style="font-size: 20px;float: right;color: blue;" class="text text-primary"><b> +@(fea.Count_limit.Split(',')[1])</b></span>
+                                    }
+                                </div>
+                            }
+                        </div>
+                        <div class="col-md-12" style="padding-left: 30px">
+                            <div class="form-group row-info">
+                                <span class="control-label">Type </span>
+                                <span>
+                                    @(fea.LicenseType)
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-12" style="padding-left: 30px">
+                            <div class="form-group row-info">
+                                <span class="control-label">Description </span>
+                                <span>
+                                    @(fea.Subscription_warning_msg)
+                                </span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    //$("#ims_version").select2({});
+    var testEmail = /^[A-Z0-9._%+-]+@@([A-Z0-9-]+\.)+[A-Z]{2,4}$/i;
+    function reset_pass_submit() {
+        let set_pass = $("[name=reset_type][value=set_pass]:checked").length>0;
+        let new_pass = $("#new_pass").val();
+        let confirm_pass = $("#confirm_pass").val();
+        let email_cc = $("#email_cc").val();
+        let require_change = $("input[name='require_change']").is(":checked");
+        let is_sendNoty = $("input[name='is_sendNoty']").is(":checked");
+
+        if (set_pass) {
+            if (new_pass.trim() == "") {
+                warning("New Password is required!");
+                $("#new_pass").focus();
+                return false;
+            }
+            else if (new_pass != confirm_pass)
+            {
+                warning("Confirm Password is not match!");
+                $("#confirm_pass").focus();
+                return false;
+            }
+        }
+        if (email_cc.trim().length>0 && !testEmail.test(email_cc)) {
+                warning("Email invalidate!");
+                $("#confirm_pass").focus();
+                return false;
+        }
+        if (confirm("Do you want to Reset PassWord for this store?") === false) {
+            return;
+        }
+        $("#reset_password_imgload").show();
+
+        $.ajax({
+            method: "POST",
+            url: "/merchantman/ResetPassWord",
+            data: { storeCode: '@Model.StoreId', set_pass, new_pass, confirm_pass, email_cc, require_change, is_sendNoty},
+        }).done(function (data) {
+        $('#reset_pass_form').slideUp(300);
+            success(data.msg);
+        }).fail(function (err) {
+            error(err.responseText);
+        }).always(function () {
+            $("#reset_password_imgload").hide();
+        });
+    }
+
+    $(".store-active").click(($event) => {
+        overlayOn();
+        $event.preventDefault();
+        $(".store-active").find("img").show();
+        $.ajax({
+            method: "POST",
+            url: "/merchantman/StoreActivation",
+            data: {
+                licenseId: '@ViewBag.licenseId',
+                //ims_version,
+                active : true,
+                stage: '@ViewBag.stage',
+            },
+        }).done(function (data) {
+            success(data);
+            ChangeTab('services');
+            $("#store-profile-dialog").modal("hide");
+            $("#_body > div.modal-backdrop.fade.in").remove()
+            $("#_body").removeClass( "modal-open" )
+        }).fail(function (err) {
+            error(err.responseJSON[0]);
+            //if (err.responseJSON[1] == true) {
+            //    $("#ims_version").prop("disabled", true);
+            //}
+        }).always(function () {
+            $(".store-active").find("img").hide();
+            overlayOff();
+        });
+});
+    $("[name=reset_type]").on("click", function () {
+        if ($(this).val() == "set_pass") {
+            $(".set_pass").slideDown(300);
+        } else {
+            $(".set_pass").slideUp(300);
+        }
+    });
+
+</script>
+<style type="text/css">
+    #partial_tab {
+        display: flow-root;
+    }
+
+    .control-label {
+        width: 200px;
+        display: inline-block;
+    }
+
+    span.control-label {
+        width: 185px;
+    }
+
+    .row-info {
+        border-bottom: 1px dashed gray;
+        padding-bottom: 5px;
+    }
+
+    .store-profile table {
+        border: 1px solid #b4c4d2;
+    }
+
+    .licenses-info {
+        margin: 0;
+    }
+</style>

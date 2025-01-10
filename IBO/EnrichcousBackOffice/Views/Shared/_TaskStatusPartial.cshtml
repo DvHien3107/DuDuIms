@@ -1,0 +1,244 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.Ts_Task>
+@{ 
+    var ListReminder = ViewBag.ListReminder as List<EnrichcousBackOffice.Models.T_RemindersTicket>;
+}
+@foreach (var item in Model)
+{
+    if (item.ParentTaskId > 0)
+    {
+        continue;
+    }
+
+    var subTask = Model.Where(t => t.ParentTaskId == item.Id).ToList();
+
+    double done = 0;
+    double total = 1;
+    double percentDone = 0;
+    if (subTask.Count == 0)
+    {
+        done = item.Complete == true ? 1 : 0;
+        total = 1;
+        percentDone = ((done / total) * 100);
+    }
+    else
+    {
+        done = subTask.Where(t => t.Complete == true).Count();
+        total = subTask.Count();
+        percentDone = Math.Round((done / total) * 100, 0);
+    }
+    @Html.Raw("<div style='position: relative;border-bottom: 1px solid #ecf0f5;margin-bottom:8px'>")
+    @*if (item.TaskTemplateCategoryId != null)
+        {
+            <text>
+                <div style="cursor:pointer;position:relative" class="form-group" title="Click to open task" data-toggle="tooltip" onclick="expandTask(@item.Id);update_task_ticket_template('@(ViewBag.can_update==true?"true":"false")','@item.Id')">
+            </text>
+        }
+        else
+        {
+            <text>
+                <div style="cursor:pointer;position:relative" class="form-group" title="Click to open task" data-toggle="tooltip" onclick="expandTask(@item.Id);update_task('@(ViewBag.can_update==true?"true":"false")','@item.Id', true, '@item.TicketId', '@item.TicketName')">
+            </text>
+        }*@
+<div style="cursor:pointer;position:relative" class="form-group" title="Click to open task" data-toggle="tooltip" onclick="expandTask(@item.Id);">
+    <span class="pull-left"><span id="icon-complete-task-@item.Id"><i class="fa @(done==total?"fa-check-square":"fa-pencil-square-o")" style="color:@(done==total?"#00a65a":"#f39c12")"></i></span> @item.Name (<span id="done-status-task-@item.Id">@done</span>/@total)</span>
+
+    @if (ListReminder.Any(x => x.TaskId == item.Id))
+    {
+        <i class="fa fa-bell bell-reminder" style="margin:0px 5px;"></i>
+    }
+
+    <span id="status-label-@item.Id">
+        @if (done == total)
+        {
+            <span class="label label-success" style="margin-left:2px">Completed</span>
+        }
+        else
+        {
+            <span class="label label-danger" style="margin-left:2px">Not Complete</span>
+        }
+    </span>
+
+    @if (item.Requirement == true)
+    {
+        <span style="@(done==total?"display:none":"")" id="require_label_@item.Id" class='label label-danger'>Required</span>
+    }
+
+
+    <br />
+    @if (!string.IsNullOrEmpty(item.AssignedToMemberName))
+    {
+        <div style="margin-bottom:5px;">
+            @foreach (var mem in item.AssignedToMemberName.Split(','))
+            {
+                <span class="label label-primary">@mem</span>
+            }
+        </div>
+    }
+
+
+    <div class="progress progress-xs" style="margin-top:10px;">
+        <div class="progress-bar @(done==total?"progress-bar-success":"progress-bar-warning") progress-bar-striped" id="process-task-@item.Id" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: @percentDone%">
+            <span class="sr-only"><span id="pencent-done-total-@item.Id">@percentDone%</span> Complete </span>
+        </div>
+        <span id="percent-task-text-@item.Id" style="position: absolute;font-weight:bold; bottom: -20px; left: 50%; transform: translateX(-50%); color: @(done==total?"#00a65a":"#f39c12")">@percentDone%</span>
+    </div>
+
+    @Html.Raw("</div>")
+    <div style="display:flex;position:absolute;right:0px;top:1px;">
+        @if (item.TaskTemplateCategoryId != null)
+        {
+            <a class="btn-edit-task" style="margin-right:9px;" onclick="expandTask(@item.Id, false);update_task_ticket_template('@(ViewBag.can_update==true?"true":"false")','@item.Id')" title="update task"><i class="fa fa-pencil-square-o" aria-hidden="true"></i></a>
+        }
+        else
+        {
+            <a class="btn-edit-task" style="margin-right:9px;" onclick="expandTask(@item.Id, false);update_task('@(ViewBag.can_update==true?"true":"false")','@item.Id', true, '@item.TicketId', '@item.TicketName')" title="update task"><i class="fa fa-pencil-square-o" aria-hidden="true"></i></a>
+        }
+        <a class="expand_button_@item.Id expand_task_button">
+            <i class="fa fa-angle-right" title="expand task" onclick="expandTask(@item.Id)" style="transform:rotate(90deg);font-size:25px;font-weight:bold;margin-top:-2px" aria-hidden="true"></i>
+        </a>
+    </div>
+    <div id="task_quick_detail_@item.Id">
+    </div>
+</div>
+        }
+        <style>
+            .btn-edit-task {
+                margin-right: 9px;
+                background: #f39c12;
+                color: white;
+                padding: 2px 9px;
+                border-radius: 3px;
+            }
+                .btn-edit-task:hover, .expand_task_button:hover {
+                    color: white;
+                    opacity:0.8;
+                }
+                .expand_task_button.open i {
+                    transform: rotate(270deg) !important;
+                }
+
+            .expand_task_button {
+                display: block;
+                height: 24px;
+                background: var(--main-color-1);
+                color: white;
+                padding: 2px 10px;
+                border-radius: 3px;
+             
+            }
+                .expand_task_button i {
+                    transition: all .2s linear;
+                }
+        </style>
+        <script>
+            function expandTask(TaskId, show = true) {
+                overlayOn();
+                $(".expand_task_button").removeClass('open');
+                if (show == false) {
+                    if ($(".task_quick_detail_content_" + TaskId).length) {
+                        $(".div-detail-" + TaskId).slideUp(function () {
+                            $(".task_quick_detail_content_" + TaskId).hide();
+                        });
+                    }
+                    overlayOff();
+                    return;
+                }
+                if ($(`.task_quick_detail_content_${TaskId}`).length && $(`.task_quick_detail_content_${TaskId}`).is(':visible')) {
+                    $(".div-detail-" + TaskId).slideUp(function () {
+                        $(".task_quick_detail_content_" + TaskId).hide();
+                    });
+                    overlayOff();
+                    return;
+                }
+                $.ajax({
+                    method: "POST",
+                    url: "/Ticket_New/ExpandTask",
+                    data: { 'TaskId': TaskId },
+                    dataType: "html"
+                })
+                    .done(function (data) {
+                        $(".task_quick_detail_content").hide();
+                        $(`#task_quick_detail_${TaskId}`).html(data);
+                        $(".tr-detail-" + TaskId).show();
+
+                        $(`.expand_button_${TaskId}`).addClass('open');
+                        $(".div-detail-" + TaskId).slideDown(function () {
+                        });
+
+                        overlayOff();
+                    })
+                    .fail(function () {
+                        error('Oops ! some thing went wrong .')
+                        overlayOff();
+                    });
+            }
+
+            function quickCompleteTask(el) {
+                overlayOn();
+                var type = $(el).attr('data-type');
+                var taskId = $(el).attr('data-id');
+                $.ajax({
+                    method: "POST",
+                    url: "/Ticket_New/CompleteTask",
+                    data: { 'TaskId': taskId },
+                    dataType: "json"
+                }).done(function (data) {
+                    var options = $.parseJSON('{"text":"' + data.message + '","layout":"topRight","type":"success"}');
+                    noty(options);
+                    if (type == 'task') {
+                        if ($(el).is(":checked")) {
+                            $(`.expand_subtask_${taskId}`).prop('checked', true);
+
+                        }
+                        else {
+                            $(`.expand_subtask_${taskId}`).prop('checked', false);
+                        }
+                    }
+                    else {
+                        if (data.completeAll) {
+                            $(el).parents('table').find('[name="CompleteAll"]').prop('checked', true);
+                        }
+                        else {
+                            $(el).parents('table').find('[name="CompleteAll"]').prop('checked', false);
+                        }
+                    }
+                    refreshQuickChangeTask($(el).parents('table').attr('data-task-id'));
+                    Gettimeline();
+                    overlayOff();
+                })
+                    .fail(function () {
+                        var options = $.parseJSON('{"text":"' + data.message + '","layout":"topRight","type":"error"}');
+                        noty(options);
+                        overlayOff();
+                    });
+            }
+            function refreshQuickChangeTask(taskId) {
+                var countTotalSubTask = $(`#table-status-task-${taskId}`).find('[name="CompleteSubTask"]').length;
+                var countCompleteTotalSubTask = $(`#table-status-task-${taskId}`).find('[name="CompleteSubTask"]:checked').length;
+                if (countTotalSubTask == countCompleteTotalSubTask) {
+                    $(`#status-label-${taskId}`).html('<span class="label label-success" style="margin-left:2px">Completed</span>');
+                    $(`#process-task-${taskId}`).css('width', '100%');
+                    $(`#process-task-${taskId}`).removeClass('progress-bar-warning');
+                    $(`#process-task-${taskId}`).addClass('progress-bar-success');
+                    $(`#pencent-done-total-${taskId}`).html('100%');
+                    $(`#percent-task-text-${taskId}`).html('100%');
+                    $(`#require_label_${taskId}`).hide();
+                    $(`#percent-task-text-${taskId}`).css('color', '#00a65a');
+                    $(`#done-status-task-${taskId}`).html(countCompleteTotalSubTask);
+                    $(`#icon-complete-task-${taskId}`).html(`<i class="fa fa-check-square" style="color:#00a65a")"></i>`);
+                }
+                else {
+                    let percent = Math.floor((countCompleteTotalSubTask * 100) / countTotalSubTask);
+                    $(`#status-label-${taskId}`).html('<span class="label label-danger" style="margin-left:2px">Not Complete</span>');
+                    $(`#process-task-${taskId}`).css('width', `${percent}%`);
+                    $(`#process-task-${taskId}`).removeClass('progress-bar-success');
+                    $(`#process-task-${taskId}`).addClass('progress-bar-warning');
+                    $(`#pencent-done-total-${taskId}`).html(`${percent}%`);
+                    $(`#percent-task-text-${taskId}`).html(`${percent}%`);
+                    $(`#require_label_${taskId}`).show();
+                    $(`#percent-task-text-${taskId}`).css('color', '#f39c12');
+                    $(`#done-status-task-${taskId}`).html(countCompleteTotalSubTask);
+                    $(`#icon-complete-task-${taskId}`).html(`<i class="fa fa-pencil-square-o" style="color:#f39c12")"></i>`);
+                }
+            }
+        </script>

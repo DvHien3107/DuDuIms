@@ -1,0 +1,222 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title</title>
+    @Styles.Render("~/Content/css")
+    @*@Scripts.Render("~/bundles/modernizr")*@
+    <!-- Bootstrap 3.3.7 -->
+    <link rel="stylesheet" href="/content/admin/bower_components/bootstrap/dist/css/bootstrap.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="/content/admin/bower_components/font-awesome/css/font-awesome.min.css">
+    <!-- Ionicons -->
+    <link rel="stylesheet" href="/content/admin/bower_components/Ionicons/css/ionicons.min.css" />
+    <link href="/Content/noty/jquery.noty.css" rel="stylesheet" />
+    <link href="/Content/noty/noty_theme_default.css" rel="stylesheet" />
+    <style>
+        .column {
+            height: 100vh
+        }
+        .homeNewVersionRow > .column {
+            margin-bottom: 0 !important;
+            padding-left: 0 !important;
+            margin-left: 0;
+            float: left;
+        }
+
+        body {
+            margin: 0;
+            overflow-x: hidden;
+            min-width: 320px;
+            background: #fff;
+            font-size: 14px;
+            line-height: 1.4285em;
+            color: rgba(0,0,0,.87);
+            font-smoothing: antialiased;
+        }
+
+        .homeNewVersionPhoneContainer {
+            text-align: center;
+            padding-top: 10px !important;
+            height: 100vh;
+        }
+
+        @@media (min-width: 1281px) {
+            .homeNewVersionSignInV2 {
+                width: 60%;
+                height: auto;
+            }
+        }
+
+        .homeNewVersionSignIn {
+            display: inline-block;
+            margin-top: 50px;
+            margin-bottom: 1%;
+            border: 1px solid #000;
+            border-radius: 10px;
+        }
+
+        .sub-add-device {
+            text-align: center;
+            border: 1px dotted #000;
+            margin-left: 5%;
+            margin-right: 5%;
+            margin-bottom: 5%;
+            padding: 5%;
+        }
+
+        .device-id-add {
+            display: flex;
+        }
+
+        .ui.input {
+            width: 48px;
+            margin: auto;
+            height: 48px;
+            font-size: 1em;
+            position: relative;
+            font-weight: 400;
+            font-style: normal;
+            display: inline-flex;
+            color: rgba(0,0,0,.87);
+        }
+
+            .ui.input > input {
+                margin: 0;
+                max-width: 100%;
+                flex: 1 0 auto;
+                outline: 0;
+                -webkit-tap-highlight-color: rgba(255,255,255,0);
+                text-align: left;
+                line-height: 1.21428571em;
+                font-family: Lato,Helvetica Neue,Arial,Helvetica,sans-serif;
+                padding: .67857143em 1em;
+                background: #fff;
+                border: 1px solid rgba(34,36,38,.15);
+                color: rgba(0,0,0,.87);
+                border-radius: .28571429rem;
+                -webkit-transition: border-color .1s ease,-webkit-box-shadow .1s ease;
+                -webkit-transition: box-shadow .1s ease,border-color .1s ease;
+                transition: box-shadow .1s ease,border-color .1s ease;
+                box-shadow: none;
+            }
+
+        .footer, .singInButton {
+            justify-content: center;
+        }
+
+        .footer {
+            bottom: 0;
+            width: 100%;
+        }
+
+        .row {
+            margin-left: unset !important;
+            margin-right: unset !important;
+        }
+
+        /*=================Del Layout===================*/
+        .navbar.navbar-expand-lg.fixed-top {
+            display: none !important;
+        }
+
+        .ct-footer {
+            display: none !important;
+        }
+
+        .mrt-66 {
+            margin-top: unset !important;
+        }
+
+        input {
+            text-transform: uppercase !important;
+        }
+        /*===============================================*/
+        .ui.small.image, .ui.small.images .image, .ui.small.images img, .ui.small.images svg {
+            width: 150px;
+            height: auto;
+            font-size: .92857143rem;
+        }
+
+        img.ui.image {
+            display: block;
+        }
+
+        .ui.image {
+            position: relative;
+            display: inline-block;
+            vertical-align: middle;
+            max-width: 100%;
+            background-color: transparent;
+        }
+
+        .small, small {
+            font-size: 80%;
+            font-weight: 400;
+        }
+
+        ::selection {
+            background-color: #cce2ff;
+            color: rgba(0,0,0,.87);
+        }
+
+        .ui.grid > [class*="two column"].row > .column {
+            width: 50% !important;
+        }
+
+        .login__row > input {
+            margin-top: 20px;
+            border: none;
+            border-bottom: 1px solid #e7e7e7;
+            width: 70%;
+            text-align: center;
+            font-size: 20px;
+            padding-bottom: 10px;
+        }
+
+        .login__row > button, #doLogin > button {
+            width: 90%;
+            height: 40px;
+            border-radius: 10px;
+            border: hidden;
+            margin-bottom: 20px;
+            font-size: 25px;
+            font-weight: 600;
+        }
+
+        body {
+            padding-top: 0px;
+            padding-bottom: 0px;
+        }
+
+        @@media only screen and (max-device-width: 414px) {
+            .resfouronefour {
+                transform: translateY(489px);
+            }
+        }
+
+        @@media print {
+            footer {
+                page-break-after: always;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="row">
+        <div class="row body-content">
+            @RenderBody()
+        </div>
+        <hr />
+    </div>
+    <!-- jQuery 3 -->
+    <script src="~/Content/Admin/bower_components/jquery/dist/jquery.min.js"></script>
+    <script src="~/Scripts/jquery-ui.min.js"></script>
+    <!-- Bootstrap 3.3.7 -->
+    <script src="/content/admin/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="~/Content/noty/jquery.noty.js"></script>
+    <script src="~/Scripts/noty-cfg.js"></script>
+    @RenderSection("scripts", required: false)
+</body>
+</html>

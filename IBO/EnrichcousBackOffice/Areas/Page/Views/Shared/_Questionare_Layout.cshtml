@@ -1,0 +1,90 @@
+﻿
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewBag.Title</title>
+
+    <!-- Bootstrap 3.3.7 -->
+    <link rel="stylesheet" href="/content/admin/bower_components/bootstrap/dist/css/bootstrap.min.css">
+    <link href="~/Areas/Page/Content/css/style.css" rel="stylesheet" />
+    <!-- Font Awesome 5.12.0-->
+    <link href="~/Areas/Page/Content/css/fontawesome/css/fontawesome.min.css" rel="stylesheet" />
+    <link href="~/content/admin/bower_components/font-awesome/css/font-awesome.min.css" rel="stylesheet" />
+    <link href="~/Areas/Page/Content/css/fontawesome/css/brands.min.css" rel="stylesheet" />
+    <link href="~/Areas/Page/Content/css/fontawesome/css/solid.min.css" rel="stylesheet" />
+    <link href="~/Content/Admin/bower_components/select2/dist/css/select2.min.css" rel="stylesheet" />
+    <!--Noty-->
+    <link href="~/Content/noty/jquery.noty.css" rel="stylesheet" />
+    <link href="~/Content/noty/noty_theme_default.css" rel="stylesheet" />
+    <link href="~/Content/Admin/bower_components/jQuery-tagEditor-master/jquery.tag-editor.css" rel="stylesheet" />
+    @*<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.min.css">*@
+    <link href="~/Content/Admin/bower_components/Flot/examples/shared/jquery-ui/jquery-ui.min.css" rel="stylesheet" />
+    @RenderSection("style", false)
+    <script src="~/Areas/Page/Content/js/jquery-3.4.1.js"></script>
+    <script src="~/Content/Admin/bower_components/jQuery-tagEditor-master/jquery.caret.min.js"></script>
+    <script src="~/Content/Admin/bower_components/jQuery-tagEditor-master/jquery.tag-editor.min.js"></script>
+
+</head>
+<body>
+    @RenderBody()
+
+    <footer class="footer-area">
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-12 col-xs-12">
+                    <div class="col-md-4">
+                        <div class="widget_text forms-logo">
+                            <img style="max-width: 100%;" src="~/Areas/Page/Content/img/logo-light.png">
+                            <div id="black-studio-tinymce-2" class="widget widget_black_studio_tinymce">
+                                <div class="textwidget">
+                                    <p style="line-height: 30px;">Atlanta, GA</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 post-right">
+                        <div class="widget_text about">
+                            <h4>GET IN TOUCH</h4>
+                            <div class="textwidget custom-html-widget">
+                                <p>Enrich & Co</p>
+                                <p><i class="fas fa-map-marker-alt"></i> 855 Metropolian Pkwy 30310 United States.</p>
+                                <p><i class="fas fa-envelope"></i> contact@enrichcous.com</p>
+                                <p><i class="fas fa-phone-alt"></i> +1-8000-7425-877</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="widget_text social">
+                            <h4>FOLLOW US</h4>
+                            <a href="#"><i class="fab fa-facebook"></i></a>
+                            <a href="#"><i class="fab fa-twitter"></i></a>
+                            <a href="#"><i class="fab fa-youtube"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+
+    <!--JQuery 3.4.1-->
+
+    <script src="~/Scripts/jquery-ui.min.js"></script>
+    <!-- Bootstrap 3.3.7 -- >
+
+    <!--Noty-->
+    <script src="/content/admin/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="~/Areas/Page/Content/js/webcamjs/webcam.min.js"></script>
+    <script src="~/Areas/Page/Content/js/check-required.js"></script>
+    <script src="~/Content/noty/jquery.noty.js"></script>
+    <script src="~/Content/Admin/bower_components/select2/dist/js/select2.min.js"></script>
+    @RenderSection("script", false)
+</body>
+</html>

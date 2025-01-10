@@ -1,0 +1,337 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.Form_CustomizeItems>
+@using EnrichcousBackOffice.Models
+@{
+    var merchant = ViewBag.merchant as C_Customer;
+    ViewBag.Title = "To: " + ((merchant?.BusinessName) ?? (merchant?.OwnerName));
+    string type_page = string.IsNullOrWhiteSpace(Request["t"]) == true ? "form" : Request["t"];
+}
+
+
+<style>
+    .control-label {
+        font-size: 16px
+    }
+    .row_pdf{
+        width:900px;
+    }
+    @@media print {
+        footer {
+            page-break-after: always;
+        }
+    }
+
+    .nb {
+        border: 0;
+        border-bottom: 1px solid #808080;
+    }
+
+    .error {
+        border-bottom: 1px solid red;
+    }
+
+    .customize_form {
+        padding: 20px;
+        -webkit-box-shadow: 3px 3px 5px 6px #ccc; /* Safari 3-4, iOS 4.0.2 - 4.2, Android 2.3+ */
+        -moz-box-shadow: 3px 3px 5px 6px #ccc; /* Firefox 3.5 - 3.6 */
+        box-shadow: 3px 3px 5px 6px #ccc; /* Opera 10.5, IE 9, Firefox 4+, Chrome 6+, iOS 5 */
+    }
+</style>
+<!--type page: form|view-->
+<input type="hidden" id="type_page" value="@type_page" />
+<input type="hidden" value="@Model.Count()" id="total_question" />
+
+
+
+
+<div class="row" style="margin-top: 70px;margin-bottom: 50px;">
+    <div class="col-xs-12">
+        <p style="text-align:left">
+            @ViewBag.Title
+        </p>
+        <p style="text-align:center">
+            @if (type_page == "view")
+            {
+                <label style="font-size: 20px; text-align: center; color: black">@ViewBag.form_title</label>
+            }
+            else
+            {
+                <input name="inp_title" onblur="updateTitle()" class="form-control nb" value="@ViewBag.form_title" style="font-size: 18px; text-align: center; color: black" placeholder="THE TITLE" />
+            }
+        </p>
+    </div>
+</div>
+
+<div class="row @if (type_page == "view") {@Html.Raw("row_pdf") }" >
+    <div class="col-xs-12">
+        <form class="form-horizontal question_form_list">
+
+            @foreach (var item in Model)
+            {
+                if (type_page == "view")
+                {
+
+                    <div class="form-group">
+                        <div class="col-xs-1"><label class="control-label">Q@(item.Index). </label></div>
+                        <div class="col-xs-9">
+                            <label class="control-label" style="text-align:left;font-weight:normal !important">@item.Question</label>
+                            <br />
+                            @if (item.Type == "yesno")
+                            {
+                                <div class="col-xs-4"><input type="checkbox" /> Yes</div><div class="col-xs-4"><input type="checkbox" /> No</div><div class="col-xs-4">Other____________</div>
+                            }
+                            else
+                            {
+                                <div class="col-xs-12">
+                                    <textarea class="nb" wrap="soft" style="width:100%;height:50px"></textarea>
+                                </div>
+
+                            }
+                        </div>
+                        <div class="col-xs-2">
+                            @*<button type="button" value="@item.Id" class="btn-sm btn_remove" onclick="removeQuestion(this)" title="Remove">x</button>*@
+                        </div>
+                    </div>
+
+                }
+                else
+                {
+
+                    <div class="form-group">
+                        <div class="col-xs-1"><label class="control-label">Q@(item.Index). </label></div>
+                        <div class="col-xs-9">
+                            <input type="text" id="question_@item.Id" class="form-control nb inp_question" value="@item.Question" onblur="updateQuestion(this)" />
+                            <br />
+                            @if (item.Type == "yesno")
+                            {
+                                <div class="col-xs-4"><input type="checkbox" /> Yes</div><div class="col-xs-4"><input type="checkbox" /> No</div><div class="col-xs-4">Other____________</div>
+                            }
+                            else
+                            {
+                                <div class="col-xs-12">
+                                    <textarea class="nb" wrap="soft" style="width:100%;height:50px"></textarea>
+                                </div>
+
+                            }
+                        </div>
+                        <div class="col-xs-2">
+                            <button type="button" value="@item.Id" class="btn-sm btn_remove" onclick="removeQuestion(this)" title="Remove">x</button>
+                        </div>
+                    </div>
+
+                }
+
+            }
+
+
+            <!--add quetstion-->
+            @if (type_page != "view")
+            {
+
+                <div class="form-group customize_form">
+                    <div class="col-xs-2"><label class="control-label">Question: </label></div>
+                    <div class="col-xs-7">
+                        <input type="text" class="form-control nb" id="inp_question_org" placeholder="Enter question" />
+                    </div>
+                    <div class="col-xs-2">
+                        <select class="form-control nb" id="inp_type">
+                            <option value="text">Text</option>
+                            <option value="yesno">Yes or No</option>
+                        </select>
+                    </div>
+                    <div class="col-xs-1">
+                        <button type="button" class="btn btn-default " onclick="addQuestion()"> + Add</button>
+                    </div>
+                </div>
+
+            }
+
+
+        </form>
+
+        <!--div template-->
+        <!--yes no question-->
+
+        <div class="form-group question_yesno" style="display:none">
+            <div class="col-xs-1"><label class="control-label">Q1. </label></div>
+            <div class="col-xs-9">
+                <input type="text" class="form-control nb inp_question" onblur="updateQuestion(this)" />
+                <br />
+
+                <div class="col-xs-4"><input type="checkbox" /> Yes</div><div class="col-xs-4"><input type="checkbox" /> No</div><div class="col-xs-4">Other____________</div>
+
+            </div>
+            <div class="col-xs-2">
+                <button type="button" class="btn-sm btn_remove" title="Remove" onclick="removeQuestion(this)">x</button>
+            </div>
+        </div>
+
+        <!--text question-->
+        <div class="form-group question_text" style="display:none">
+            <div class="col-xs-1"><label class="control-label">Q1. </label></div>
+            <div class="col-xs-9">
+                <input type="text" class="form-control nb inp_question" onblur="updateQuestion(this)" />
+                <br />
+
+                <div class="col-xs-12">
+                    <textarea class="nb" wrap="soft" style="width:100%;height:50px"></textarea>
+                </div>
+
+            </div>
+            <div class="col-xs-2">
+                <button type="button" class="btn-sm btn_remove" title="Remove" onclick="removeQuestion(this)">x</button>
+            </div>
+        </div>
+
+        <!--end div template-->
+
+    </div>
+
+</div>
+
+
+
+
+
+<script type="text/javascript">
+
+    //$(function () {
+
+    ////ktra che do view thi cau hoi show dang label
+    //    if ($("#type_page").val() == "view") {
+
+
+    //        //$("input[name=inp_title]").replaceWith("<b style='font-size:18px;text-align:center;color:black'>" + $("input[name=inp_title]").val() + "</b>");
+    //        //$(".btn_remove, .customize_form").hide();
+
+    //        //$(".inp_question").each(function () {
+
+    //        //    $(this).replaceWith("<label class='control-label'>" + $(this).val() + "</label><br/>");
+
+    //        //});
+    //    }
+    
+
+
+    //});
+
+    function addQuestion() {
+
+        var question = $("#inp_question_org").val();
+        var type = $("#inp_type").val();
+        //console.log(question);
+        //console.log(type);
+
+        if (question == "" || question.length <= 1) {
+            $("#inp_question_org").addClass("error");
+            //alert("error");
+        }
+        else {
+            $("#inp_question_org").removeClass("error");
+
+            $("#inp_question_org").val("");
+            $("#inp_type").val("text");
+
+            console.log(question);
+
+            $.post("/form/AddUpdateQuestion", { id: null, question: question, type: type }, function (data, status) {
+                //  console.log(status);
+                if (data[0] == false) {
+                    alert(data[1]);
+                }
+                else {
+                    // console.log(data[2]);
+                    getListQuestion(data);
+                }
+            }, "json");
+
+        }
+
+
+    }
+
+    /**
+     * add new/update question
+     * @@param input
+     */
+    function updateQuestion(input) {
+
+        //  alert("onblur: " + $(input).attr("id"));
+        var question = $(input).val();
+        var id = $(input).attr("id").split("_")[1];
+        $.post("/form/AddUpdateQuestion", { Id: Id, question: question }, function (data) {
+            if (data[0] == false) {
+                alert(data[1]);
+            }
+            else {
+                //console.log(data[2]);
+            }
+        }, "json");
+    }
+
+    /**
+     * remove item
+     * @@param input
+     */
+    function removeQuestion(input) {
+
+        var Id = $(input).val();
+        $.post("/form/RemoveQuestion", { Id: Id }, function (data) {
+            if (data[0] == false) {
+                alert(data[1]);
+            }
+            else {
+                //  console.log(data[2]);
+
+                getListQuestion(data);
+
+            }
+        }, "json");
+    }
+
+    /**
+     * render danh sach cac cau hoi.
+     * @@param data { /true/false, mesage, CustomizeForm list Object}
+     */
+    function getListQuestion(data) {
+
+        $(".question_form_list").find(".form-group").not(".customize_form").remove();
+
+        for (var i = 0; i < data[2].length; i++) {
+            if (data[2][i].Type == "yesno") {
+                $(".question_yesno").find(".control-label").html("Q" + data[2][i].Index + ".");
+
+                let ct = $(".question_yesno").html();
+                $(".question_form_list").children(".customize_form").before("<div class='form-group'>" + ct + "</form>");
+            }
+            else {
+                $(".question_text").find(".control-label").html("Q" + data[2][i].Index + ".");
+
+                let ct = $(".question_text").html();
+                $(".question_form_list").children(".customize_form").before("<div class='form-group'>" + ct + "</form>");
+
+            }
+            $(".question_form_list").find(".btn_remove").last().val(data[2][i].Id);
+            $(".question_form_list").find(".inp_question").last().val(data[2][i].Question);
+            $(".question_form_list").find(".inp_question").last().attr("id", "question_" + data[2][i].Id);
+
+        }
+
+        $("#total_question").val(data[2].length);
+
+
+    }
+
+    function updateTitle() {
+
+        $.post("/form/UpdateTitle", { title: $("input[name=inp_title]").val() }, function (data) {
+            if (data[0] == false) {
+                alert(data[1]);
+            }
+            else {
+                //ok
+            }
+        }, "json");
+    }
+
+
+</script>

@@ -1,0 +1,15 @@
+﻿@foreach (var item in Model)
+{
+    <div id="history_@item.Id" class="col-md-12 history_item" style="border: 1px solid orange; padding:10px; margin-bottom:10px">
+        <div class="pull-left">
+            <b><a style="color:#337ab7" onclick="show_progress_modal(@item.Id)">Order: #@item.OrdersCode</a></b><br />
+            <label>Merchant:</label> @item.CustomerName<br />
+            <label style="color:gray">Grand total: <span class="label label-primary">@(item.GrandTotal?.Tostring("#,##0 đ"))</span></label>
+
+        </div>
+        <div class="pull-right">
+            <i class="pull-right"><b>@Html.Raw(item.UpdatedBy?.Split('|').Last().Replace("-", "<br/>"))</b></i><br />
+            <i class="pull-right"><span class="label label-success">@item.BundelStatus</span></i><br />
+        </div>
+    </div>
+}

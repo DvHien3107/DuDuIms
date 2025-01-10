@@ -1,0 +1,506 @@
+﻿@using EnrichcousBackOffice.Models
+@{
+    ViewBag.Title = "Transaction Report";
+    var host = $"{HttpContext.Current.Request.Url.Scheme}://{HttpContext.Current.Request.Url.Authority}";
+
+    var Partners = ViewBag.Partners as List<C_Partner>;
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.css">
+<style>
+    .ico-help {
+        display: inline-block;
+        transform: translateY(1px);
+        color: var(--main-color-1);
+        font-size: 1em;
+        padding-left: 1px;
+    }
+
+    .total-div {
+        display: inline-block;
+        border: 1px dotted green;
+        padding: 5px 10px;
+        margin-right: 3px;
+    }
+</style>
+<section class="content-header">
+    <h1>
+        Transaction Report
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li>Merchant</li>
+        <li>Transaction Report</li>
+    </ol>
+</section>
+
+<section class="content">
+    @if (TempData["e"] != null)
+    {
+        <div class="alert alert-warning alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+        </div>
+    }
+    else if (TempData["s"] != null)
+    {
+        <div class="alert alert-success alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+        </div>
+    }
+    <div class="row">
+        <div class="col-md-12">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Transaction Report</h3>
+                </div>
+                <div class="box-body">
+                    <div class="row" style="padding:0 10px 20px 10px">
+                        @*<div class="row col-md-12" style="padding-bottom:20px">
+                                <a class="btn btn-primary pull-right" onclick="open_request()"><i class="fa fa-plus"></i> New request</a>
+                            </div>*@
+                        <div id="search_select_group">
+                            <form id="search_form" action="#">
+                                <div class="col-lg-3 col-md-6 col-sm-6 form-group" style="padding: 0 5px">
+                                    <div class="input-group">
+                                        <div class="input-group-addon">
+                                            From
+                                            <div class="ico-help" title="The from date for the search."><i class="fa fa-question-circle"></i></div>
+                                        </div>
+                                        <input type="text" readonly class="form-control input_change datepicker" name="FromDate" value="@ViewBag.FromDate" />
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-3 col-md-6 col-sm-6 form-group" style="padding: 0 5px">
+                                    <div class="input-group">
+                                        <div class="input-group-addon">
+                                            To
+                                            <div class="ico-help" title="The to date for the search."><i class="fa fa-question-circle"></i></div>
+                                        </div>
+                                        <input type="text" readonly class="form-control input_change datepicker" name="ToDate" value="@ViewBag.ToDate" />
+                                    </div>
+                                </div>
+                                @*<div class="col-lg-3 col-md-6 col-sm-6 form-group">
+                                        <div class="input-group">
+                                            <span class="input-group-addon">
+                                                #Invoice
+                                            </span>
+                                            <input type="text" name="InvoiceNumber" class="form-control input_change" />
+                                        </div>
+                                    </div>*@
+
+                                <div class="col-lg-3 col-md-6 col-sm-6 form-group" style="padding: 0 5px">
+                                    <div class="input-group">
+                                        <div class="input-group-addon">
+                                            Status
+                                            <div class="ico-help" title="Search by transaction status ."><i class="fa fa-question-circle"></i></div>
+                                        </div>
+                                        <select class="form-control input_change select2" name="Status" style="width: 100%">
+                                            <option value="">All</option>
+                                            <option value="success">Success</option>
+                                            <option value="pending">Pending</option>
+                                            <option value="failed">Failed</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-lg-3 col-md-6 col-sm-6 form-group" style="padding: 0 5px">
+                                    <div class="input-group">
+                                        <div class="input-group-addon">
+                                            Payment Type
+                                            <div class="ico-help" title="Search by payment type"><i class="fa fa-question-circle"></i></div>
+                                        </div>
+                                        <select class="form-control input_change select2" name="PaymentType" style="width: 100%">
+                                            <option value="">All</option>
+                                            <option value="PaymentGateway">Payment Gateway</option>
+                                            <option value="FOC">FOC</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-lg-3 col-md-6 col-sm-6 form-group" style="padding: 0 5px">
+                                    <div class="input-group">
+                                        <div class="input-group-addon">
+                                            Partner
+                                            <div class="ico-help" title="Search by partner"><i class="fa fa-question-circle"></i></div>
+                                        </div>
+                                        <select class="form-control input_change select2" name="Partner" style="width: 100%">
+                                            <option value="">All</option>
+                                            <option value="mango" @(TempData["Partner"]?.ToString() == "mango" ? "selected" : "")>@ViewBag.ProductName</option>
+                                            @foreach (var item in Partners.OrderBy(c => c.Code))
+                                            {
+                                                <option value="@item.Code" @(TempData["Partner"]?.ToString() == item.Code.ToString() ? "selected" : "")>#@item.Code - @item.Name</option>
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-lg-3 col-md-6 col-sm-6 form-group" style="padding: 0 5px">
+                                    <div class="input-group">
+                                        <div class="input-group-addon">
+                                            Search
+                                            <div class="ico-help" title="Search by invoice id, salon name, salon email, salon phone,mxmerchant id ."><i class="fa fa-question-circle"></i></div>
+                                        </div>
+                                        <input type="text" name="SearchText" class="form-control input_change" placeholder="Invoice ID | Salon Info | Transaction ID" />
+                                    </div>
+                                </div>
+                                <div class="col-md-2 form-group" style="padding: 0 5px">
+                                    <button class="btn btn-primary btn-flat" type="button" id="SearchButton" name="SearchButton"><i class="fa fa-search"></i> Search</button>
+                                </div>
+                            </form>
+
+                            <img id="search_loading" style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                        </div>
+                    </div>
+                    <hr />
+                    @*<div class="col-md-12" style="padding:0"><a class="pull-right btn btn-primary">Create PO</a></div>*@
+                    <div>
+                        <div class="total-wrapper" style="text-align:right;font-size:19px;font-weight:bold;">
+                            <div class="total-div" style="display:inline-block;"><span>Num. Of Transaction: </span><span style="display:inline-block;min-width:20px;text-align:left;" id="total-record"> 0</span></div>
+                            <div class="total-div" style="display:inline-block;"><span>Total: </span><span style="display:inline-block;min-width:70px;text-align:left;" id="total-amount">$0.00</span></div>
+
+                        </div>
+                        <table class="table table-bordered table-hover data-transaction" style="width:100%">
+                            <thead>
+                                <tr class="bg-primary">
+                                    <th>Date</th>
+                                    <th>Salon Name</th>
+                                    <th>Orders</th>
+                                    <th>Type</th>
+                                    <th>Amount</th>
+                                    <th>Card Type</th>
+                                    <th>Transaction ID</th>
+                                    <th>Status</th>
+                                    <th>Message</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<div class="modal fade" id="Invoice" role="dialog" style="display: none;">
+    <div class="modal-dialog modal-content" style="min-width:900px">
+        <div class="modal-header">
+            <div class="modal-title pull-left"><h3 style="margin:0">View Invoice</h3></div>
+            <button type="button" class="btn btn-sm btn-warning" style="float:left; margin-left:20px" onclick="document.getElementById('invoice-view').contentWindow.print()"><i class="fa fa-print"></i> Print</button>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">×</span>
+            </button>
+        </div>
+        <div class="modal-body" style="padding:1px;height: 77vh;">
+            <iframe width="100%" height="100%" style="border: none;" id="invoice-view" data-src="@host/order/ImportInvoiceToPDF?_code=%code%&amp;flag=Invoice"></iframe>
+        </div>
+    </div>
+</div>
+<link href="~/Content/Selectize/css/selectize.default.css" rel="stylesheet" />
+<script src="~/Content/Selectize/js/standalone/selectize.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.js"></script>
+@section script{
+    <script>
+        $(function () {
+            $('.select2').select2({
+                minimumResultsForSearch: -1,
+                width: 'element'
+            });
+            $('[name="Partner"]').select2({
+                width: 'element'
+            });
+        })
+
+        $('.datepicker').datepicker({
+            changeMonth: true,
+            changeYear: true,
+            yearRange: '1950:2050'
+        });
+        var t = $(".data-transaction").DataTable({
+            "language": {
+                "processing": '<img src="/Content/ajax-loaders/loading2.gif" width="60px" />',
+                "paginate": {
+                    "first": '<i class="fa fa-angle-double-left" aria-hidden="true"></i>',
+                    "last": '<i class="fa fa-angle-double-right" aria-hidden="true"></i>',
+                    "next": '<i class="fa fa-angle-right" aria-hidden="true"></i>',
+                    "previous": '<i class="fa fa-angle-left" aria-hidden="true"></i>'
+                },
+            },
+            //"columnDefs": [{
+            //    "targets": 'no-sort',
+            //    "orderable": false,
+            //}],
+            'paging': true,
+            "pageLength": 10,
+            "serverSide": true, // for process server side
+            "processing": true, // for show progress bar
+            'lengthChange': true,
+            'searching': false,
+            //'ordering': false,
+            'stateSave': false,
+            'info': false,
+            "scrollX": true,
+            'autoWidth': true,
+            "order": [[0, "desc"]],
+            "ajax": {
+                "url": "/MerchantMan/GetListTransaction",
+                "type": "POST",
+                "datatype": "json",
+                data: function (data) {
+                    data.FromDate = $("[name='FromDate']").val();
+                    data.ToDate = $("[name='ToDate']").val();
+                    //data.InvoiceNumber = $("[name='InvoiceNumber']").val();
+                    data.SearchText = $("[name='SearchText']").val();
+                    data.Status = $("[name='Status']").val();
+                    data.PaymentType = $("[name='PaymentType']").val();
+                    data.Partner = $("[name='Partner']").val();
+                    return data;
+                },
+                'dataSrc': function (data) {
+                    $('#total-record').html(data.recordsTotal);
+                    $('#total-amount').html(data.totalAmount);
+                    return data.data;
+                }
+
+            },
+            "fnRowCallback": function (nRow, aData, iDisplayIndex) {
+                $(nRow).addClass('row_transaction').hover(function () {
+                    $(this).find(".btn_edit_amount").show();
+                }, function () {
+                    $(this).find(".btn_edit_amount").hide();
+                });
+                return nRow;
+            },
+            "columns": [
+                {
+                    name: 'CreateAt',
+                    visible: true,
+                    searchable: false,
+                    render: function (data, type, row, meta) {
+                        return '<i>' + moment(data).format("MMM DD YYYY <br/> h:mm:ss A") + '</i>';
+                    },
+                    data: 'CreateAt'
+                },
+                {
+                    name: 'BusinessName',
+                    visible: true,
+                    searchable: false,
+                    render: function (data, type, row, meta) {
+                        var html = '';
+                        html += '<b class="text text-success">' + data + '</b>';
+                        html += '<br/>'
+                        html += '<span>Store ID: </span><a target="_blank" title="Go to merchant dashboard" style="font-weight: bold;" href="/merchantman/detail/' + row["CustomerId"] + '" class="text text-primary">' + row["StoreCode"] + '</a>'
+                        html += '<br/>'
+                        html += '<span>' + row["Address"] + '</span>'
+                        if (row["PartnerCode"] != null && row["PartnerCode"] != "") {
+                            html += '<br/><span class="label label-default" data-toggle="tooltip" title="' + row["PartnerName"] + '">' + row["PartnerCode"] + '</span>'
+                        }
+                        return html;
+                    },
+                    data: 'BusinessName'
+                },
+                {
+                    name: 'OrdersCode',
+                    visible: true,
+                    searchable: false,
+                    render: function (data, type, row, meta) {
+                        return '<b>#' + data + '</b><br /><a class="label label-primary" onclick="show_invoice(\'' + data + '\')"><i class="fa fa-search" aria-hidden="true"></i> View receipt</a>';
+                    },
+                    data: 'OrdersCode'
+                },
+                {
+                    name: 'PaymentMethod',
+                    visible: true,
+                    searchable: false,
+                    render: function (data, type, row, meta) {
+                        var html = '';
+                        if (data == 'CreditCard') {
+                            html += '<span>Credit/Debit Card</span>';
+                        }
+                        else {
+                            html += '<span>' + data + '</span>';
+                        }
+
+                        if (row['PaymentNote'] !== '' && row['PaymentNote'] !== null) {
+                            html += '<br /><i style="font-size: .8em">Note: ' + row['PaymentNote'] + '</i>';
+                        }
+                        if (row['CreateBy'] !== '' && row['CreateBy'] !== null) {
+                            html += '<br /><i style="font-size: .8em">By: ' + row['CreateBy'] + '</i>';
+                        }
+                        if (row['UpdateDescription'] !== '' && row['UpdateDescription'] !== null) {
+                            html += '<br /><i style="font-size: .8em">Amount update note: ' + row['UpdateDescription'] + '</i>';
+                        }
+                        return html;
+                    },
+                    data: 'PaymentMethod'
+                },
+                {
+                    name: 'Amount',
+                    visible: true,
+                    searchable: false,
+                    data: 'Amount',
+                    render: function (data, type, row, meta) {
+                        var html = ``;
+                        html += `${data}<button class="btn btn-sm btn-outline-warning pull-right btn_edit_amount" onclick="updateTransactionAmount('${row["Id"]}', '${row["OrdersCode"]}', '${row["Amount"]}')"
+                                        style="display:none" data-toggle="tooltip" title="Update amount">
+                                    <i class="fa fa-pencil" aria-hidden="true"></i>
+                                </button>`;
+                        return html;
+                    }
+                },
+                {
+                    name: 'CardNumber',
+                    visible: true,
+                    searchable: false,
+                    render: function (data, type, row, meta) {
+                        var html = '';
+                        if (data !== '' && data !== null) {
+                            html += '<span>' + row["BankName"] + data + '</span>';
+                        }
+                        return html;
+                    },
+                    data: 'CardNumber'
+                },
+                {
+                    name: 'MxMerchant_id',
+                    visible: true,
+                    searchable: false,
+                    render: function (data, type, row, meta) {
+                        var html = '';
+                        if (data !== '' && data !== null) {
+                            html += '<span>#' + data + '</span>';
+                        }
+                        return html;
+                    },
+                    data: 'MxMerchant_id'
+                },
+                {
+                    name: 'PaymentStatus',
+                    visible: true,
+                    searchable: false,
+                    render: function (data, type, row, meta) {
+                        var html = '';
+                        if (data == 'Success') {
+                            html += '<label class="label label-success">' + data + '</label>';
+                        }
+                        else if (data == 'Approved') {
+                            html += '<label class="label label-primary">' + data + '</label>';
+                        }
+                        else if (data == 'Pending') {
+                            html += '<label class="label label-warning">' + data + '</label>';
+                        }
+                        else if (data == 'Failed' || data == 'Declined') {
+                            html += '<label class="label label-danger">' + data + '</label>';
+                        }
+                        else if (data == 'Waiting') {
+                            html += '<label class="label label-warning">' + data + '</label>';
+                        }
+
+                        return html;
+                    },
+                    data: 'PaymentStatus'
+                },
+                {
+                    name: 'ResponeText',
+                    visible: true,
+                    searchable: false,
+                    render: function (data, type, row, meta) {
+                        return row['ResponseText'];
+                    },
+                    data: 'PaymentStatus'
+                },
+            ]
+        });
+
+        $('.input_change').change(function () {
+            $(".data-transaction").DataTable().ajax.reload();
+        })
+        $('#SearchButton').click(function () {
+            $(".data-transaction").DataTable().ajax.reload();
+        })
+
+        function show_invoice(code) {
+            let src = $("#invoice-view").data("src").replace("%code%", code);
+            $("#invoice-view").attr("src", src);
+            $('#Invoice').modal('show');
+        }
+        $(document).ready(function () {
+            $('.ico-help').tooltip();
+        });
+
+        function updateTransactionAmount(id, orderCode, oldAmount) {
+            $.confirm({
+                title: `<span style="font-size:16px;"><i class="fa fa-pencil-square-o"></i> Update transaction amount order <b>#${orderCode}</b></span>`,
+                content: `<form action="" method="post" id="form-salon-note">
+                               <div class="form-group">
+                                    <i class="text-danger msg_error" style="display:none"></i>
+                                </div>
+                               <div class="form-group">
+                                    <label class="control-label">Amount</label>
+                                    <div class="input-group">
+                                        <div class="input-group-addon"><i class="fa fa-dollar"></i></div>
+                                        <input type="number" step="0.05" min="0" pattern="(\d{3})([\.])(\d{2})" class="form-control disable-enter" onchange="" style="text-align: right; font-weight:bold"
+                                                value="${oldAmount.replace('$', '')}" name="Amount" id="Amount" />
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label">Note</label>
+                                    <textarea type="text" class="form-control" style="min-height:100px;resize:vertical;" id="UpdateNote"></textarea>
+                                </div>
+                                <input name="Id" id="transaction_id" value="${id}" hidden />
+                            </form>`,
+                buttons: {
+                    formSubmit: {
+                        text: 'Save',
+                        btnClass: 'btn-blue',
+                        action: function () {
+                            var amount = Math.abs(this.$content.find('#Amount').val());
+                            var note = this.$content.find('#UpdateNote').val();
+                            var id = this.$content.find('#transaction_id').val();
+                            var error = false;
+                            if (amount == '') { this.$content.find('.input-group').css('border', '1px solid #ff7070'); error = true; }
+                            else this.$content.find('.input-group').css('border', '1px solid #ccc');
+                            if (note == '') { this.$content.find('#UpdateNote').css('border', '1px solid #ff7070'); error = true; }
+                            else this.$content.find('#UpdateNote').css('border', '1px solid #ccc');
+                            if (error) return false;
+                            $.ajax({
+                                url: '/merchantman/UpdateTransactionAmount',
+                                type: 'Post',
+                                dataType: 'Json',
+                                data: { 'Id': id, 'Amount': amount, 'Note': note },
+                                success: function (data) {
+                                    if (data[0]) {
+                                        noty({ "text": data[1], "layout": "topRight", "type": "success" });
+                                        $(".data-transaction").DataTable().ajax.reload();
+                                    }
+                                    else {
+                                        noty({ "text": data[1], "layout": "topRight", "type": "error" });
+                                    }
+                                },
+                                error: function (res) {
+                                    alert('oops! something went wrong.');
+                                    console.log(res);
+                                }
+                            });
+                        }
+                    },
+                    cancel: function () {
+                        //close
+                    },
+                },
+                onContentReady: function () {
+                    // bind to events
+                    var jc = this;
+                    this.$content.find('form').on('submit', function (e) {
+                        // if the user submits the form by pressing enter in the field.
+                        e.preventDefault();
+                        jc.$$formSubmit.trigger('click'); // reference the button and click it
+                    });
+                }
+            });
+
+        }
+
+    </script>
+}

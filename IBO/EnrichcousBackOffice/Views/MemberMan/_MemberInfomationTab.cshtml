@@ -1,0 +1,345 @@
+﻿@model EnrichcousBackOffice.Models.P_Member
+@using EnrichcousBackOffice.AppLB
+@{
+
+     string picture;
+     var  cMem = Authority.GetCurrentMember();
+    if (string.IsNullOrWhiteSpace(Model.Picture))
+    {
+        if (Model.Gender?.Equals("Male", StringComparison.InvariantCultureIgnoreCase) == true)
+        {
+            picture = "/Upload/Img/Male.png";
+        }
+        else
+        {
+            picture = "/Upload/Img/Female.png";
+        }
+    }
+    else
+    {
+        picture = Model.Picture;
+    }
+
+    string identity_card_image_before;
+    if (string.IsNullOrWhiteSpace(Model.IdentityCardImageBefore))
+    {
+        identity_card_image_before = "/Upload/Img/no_image.jpg";
+    }
+    else
+    {
+        identity_card_image_before = Model.IdentityCardImageBefore;
+    }
+
+
+    string identity_card_image_after;
+    if (string.IsNullOrWhiteSpace(Model.IdentityCardImageAfter))
+    {
+        identity_card_image_after = "/Upload/Img/no_image.jpg";
+    }
+    else
+    {
+        identity_card_image_after = Model.IdentityCardImageAfter;
+    }
+
+
+}
+<div id="infomation">
+    <div class="box-header" style="text-align:right">
+        @*<button type="button" onclick="location.href='/departmentman'" class="btn btn-info" data-toggle="tooltip" title="Export PDF">
+            <i class="fa fa-file-pdf-o" style="margin-right:5px"></i> Export PDF
+        </button>*@
+        @if (Model.IsCompleteProfile==true)
+        {
+            <buttton type="button" onclick="MarkasCompleteProfile(false)"  style="cursor:pointer" class="btn btn-success btn-sm pull-left"><i class="fa fa-check" aria-hidden="true"></i> Completed Profile</buttton>
+        }
+        else
+        {
+            <buttton type="button"  onclick="MarkasCompleteProfile(true)" style="cursor:pointer" class="btn btn-default btn-sm pull-left"><i class="fa fa-check" aria-hidden="true"></i> Mark as complete profile</buttton>
+        }
+
+        <button class="btn btn-warning" style="float:right;margin-left:10px; font-weight:700;color:white" onclick="EditMember()"><i class="fa fa-fw fa-pencil" style="margin-right:5px"></i>Edit </button>
+        <a onclick="reset_password('@Model.Id')" data-toggle="modal" data-target="modal-default" href="#" class="btn btn-primary pull-right"><b><i class="fa fa-refresh" aria-hidden="true"></i> Reset Password</b></a>
+        <a onclick="SendEmailUpdate()" style="margin-right:10px" data-toggle="modal" data-target="modal-default" href="#" class="btn btn-default pull-right"><b><i class="fa fa-envelope" aria-hidden="true"></i> @(Model.IsSendEmailUpdateInfo==true?"Resend":"Send") Email Update</b></a>
+    </div>
+    <div class="box-body">
+        <div class="row">
+
+            <div class="col-md-6">
+                <div class="sub-title">
+                    <h3>Enrich Infomation:</h3>
+                </div>
+                <div class="box-personal">
+                    <div class="row box-text-infor">
+                        <label class="col-md-6">Employee Id: </label>
+                        <div class="col-md-6 text text-infor">
+                            <p>@Model.EmployeeId</p>
+                        </div>
+                    </div>
+                    <div class="row box-text-infor">
+                        <label class="col-md-6">Full Name: </label>
+                        <div class="col-md-6 text text-infor">
+                            <p>@Model.FirstName @Model.LastName</p>
+                        </div>
+                    </div>
+                    <div class="row box-text-infor">
+                        <label class="col-md-6">Office Email: </label>
+                        <div class="col-md-6 text text-infor">
+                            <p class="text-email">@Model.PersonalEmail</p>
+                        </div>
+                    </div>
+                    @if (cMem.SiteId == 1)
+                    {
+                        <div class="row box-text-infor">
+                            <label class="col-md-6">Belong To Partner: </label>
+                            <div class="col-md-6 text text-infor">
+                                <p class="text-email">@ViewBag.SiteName</p>
+                            </div>
+                        </div>
+                    }
+
+                    <div class="row box-text-infor">
+                        <label class="col-md-6">Department: </label>
+                        <div class="col-md-6 text text-infor">
+                            <p class="text-email">@(string.IsNullOrEmpty(Model.DepartmentName)?"N/A": Model.DepartmentName)</p>
+                        </div>
+                    </div>
+                    <div class="row box-text-infor">
+                        <label class="col-md-6">Member Type: </label>
+                        <div class="col-md-6 text text-infor">
+                            <p class="text-email">  @Model.MemberTypeName</p>
+                        </div>
+                    </div>
+
+                    <div class="row box-text-infor">
+                        <label class="col-md-6">Work Status: </label>
+                        <div class="col-md-6 text text-infor">
+                            <p>
+                                <span style="width:auto;padding:3px 5px" class="@((Model.EmployeeStatus??"Working")=="Working"?"label label-success":"")">
+                                    @(Model.EmployeeStatus??"Working")
+                                </span>
+                            </p>
+
+                        </div>
+                    </div>
+                    <div class="row box-text-infor">
+                        <label class="col-md-6">Job Position: </label>
+                        <div class="col-md-6 text text-infor">
+                            <p>
+                                @Model.JobPosition
+                            </p>
+                        </div>
+                    </div>
+                    <div class="row box-text-infor">
+                        <label class="col-md-6">Base Salary: </label>
+                        <div class="col-md-6 text text-infor">
+                            <p>@(Model.BaseSalary?.ToString("$#,##0.##"))</p>
+                        </div>
+                    </div>
+                    <div class="row box-text-infor">
+                        <label class="col-md-6"> Probation Date: </label>
+                        <div class="col-md-6 text text-infor">
+                            <p>@string.Format("{0:MM-dd-yyyy}", Model.ProbationDate) </p>
+                        </div>
+                    </div>
+                    <div class="row box-text-infor">
+                        <label class="col-md-6">Official Date: </label>
+                        <div class="col-md-6 text text-infor">
+                            <p>@string.Format("{0:MM-dd-yyyy}", Model.EmploymentContractDate) </p>
+                        </div>
+                    </div>
+                    <div class="row box-text-infor">
+                        <label class="col-md-6">End Date: </label>
+                        <div class="col-md-6 text text-infor">
+                            <p>@string.Format("{0:MM-dd-yyyy}", Model.TerminateContractDate) </p>
+                        </div>
+                    </div>
+
+
+                </div>
+                <div class="sub-title">
+                    <h3>Account Information:</h3>
+                </div>
+                <div class="box-personal">
+                    <div class="row box-text-infor">
+                        <label class="col-md-6">Access Roles: </label>
+                        <div class="col-md-6 text text-infor">
+                            <p>@Model.RoleName</p>
+                        </div>
+                    </div>
+                    <div class="row box-text-infor">
+                        <label class="col-md-6">Status: </label>
+                        <div class="col-md-6 text text-infor">
+                            <p style="background: none; justify-content: left; ">
+                                @if (Model.Active == true)
+                                {
+                                    <label style="font-size:14px" class="label label-success">Active</label>
+                                }
+                                else
+                                {
+                                    <label style="font-size:14px" class="label label-danger">Deactive</label>
+                                }
+
+
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+
+
+            </div>
+            <div class="col-md-6 ">
+                <div class="sub-title">
+                    <h3>Personal Infomation:</h3>
+                </div>
+                <div class="box-personal">
+
+
+                    <div class="row box-text-infor">
+                        <label class="col-md-6">Identity card: </label>
+                        <div class="col-md-6 text text-infor">
+                            <p class="identity-text">
+                                @Model.IdentityCardNumber
+                                @if (!string.IsNullOrEmpty(Model.IdentityCardNumber))
+                                {
+                                    <a class="view-card" data-toggle="modal" data-target="#exampleModalCenter"><i class="fa fa-eye" aria-hidden="true"></i></a>
+                                }
+                            </p>
+                        </div>
+                    </div>
+                    <div class="row box-text-infor">
+                        <label class="col-md-6">Personal Income Tax: </label>
+                        <div class="col-md-6 text text-infor">
+                            <p>@Model.PersonalIncomeTax</p>
+                        </div>
+                    </div>
+                    <div class="row box-text-infor">
+                        <label class="col-md-6">Social Insurance Code: </label>
+                        <div class="col-md-6 text text-infor">
+                            <p>@Model.SocialInsuranceCode</p>
+                        </div>
+                    </div>
+                    <div class="row box-text-infor">
+                        <label class="col-md-6">Country: </label>
+                        <div class="col-md-6 text text-infor">
+                            <p>@(ViewBag.Country)</p>
+                        </div>
+                    </div>
+                    <div class="row box-text-infor">
+                        <label class="col-md-6">State/Province: </label>
+                        <div class="col-md-6 text text-infor">
+                            <p> @(ViewBag.State)</p>
+                        </div>
+                    </div>
+                    <div class="row box-text-infor">
+                        <label class="col-md-6">City/District: </label>
+                        <div class="col-md-6 text text-infor">
+                            <p>@Model.City</p>
+                        </div>
+                    </div>
+                    <div class="row box-text-infor">
+                        <label class="col-md-6">Zip code: </label>
+                        <div class="col-md-6 text text-infor">
+                            <p>@Model.ZipCode</p>
+                        </div>
+                    </div>
+                    <div class="row box-text-infor">
+                        <label class="col-md-6">Address: </label>
+                        <div class="col-md-6 text text-infor">
+                            <p>@Model.Address</p>
+                        </div>
+                    </div>
+
+                    <div class="row box-text-infor">
+                        <label class="col-md-6">Cell phone: </label>
+                        <div class="col-md-6 text text-infor">
+                            <p>@Model.CellPhone</p>
+                        </div>
+                    </div>
+                    <div class="row box-text-infor">
+                        <label class="col-md-6">Personal Email: </label>
+                        <div class="col-md-6 text text-infor">
+                            <p class="text-email">@Model.Email1</p>
+                        </div>
+                    </div>
+                    <div class="row box-text-infor">
+                        <label class="col-md-6">Gender: </label>
+                        <div class="col-md-6 text text-infor">
+                            <p>@Model.Gender</p>
+                        </div>
+                    </div>
+                    <div class="row box-text-infor">
+                        <label class="col-md-6">Birthday: </label>
+                        <div class="col-md-6 text text-infor">
+
+                            <p>@string.Format("{0:MM-dd-yyyy}", Model.Birthday) </p>
+                        </div>
+                    </div>
+                    <div class="row box-text-infor">
+                        <label class="col-md-6">Profile Defined Color: </label>
+                        <div class="col-md-6 text text-infor">
+                            <p class="text-email">
+                                <input type="color" class="form-control" name="ProfileDefinedColor"
+                                       data-toggle="tooltip" title="Click here to changes color" data-placement="bottom"
+                                       id="ProfileDefinedColor" onchange="pickerColor()" value="@(Model.ProfileDefinedColor == null ? "#ffffff" : Model.ProfileDefinedColor)"
+                                       style="width: 80px; margin-right: 20px; height: 22px; padding: 0px 10px; " disabled />
+                                @Model.ProfileDefinedColor
+                            </p>
+                        </div>
+                    </div>
+
+
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+</div>
+
+<!-- start modal identity card -->
+<div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog" id="modal-identity" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+
+                </button>
+                <h4 class="modal-title">Identity Card</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6 box-img-identity">
+                        <span style="padding-bottom: 15px; display: inline-block">Front Side:</span>
+                        @if (!string.IsNullOrEmpty(Model.IdentityCardImageBefore))
+                        {
+                            <a class="download-avatar" style="margin-right:5px;" target="_blank" title="view" href="@identity_card_image_before"><i class="fa fa-search"></i> </a>
+                            <a class="download-avatar" title="download" href="/Upload/DownloadFile_?file=@identity_card_image_before"><i class="fa fa-download"></i> </a>
+                        }
+
+                        <img class="img-fluid" src="@identity_card_image_before" />
+
+                    </div>
+                    <div class="col-md-6 box-img-identity">
+                        <span style="padding-bottom:15px;display:inline-block">Back Side:</span>
+                        @if (!string.IsNullOrEmpty(Model.IdentityCardImageBefore))
+                        {
+                            <a class="download-avatar" style="margin-right:5px;" target="_blank" title="view" href="@identity_card_image_after"><i class="fa fa-search"></i> </a>
+                            <a class="download-avatar" title="download" href="/Upload/DownloadFile_?file=@identity_card_image_after"><i class="fa fa-download"></i> </a>
+                        }
+
+                        <img class="img-fluid" src="@identity_card_image_after" />
+
+                    </div>
+                </div>
+
+            </div>
+
+
+        </div>
+    </div>
+</div>

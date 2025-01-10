@@ -1,0 +1,686 @@
+﻿@model List<EnrichcousBackOffice.Models.Document_Category>
+@{
+    ViewBag.Title = "Document Management";
+    var cMem = EnrichcousBackOffice.AppLB.Authority.GetCurrentMember();
+}
+@section style{
+    <style>
+        /*  parent category css  */
+        .child_category_wrapper {
+            display: none;
+        }
+
+        .pointer-event {
+            cursor: pointer;
+        }
+
+        .category_wrapper {
+            padding: 0px;
+            margin: 0px;
+            list-style: none;
+        }
+
+        .category-parent-header {
+            padding: 8px 8px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .icon-expand {
+            margin-top: 3px;
+            transition: all .1s linear;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .category_parrent.open .icon-expand {
+            transform: rotate(90deg);
+        }
+
+        .category_parrent {
+            border: 1px solid #eee;
+            margin-bottom: 5px;
+            background: white;
+        }
+
+            .category_parrent .category_name {
+                font-weight: normal;
+                font-size: 16px;
+                text-transform: uppercase;
+            }
+
+        .expand-button {
+            padding: 0px 10px;
+            border-radius: 2px;
+        }
+
+           
+        /*.category_parrent.open .category_name, .category_parrent:hover .category_name, .category_parrent.open .icon-expand, .category_parrent:hover .icon-expand {
+                color: white;
+            }*/
+        /* .category_parrent.open, .category_parrent:hover {
+                background-color: var(--main-color-1);
+            }*/
+        /* child category css*/
+        .child_category_wrapper {
+            list-style: none;
+            padding-left: 0px;
+            margin-left: 0px;
+        }
+
+        .child_category {
+            padding: 8px 8px 8px 15px;
+            font-size: 14px;
+        }
+
+            .child_category:hover {
+                background: #f6f6f6;
+            }
+        /*   loading*/
+        .circular {
+            animation: rotate 2s linear infinite;
+            height: 50px;
+            transform-origin: center center;
+            width: 50px;
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            margin: auto;
+        }
+
+        .path {
+            stroke-dasharray: 1, 200;
+            stroke-dashoffset: 0;
+            animation: dash 1.5s ease-in-out infinite, color 6s ease-in-out infinite;
+            stroke-linecap: round;
+        }
+
+        @@keyframes rotate {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @@keyframes dash {
+            0% {
+                stroke-dasharray: 1, 200;
+                stroke-dashoffset: 0;
+            }
+
+            50% {
+                stroke-dasharray: 89, 200;
+                stroke-dashoffset: -35px;
+            }
+
+            100% {
+                stroke-dasharray: 89, 200;
+                stroke-dashoffset: -124px;
+            }
+        }
+
+        @@keyframes color {
+            100%, 0% {
+                stroke: #d62d20;
+            }
+
+            40% {
+                stroke: #0057e7;
+            }
+
+            66% {
+                stroke: #008744;
+            }
+
+            80%, 90% {
+                stroke: #ffa700;
+            }
+        }
+
+        div.dataTables_wrapper div.dataTables_processing {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 100%;
+            margin-left: 0;
+            margin-top: 0;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            padding: 1em 0;
+            border: none;
+            background-color: #fffdfd80;
+        }
+    /*    progess style*/
+
+        .step-progress {
+            margin: 0;
+            text-align: right;
+            width: 100%;
+        }
+
+        .step-progress ul {
+            font-size: 0;
+            margin-bottom: 0px;
+        }
+
+        .step-progress li {
+            display: inline-block;
+            position: relative;
+            margin: 2px;
+        }
+
+        .step-progress li:nth-child(1) {
+            z-index: 6;
+        }
+
+        .step-progress li:nth-child(2) {
+            z-index: 5;
+        }
+
+        .step-progress li:nth-child(3) {
+            z-index: 4;
+        }
+
+        .step-progress li:nth-child(4) {
+            z-index: 3;
+        }
+
+        .step-progress li:nth-child(5) {
+            z-index: 2;
+        }
+
+        .step-progress li:nth-child(6) {
+            z-index: 1;
+        }
+
+        .step-progress a {
+            display: block;
+            position: relative;
+            min-width: 100px;
+            height: 32px;
+            background-color: #ececec;
+            padding: 0 16px 0 24px;
+            font-size: 13px; /*reset zeroing*/
+            line-height: 32px;
+            font-weight: bold;
+            color: #777;
+            text-transform: uppercase;
+        }
+
+        .step-progress a:before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 32px;
+            border-width: 16px 8px;
+            border-style: dashed dashed dashed solid;
+            border-color: transparent transparent transparent #ffffff;
+        }
+
+        .step-progress a:after {
+            content: "";
+            display: block;
+            position: absolute;
+            top: 0;
+            right: -16px;
+            height: 32px;
+            border-width: 16px 8px;
+            border-style: dashed dashed dashed solid;
+            border-color: transparent transparent transparent #e9e9e9;
+        }
+
+            .step-progress li.active-step a {
+                background-color: #03bed5;
+                color: #fff;
+                cursor: pointer;
+            }
+
+                .step-progress li.active-step a:after {
+                    border-left-color: #03bed5;
+                }
+
+            .step-progress li.inactive-step a {
+                cursor: default;
+            }
+
+        .header-progress {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            width: 100%;
+            align-items: center;
+            padding: 0px 15px 10px 10px;
+        }
+
+        .progress-title h2 {
+            font-size: 16px;
+            text-transform: uppercase;
+            margin: 0px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .step-progress li:first-child a:before {
+            display: none;
+        }
+        .dropdown-dot {
+            transition-duration: .28s;
+            transition-property: box-shadow,transform,opacity;
+            transition-timing-function: cubic-bezier(.4,0,.2,1);
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+        }
+
+            .dots-menu.open .dropdown-dot, .dropdown-dot:hover {
+                background: #ccd0d5;
+            }
+
+            .dropdown-dot:after {
+                content: '\2807';
+                font-size: 22px;
+                left: 12px;
+                top: 3px;
+                cursor: pointer;
+                color: #686868;
+                position: absolute;
+            }
+
+            .dropdown-dot:hover:after {
+                color: black;
+            }
+        .expand-button {
+            color: #3c3736;
+        }
+        .select2-container.select2-container-disabled .select2-choice {
+            background-color: #ddd;
+            border-color: #a8a8a8;
+        }
+        .category_parrent.open .category-parent-header:not(.active), .category_parrent.open .category-parent-header .expand-button {
+            color: var(--main-color-1);
+        }
+        .category_parrent.open .category-parent-header.active, .category_parrent.open .category-parent-header.active .expand-button {
+            background: var(--main-color-1);
+            color: white !important;
+        }
+        .child_category.active {
+            background: var(--main-color-1);
+            color: white;
+        }
+        .category_parrent.open .child_category_wrapper{
+            display:block;
+        }
+       
+        .img-display img {
+            object-fit: contain;
+            display: block;
+            max-width: 250px;
+            max-height: 250px;
+        }
+
+
+        .custom-file-upload {
+            margin-top: 15px;
+            background: #2b97e6;
+            color: white;
+            padding: 4px 10px;
+            font-size: 14px;
+        }
+
+            .custom-file-upload i {
+                padding-right: 7px;
+            }
+
+        .view-name-img {
+            width: 200px !important;
+            height: 28px !important;
+        }
+    </style>
+}
+
+<section class="content-header">
+    <h1>
+        Document Management
+        <small>Document</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Dashboard</a></li>
+        <li class="active">Document</li>
+    </ol>
+</section>
+
+<!-- Main content -->
+<section class="content">
+
+
+    @if (TempData["error"] != null)
+    {
+        <div class="alert alert-warning alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <span><i class="icon fa fa-warning"></i> @TempData["error"]</span>
+        </div>
+    }
+    else if (TempData["success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <span><i class="icon fa fa-check"></i> @TempData["success"]</span>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-sm-3">
+            <div class="box box-primary">
+                <div class="box-header with-border" style="display:flex;align-items:center;">
+                    <h3 class="box-title box-title-category" style="flex-grow:1;font-weight:600;font-size:16px;">
+                        CATEGORY
+                    </h3>
+                    @if (cMem.RoleCode?.Contains("admin") == true)
+                    {
+                        <div style="flex-grow:1;text-align:right;">
+                            <button type="button" class="btn btn-success btn-sm" onclick="AddCategory()" title="add new category">
+                                <i class="fa fa-plus"></i>
+                            </button>
+                        </div>
+                    }
+                </div>
+                <div class="box-body" id="render_menu" style="background:#f5f5f5">
+                     @Html.Partial("_DocumentCategoryMenu",Model)
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-9">
+            <div class="box box-primary  department-detail">
+                <div class="box-body box-body-data" id="detail_content" style="min-height:200px;">
+                </div>
+                <div id="no-selected-category" style="display:none;font-size:16px;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)"><i class="fa fa-exclamation" style="margin-right:5px" aria-hidden="true"></i> no category selected</div>
+                <div class="loading-group" id="loading-content" style="position: absolute;right: 50%;top: 60%;transform: translate(-50%, -50%);color: #797979;display:none">
+                    <svg class="circular" viewBox="25 25 50 50">
+                        <circle class="path" cx="50" cy="50" r="20" fill="none" stroke-width="2" stroke-miterlimit="10" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+</section>
+<!-- Modal category-->
+
+<div id="render_crud_documentcategory">
+
+</div>
+    <!-- Modal add document files-->
+<div id="render_crud_documentfiles">
+
+</div>
+
+<div id="render_iframe_view_file">
+   
+</div>
+
+@section script
+        {
+    <script>
+        @*@if (Model.Where(x=>x.ParentId==null).Count() > 0)
+        {
+             <text>
+             LoadCategory(@Model.Where(x => x.ParentId == null).OrderBy(x=>x.DisplayOrder).FirstOrDefault().Id);
+            </text>
+        }*@
+        function FirstLoadPage() {
+            if ($(".category_menu").length) {
+                $(".category_menu").first().trigger('click');
+            }
+            else {
+                $("#no-selected-category").show();
+            }
+        }
+        FirstLoadPage();
+        $(".category-parent-header").click(function () {
+            $(this).children('ul').slideToggle();
+            $(this).toggleClass("open");
+        })
+        function ExpandSubmenu(el, id) {
+            //remove all expand
+           $('.category_parrent').children('ul').slideUp();
+           $('.category_parrent').removeClass("open");
+            // expand this category
+            $(el).parents('.category_parrent').children('ul').slideToggle();
+            $(el).parents('.category_parrent').toggleClass("open");
+                LoadCategory(id);
+            }
+            function AddCategory() {
+
+                overlayOn();
+            $.ajax({
+                    type: "post",
+                url: "/Documents/AddOrUpdateDocumentCategory",
+                data: {},
+                dataType: "html",
+                success: function (data) {
+                    $("#render_crud_documentcategory").html(data);
+                    $("#category_modal").modal("show");
+                    },
+                error: function () {
+
+                    },
+                complete: function () {
+                        overlayOff();
+                    }
+                });
+        }
+        function EditCategory(CategoryId) {
+            overlayOn();
+            $.ajax({
+                type: "post",
+                url: "/Documents/AddOrUpdateDocumentCategory",
+                data: { CategoryId},
+                dataType: "html",
+                success: function (data) {
+                    $("#render_crud_documentcategory").html(data);
+                    $("#category_modal").modal("show");
+                },
+                error: function () {
+
+                },
+                complete: function () {
+                    overlayOff();
+                }
+            });
+        }
+        function DeleteCategory(CategoryId) {
+            if (confirm("are you sure delete this category ?")) {
+                overlayOn();
+                $.ajax({
+                    type: "post",
+                    url: "/Documents/DeleteCategory",
+                    data: { CategoryId },
+                    dataType: "json",
+                    success: function (data) {
+                        if (data.status) {
+                            let success = $.parseJSON('{"text":"' + data.message + '","layout":"topRight","type":"success"}');
+                            noty(success);
+                            ReloadMenu();
+                            $("#detail_content").html("");
+                            $("#no-selected-category").show();
+                        }
+                        else {
+                            let error = $.parseJSON('{"text":"' + data.message + '","layout":"topRight","type":"error"}');
+                            noty(error);
+                        }
+                    },
+                    error: function () {
+
+                    },
+                    complete: function () {
+                        overlayOff();
+                    }
+                });
+            }
+        }
+        function LoadCategory(Id) {
+            $("#no-selected-category").hide();
+            $("#loading-content").show();
+            $("#detail_content").html('');
+            $(".category_menu").removeClass("active");
+            $("#category_menu_" + Id).addClass("active");
+            $("#category_menu_" + Id).parents(".category_parrent").addClass("open");
+            $("#category_menu_" + Id).parents(".category_parrent").children(".category-parent-header").addClass("open");
+            $.ajax({
+                type: "post",
+                url: "/Documents/GetContent",
+                data: { "CategoryId": Id },
+                dataType: "html",
+                success: function (data) {
+                    $("#detail_content").html(data);
+
+                },
+                error: function () {
+
+                },
+                complete: function () {
+                    $("#loading-content").hide();
+                }
+            });
+        }
+        function ReloadMenu(CategorySelectedId) {
+            overlayOn();
+            $.ajax({
+                type: "post",
+                url: "/Documents/ReloadMenu",
+                data: { CategorySelectedId },
+                dataType: "html",
+                success: function (data) {
+                    $("#render_menu").html(data);
+                    if (CategorySelectedId) {
+                        LoadCategory(CategorySelectedId);
+                    }
+                },
+                error: function () {
+                },
+                complete: function () {
+                    overlayOff();
+                }
+            });
+        }
+        // document files
+        function AddDocumentFiles(CategoryId) {
+            overlayOn();
+            $.ajax({
+                type: "post",
+                url: "/Documents/AddOrUpdateDocumentFiles",
+                data: { CategoryId},
+                dataType: "html",
+                success: function (data) {
+                    $("#render_crud_documentfiles").html(data);
+                    $("#document_files_modal").modal("show");
+                },
+                error: function () {
+
+                },
+                complete: function () {
+                    overlayOff();
+                }
+            });
+        }
+        function ViewDocumentFile(DocumentFileId) {
+            overlayOn();
+            $.ajax({
+                type: "post",
+                url: "/Documents/DetailDocumentFile",
+                data: { DocumentFileId },
+                dataType: "html",
+                success: function (data) {
+                    $("#render_iframe_view_file").html(data);
+                    $("#document_file_detail_modal").modal("show");
+                },
+                error: function () {
+
+                },
+                complete: function () {
+                    overlayOff();
+                }
+            });
+        }
+        function DownLoadDocumentFile(DocumentFileId) {
+            overlayOn();
+            $.ajax({
+                type: "post",
+                url: "/Documents/DownLoadDocumentFile",
+                data: { DocumentFileId },
+                dataType: "json",
+                success: function (data) {
+                    if (data) {
+                        let success = $.parseJSON('{"text":"download success","layout":"topRight","type":"success"}');
+                        noty(success);
+                        window.location.href = "/Documents/DownloadFile_?file=" + data.path;
+                    }
+                    else {
+                        let error = $.parseJSON('{"text":"' + data.message + '","layout":"topRight","type":"error"}');
+                        noty(error);
+
+                    }
+                },
+                error: function () {
+                    alert('something went wrong !')
+                },
+                complete: function () {
+                    overlayOff();
+                }
+            });
+        }
+        function EditDocumentFile(DocumentFileId) {
+            overlayOn();
+            $.ajax({
+                type: "post",
+                url: "/Documents/AddOrUpdateDocumentFiles",
+                data: { DocumentFileId },
+                dataType: "html",
+                success: function (data) {
+                    $("#render_crud_documentfiles").html(data);
+                    $("#document_files_modal").modal("show");
+                },
+                error: function () {
+
+                },
+                complete: function () {
+                    overlayOff();
+                }
+            });
+        }
+        function DeleteDocumentFile(DocumentFileId) {
+            if (confirm('are you sure delete this file !')) {
+                overlayOn();
+                $.ajax({
+                    type: "post",
+                    url: "/Documents/DeleteDocumentFile",
+                    data: { DocumentFileId },
+                    dataType: "json",
+                    success: function (data) {
+                        if (data.status) {
+                            $("#category_modal").modal("hide");
+                            let success = $.parseJSON('{"text":"' + data.message + '","layout":"topRight","type":"success"}');
+                            noty(success);
+                            $(".table-document-file").DataTable().ajax.reload();
+                        }
+                        else {
+                            let error = $.parseJSON('{"text":"' + data.message + '","layout":"topRight","type":"error"}');
+                            noty(error);
+                        }
+                    },
+                    error: function () {
+
+                    },
+                    complete: function () {
+                        overlayOff();
+                    }
+                });
+            }
+
+        }
+    </script>
+
+}
+

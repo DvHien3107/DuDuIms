@@ -1,0 +1,25 @@
+<div class="col-md-12" id="button_show_pos_info">
+    <button class="btn btn-primary" onclick="show_pos_info()">Show info</button>
+    <img id="pos_info_loading" style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+</div>
+<div class="row col-md-12" id="pos_info_view" style="display:none;"></div>
+<script>
+// $("#button_show_pos_info button").trigger("click");
+function show_pos_info() {
+    $("#pos_info_loading").show();
+    $.ajax({
+        method: "POST",
+        url: "/merchantman/MangoPOSInfo",
+        data: {
+            storeCode: '@Model'
+        },
+    }).done(function (data) {
+        $("#button_show_pos_info").hide();
+        $("#pos_info_view").html(data).show(500);
+    }).fail(function (err) {
+        error(err.responseText);
+    }).always(function () {
+        $("#pos_info_loading").hide();
+    })
+}
+</script>

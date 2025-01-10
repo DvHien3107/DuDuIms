@@ -1,0 +1,68 @@
+﻿@model EnrichcousBackOffice.Areas.Page.Models.Customize.Ticket.EmailAndNameModel
+
+@{
+    Layout = "~/Areas/Page/Views/Shared/_TicketLayout.cshtml";
+    ViewBag.Title = "Create Ticket | IMS System";
+}
+
+
+@Html.Action("TicketProgress", new { step = EnrichcousBackOffice.Areas.Page.Models.Customize.Ticket.TicketProgressStep.NameAndEmail })
+<div class="page-body">
+
+    @using (Html.BeginForm("Index", "Ticket", FormMethod.Post, new { @class = "form" }))
+    {
+        @Html.AntiForgeryToken()
+    <div class="box  box-custom">
+        <div class="box-header with-border">
+            <h3 class="box-title">Contact Information</h3>
+        </div>
+
+        <div class="box-body">
+            <div class="row">
+                <div class="col-sm-6">
+
+                    @*<div class="form-group">
+                        @Html.LabelFor(m => m.FirstName)<span style="color:red"> *</span>
+                        @Html.EditorFor(m => m.FirstName, new { htmlAttributes = new { @class = "form-control", @placeholder = "First Name" } })
+                        @Html.ValidationMessageFor(m => m.FirstName)
+
+                    </div>
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.LastName)<span style="color:red"> *</span>
+                        @Html.EditorFor(m => m.LastName, new { htmlAttributes = new { @class = "form-control", @placeholder = "Last Name" } })
+                        @Html.ValidationMessageFor(m => m.LastName)
+                    </div>*@
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.Email)<span style="color:red"> *</span>
+                        @Html.EditorFor(m => m.Email, new { htmlAttributes = new { @class = "form-control", @placeholder = "Email Address" } })
+
+                        @Html.ValidationMessageFor(m => m.Email)
+                        <small id="emailHelp" class="form-text text-muted" style="display:block;padding-top:5px">We'll never share your email with anyone else.</small>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+       
+                <div>
+                    @Html.ValidationMessage("error-summary", new { @class = "validation-summary" })
+                </div>
+
+                <div class="box">
+                    <div class="box-body">
+
+                        <button type="submit" class="btn btn-next btn-custom">Next</button>
+                    </div>
+                </div>
+                }
+
+
+
+            </div>
+
+
+            @section scripts{
+
+            }
+

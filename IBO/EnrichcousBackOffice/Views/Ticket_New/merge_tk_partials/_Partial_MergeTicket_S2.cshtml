@@ -1,0 +1,58 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.T_SupportTicket>
+@using EnrichcousBackOffice.AppLB
+<label style="font-size:20px">Select main ticket</label>
+<table class="table table-bordered table-striped">
+    <thead style="background-color: #aad3ea">
+        <tr>
+            <th>Ticket</th>
+            <th>Date</th>
+            <th>Select</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (TempData["e"] != null)
+        {
+            <tr><td colspan="10"><label class="fa fa-warning text-warning"> @TempData["e"]</label></td></tr>
+        }
+        else
+        {
+            foreach (var tk in Model)
+            {
+                <tr class="tr_ticket_2" style="cursor:pointer">
+                    <td>
+                        <label class="text-success"><a href="/Ticket_New/detail/@tk.Id" target="_blank">#@CommonFunc.view_TicketId(tk.Id)</a></label>@if (ViewBag.cur_tk == tk.Id)
+                        {<label class="label label-success"> Current ticket</label>}
+                        <p>@tk.Name</p>
+                    </td>
+                    <td>
+                        Create at:
+                        <span id="localtime-@tk.Id">
+                            <script>convertLocalTime("@tk.Id", "@tk.CreateAt")</script>
+                        </span>
+                        by <b>@tk.CreateByName</b><br />
+                        @(!string.IsNullOrEmpty(tk.UpdateTicketHistory) ? tk.UpdateTicketHistory.Split('|').Last() : "")<br />
+                    </td>
+                    <td style="text-align:center">
+                        <input name="main_ticket" value="@tk.Id" type="radio" style="width:16px; height:16px" />
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+<script>
+    $(".tr_ticket_2").on("click", function (event) {
+        if (event.target.type !== 'radio') {
+            $(':radio', this).trigger('click');
+        }
+    });
+    $("[name=main_ticket]").on("click", function () {
+        $(this).closest("tr").css("background-color", "#cce6ff");
+        $("[name=main_ticket]").not(this).closest("tr").css("background-color", "#fff");
+    });
+</script>
+<style>
+    .tr_ticket:hover {
+        background-color: #ddd !important;
+    }
+</style>

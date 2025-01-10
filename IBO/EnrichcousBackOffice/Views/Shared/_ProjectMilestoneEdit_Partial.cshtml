@@ -1,0 +1,584 @@
+﻿@{
+    var stage = ViewContext.RouteData.Values["controller"].ToString().ToLower();
+    bool development = ViewBag.development == true;
+    string development_proj = ViewBag.development_proj;
+}
+@* Layout *@
+<div class="modal fade in" id="project-milestone" role="dialog" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-content" style="width: 450px;">
+        @* START - Header *@
+        <div class="modal-header">
+            <button style="font-size:2em" type="button" class="close" data-dismiss="modal">
+                <i class="fa fa-close"></i>
+            </button>
+            <h3 class="modal-title" style="margin-right:50px">Milestone</h3>
+        </div>
+
+        <div class="loading_over" style="width: 100%; height: 100%;position: absolute;top: 0;left: 0;opacity: 0.3; background-color:grey; z-index:999;display:none">
+            <img style="margin:40% auto; display:block; height:50px" src="/Content/ajax-loaders/loading-partial.gif">
+        </div>
+        @* END - Header *@
+
+        @* START- Body *@
+        <div class="modal-body">
+            <div class="row">
+                <div class="col-md-12 form-inline filter-group">
+                    <div class="input-group col-md-12 pull-left" style="margin-bottom:10px;display:none;">
+                        <div class="input-group-addon" style="line-height: 20px;width: 35%;text-align: left;text-indent: 5px;">
+                            <i class="fa fa-list-alt" style="margin-right: 5px;"></i>Project
+                        </div>
+                        <select class="form-control group new-project-add" style="width: 100%; display: none" data-placeholder="Input to create new Project..."></select>
+                        <input class="form-control project-item" style="width: 100%;display: none;" placeholder="Input to edit Project...">
+                    </div>
+                    @*<button class="btn btn-sm btn-default btn-new-project" style="margin-top: 2px;float: right;height: 100%;display: none;" onclick="newProject(event)">New</button>
+                        <button class="btn btn-sm btn-default btn-edit-project" style="margin-top: 2px;float: right;height: 100%;display: none;" onclick="editProject(event)">Edit</button>*@
+                </div>
+                <div class="col-md-12 form-inline filter-category">
+                    <div class="input-group col-md-12 pull-left" style="margin-bottom:10px;">
+                        <div class="input-group-addon" style="line-height: 20px;width: 35%;text-align: left;text-indent: 5px;">
+                            <i class="fa fa-list-alt" style="margin-right: 5px;"></i>Category
+                        </div>
+                        @*
+                            <select class="form-control category" style="width: 100%"
+                                data-allow-clear="true" data-tags="true"
+                                data-placeholder="Input to create new Category...">
+                                <option></option>
+                            </select>
+                        *@
+                        <input class="form-control category-item" style="width: 100%;" placeholder="Input to edit Category...">
+                    </div>
+                </div>
+                <span class="col-md-12 form-inline msg-category" style="display: none;margin-top: -10px;font-size: 12px;text-indent: 10px;color: red"></span>
+                <div class="col-md-12 form-inline filter-version">
+                    <div class="input-group col-md-10 pull-left" style="margin-bottom:10px;">
+                        <div class="input-group-addon" style="line-height: 20px;width: 35%;text-align: left;text-indent: 5px;">
+                            <i class="fa fa-list-alt" style="margin-right: 5px;"></i>Version
+                        </div>
+                        @*<select class="form-control version" style="width: 100%"
+                                    data-allow-clear="true" data-tags="true"
+                                    data-placeholder="Input to create new Version...">
+                                <option></option>
+                            </select>*@
+                        <input class="form-control version-item" style="width: 100%;" placeholder="Input to edit Version...">
+                    </div>
+                </div>
+                <span class="col-md-12 form-inline msg-version" style="display: none;margin-top: -10px;font-size: 12px;text-indent: 10px;color: red"></span>
+            </div>
+        </div>
+        @* END - Body *@
+
+        @* START - Footer *@
+    <div class="modal-footer">
+        <button data-dismiss="modal" class="btn btn-default pull-left">Close</button>
+        <button type="button" class="btn btn-danger btn-delete" style="display: none" onclick="milestoneDelete()">Delete</button>
+        <button class="btn btn-primary btn-new" style="display: none" onclick="milestoneSave(event)">Save</button>
+        <button class="btn btn-primary btn-edit" style="display: none" onclick="milestoneUpdate(event)">Update</button>
+
+    </div>
+        @* END - Footer *@
+    </div>
+</div>
+@* Plugin *@
+<script type="text/javascript">
+let TARGET_CATEGORY = "category";
+let TARGET_VERSION = "version";
+let TARGET_ADD = "add";
+let TARGET_EDIT = "edit";
+(function($) {
+this.MSVersion = function () {
+    let defaults = {
+        group: null,
+        category: null,
+        version: null,
+        stage: '@stage',
+        process: TARGET_EDIT,
+        target: null,
+        finish: null,
+    }
+    if (arguments[0] && typeof arguments[0] === "object") {  this.options = extendDefaults(defaults, arguments[0]); }
+    function extendDefaults(source, properties) {
+        console.log(properties);
+        var property;
+        for (property in properties) {
+            if (properties.hasOwnProperty(property)) {
+                source[property] = properties[property];
+            }
+        }
+        return source;
+    }
+}
+this.MSVersion.prototype.isCategory = function() {
+    return this.options.target === TARGET_CATEGORY;
+}
+this.MSVersion.prototype.isVersion = function() {
+    return this.options.target === TARGET_VERSION;
+}
+this.MSVersion.prototype.isAdd = function() {
+    return this.options.process === TARGET_ADD;
+}
+this.MSVersion.prototype.isEdit = function() {
+    return this.options.process === TARGET_EDIT;
+}
+this.MSVersion.prototype.isCategoryAdd = function() {
+    return this.isCategory() && this.isAdd();
+}
+this.MSVersion.prototype.isCategoryEdit = function() {
+    return this.isCategory() && this.isEdit();
+}
+this.MSVersion.prototype.isVersionAdd = function() {
+    return this.isVersion() && this.isAdd();
+}
+this.MSVersion.prototype.isVersionEdit = function() {
+    return this.isVersion() && this.isEdit();
+}
+this.MSVersion.prototype.checkIs = function(target, process) {
+    return this.options.target === target && this.options.process === process;
+}
+this.MSVersion.prototype.saveInfo = function(result) {
+    this.options.groupInfo = result["group"];
+    this.options.categoryInfo = null;
+    this.options.versionInfo = null;
+
+    let category = result["category"];
+    if (category !== null && category !== undefined) {
+        if ($("#project-milestone .category option:selected").val() !== category.Id && validString(category.Id)) {
+            $("#project-milestone .category option:selected").attr("value", category.Id)
+            $("#project-milestone .category").val(category.Id).trigger("change");
+        }
+        this.options.categoryInfo = category;
+    }
+    let version = result["version"];
+    if (version !== null && version !== undefined) {
+        if ($("#project-milestone .version option:selected").val() !== version.Id && validString(version.Id)) {
+            $("#project-milestone .version option:selected").attr("value", version.Id)
+            $("#project-milestone .version").val(version.Id).trigger("change");
+        }
+        this.options.versionInfo = version;
+    }
+}
+    this.MSVersion.prototype.callback = function () {
+        
+    if (this.options.group === null && this.options.category === null && this.options.version === null) {
+        if (this.options.finish !== null) {
+            this.options.finish();
+        }
+        return;
+    }
+    if (this.options.finish !== null) {
+        this.options.finish(this.options.group, this.options.category, this.options.version);
+       
+    }
+}
+}(jQuery));
+</script>
+
+@* Util *@
+<script type="text/javascript">
+    $.ajaxSetup({ cache: false });
+    $(document).ajaxError(function (e, xhr, opts) {
+        if (isNotMilestoneAjaxCall(opts)) return;
+        error(xhr.responseText);
+    }).ajaxSuccess(function (data, xhr, opts) {
+        try {
+            if (validString(xhr.responseJSON.message) && xhr.responseJSON.status==null) {
+                success(xhr.responseJSON.message);
+            }
+        } catch (e) {
+        }
+    }).ajaxStart(function () {
+        $("#project-milestone .loading_over").show();
+    }).ajaxSend(function (e, xhr, opts) {
+    }).ajaxComplete(function (e, xhr, opts) {
+        $("#project-milestone .loading_over").hide();
+    }).ajaxStop(function () {
+        $("#project-milestone .loading_over").hide();
+    });
+    function isNotMilestoneAjaxCall(opts) {
+        return !(opts.url).startsWith("/milestone");
+    }
+    function validString(val) {
+        if (val === null || val === undefined || val.trim() === "") {
+            return false;
+        }
+        return true;
+    }
+    function notValidString(val) {
+        return !validString(val);
+    }
+    let newTag = function (params) {
+        return {
+            id: params.term + "_new",
+            text: params.term,
+            newOption: true
+        }
+    }
+</script>
+@* Declare *@
+<script type="text/javascript">
+    const PROJECT_MILESTONE = "ProjectMilestone";
+    const CATEGORIES = "Categories";
+    const VERSIONS = "Versions";
+    let msVersion = null;
+    let editGroup = null;
+    let editCategory = null;
+    let editVersion = null;
+    // Storage
+    let Storage = sessionStorage;
+    function StorageGet(key) {
+        return JSON.parse(Storage.getItem(key));
+    }
+    function StorageSet(key, val) {
+        Storage.setItem(key, JSON.stringify(val));
+    }
+    // CallBack
+    let callbackOnLoad = {};
+    function RegistCallback(name, func, ...params) {
+        callbackOnLoad[name] = { "caller": func, "params": params };
+    }
+    function ExecuteCallback(target = null) {
+        if (target === null || target === undefined) {
+            return;
+        }
+        let call = callbackOnLoad[target];
+        if (call.caller != null) {
+            call.caller(...call.params);
+        }
+        /*
+            for (let name in callbackOnLoad) {
+                let call = callbackOnLoad[name];
+                if (call.caller != null) {
+                    call.caller(...call.params);
+                }
+            }*/
+    }
+</script>
+
+@* Request call *@
+<script type="text/javascript">
+    /**
+    * Init milestone data
+    */
+    function initProjectMilestone() {
+        $.ajax({
+            method: "POST",
+            url: "/milestone/InitMilestone"
+        }).done(function (result) {
+            Storage.setItem(PROJECT_MILESTONE, JSON.stringify(result));
+            ExecuteCallback("init_view");
+        });
+    }
+
+    /**
+    * Save milestone data
+    */
+    function getDataSelect(target) {
+        let optionEl = $("#project-milestone ." + target + " option:selected");
+        if (optionEl.val() === "") {
+            return null;
+        }
+        let id = optionEl.val();
+        if (msVersion.isEdit() && id === optionEl.text() + "_new") {
+            id = $(`#project-milestone .${target}`).data("old-val");
+        }
+        return { Id: id, Name: optionEl.text() }
+    }
+    function milestoneSave($even) {
+        $even.preventDefault();
+        $(`.category-item`).data("id", null);
+        $(`.version-item`).data("id", null);
+        $.ajax({
+            method: "POST",
+            url: "/milestone/SaveMilestone",
+            data: {
+                projectInfo: getDataSelect("group"),
+                categoryInfo: getItem("category"),
+                versionInfo: getItem("version"),
+            },
+        }).done(finishModified);
+    }
+    function milestoneDelete() {
+        if (confirm("are you sure delete this category ?")) {
+            var category = getItem("category");
+            $.ajax({
+                method: "POST",
+                url: "/milestone/DeleteMilestone",
+                data: {
+                    categoryInfo: category,
+                },
+            }).done(function (data) {
+                if (data.status) {
+                    $("#project-milestone").modal('hide');
+                    success(data.message);
+                    $("#project option[value=" + category.Id + "]").remove();
+                    $("#project-milestone").find("[name='project']").trigger('change.select2');
+                }
+                else {
+                    error(data.message);
+                }
+            });
+        }
+       
+    }
+    /**
+    * Save milestone data
+    */
+    function getItem(target) {
+        if (target === "category" && msVersion.isVersionEdit()) {
+            return null;
+        }
+        let element = $(`.${target}-item`);
+        if (element.val() === "") {
+            return null;
+        }
+        let id = element.data("id");
+        let name = element.val();
+        if (msVersion.isAdd() && notValidString(id)) {
+            id = name;
+        }
+        return { Id: id, Name: name }
+    }
+    function milestoneUpdate($even) {
+        $even.preventDefault();
+        $.ajax({
+            method: "POST",
+            url: "/milestone/SaveMilestone",
+            data: {
+                projectInfo: getItem("project"),
+                categoryInfo: getItem("category"),
+                versionInfo: getItem("version"),
+            },
+        }).done(finishModified);
+    }
+    /**
+    * Init milestone
+    */
+    function newProject($even) {
+        $even.preventDefault();
+        let projectName = prompt("Project name :", "");
+        if (notValidString(projectName)) {
+            return;
+        }
+        $.ajax({
+            method: "POST",
+            url: "/milestone/NewProject",
+            data: {
+                projectInfo: {
+                    Id: projectName,
+                    Name: projectName,
+                }
+            },
+        }).done(function (result) {
+            let projectStorage = StorageGet(PROJECT_MILESTONE);
+            let editItem = projectStorage[result.Id];
+            if (editItem === null || editItem === undefined) {
+                editItem = {
+                    Id: result.Id,
+                    Name: result.Name,
+                }
+            }
+            projectStorage[result.Id] = editItem;
+            StorageSet(PROJECT_MILESTONE, JSON.stringify(projectStorage));
+            let newOption = new Option(result.Name, result.Id, true, true);
+            $("#project-milestone .group").append(newOption).trigger('change');
+        });
+    }
+    function editProject($even) {
+        $even.preventDefault();
+        $(".project-item").prop("readonly", !$(".project-item").prop("readonly"));
+    }
+
+    /**
+    * Select milestone data
+    */
+    function finishModified(result) {
+        if (msVersion === null || msVersion === undefined) {
+            return;
+        }
+        Storage.setItem(PROJECT_MILESTONE, JSON.stringify(result['refresh']));
+        let category = result['rs-save']["category"];
+        if (category !== null && category !== undefined) {
+            msVersion.options.category = category.Id;
+        }
+        let version = result['rs-save']["version"];
+        if (version !== null && version !== undefined) {
+            msVersion.options.version = version.Id;
+        }
+        msVersion.callback();
+        $("#project-milestone").modal("hide");
+    }
+    function getValSelected(target) {
+        let val = $(`#project-milestone .${target} option:selected`).val();
+        let text = $(`#project-milestone .${target} option:selected`).text();
+        if (val === text) {
+            return null;
+        }
+        return val;
+    }
+</script>
+
+@* Main process *@
+<script type="text/javascript">
+
+/**
+* Put new option tag to target
+* #param target
+* #param entry
+* #param parent
+*/
+function putOption(target, entry, parent = null ) {
+    let optionEl = $(`<option></option>`);
+    optionEl.val(entry.Id);
+    optionEl.text(entry.Name);
+    if (msVersion.isEdit() || (parent != null)) {
+        optionEl.prop("disabled", true);
+    }
+    $("#project-milestone ."+target).append(optionEl);
+    if (parent !== null) {
+        optionEl.attr("data-group", parent.Id);
+    }
+}
+/**
+* Init category&version if exist
+* param groupName
+*/
+function loadGroupChildEntry(groupId) {
+    try {
+        let groupInfo = StorageGet(PROJECT_MILESTONE);
+        if(validString(groupId) === false) {
+            return;
+        }
+        let group = groupInfo[groupId];
+        let categories = group[CATEGORIES];
+        for (const category of categories) {
+            putOption("category", category, group);
+        }
+        let versions = group[VERSIONS];
+        for (const version of versions) {
+            putOption("version", version, group);
+        }
+        $("#project-milestone .category").select2({createTag: newTag});
+        $("#project-milestone .version").select2({createTag: newTag});
+    } catch (e) {
+        // console.log(e);
+    }
+}
+
+/**
+* Load to group
+*/
+function loadGroup() {
+    let groupInfo = StorageGet(PROJECT_MILESTONE);
+    $("#project-milestone .group option").remove();
+    for (const groupId in groupInfo) {
+        let group = groupInfo[groupId];
+        putOption("group", group);
+    }
+    $("#project-milestone .group").select2({createTag: newTag}).on("change", function(e) {
+        let group = $("#project-milestone .group").val();
+        $("#project-milestone .category option").remove();
+        if (msVersion.isEdit()) {
+            if (notValidString(group) || group.endsWith("_new")) {
+                group = msVersion.options.group;
+            }
+        }
+        loadGroupChildEntry(group);
+    });
+
+    $("#project-milestone .category").select2({createTag: newTag});
+    $("#project-milestone .version").select2({createTag: newTag});
+}
+
+    function showMilestoneManger(args) {
+        msVersion = new MSVersion(args);
+        if (notValidString(args.category) && msVersion.isCategoryAdd() === false) {
+        warning("Please choose Category first!");
+        return;
+    }
+    if (notValidString(args.version) && msVersion.isVersionEdit()) {
+        warning("Please choose Version first!");
+        return;
+    }
+    let status = msVersion.isEdit() ? "edit" : "create new";
+    $("#project-milestone .project-item").attr("placeholder", `Input to ${status} Project...`)
+    $("#project-milestone .category-item").attr("placeholder", `Input to ${status} Category...`)
+    $("#project-milestone .version-item").attr("placeholder", `Input to ${status} Version...`)
+
+    if(msVersion.isVersion()) {
+        $("#project-milestone .group").prop("disabled", true);
+        $("#project-milestone .category").prop("disabled", true);
+    } else {
+        $(".filter-version").hide();
+    }
+    $("#project-milestone .version").val(args.version).trigger('change');
+    $("#project-milestone").modal("show");
+    $(".project-item").data("id", args.group);
+    $(".category-item").data("id",args.category);
+    $(".version-item").data("id",args.version);
+
+    if (msVersion.isCategory()){
+        $("#project-milestone .modal-title").text("Category");
+    }
+    if (msVersion.isVersion()){
+        $(".project-item").prop("disabled", true);
+        $(".filter-category").hide();
+        $("#project-milestone .modal-title").text("Version");
+    }
+    if (msVersion.isAdd()) {
+        loadGroup();
+        $("#project-milestone .group").val(args.group).trigger('change');
+        $("#project-milestone .category").val(args.category).trigger('change');
+        if (msVersion.isCategoryAdd()) {
+            $("button.btn-new-project").show();
+        }
+        $("button.btn-new").show();
+        $(".category-item").val(null);
+        $(".version-item").val(null);
+    }
+    if (msVersion.isEdit()) {
+        $("button.btn-edit").show();
+        $("button.btn-delete").show();
+        // Project
+        $(".new-project-add").parent("div").find(".select2-container").remove();
+        $(".project-item").show();
+        $(".project-item").val(args.groupName);
+        // Category
+        if (msVersion.isCategoryEdit()) {
+            $(".project-item").prop("readonly", true);
+            $("button.btn-edit-project").show();
+            $(".category-item").val(args.categoryName);
+        }
+        if (msVersion.isVersionEdit() && validString(args.version)) {
+            $(".version-item").val(args.versionName);
+        }
+
+    }
+}
+</script>
+
+@* Ready group *@
+<script type="text/javascript">
+    $(document).ready(() => {
+        Storage.removeItem(PROJECT_MILESTONE)
+        initProjectMilestone();
+    });
+    $("#project-milestone").on('shown.bs.modal', function () {
+    })
+    $("#project-milestone").on('hidden.bs.modal', function (e) {
+        // msVersion = null;
+        $("#project-milestone .group").prop("disabled", false);
+        $("#project-milestone .category").prop("disabled", false);
+        $("#project-milestone .version").prop("disabled", false);
+        $(".filter-category").show();
+        $(".filter-version").show();
+        $("span.msg-category").hide();
+        $("span.msg-version").hide();
+        $("button[class*=btn-new]").hide();
+        $("button[class*=btn-edit]").hide();
+        $("button[class*=btn-delete]").hide();
+        $(".project-item").hide();
+        $(".project-item").prop("readonly", false);
+        $(".project-item").data("id", "");
+        $(".category-item").data("id", "");
+        $(".version-item").data("id", "");
+    })
+</script>

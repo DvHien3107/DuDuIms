@@ -1,0 +1,559 @@
+﻿@using EnrichcousBackOffice.Models
+@using EnrichcousBackOffice.Models.CustomizeModel.Order
+@using EnrichcousBackOffice.AppLB
+@{
+    Dictionary<string, bool> p = ViewBag.p;
+    var cMem = Authority.GetCurrentMember();
+    var Team = ViewBag.Team as List<EnrichcousBackOffice.Models.P_Department>;
+    var ShowSalesPerson = ViewBag.ShowSalesPerson as bool?;
+    var ShowTeam = ViewBag.ShowTeam as bool?;
+    var FromSearch = ViewBag.From as DateTime?;
+    var ToSearch = ViewBag.To as DateTime?;
+    var SearchPartner = ViewBag.SearchPartner as string;
+    var Partners = ViewBag.Partners as List<C_Partner>;
+    List<EnrichcousBackOffice.Models.P_Member> members = ViewBag.ListMemberFilter;
+    var ListSearchBy = new List<OrderSearchByItems>()
+{
+         new OrderSearchByItems {
+            value= "All",
+            label= "All",
+            icon= "<i class'fa fa-search'></i>",
+            type= new string[]{"number","text"},
+
+        },
+        new OrderSearchByItems {
+            value= "phone",
+            label= "Salon Phone",
+            icon= "<i class'fa fa-phone' aria-hidden='true'></i>",
+            type= new string[]{"number" },
+
+        },
+
+    new OrderSearchByItems    {
+            value= "email",
+            label= "Salon Email",
+            icon= "<i class='fa fa-envelope-o'></i>",
+            type= new string[]{"text" }
+        },
+    new OrderSearchByItems{
+            value= "storeId",
+            label= "Store Id",
+            icon= "<i class='fa fa-search'></i>",
+            type = new string[] { "number", "text" }
+    },
+ new OrderSearchByItems       {
+            value= "invoice",
+            label= "Invoice Code",
+            icon= "<i class='fa fa-search'></i>",
+            type = new string[] { "number", "text" }
+    },
+   new OrderSearchByItems     {
+            value= "salonName",
+            label= "Salon Name",
+            icon= "<i class='fa fa-search'></i>",
+            type=new string[]{"number", "text" }
+        },
+};
+}
+
+<div>
+    <div class="box" style="border-top:none;">
+
+        @if (p.Any(k => k.Key.Equals("orders_addnew")) == true && p["orders_addnew"] == true)
+        {
+            <div class="box-tools pull-right">
+                <div>
+                    <a href="/order/save" class="btn btn-success" @*dropdown-toggle*@ @*data-toggle="dropdown"*@ aria-expanded="false" style="min-width:200px; padding: 4px 12px">
+                        <i class="fa fa-plus"></i> Add New
+                    </a>
+                    <ul class="dropdown-menu" role="menu" style="box-shadow: 5px 10px 8px #888888;">
+                        <li><a href="/order/save?type=hardware" onclick="overlayOn()"><i class="fa fa-desktop"></i>Hardware Invoice</a></li>
+                        <li><a href="/order/save?type=subscription" onclick="overlayOn()"><i class="fa fa-plus-circle" style="font-size:1.25em"></i>Subscription Invoice</a></li>
+                    </ul>
+                </div>
+            </div>
+        }
+
+        <!-- /.box-header -->
+        <div class="box-body" style="padding: 0">
+            <div class="col-md-12 no-padding">
+                <div class="box box-solid">
+                    <div id="ticket_type_select" class="box-body no-padding">
+                        <div id="filter_status" class="col-md-12 no-padding">
+                            <a class="btn btn-app" data-status="Open">
+                                <span class="badge bg-aqua"><span class="fill_count"></span><span id="open">@(ViewBag.Open)</span></span>
+                                <i class="fa fa-eye"></i> Open
+                            </a>
+                            <a class="btn btn-app" data-status="Paid_Wait">
+                                <span class="badge bg-yellow "><span class="fill_count"></span><span id="PaidWait">@(ViewBag.Paid_Wait)</span></span>
+                                <i class="fa fa-bullhorn"></i> Paid/Wait
+                            </a>
+                            <a class="btn btn-app" data-status="Closed">
+                                <span class="badge bg-blue "><span class="fill_count"></span><span id="closed">@(ViewBag.Closed)</span></span>
+                                <i class="fa  fa-check"></i> Closed
+                            </a>
+                            @*<a class="btn btn-app" data-status="Canceled">
+                                    <span class="badge bg-navy"><span class="fill_count"></span><span id="canceled">@(ViewBag.Canceled)</span></span>
+                                    <i class="fa fa-stop-circle-o "></i> Canceled
+                                </a>*@
+                            @*<a class="btn btn-app" data-status="All">
+                                    <span class="badge bg-navy"><span class="fill_count"></span><span id="all">@(ViewBag.All)</span></span>
+                                    <i class="fa fa-envelope "></i> All
+                                </a>*@
+                            <a class="btn btn-app" data-status="Reality">
+                                <span class="badge bg-navy"><span class="fill_count"></span><span id="reality">@(ViewBag.Reality)</span></span>
+                                <i class="fa fa-envelope "></i> Reality
+                            </a>
+                            <a class="btn btn-app" data-status="Deleted" onclick="$('#status').val('Deleted')">
+                                <span class="badge bg-red"><span class="fill_count"></span><span id="invisible">@(ViewBag.Deleted)</span></span>
+                                <i class="fa  fa-stop-circle-o"></i> Canceled/Deleted
+                            </a>
+                            <input type="hidden" id="status" value="@(ViewBag.Status)" />
+                        </div>
+                        <div>
+                            <form class="form-inline" style="max-width:100%; padding:5px">
+                                <div class="row form-inline filter-group">
+
+
+                                    <!--<div class="col-md-3 col-sm-6 form-group" style="margin-bottom:5px;padding-right:0px;">
+    <div class="input-group" style="width:100%">
+        <div class="input-group-addon" style="width:80px">
+            <span><b><i class="fa fa-calendar"></i> From</b></span>
+        </div>
+        <input type="text" id="fdate" name="fdate" class="form-control datepicker-jq" style="width: 100%" value="@TempData["search_from_date"]" autocomplete="off" readonly>
+    </div>-->
+                                    <!-- /.input group -->
+                                    <!--</div>
+    <div class="col-md-3 col-sm-6 form-group" style="margin-bottom:5px;padding-right:0px;">
+        <div class="input-group" style="width:100%">
+            <div class="input-group-addon" style="width:80px">
+                <span><b><i class="fa fa-calendar"></i> To</b></span>
+            </div>
+            <input type="text" id="to_date" name="fdate" class="form-control datepicker-jq" style="width: 100%" value="@TempData["search_to_date"]" autocomplete="off" readonly>
+        </div>-->
+                                    <!-- /.input group -->
+                                    <!--</div>-->
+                                    <div class="col-lg-3 col-md-6 col-sm-6 form-group" style="padding: 0 5px;margin-bottom:10px">
+                                        <div class="input-group" style="width:100%">
+                                            <div class="input-group-addon" style="width:100px;"><i class="fa fa-calendar" aria-hidden="true"></i> Date</div>
+                                            <input type="text" class="form-control daterange search-change" id="time" />
+                                        </div>
+                                        <!-- /.input group -->
+                                    </div>
+                                    @if (ShowTeam.GetValueOrDefault())
+                                    {
+                                        <div class="col-lg-3 col-md-6 col-sm-6 form-group" style="padding: 0 5px; margin-bottom: 10px">
+                                            <div class="input-group" style="width:100%">
+                                                <div class="input-group-addon" style="width:80px;">
+                                                    Team
+                                                </div>
+                                                <select class="form-control member-in-dept select2 search-change" id="Team" name="Team">
+                                                    <option value="">All</option>
+                                                    @foreach (var item in Team)
+                                                    {
+                                                        <option value="@item.Id" @(ViewBag.TeamSearch == item.Id.ToString() ? "selected" : "")>@item.Name</option>
+                                                    }
+                                                </select>
+                                            </div>
+                                            <!-- /.input group -->
+                                        </div>
+                                    }
+
+                                    @if (ShowSalesPerson.GetValueOrDefault())
+                                    {
+                                        <text>
+                                            <div class="col-lg-3 col-md-6 col-sm-6 form-group" style="padding: 0 5px; margin-bottom: 10px">
+                                                <div class="input-group" style="width:100%">
+                                                    <div class="input-group-addon" style="width:100px;">Sales Person</div>
+                                                    <select class="form-control select2 search-change" id="sales-person" name="sales-person">
+                                                        <option value=""> All </option>
+                                                        @foreach (var member in members)
+                                                        {
+                                                            <option value="@member.MemberNumber" @(ViewBag.SalesPerson == member.MemberNumber ? "selected" : "")> @member.FullName - #@member.MemberNumber</option>
+                                                        }
+
+                                                    </select>
+                                                </div>
+                                                <!-- /.input group -->
+                                            </div>
+                                        </text>
+                                    }
+
+                                    @if (string.IsNullOrEmpty(cMem.BelongToPartner))
+                                    {
+                                        <div class="col-lg-3 col-md-6 col-sm-6 form-group" style="padding: 0 5px; margin-bottom: 10px">
+                                            <div class="input-group" style="width:100%">
+                                                <div class="input-group-addon" style="width:80px;">
+                                                    Partner/Company
+                                                </div>
+                                                <select class="form-control member-in-dept select2 search-change" id="Partner" name="Partner">
+                                                    <option value="">All</option>
+                                                    <option value="mango">@ViewBag.ProductName</option>
+                                                    @foreach (var item in Partners.OrderBy(c => c.Code))
+                                                    {
+                                                        <option value="@item.Code" @(ViewBag.SearchPartner == item.Code.ToString() ? "selected" : "")>#@item.Code - @item.Name</option>
+                                                    }
+                                                </select>
+                                                <!-- /.input group -->
+                                            </div>
+                                        </div>
+                                    }
+
+                                    <div class="col-lg-3 col-md-6 col-sm-6 form-group" style="padding: 0 5px; margin-bottom: 10px">
+                                        <div class="input-group" style="width:100%">
+                                            <div class="input-group-addon" style="width:80px;">
+                                               From System
+                                            </div>
+                                            <select class="form-control member-in-dept select2 search-change" id="FromSystem" name="FromSystem">
+
+                                                <option @(ViewBag.FromSystem == "ims" ? "selected":"") value="ims">IMS System</option>
+                                                <option  @(ViewBag.FromSystem == "pos" ? "selected":"") value="pos">POS System</option>
+                                                <option value="">All</option>
+                                            </select>
+                                            <!-- /.input group -->
+                                        </div>
+                                    </div>
+
+
+                                    <div class="col-lg-3 col-md-6 col-sm-6 form-group" style="padding: 0 5px; margin-bottom: 10px">
+                                        <div class="input-group" style="width:100%">
+                                            <div class="input-group-addon" id="SearchLabel" style="width:100px;">
+                                                @if (!string.IsNullOrEmpty(ViewBag.SearchBy))
+                                                {
+                                                    <span>@(ListSearchBy.FirstOrDefault(x=>x.value == ViewBag.SearchBy).label)</span>
+                                                }
+                                                else
+                                                {
+                                                    <span>All</span>
+                                                }
+
+                                            </div>
+                                            <input type="text" class="form-control" id="SearchText" placeholder="" value="@ViewBag.SearchText">
+                                            <input type="hidden" class="form-control" id="SearchBy" placeholder="" value="@ViewBag.SearchBy">
+                                            <div id="searchtext-autocomplete">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                                @*<div class="row text-center" style="margin:1rem;">
+                                        <button type="button" class="btn btn-primary btn-flat" id="search_submit" name="search_submit">
+                                            <i class="fa fa-search"></i> Search
+                                        </button>
+                                    </div>*@
+
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <br />
+            <div class="col-md-12 no-padding">
+                <div class="box box-solid">
+
+                    <a href="/order/ExportInvoiceToExcel" class="btn btn-sm btn-success" style="position: absolute; right: 0; top: -5px"><i class="fa fa-file-excel-o" aria-hidden="true"></i> Export excel</a>
+                    <span style="font-size: 20px; border: 1px dotted green; padding: 5px; position: absolute; left:200px; top: -10px"><b id="data_total_grand_ivoice"></b></span>
+                    <table id="order_table" class="table table-bordered table-striped" data-order='[[ 0, "desc" ]]'>
+                        <thead>
+                            <tr>
+                                <th style="width:10%" data-name="UpdateAt">Updated Date</th>
+                                <th style="width:10%" data-name="InvoiceId">Invoice#</th>
+                                <th style="" data-name="CustomerName">Merchant Name</th>
+                                <th style="width:20%" data-name="SalesPerson">Sales Person</th>
+                                <th style="width:10%" data-name="GrandTotal">Grand Total</th>
+                                <th style="width:10%" data-name="Status">Status</th>
+                                <th style="min-width: 110px; width: 110px" class="no-sort">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <!-- /.box-body -->
+    </div>
+    <!-- /.box -->
+</div>
+
+
+<script type="text/javascript">
+        $('.daterange').daterangepicker(
+        {
+            "showDropdowns": true,
+            "minYear": 1950,
+            "maxYear": 2050,
+            "autoApply": true,
+            //"alwaysShowCalendars": true,
+            "ranges": {
+            //'Today': [moment(), moment()],
+            //'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+            //'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+            //'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+            'This Month': [moment().startOf('month'), moment().endOf('month')],
+            'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')],
+            'Nearest 3 months': [moment().subtract(3, 'month').startOf('month'), moment()],
+            'This Year': [moment().startOf('year'), moment().endOf('year')],
+            'Last Year': [moment().subtract(1, 'year').startOf('year'), moment().subtract(1, 'year').endOf('year')]
+            },
+            "locale": {
+            "customRangeLabel": "Custom Date",
+                    "format": "MMM D, YYYY",
+                },
+            @if(FromSearch != null)
+            {
+                  <text>
+                "startDate": '@FromSearch.Value.ToString("MMM dd, yyyy")',
+                  </text>
+            }
+            else
+            {
+                  <text>
+                  "startDate": moment().subtract(3, 'month').startOf('month'),
+                  </text>
+            }
+               @if(ToSearch != null)
+            {
+                <text>
+
+                "endDate": '@ToSearch.Value.ToString("MMM dd, yyyy")',
+                </text>
+               }
+               else
+               {
+                   <text>
+                   "endDate": moment(),
+                     </text>
+               }
+
+            },
+    )
+    $(document).ready(function () {
+          $("#filter_status a[data-status=@(ViewBag.Status)]").addClass('active btn-info');
+           var table = $('#order_table').DataTable({
+                'paging': true,
+                'searching': false,
+                'ordering': true,
+                'info': false,
+                'autoWidth': false,
+
+                "columnDefs": [{
+                    "targets": 'no-sort',
+                    "orderable": false,
+                }
+                ],
+
+                "processing": true,
+                "language": {
+                    "infoFiltered": "",
+                    "processing": '<img src="/Content/ajax-loaders/loading2.gif" width="60px">'
+                },
+                "serverSide": true,
+                "ajax": {
+                    "type": "POST",
+                    "url": "/Order/LoadOrder_table",
+                    "data": function (d) {
+                        d.Status = $('#status').val();
+                        d.SearchText = $('#SearchText').val();
+                        d.SearchBy = $('#SearchBy').val();
+                        d.FromDate = $('.daterange').data('daterangepicker').startDate.format('YYYY-MM-DD');
+                        d.ToDate = $('.daterange').data('daterangepicker').endDate.format('YYYY-MM-DD');
+                        d.Team = $('#Team').val();
+                        d.FromSystem = $('#FromSystem').val();
+                        d.SalesPerson = $('#sales-person').val();
+                        d.Partner = $('#Partner').val();
+                        return d;
+                    },
+                    "dataSrc": function () {
+                        return '';
+                    },
+                    "complete": function (json)
+                    {
+                        if (json.responseJSON.data.trim()) {
+                            if (json.responseJSON.data[0] == -1) {
+                                window.location.reload();
+                            }
+                            $("#order_table tbody").html(json.responseJSON.data);
+                        }
+                        $("#data_total_grand_ivoice").html("Total: " + json.responseJSON.grandtotalInvoice)
+                        $('#filter_status .active .fill_count').html(json.responseJSON.recordsFiltered + "/");
+                        $("#open").html(json.responseJSON.OpenCount);
+                        $("#PaidWait").html(json.responseJSON.Paid_WaitCount);
+                        $("#closed").html(json.responseJSON.ClosedCount);
+                        $("#reality").html(json.responseJSON.RealityCount);
+                        $("#invisible").html(json.responseJSON.DeletedCount);
+                        //show_hide_clear_btn();
+                    }
+                },
+                "stateSave": true
+            });
+
+            $("#filter_status > a").on('click', function () {
+                if (!$(this).hasClass('active')) {
+                    $("#status").val($(this).data('status'));
+                    $("#filter_status > a.active").removeClass('active btn-info').find(".fill_count").html('');
+                    $(this).addClass('active btn-info');
+                    table.draw();
+                }
+            });
+
+        $(".search-change").change(function () {
+                table.draw();
+            })
+            $('#search_submit').click(function () {
+                table.draw();
+            })
+          });
+
+        //dataTable
+        //$('#order_table').DataTable({
+        //    'paging': true,
+        //    'lengthChange': true,
+        //    'searching': false,
+        //    'ordering': true,
+        //    'info': false,
+        //    'autoWidth': true
+        //})
+
+        //Datepicker
+        $(".datepicker-jq").datepicker({
+            changeMonth: true,
+            changeYear: true,
+            yearRange: '1950:2050'
+        });
+
+        function SearchSubmit() {
+            $("#search_loading").show();
+            return true;
+        }
+
+        function showPopupSalesPerson(orderCode) {
+            $(".loading").show();
+            var modal = $("#change-sales-person-modal");
+            modal.find(".modal-title").text("Invoice:#" + orderCode)
+            modal.find("#OrderCode").val(orderCode);
+            $.ajax({
+                type: "Get",
+                url: "/Order/GetSalesPerson",
+                data: { "orderCode": orderCode }, // serializes the form's elements.
+                success: function (data) {
+                    var ListSalesPerson = modal.find("#SalesPerson");
+                    ListSalesPerson.val(data.SalesMemberNumber);
+                    ListSalesPerson.select2();
+                    modal.modal("show");
+                },
+                complete: function () {
+                    $(".loading").hide();
+                },
+            });
+        }
+
+        function changeSalesPerson() {
+            $(".loading").show();
+            var modal = $("#change-sales-person-modal");
+            var orderCode = modal.find("#OrderCode").val();
+            var salesPerson = modal.find("#SalesPerson").val();
+            var salesPersonName = modal.find("#SalesPerson option:selected").text();
+            $.ajax({
+                type: "POST",
+                url: "/Order/ChangeSalesPerson",
+                data: { "orderCode": orderCode, "salesPerson": salesPerson }, // serializes the form's elements.
+                success: function (data) {
+                    if (data.status) {
+                        noty({ "text": data.message, "layout": "topRight", "type": "success" });
+                        modal.modal('hide');
+                        var htmlUpdateSalePerson = '';
+                        if (salesPerson != '') {
+                            htmlUpdateSalePerson += '<div class="sales-person-' + orderCode + '">'
+                            htmlUpdateSalePerson += '<span><b>' + salesPersonName + '</b></span><br />'
+                            htmlUpdateSalePerson += '<span><i>Member number: #' + salesPerson + '</i></span>'
+                        }
+                        else {
+                            htmlUpdateSalePerson += '<span><b>--N/A--</b></span>'
+                        }
+                        $('.sales-person-' + orderCode).html(htmlUpdateSalePerson);
+                    }
+                    else {
+                        noty({ "text": data.message, "layout": "topRight", "type": "warning" });
+                    }
+                },
+                complete: function () {
+                    $(".loading").hide();
+                },
+            });
+    }
+
+
+        $("#Team").change(function () {
+            var IdTeam = $('#Team').val();
+            $.ajax({
+                type: "Post",
+                url: "/SaleLead/GetMemberSalesPersonByTeam",
+                data: { "IdTeam": IdTeam },
+                success: function (data) {
+                    $('#sales-person').html('');
+                    $('#sales-person').append($('<option value="">All</option>'));
+                    $.each(data, function (id, option) {
+                        $('#sales-person').append($('<option></option>').val(option.Id).html(option.Name));
+                    });
+                },
+                error: function (xhr, ajaxOptions, thrownError) {
+                    alert('fail');
+                }
+            });
+        })
+    $(".select2").select2({
+        width: 'element'
+    });
+
+    function isNumeric(val) {
+        return /^-?\d+$/.test(val);
+    }
+
+             $(function () {
+            var listSearchBy  =@Html.Raw(Json.Encode(ListSearchBy));
+
+            $("#SearchText").autocomplete({
+                minLength: 1,
+                source: function (d, e) {
+                    let arraySearch = listSearchBy;
+                    if (isNumeric(d.term)) {
+                        arraySearch = arraySearch.filter(x => x.type.includes("number"));
+                    }
+                    else {
+                        arraySearch = arraySearch.filter(x => x.type.includes("text"));
+                    }
+
+                    e(arraySearch)
+                },
+                change: function (event, ui) {
+                    $('#order_table').DataTable().draw();
+                },
+                appendTo: "#searchtext-autocomplete",
+                autoFocus: true,
+                focus: function (event, ui) {
+                    let currentInput = $("#SearchText").val();
+                    $("#SearchText").val(currentInput);
+                    return false;
+                },
+                select: function (event, ui) {
+                    let currentInput = $("#SearchText").val();
+                    $("#SearchText").val(currentInput).blur();
+                    $("#SearchBy").val(ui.item.value);
+                    $("#SearchLabel").html(`<span class='label-search'>${ui.item.label}</span>`);
+                 //   $("#SearchText-description").html('<i class="fa fa-info" aria-hidden="true"></i> ' + ui.item.label + " is <b id='SearchText-value-description'>" + currentInput + "</b>");
+                    $('#order_table').DataTable().draw();
+                    return false;
+                }
+            }).autocomplete("instance")._renderItem = function (ul, item) {
+                let currentInput = $("#SearchText").val();
+                    return $("<li>")
+                        .append("<div><span>" + item.icon + "</span> " + item.label + " is <b>" + currentInput+ "</b></div>")
+                        .appendTo(ul);
+                };
+
+           
+        });
+   
+
+</script>

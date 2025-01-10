@@ -1,0 +1,292 @@
+﻿@using EnrichcousBackOffice.Models;
+@{
+    List<T_Project_Milestone> projects = ViewBag.projects ?? new List<T_Project_Milestone>();
+}
+<section class="content">
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="box box-default" style="border:1px solid #ddd">
+                <div class="box-header with-border" style="background: #f5f5f5">
+                    <h3 class="box-title"></h3>
+
+                        <div id="filter" class="box-tools pull-right">
+                            <a href="/Ticket_New?page=DevelopmentsTicket" class="btn pull-left" data-toggle="tooltip" title="" data-original-title="Go back">
+                                <i class="fa fa-arrow-left"></i> Go back
+                            </a>
+                            <div class="input-group col-sm-2 pull-right" style="margin-bottom:1rem;display:inline-table">
+                                <div class="input-group-addon">Time</div>
+                                <select class="form-control" id="month" name="time">
+                                    <option value="0">This month</option>
+                                    <option value="1">Last month</option>
+                                    <option value="3">Nearest 3 months</option>
+                                    <option value="6">Nearest 6 months</option>
+                                    <option value="12">This year</option>
+                                </select>
+                            </div>
+                            <div class="input-group col-sm-2 pull-right" style="margin-bottom:1rem;display:inline-table">
+                                <div class="input-group-addon">Project</div>
+                                <select class="form-control" id="project" name="time">
+                                    @foreach (var pj in projects)
+                                    {
+                                        <option value="@pj.Id" @(pj.Id == ViewBag.project ? "selected" : "")>@pj.Name</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                </div>
+                <!-- /.box-header -->
+
+                <div class="box-body salelead-list">
+                    <div class="box box-info " id="nopcommerce-common-statistics-box">
+                        <div class="box-header with-border clearfix">
+                            <div class="box-title">
+                                <i class="fa ion-stats-bars"></i>
+                                Common statistics
+                            </div>
+                        </div>
+                        <div class="box-body">
+                            <div class="row" style="display: flex;justify-content: center;margin-bottom:2rem">
+                                <div class="col-lg-4 col-xs-6">
+                                    <!-- small box -->
+                                    <div class="small-box bg-aqua-gradient">
+                                        <div class="inner">
+                                            <h3><span class="count" id="total-all"></span><sup style="font-size: 20px"> Total ticket</sup></h3>
+                                            <p id="total-all-detail">---</p>
+                                        </div>
+                                        <div class="icon">
+                                            <i class="ion ion-android-add-circle"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-4 col-xs-6">
+                                    <!-- small box -->
+                                    <div class="small-box bg-yellow-gradient loading-bro">
+                                        <div class="inner">
+                                            <h3> <span class="count" id="total-open"></span> <sup style="font-size: 20px"> Total Open ticket</sup></h3>
+                                            <p id="total-open-detail">---</p>
+                                        </div>
+                                        <div class="icon">
+                                            <i class="ion ion-person-add"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- ./col -->
+                                <div class="col-lg-4 col-xs-6">
+                                    <!-- small box -->
+                                    <div class="small-box bg-green-gradient">
+                                        <div class="inner">
+                                            <h3> <span class="count" id="total-closed"></span> <sup style="font-size: 20px"> Total Closed ticket</sup></h3>
+                                            <p id="total-closed-detail">---</p>
+                                        </div>
+                                        <div class="icon">
+                                            <i class="ion ion-arrow-graph-up-right"></i>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="box box-info" id="trial-merchant-report">
+                                <div class="box-header with-border" style="padding: 12px;">
+                                    <h3 class="box-title">
+                                        <i class="fa fa-line-chart" aria-hidden="true"></i>
+                                        Tickets statistic
+                                    </h3>
+                                    <div class="box-tools pull-right">
+                                    </div>
+                                </div>
+                                <div class="box-body">
+                                    <div class="row" id="list_charts" style="margin:0">
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <!-- /.box -->
+        </div>
+    </div>
+</section>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.bundle.min.js"></script>
+<script src="https://emn178.github.io/chartjs-plugin-labels/src/chartjs-plugin-labels.js"></script>
+<script type="text/javascript">
+    $(function () {
+        $("#filter select").on("change", function () {
+            LoadDataChart($("#project").val(), $("#month").val());
+        });
+        LoadDataChart('@ViewBag.project',0);
+    })
+    function LoadDataChart(project_id, month) {
+        overlayOn();
+        $.ajax({
+            url: '/Ticket_New/Report_data',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                project_id, month
+            }
+        })
+            .done(function (data) {
+                if (data.result) {
+                    $("#list_charts").empty();
+                    for (var i in data.List_data) {
+                        $(`<div class="charts" class="col-sm-12" style="margin-top:50px">
+                            <canvas id="chart_${i}" width="400" height="400"></canvas>
+                        </div>`
+                        ).appendTo("#list_charts");
+                        var _ctx = document.getElementById("chart_" + i).getContext('2d');
+                        var _chart = new Chart(_ctx, {
+                            type: 'bar',
+                            data: {
+                                datasets: [
+                                    {
+                                        label: "All",
+                                        backgroundColor: '#14d1ff',
+                                        borderColor: '#00c0ef',
+                                        borderWidth: 1
+                                    },
+                                    {
+                                        label: "Open",
+                                        backgroundColor: '#f7bc60',
+                                        borderColor: '#f39c12',
+                                        borderWidth: 1,
+
+                                    },
+                                    {
+                                        label: "Closed",
+                                        backgroundColor: '#00ca6d',
+                                        borderColor: '#00a65a',
+                                        borderWidth: 1
+                                    }
+
+                                ]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                title: {
+                                    display: true,
+                                    text: '',
+                                    fontSize: 16,
+                                },
+                                scales: {
+
+                                    yAxes: [{
+                                        ticks: {
+                                            beginAtZero: true,   // minimum value will be 0.
+                                            callback: function (value) { if (value % 1 === 0) { return value; } },
+                                        },
+                                        scaleLabel: {
+                                            display: true,
+                                            labelString: 'Tickets'
+                                        },
+                                    }],
+                                    xAxes: [{
+                                        scaleLabel: {
+                                            display: true,
+                                            labelString: 'Versions'
+                                        },
+                                    }],
+                                },
+                                plugins: {
+                                    labels: {
+                                        render: function () {
+                                            return '';
+                                        }
+                                    }
+                                }
+                            },
+
+                        });
+                        var c = data.List_data[i];
+                        _chart.data.datasets[0].data = c.all;
+                        _chart.data.datasets[1].data = c.open;
+                        _chart.data.datasets[2].data = c.closed;
+
+                        $(`<div style="margin-bottom:2rem; padding-left: 50px">
+                            <label>Ticket in stage</label><br/>
+                            <span class="box_chart_all"></span> All: ${c.all.reduce((pv, cv) => { return pv + cv; }, 0)}
+                            <span class="box_chart_open"></span> Open: ${c.open.reduce((pv, cv) => { return pv + cv; }, 0)}
+                            <span class="box_chart_closed"></span> Closed: ${c.closed.reduce((pv, cv) => { return pv + cv; }, 0)}
+                        </div><hr/>`
+                        ).appendTo("#list_charts");
+                        console.log(c.all.reduce((pv, cv) => {
+                            return pv + cv;
+                        }, 0))
+                        _chart.options.title.text = c.title;
+                        _chart.data.labels = c.label;
+                        _chart.options.scales.yAxes[0].ticks.max = data.y_max;
+                        _chart.update();
+                    }
+                    $('#total-all').html(data.Totalticket.value);
+                    $('#total-all-detail').html(data.Totalticket.detail || "---");
+                    $('#total-open').html(data.TotalOpenticket.value);
+                    $('#total-open-detail').html(data.TotalOpenticket.detail || "---");
+                    $('#total-closed').html(data.TotalClosedticket.value);
+                    $('#total-closed-detail').html(data.TotalClosedticket.detail || "---");
+                    $('.count').each(function () {
+                        $(this).prop('Counter', 0).animate({
+                            Counter: $(this).text()
+                        }, {
+                            duration: 1000,
+                            easing: 'swing',
+                            step: function (now) {
+                                $(this).text(Math.ceil(now));
+                            }
+                        });
+                    });
+                }
+                else {
+                    error(data.message);
+                }
+            })
+            .fail(function (data) {
+                console.log(data.message);
+            })
+            .always(function () {
+            overlayOff();
+        });
+    }
+
+
+</script>
+<style>
+    .box_chart_all {
+        display: inline-block;
+        width: 50px;
+        height: 14px;
+        background-color: #7fdff6;
+        border: 1px solid #14d1ff;
+        vertical-align: middle;
+        margin-left: 30px;
+    }
+
+    .box_chart_open {
+        display: inline-block;
+        width: 50px;
+        height: 14px;
+        background-color: #f7bc60;
+        border: 1px solid #f39c12;
+        vertical-align: middle;
+        margin-left: 30px;
+    }
+
+    .box_chart_closed {
+        display: inline-block;
+        width: 50px;
+        height: 14px;
+        background-color: #00ca6d;
+        border: 1px solid #00a65a;
+        vertical-align: middle;
+        margin-left: 30px;
+    }
+</style>

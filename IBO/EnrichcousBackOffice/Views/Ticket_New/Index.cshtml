@@ -1,0 +1,936 @@
+﻿@using EnrichcousBackOffice.Utils.IEnums
+@model EnrichcousBackOffice.Models.CustomizeModel.Ticket.IndexTicketModel
+@using EnrichcousBackOffice.AppLB
+@{
+    Layout = "~/Views/Ticket_New/_TicketLayout.cshtml";
+    ViewBag.Page = Model.Page;
+    var Stage = Model.Stage;
+    string PageDeployment = "19120001";
+    string PageSupportTicket = "19120003";
+    string PageDevelopmentsTicket = "19120002";
+    var colors = new string[] { "#007bff", "#17a2b8", "#f08426", "#1dbf04", "#f02626", "#2692f0", "#2926f0", "#8e26f0", "#d226f0", "#f026b0", "#1dbf04" };
+    var version = System.Configuration.ConfigurationManager.AppSettings["IMSVersion"];
+}
+
+<style>
+    .account-manager {
+        cursor: pointer;
+    }
+</style>
+<!-- Main content -->
+<section class="content">
+    <input type="hidden" name="Page" id="Page" value="@Model.Page" />
+    <input type="hidden" class="changeFilter" name="typeTicket" value="" />
+    @if (Model.Page == PageDevelopmentsTicket)
+    {
+        <input type="hidden" name="projectId" value="@Response.Cookies["projectId"].Value" />
+        <input type="hidden" name="stageId" value="@Response.Cookies["stageId"].Value" />
+        <input type="hidden" name="versionId" value="@Response.Cookies["versionId"].Value" />
+    }
+    else if (Model.Page == PageDeployment)
+    {
+        <input type="hidden" name="stageId" value="@Response.Cookies["stageDeploymentId"].Value" />
+    }
+    else
+    {
+        <input type="hidden" name="stageId" value="@Response.Cookies["stageSupportId"].Value" />
+    }
+
+    <div class="row">
+        @if (TempData["e"] != null)
+        {
+            <div class="col-md-12">
+                <div class="alert alert-warning alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                    <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+                </div>
+            </div>
+        }
+        else
+        {
+            if (TempData["s"] != null)
+            {
+                <div class="col-md-12">
+                    <div class="alert alert-success alert-dismissible">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                        <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+                    </div>
+                </div>
+            }
+            <div class="col-md-12">
+                <div class="box box-primary">
+                    <!-- /.box-header -->
+                    <div class="box-header with-border">
+                        <div class="col-md-12" style="padding: 0;">
+                            @if (Model.Page == PageDeployment || Model.Page == PageSupportTicket)
+                            {
+                                <div class="form-inline" style="padding-left: 0;">
+                                    <div id="cssmenu">
+                                        <ul>
+                                            <li class="hide">
+                                                <a for="#select_list_type" style="font-weight:bold;display:none;" id="select-again-type">@(Model.AllStage?"ALL":Model.Stage.Name)</a>
+                                            </li>
+                                            <li>
+                                                <a style="cursor: context-menu;" href="#"><b>@Model.Project.Name</b></a>
+                                            </li>
+                                        </ul>
+                                    </div>
+
+                                    <span class="pull-right">
+                                        <a href="/ticket/update?page=@Model.Page" onclick="$(this).find('.loading').show()" class="btn btn-primary">
+                                            <i class="fa fa-plus"></i> New ticket
+                                            <img class="loading" src="/Content/ajax-loaders/ajax-loader-1.gif" style="display:none">
+                                        </a>
+                                    </span>
+                                </div>
+
+                                @*<div id="select_list_type" class="filter-group" style="display:none;">
+                                        <label onclick="filterTypeDeployment(this)" class="btn btn-info btn-lg btn-flat filter-group-value" data-type="all" data-color="@colors[0]" style="border-color: unset; background-color: @colors[0] !important;">
+                                            <span class="filter-type-item" data-key="all">All</span>
+                                        </label>
+                                        @{
+                                            var i = 1;
+                                        }
+                                        @foreach (var stage in Model.ListStage.OrderBy(c=>c.BuildInCode))
+                                        {
+                                            <label onclick="filterTypeDeployment(this)" class="btn btn-info btn-lg btn-flat filter-group-value" data-type="@stage.Id" data-color="@colors[i % 10]" style="border-color: unset; background-color: @colors[i % 10] !important;">
+                                                <span class="filter-type-item" data-key="@stage.Id">@stage.Name</span>
+                                            </label>
+                                            i++;
+                                        }
+
+                                    </div>*@
+                            }
+
+                            else
+                            {
+                                <div class="form-inline" style="padding-left: 0;">
+                                    <div id="cssmenu">
+                                        <ul>
+                                            <li>
+                                                <a onclick="select_stage_show(null,'@(Model.AllStage ? "all" : Model.Stage?.Id)')">
+                                                    <b>@(Model.AllVersion ? "All Versions" : Model.Version?.Name)</b>
+                                                    <i onclick="LoadVersionInfo()" data-toggle="tooltip" data-placement="top" title="Click to view Version info" class="fa fa-info-circle" style=" padding: 8px; margin: -7px 0; margin-right: -22px;"></i>
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a onclick="select_stage_show('@(Model.AllProject ? "all" : Model.Stage?.ProjectId)')">
+                                                    <b>@(Model.AllStage ? "All Stages" : Model.Stage?.Name)</b>
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a onclick="select_stage_show()">
+                                                    <b>@(Model.AllProject ? "All Projects" : Model.Project?.Name)</b>
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <span class="pull-right">
+                                        <a href="/ticket/Report" onclick="overlayOn()" class="btn btn-warning">
+                                            <i class="fa fa-bar-chart"></i> View Report
+                                        </a>
+                                        <a href="/ticket/update?Page=@Model.Page" onclick="$(this).find('.loading').show()" class="btn btn-primary">
+                                            <i class="fa fa-plus"></i> New ticket
+                                            <img class="loading" src="/Content/ajax-loaders/ajax-loader-1.gif" style="display:none">
+                                        </a>
+                                    </span>
+                                </div>
+                            }
+
+
+
+                            <div class="fill-over"></div>
+                            <style type="text/css">
+                                .log-histoty-detail-content {
+                                    overflow: hidden;
+                                    text-overflow: ellipsis;
+                                    line-height: 25px;
+                                    -webkit-line-clamp: 3;
+                                    max-height: 90px;
+                                    display: -webkit-box;
+                                    -webkit-box-orient: vertical
+                                }
+
+                                .mr-1 {
+                                    margin-right: 3px;
+                                }
+
+                                .select2-container-multi-custom {
+                                    width: auto !important;
+                                    min-width: 160px;
+                                }
+
+                                    .select2-container-multi-custom input {
+                                        margin-top: 3px !important;
+                                    }
+
+                                    .select2-container-multi-custom ul {
+                                        display: flex !important;
+                                    }
+
+                                        .select2-container-multi-custom ul li {
+                                            margin-top: 3px !important;
+                                        }
+
+                                .no-wrap {
+                                    white-space: nowrap;
+                                }
+
+                                .wrap {
+                                    white-space: pre-wrap;
+                                }
+
+
+                                .filter-group {
+                                    position: absolute;
+                                    background-color: white;
+                                    top: 39px;
+                                    z-index: 1001;
+                                    display: none;
+                                    height: fit-content;
+                                    width: 500px;
+                                    left: 125px;
+                                    box-shadow: 5px 5px 5px 5px rgba(0, 0, 60, 0.2);
+                                    flex-flow: row wrap;
+                                    align-items: baseline;
+                                    padding: 10px 0 0 10px;
+                                }
+
+                                .fill-over {
+                                    position: fixed;
+                                    top: 0;
+                                    left: 0;
+                                    width: 100%;
+                                    height: 100%;
+                                    display: none;
+                                    z-index: 1000;
+                                }
+
+                                .filter-group-value {
+                                    width: 235px;
+                                    white-space: nowrap;
+                                    overflow: hidden;
+                                    text-overflow: ellipsis;
+                                    /*border: 1px solid #999;*/
+                                    direction: rtl;
+                                }
+
+                                .flex {
+                                    display: flex !important;
+                                }
+
+                                label.filter-group-value {
+                                    margin-right: 10px;
+                                    margin-bottom: 10px;
+                                }
+
+                                .circular {
+                                    animation: rotate 2s linear infinite;
+                                    height: 50px;
+                                    transform-origin: center center;
+                                    width: 50px;
+                                    position: absolute;
+                                    top: 0;
+                                    bottom: 0;
+                                    left: 0;
+                                    right: 0;
+                                    margin: auto;
+                                }
+
+                                .path {
+                                    stroke-dasharray: 1, 200;
+                                    stroke-dashoffset: 0;
+                                    animation: dash 1.5s ease-in-out infinite, color 6s ease-in-out infinite;
+                                    stroke-linecap: round;
+                                }
+
+                                @@keyframes rotate {
+                                    100% {
+                                        transform: rotate(360deg);
+                                    }
+                                }
+
+                                @@keyframes dash {
+                                    0% {
+                                        stroke-dasharray: 1, 200;
+                                        stroke-dashoffset: 0;
+                                    }
+
+                                    50% {
+                                        stroke-dasharray: 89, 200;
+                                        stroke-dashoffset: -35px;
+                                    }
+
+                                    100% {
+                                        stroke-dasharray: 89, 200;
+                                        stroke-dashoffset: -124px;
+                                    }
+                                }
+
+                                @@keyframes color {
+                                    100%, 0% {
+                                        stroke: #d62d20;
+                                    }
+
+                                    40% {
+                                        stroke: #0057e7;
+                                    }
+
+                                    66% {
+                                        stroke: #008744;
+                                    }
+
+                                    80%, 90% {
+                                        stroke: #ffa700;
+                                    }
+                                }
+
+                                div.dataTables_wrapper div.dataTables_processing {
+                                    position: absolute;
+                                    top: 50%;
+                                    left: 50%;
+                                    width: 100%;
+                                    height: 100%;
+                                    margin-left: 0;
+                                    margin-top: 0;
+                                    transform: translate(-50%, -50%);
+                                    text-align: center;
+                                    padding: 1em 0;
+                                    border: none;
+                                    background-color: #fffdfd80;
+                                }
+
+                                .table th {
+                                    white-space: nowrap;
+                                }
+
+                                .relative {
+                                    position: relative;
+                                }
+
+                                .btn-note-ticket {
+                                    opacity: 0;
+                                    -webkit-transition: opacity 0.3s ease-in-out;
+                                    -moz-transition: opacity 0.3s ease-in-out;
+                                    -ms-transition: opacity 0.3s ease-in-out;
+                                    -o-transition: opacity 0.3s ease-in-out;
+                                    transition: opacity 0.3s ease-in-out;
+                                }
+
+                                .tr-ticket-item:hover .btn-note-ticket {
+                                    opacity: 1;
+                                }
+
+                                .btn-note-ticket {
+                                    position: absolute;
+                                    right: 5px;
+                                    bottom: 5px;
+                                    background: #f39c12;
+                                    color: white;
+                                    padding: 0px 6px;
+                                    border-radius: 2px;
+                                }
+
+                                    .btn-note-ticket:hover {
+                                        color: white;
+                                        opacity: 0.8;
+                                    }
+
+                                .note-ticket {
+                                    display: block;
+                                    margin-top: 5px;
+                                    font-style: italic;
+                                }
+                            </style>
+                            <script>
+                                $('#cssmenu a').on("click", function () { $($(this).attr("for")).toggleClass('flex'); $('.fill-over').show(); });
+                                $('.fill-over').on("click", function () { $(".flex").removeClass('flex'); $('.fill-over').hide(); })
+                            </script>
+                        </div>
+                        <!-- /.box-tools -->
+                    </div>
+
+                    <!-- .box-body -->
+                    <div class="box-body">
+                        <!--Tab button-->
+                        <div class="box box-solid" style="border-bottom:1px solid gray;">
+                            <div id="ticket_type_select" class="box-body no-padding">
+                                <div class="col">
+                                    <a href="javascript:void(0)" data-tab="open" class="tab-open ticket-tab btn btn-app">
+                                        <span class="badge bg-aqua"><span class="fill_count"></span><span id="count-open">0</span></span>
+                                        <i class="fa fa-eye"></i> Open ticket
+                                    </a>
+
+                                    <a href="javascript:void(0)" data-tab="unassigned" class="tab-unassigned ticket-tab btn btn-app">
+                                        <span class="badge bg-yellow "><span class="fill_count"></span><span id="count-unassigned">0</span></span>
+                                        <i class="fa fa-bullhorn"></i> Unassigned
+                                    </a>
+
+                                    <a href="javascript:void(0)" data-tab="closed" class="tab-closed ticket-tab btn btn-app">
+                                        <span class="badge bg-blue "><span class="fill_count"></span><span id="count-closed">0</span></span>
+                                        <i class="fa  fa-check"></i> Closed ticket
+                                    </a>
+
+                                    <a href="javascript:void(0)" data-tab="all" class="tab-all ticket-tab btn btn-app">
+                                        <span class="badge bg-navy"><span class="fill_count"></span><span id="count-all">0</span></span>
+                                        <i class="fa fa-envelope "></i> All Ticket
+                                    </a>
+
+                                    <a href="javascript:void(0)" data-tab="invisible" class="tab-invisible ticket-tab btn btn-app">
+                                        <span class="badge bg-red"><span class="fill_count"></span><span id="count-invisible">0</span></span>
+                                        <i class="fa fa-trash-o"></i> Invisible
+                                    </a>
+                                </div>
+                                <div style="vertical-align: middle;display: flex;vertical-align: baseline;align-items: center;">
+                                    <div class="form-inline" style="margin: 10px 10px; position: relative; text-align: left; display: inline-block; flex-grow: 1">
+                                        <div class="form-group">
+                                            <div class="input-group">
+                                                <div class="input-group-addon">
+                                                    <i class="fa fa-calendar"></i> Date
+                                                </div>
+                                                <input type="text" class="form-control  search-change" id="date_search" />
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group" style="display:none;" id="wrapper-closeat-filter">
+                                            <div class="input-group">
+                                                <div class="input-group-addon">
+                                                    <i class="fa fa-close"></i> Close At
+                                                </div>
+                                                <select name="closedate" class=" form-control">
+                                                    <option value="">All</option>
+                                                    <option value="today">Today</option>
+                                                    <option value="yesterday">Yesterday</option>
+                                                    <option value="thisweek">This week</option>
+                                                    <option value="lastweek">Last week</option>
+                                                    <option value="thismonth">This month</option>
+                                                    <option value="lastmonth">Last month</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <div class="input-group">
+                                                <div class="input-group-addon">
+                                                    <i class="fa fa-filter"></i> Filters
+                                                </div>
+                                                <select style="width:120px" name="s_filter" class="form-control">
+                                                    <option value="">All</option>
+                                                    <option value="assigned">Assigned To</option>
+                                                    <option value="membertag">Tag Member</option>
+                                                    <option value="openby">Open by</option>
+                                                    <option value="salon">Salon</option>
+                                                    <option value="license">License</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <select name="MemberFilter" class="form-control filter-select2" style="display:none;width:160px;" multiple>
+                                        </select>
+
+                                        <select name="TagMemberFilter" class="form-control filter-select2" style="display:none;width:160px;" multiple>
+                                        </select>
+
+                                        <select name="OpenByFilter" class="form-control filter-select2" style="display:none;width:160px;" multiple>
+                                        </select>
+
+                                        <select name="SalonFilter" data-placeholder="N/A" class="form-control filter-select2" style="display: none;width:160px;" multiple>
+                                        </select>
+
+                                        <select name="LicenseFilter" data-placeholder="N/A" class="form-control filter-select2" style="display: none;width:160px;" multiple>
+                                        </select>
+                                    </div>
+                                    <div style="width: 270px; margin-bottom: 0px;float:right" class="form-group pull-right">
+                                        <div class="input-group">
+                                            <div class="input-group-addon">
+                                                <i class="fa fa-search"></i>
+                                            </div>
+                                            <input style="max-width:250px" type="text" name="s_content" placeholder="Search by ticket#, name" class="form-control " value="">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- /.box-body -->
+                        </div>
+
+                        <div class="mailbox-messages">
+
+                            @Html.Partial("_MaskAsMultiTicketPartial", Model)
+                            <div style=" display: flex;">
+                                <div id="filter" style=" display: flex;width:100%; padding:0 20px 20px 0">
+                                    <div style="display:inline-block;padding-left:0;margin-right:15px;min-width:127px">
+                                        <label>Type</label><br />
+                                        <select title="All Type" id="ticket_type_filter" style="width: 136px; margin-right: 5px;" class="form-control filter-multiple" name="typeFilter">
+                                            <option style="font-weight:bold" value=''>All Type</option>
+                                        </select>
+                                    </div>
+
+                                    <div style="display: inline-block; padding-left: 0; margin-right: 15px; min-width: 127px">
+                                        <label>Status</label><br />
+                                        <select title="All Status" id="ticket_status_filter" style="width: 136px; margin-right: 5px;" class="form-control filter-multiple" name="statusFilter">
+                                            <option style="font-weight:bold" value=''>All Status</option>
+                                        </select>
+                                    </div>
+
+                                    <div style="display: inline-block; padding-left: 0; margin-right: 15px; min-width: 127px">
+                                        <label>Priority</label><br />
+                                        <select title="All Priority" id="ticket_priority_filter" style="width: 136px; margin-right: 5px;" class="form-control filter-multiple" name="priorityFilter">
+                                            <option style="font-weight:bold" value=''>All Priority</option>
+                                        </select>
+                                    </div>
+
+                                    <div style="display: inline-block; padding-left: 0; margin-right: 15px; min-width: 127px" class="@(Model.Page==PageDevelopmentsTicket?"hide":"")">
+                                        <label>Department</label><br />
+                                        <select title="All Department" id="ticket_department_filter" style="width: 136px; margin-right: 5px;" class="form-control filter-multiple" name="departmentFilter">
+                                            <option style="font-weight:bold" value=''>All Department</option>
+                                        </select>
+                                    </div>
+
+
+
+
+                                    <div style="display: inline-block; padding-left: 0; margin-right: 15px; min-width: 127px">
+                                        <label>Tags</label><br />
+                                        <select title="All Tags" id="ticket_tags_filter" style="width: 136px; margin-right: 5px;" class="form-control filter-multiple" name="tagFilter">
+                                            <option style="font-weight:bold" value=''>All Tags</option>
+                                        </select>
+                                    </div>
+                                    <div style="display: inline-block; padding-left: 0; margin-right: 15px; min-width: 127px">
+                                        <label>&nbsp</label><br />
+                                        <a id='btn_clear' class="btn btn-default" data-toggle='tooltip' data-original-title='Click to clear filter' style=' vertical-align: sub; display: none; color: #00acd6; font-weight: bold' onclick='clear_filter()'> < Clear filter > </a>
+                                    </div>
+
+
+
+                                </div>
+                                @*<div class="pull-left"><a id='btn_clear' class="btn btn-default" data-toggle='tooltip' data-original-title='Click to clear filter' style=' vertical-align: sub; display: none; color: #00acd6; font-weight: bold' onclick='clear_filter()'> < Clear filter > </a></div>*@
+
+
+                            </div>
+                            <div>
+                                <div style="display:flex;align-items:center;">
+                                    <label style="font-weight:normal;flex-grow:1;display:flex;align-items:center;">Show&nbsp;<input class="form-control input-sm" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1');" style="max-width:50px;text-align:center;" name="dataTableLength" value="" />&nbsp;entries</label>
+                                    <div style="flex-grow: 2;text-align:right;">
+                                        <button onclick="exportExcel()" id="exportExcelBtn" class="btn btn-sm btn-success"><i class="fa fa-file-excel-o" aria-hidden="true"></i> Export Excel <img class="loading" src="/Content/ajax-loaders/ajax-loader-1.gif" style="display:none"></button>
+
+                                    </div>
+                                </div>
+                                <table class="table table-list-ticket table-hover table-bordered table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th class="no-sort"><input name="checkall" type="checkbox" /></th>
+                                            <th class="no-sort">#</th>
+                                            <th data-name="Date">Date</th>
+                                            <th style="min-width:100px" data-name="Name">Name</th>
+                                            <th style="min-width:150px" data-name="StatusName">Status/Note</th>
+                                            <th data-name="Type">Type</th>
+                                            <th class="no-sort">Assigned</th>
+                                            <th class="no-sort">Last Updated</th>
+                                            @if (Model.Page == PageDevelopmentsTicket)
+                                            {
+                                                <th class="no-sort">Shared Stage</th>
+                                            }
+                                            <th data-name="License">Licenes</th>
+
+                                        </tr>
+                                    </thead>
+                                    <tbody id="list_tickets">
+                                    </tbody>
+
+                                </table>
+
+                            </div>
+
+
+                            <!-- /.table -->
+                        </div>
+                        <!-- /.mail-box-messages -->
+                    </div>
+                    <!-- /.box-body -->
+                </div>
+                <!-- /. box -->
+            </div>
+        }
+
+
+        <!-- /.col -->
+    </div>
+    <!-- /.row -->
+    <div id="select_stage_partial">
+    </div>
+
+    <div id="merchant_popup">
+    </div>
+</section>
+
+<!-- /.content -->
+<div class="modal fade" id="add-note-ticket-modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" style="margin-right:50px"><i class="fa fa-pencil-square-o"></i>&nbsp;Update Note</h4>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="TicketId" value="" />
+                <div class="form-group">
+                    <label>Note :</label>
+                    <textarea class="form-control" wrap="soft" name="TicketNote" rows="5"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Cancel</button>
+                <button type="button" onclick="updateNote()" class="btn btn-primary">Save</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+
+
+
+<div class="modal fade" id="view_version_info">
+    <div class="modal-dialog">
+        <div class="box box-success">
+            <div class="box-header with-border">
+                <h3 class="modal-title">Version Info</h3>
+                <div class="box-tools pull-right">
+                    <button type="button" class="btn btn-box-tool" data-dismiss="modal" aria-label="Close"><i class="fa fa-times"></i></button>
+                </div>
+            </div>
+            <div class="box-body">
+                <div class="box box-widget" style=" border: 1px solid #ddd; margin-bottom: 0px;">
+                    <div class="box-header with-border">
+                        <div class="user-block">
+                            <i style="color:#222">Name: </i> <span class="text-success" style="font-size: 16px; font-weight: 600;">@(Model.Version?.Name)</span><br />
+                            <i style="color: #999; font-size: 13px;">
+                                Updated: <span class="member_updated">Shared publicly</span>
+                                - <span>
+                                    @(Model.Version?.UpdateAt?.UtcToIMSDateTime().ToString("MMM dd, yyyy hh:mm tt"))
+                                </span> <br />
+                            </i>
+                        </div>
+                    </div>
+                    <!-- /.box-body -->
+                    <div id="notes_list" class="box-footer box-comments custom-scroll" style="padding:0; max-height: 60vh; overflow-y: auto">
+
+                    </div>
+                    <template id="note_template">
+                        <div class="box-comment" style="padding: 10px 0">
+                            <div class="comment-text" style="margin-left:20px">
+                                <span class="username note_title">
+                                    Maria Gonzales
+                                </span><!-- /.username -->
+                                <span class="note_content">
+                                    It is a long established fact that a reader will be distracted
+                                    by the readable content of a page when looking at its layout.
+                                </span>
+                            </div>
+                            <!-- /.comment-text -->
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+@section style{
+
+    <style>
+        tr.strikeout {
+            text-decoration: line-through;
+        }
+
+        #ticket_type_select > a.active > .badge {
+            font-size: 12px;
+            top: -5px;
+        }
+
+        .label.label_Low {
+            background-color: #cfcfcf;
+        }
+
+        .label.label_Medium {
+            background-color: #00acd6;
+        }
+
+        .label.label_High {
+            background-color: #ff8616;
+        }
+
+        .label.label_Urgent {
+            background-color: #ff1e16;
+        }
+
+        .label.label_minor {
+            background-color: #cfcfcf
+        }
+
+        .label.label_serious {
+            background-color: #ff8616
+        }
+
+        .label.label_catastrophic {
+            background-color: #ff1e16
+        }
+    </style>
+    <link href="~/Content/DropdownStyle/dropdown.css" rel="stylesheet" />
+    <link href="~/Content/Admin/bower_components/bootstrap-daterangepicker/daterangepicker.css" rel="stylesheet" />
+    <link href="~/Content/Admin/plugins/jqueryconfirm/jquery-confirm.min.css" rel="stylesheet" />
+}
+@if (TempData["e"] == null)
+{
+    <script src="~/Scripts/Ticket/Index.js?ver=2.1.17.1"></script>
+}
+<script src="~/Content/Admin/bower_components/bootstrap-daterangepicker/daterangepicker.js"></script>
+<script src="~/Content/Admin/plugins/jqueryconfirm/jquery-confirm.min.js"></script>
+<script>
+    $('#date_search').daterangepicker(
+        {
+            "showDropdowns": true,
+            "minYear": 1950,
+            "maxYear": 2050,
+            "autoApply": true,
+            //"alwaysShowCalendars": true,
+            "ranges": {
+                //'Today': [moment(), moment()],
+                //'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                //'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+                //'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+                'This Month': [moment().startOf('month'), moment().endOf('month')],
+                'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')],
+                'Nearest 3 months': [moment().subtract(3, 'month').startOf('month'), moment()],
+                'This Year': [moment().startOf('year'), moment().endOf('year')],
+                'Last Year': [moment().subtract(1, 'year').startOf('year'), moment().subtract(1, 'year').endOf('year')]
+            },
+            "locale": {
+                "customRangeLabel": "Custom Date",
+                "format": "MMM D, YYYY",
+            },
+            "linkedCalendars": false,
+            "startDate": moment().subtract(3, 'month').startOf('month'),
+            "endDate": moment(),
+        },
+    )
+</script>
+@section script{
+
+
+    <script type="text/javascript">
+
+        $(function () {
+            ///select stage
+            //Datepicker
+            $(".datepicker").datepicker({
+                changeMonth: true,
+                changeYear: true,
+                yearRange: '1950:2050'
+            });
+            //$("#DataTables_Table_0_wrapper").find(".row").first().find("div").first().removeClass("col-sm-6").addClass("col-sm-3");
+            //$("#DataTables_Table_0_wrapper").find(".row").first().find("div").first().next().removeClass("col-sm-6").addClass("col-sm-9 filter_selectors");
+
+            initialCheck();
+            //var current = localStorage.getItem("dev_filter_default");
+
+
+            function initialCheck() {
+                $("input[name=checkall]").prop("checked", false);
+                $("input[name=checkticket]").prop("checked", false);
+                cancelMarkas();
+
+                //checkall
+                $("input[name=checkall]").on("click", function (e) {
+                    e.stopPropagation();
+                    var allcheck = $(this).prop("checked");
+                    $("input[name=checkticket]").each(function () {
+                        $(this).prop("checked", allcheck);
+                    })
+                    var findcheck = $("input[name=checkticket]:checked").map(function () { return $(this).val(); }).toArray();
+                    //console.log(findcheck);
+                    $("#markas_div").children("h4").first().html(findcheck.length + " selected");
+                    if (findcheck.length > 0) {
+                        getGroupLabelProject();
+                    }
+                    else {
+                        cancelMarkas();
+                    }
+                });
+                //check selected
+                $("input[name=checkticket]").on("click", function () {
+
+                    var findcheck = $("input[name=checkticket]:checked").map(function () { return $(this).val(); }).toArray();
+                    if (findcheck.length == $("input[name=checkticket]").length) {
+                        $("input[name=checkall]").prop("checked", true);
+                    }
+                    else if (findcheck == null || findcheck.length == 0) {
+                        $("input[name=checkall]").prop("checked", false);
+                    }
+                    //console.log(findcheck);
+                    $("#markas_div").children("h4").first().html(findcheck.length + " selected");
+                    if (findcheck.length > 0) {
+                        getGroupLabelProject();
+                    }
+                    else {
+                        cancelMarkas();
+                    }
+
+                });
+
+            }
+        })
+
+        function show_hide_clear_btn() {
+            if ( $("select[name=typeFilter]").val() != ""
+                || $("select[name=statusFilter]").val() != ""
+                || $("select[name=priorityFilter]").val() != ""
+                || $("select[name=severityFilter]").val() != ""
+                || $("select[name=tagFilter]").val() != ""
+                || $("select[name=s_filter]").val() != ""
+                || $("input[name=s_content]").val() != "") {
+                $("#btn_clear").show();
+            } else {
+                $("#btn_clear").hide();
+            }
+            $("#ticket_type_select .fill_count").html("");
+            if (table.page) {
+                $("#ticket_type_select a.active .fill_count").html(table.page.info().recordsDisplay + "/");
+            }
+        }
+
+        function Open_markas() {
+
+            var findcheck = $("input[name=checkticket]:checked").map(function () { return $(this).val(); }).toArray();
+            if (findcheck.length == $("input[name=checkticket]").length) {
+                $("input[name=checkall]").prop("checked", true);
+            }
+            else if (findcheck == null || findcheck.length == 0) {
+                $("input[name=checkall]").prop("checked", false);
+            }
+            //console.log(findcheck);
+            $("#markas_div").children("h4").first().html(findcheck.length + " selected");
+            if (findcheck.length > 0) {
+                //let projectIdTicketSelected=  $("input[name=checkticket]:checked").map(function () { return $(this).attr("data-project"); }).toArray();
+                //if (!(projectIdTicketSelected.every((val, i, arr) => val === arr[0]))) {
+                //    debugger;
+                //    $("#markas_status").find("option").each(function (index, item) {
+                //        let value = $(item).attr("value");
+                //        if (value !== "-1" && value !== "OPEN" && value !== "OPENED" && value !== "CLOSE" && value !== "CLOSED") {
+                //            $(item).hide();
+                //        }
+                //    })
+                //}
+                //else {
+                //    $("#markas_status").find("option").show();
+                //}
+                getGroupLabelProject();
+            }
+            else {
+                cancelMarkas();
+            }
+        };
+
+
+
+
+        function label_select(type, value, text) {
+            // clear_table_filter();
+            console.log('------------------------------------------')
+            console.log(type)
+            console.log(value)
+            console.log(text)
+            let val = value.replace(/\[+/g, '[').replace(/\]+/g, ']');
+            $("#ticket_" + type + "_filter").val(val).trigger("change");
+            noty({ "text": "Filter: " + text, "layout": "topRight", "type": "default" });
+        }
+
+        //SELECT STAGE
+        function select_stage_show(project, stage) {
+            $.ajax({
+                url: "/Ticket_New/_Partial_SelectStage",
+                method: "POST",
+                dataType: "html",
+            }).done(function (data) {
+                $("#select_stage_partial").html(data);
+                if (stage) {
+                    select_stage(stage);
+                } else if (project) {
+                    select_project(project);
+                }
+            }).fail(function () {
+                alert("_Partial_SelectStage fail")
+            })
+        }
+        //LOAD VERSION INFO
+          function LoadVersionInfo() {
+            event.stopPropagation();
+            overlayOn();
+            var versionId = "@(Model.Version?.Id)";
+            $.ajax({
+                method: "POST",
+                url: "/ProjectManagement/ProjectVersionLoad",
+                data: { versionId },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    if (data[0]) {
+
+                        $("#notes_list").empty();
+                        $(".member_updated").html(data[1].member_name);
+                        for (var i in data[1].notes) {
+                            var note = data[1].notes[i];
+                            var note_el = $($('#note_template').html()).appendTo($('#notes_list'));
+                            note_el.css('width', '100%');
+                            note_el.find(".note_title").html(note.Name);
+                            note_el.find(".note_content").html(note.Content);
+                        }
+                        $('#view_version_info').modal('show');
+                    } else {
+                        error(data[1]);
+                        console.log(data);
+                    }
+                })
+                .fail(function () {
+                    alert("unselect member fail!");
+                })
+                .always(function () {
+                    overlayOff();
+                });
+        }
+
+        function initToolTip() {
+            $(".updated-td").hover(function () {
+                var ticketId = $(this).find(".read-more-update").attr('data-id');
+                var el = $(this).find(".read-more-update");
+                if ($(el).attr('loaded')) {
+                    return;
+                }
+                else {
+                    $('.content_tooltip_' + ticketId).html('<i class="fa fa-spinner fa-pulse"></i>');
+                    $.ajax({
+                        url: '/ticket_new/getLastUpdateDetail',
+                        type: 'get',
+                        data: { ticketId },
+                        success: function (response) {
+                            $('.content_tooltip_' + ticketId).html(response);
+                            $(el).attr('loaded', 'true')
+                        }
+                    });
+                }
+
+            })
+        }
+
+    </script>
+
+
+}
+
+
+
+<!-- /.content -->

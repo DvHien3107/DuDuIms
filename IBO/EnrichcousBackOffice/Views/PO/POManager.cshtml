@@ -1,0 +1,223 @@
+﻿@using EnrichcousBackOffice.Models;
+@{
+    ViewBag.Title = "PO Manager";
+}
+<section class="content-header">
+    <h1>
+        PO Manager
+        <small>Purchase Order</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li><i class="fa fa-reorder"></i> Purchase Order</li>
+        <li class="active">PO Manager</li>
+    </ol>
+</section>
+
+<section class="content">
+    @if (TempData["e"] != null)
+    {
+        <div class="alert alert-warning alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+        </div>
+    }
+    else if (TempData["s"] != null)
+    {
+        <div class="alert alert-success alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+        </div>
+    }
+    <div class="row">
+        <div class="col-md-12">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">PO Manager</h3>
+                </div>
+                <div class="box-body">
+                    <div class="row" style="padding-bottom:20px">
+                        @*<div class="row col-md-12" style="padding-bottom:20px">
+                <a class="btn btn-primary pull-right" onclick="open_request()"><i class="fa fa-plus"></i> New request</a>
+            </div>*@
+                        <div id="search_select_group">
+                            <form id="search_form" action="#">
+                                <div class="col-md-3 form-group">
+                                    <div class="input-group">
+                                        <span class="input-group-addon">
+                                            Vendor
+                                        </span>
+                                        <select name="svendor" id="svendor" class="form-control input_change select2">
+                                            <option value="">All</option>
+                                            @foreach (Vendor v in ViewBag.vendor)
+                                            {
+                                                <option value="@v.Id">@v.CompanyName</option>
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 form-group">
+                                    <div class="input-group">
+                                        <span class="input-group-addon">
+                                            Status
+                                        </span>
+                                        <select name="sstatus" id="sstatus" class="form-control input_change select2">
+                                            <option value="">All</option>
+                                            <option value="Ready for purchase">Ready for purchase</option>
+                                            <option value="Submited">Submited</option>
+                                            <option value="Purchased">Purchased</option>
+                                            <option value="Cancel">Cancel</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 form-group">
+                                    <div class="input-group">
+                                        <span class="input-group-addon">
+                                            Search
+                                        </span>
+
+                                        @*<input type="hidden" id="last_search_text" value="" />*@
+                                        <input type="text" name="stext" class="form-control input_change" id="stext" placeholder="Search by Model | PO# | SO#" />
+                                        @*<div class="input-group-btn"><a class="btn btn-primary" onchange="$('#search_form').submit()"><i class="fa fa-search"></i></a></div>*@
+                                    </div>
+                                </div>
+                                <div class="col-md-2 form-group">
+                                    <button class="btn btn-primary" type="button" id="SearchButton" name="SearchButton"><i class="fa fa-search"></i> Search</button>
+                                </div>
+
+                            </form>
+
+                            <img id="search_loading" style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                        </div>
+                    </div>
+                    <hr />
+                    @*<div class="col-md-12" style="padding:0"><a class="pull-right btn btn-primary">Create PO</a></div>*@
+                    <div id="List_po">
+                        @Html.Partial("_PO_Manager_load")
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<div class="modal fade" id="modal_PDF">
+
+    <div class="modal-dialog" style="width:80%; max-width:1000px;">
+        <div class="modal-content">
+
+            <div class="modal-body">
+                <div>
+                    <div id="modal_PDF_over" style="width: 100%; height: 100%; position: absolute; top: 0px; left: 0px; opacity: 0.5; background-color: white; z-index: 9; display: none;">
+                        <img style="margin:auto; display:block; height:200px" src="/Content/ajax-loaders/loading-partial.gif">
+                    </div>
+                    <iframe id="PDFfile" style="width:100%; height: 700px"></iframe>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<link href="~/Content/Selectize/css/selectize.default.css" rel="stylesheet" />
+<script src="~/Content/Selectize/js/standalone/selectize.min.js"></script>
+@section script{
+    <script>
+        $(function () {
+            $('.select2').select2({
+                minimumResultsForSearch: -1
+            });
+            //$('#search_text').keypress(function (e) {
+            //    if (e.which == 13) {
+            //        search_load($('#search_text').val())
+            //    }
+            //});
+        })
+
+        function search_load(text = null) {
+            var status = $("#status_select").val();
+            var vendor = $("#vendor_select").val();
+            if (text == null) {
+                text = $("#last_search_text").val();
+            }
+            $("#search_loading").show();
+            $.ajax({
+                method: "POST",
+                url: "/PO/PO_Manager_search",
+                data: { status, vendor, text },
+                dataType: "html"
+            })
+                .done(function (data) {
+                    $("#last_search_text").val(text);
+                    $("#search_text").val(text);
+                    $('#List_po').html(data);
+                })
+                .fail(function () {
+                })
+                .always(function () {
+                    $("#search_loading").hide();
+                });
+        };
+        function update_status(po_code, so = "", load_img = null) {
+            if (confirm) {
+                var new_status = $("#u_status_" + po_code).val();
+
+                if (new_status == "Purchased") {
+                    var son = prompt("Please enter sale order number:", so);
+                    if (son == null || son == "") {
+                        noty({ "text": "Sale order number is required", "layout": "topRight", "type": "warning" });
+                        return false;
+                    }
+                }
+                if (load_img) { load_img.show(); }
+                $.ajax({
+                    method: "POST",
+                    url: "/PO/Update_status",
+                    data: { po_code, new_status, son },
+                    dataType: "json"
+                })
+                    .done(function (data) {
+                        if (data[0]) {
+                            noty({ "text": data[1], "layout": "topRight", "type": "success" });
+                            search_load();
+                        } else {
+                            noty({ "text": data[1], "layout": "topRight", "type": "error" });
+                        }
+                    })
+                    .fail(function () {
+                    })
+                    .always(function () {
+                        if (load_img) { load_img.hide(); }
+                    });
+            }
+        }
+        function importPDF(code) {
+            $("#modal_PDF_over").show();
+            $("#modal_PDF").modal("show");
+            $.ajax({
+                method: "POST",
+                url: "/po/ConvertToPdf",
+                data: {
+                    code
+                },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    if (data[0] == true) {
+                        $('#PDFfile').prop("src", data[1]);
+                    }
+                    else {
+                        var MsgError = $.parseJSON('{"text":"Fail: ' + data[1] + '", "layout":"topRight", "type":"error"}');
+                        noty(MsgError);
+                        $("#modal_PDF").modal("hide");
+                    }
+                    $("#modal_PDF_over").hide();
+                })
+                .fail(function () {
+                    $("#import_loading").hide();
+                    alert("Oops! Something went wrong");
+                })
+        }
+    </script>
+}

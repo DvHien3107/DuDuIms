@@ -1,0 +1,241 @@
+﻿@{
+    ViewBag.Title = "New Customer Goal";
+    int currentYear = DateTime.UtcNow.Year;
+}
+<style>
+    tr {
+        height: 50px
+    } 
+</style>
+<section class="content-header">
+    <h1>
+        New Customer Goal
+        <small>support</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Dashboard</a></li>
+        <li><i class="fa fa-credit-card"></i>New Customer Goal</li>
+    </ol>
+</section>
+
+<section class="content">
+    <div class="row">
+
+        @if (TempData["e"] != null)
+        {
+            <div class="alert alert-warning alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+            </div>
+        }
+        else if (TempData["s"] != null)
+        {
+            <div class="alert alert-success alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+            </div>
+        }
+
+
+        <div class="col-md-12">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">New Customer Goal</h3>
+                </div>
+                <!-- /.box-header -->
+
+                <div class="box-body">
+                    <div class="col-md-12" style="padding: 0;">
+                        <div>
+                            <style>
+                                .fc-button-group {
+                                    display: flex;
+                                    justify-content: center;
+                                }
+
+                                #Date {
+                                    width: 125px;
+                                    font-weight: bold;
+                                    border: none;
+                                    font-size: 16px;
+                                    color: white;
+                                    background: #2C3E50;
+                                }
+                            </style>
+                            <div class="fc-button-group">
+                                <button onclick="PrevYear()" type="button" class="btn btn-primary-custom" aria-label="prev" style="background: #2c3e50;color: white;border-radius: 7px 0px 0px 7px;margin-right: 1px;align-items:center">
+                                    <i class="fa fa-angle-left" aria-hidden="true"></i>
+                                </button>
+
+                                <span style="padding:6px" class="text-center" type="text" id="Date" name="Date" data-year="@currentYear">Year @currentYear</span>
+                                <button onclick="NextYear()" type="button" class="btn btn-primary-custom" aria-label="next" style="background: #2c3e50;color: white;border-radius: 0px 7px 7px 0px;margin-left: 1px;">
+                                    <i class="fa fa-angle-right" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                            <div class="progress" style="display:none;margin-top:2px">
+                                <div id="payroll_progess" class="progress-bar progress-bar-striped progress-bar-success" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="render-table" style="padding:0 15px;max-width:1000px;margin:auto">
+                    <table id="main-table" class="table table-bordered table-striped">
+                    </table>
+                </div>
+                <!-- /.box-body -->
+            </div>
+            <!-- /.box -->
+        </div>
+
+    </div>
+</section>
+<div class="modal fade" id="update-goal-popup" role="dialog">
+    <div class="modal-dialog modal-dialog-centered modal-content">
+        <form action="/newcustomergoal/UpdateOrCreateGoal" method="post" id="newcustomergoal-form">
+            <div class="modal-header">
+                <div class="modal-title pull-left"></div>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="control-label">Goal</label>
+                    <input class="form-control" type="number" min="0" step="1" name="Goal" id="Goal" />
+                </div>
+                <input name="Month" value="" hidden />
+                <input name="Year" value="" hidden />
+                <input name="Id" value="" hidden />
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary" onsubmit="overlayOn()">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section script{
+    <script>
+        var monthNames = ["January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"];
+        var dataT = $('#main-table').DataTable({
+            "language": {
+                "processing": '<img src="/Content/ajax-loaders/loading2.gif" width="60px" />',
+            },
+            "pageLength": 10,
+            "serverSide": true, // for process server side
+            "processing": true, // for show progress bar
+            'paging': false,
+            'lengthChange': true,
+            'searching': false,
+            'ordering': false,
+            'info': false,
+            'autoWidth': true,
+            'stateSave': false,
+            "ajax": {
+                "url": "/newcustomergoal/LoadListCustomerGoal",
+                "type": "POST",
+                "datatype": "json",
+                data: function (data) {
+                    data.Year = $("#Date").attr("data-year");
+                    return data;
+                },
+
+            },
+            'fnCreatedRow': function (nRow, aData, iDataIndex) {
+                $(nRow).hover(
+                    function () {
+                        $('#btn-edit-goal-' + aData['Month']).show();
+                    }, function () {
+                        $('#btn-edit-goal-' + aData['Month']).hide();
+                    }
+                );
+            },
+            "columns": [
+                {
+                    "title": "Month",
+                    "name": "Month",
+                    "data": "Month",
+                    "render": function (data, type, row) {
+                        let html = monthNames[data - 1];
+                        return html;
+                    },
+                    "className": 'align-middle',
+                },
+                {
+                    "title": "Goal",
+                    "name": "Goal",
+                    "data": "Goal",
+                    "render": function (data, type, row) {
+                        var html = "";
+                        html += `<b style="margin-right:5px">${data}</b>`;
+                        html += `<span class="btn btn-sm btn-warning btn-custom" style="display:none" id="btn-edit-goal-${row['Month']}" style="cursor:pointer" title="" data-toggle="tooltip" data-original-title="Edit" onclick="updateGoal(${row["Id"]},${row["Month"]},${row["Goal"]})">
+                                        <i class="fa fa-pencil"></i>
+                                    </span>`;
+                        return html;
+                    },
+                    "className": 'align-middle',
+                }
+            ]
+        })
+
+        function PrevYear() {
+            const d = new Date(document.querySelector("#Date").getAttribute("data-year"));
+            const currentYear = d.getFullYear() - 1;
+            d.setFullYear(currentYear);
+            document.querySelector("#Date").setAttribute("data-year", d.getFullYear());
+            document.querySelector("#Date").innerHTML = "Year " + d.getFullYear();
+            $('#main-table').DataTable().ajax.reload();
+        }
+
+        function NextYear() {
+            const d = new Date(document.querySelector("#Date").getAttribute("data-year"));
+            const currentYear = d.getFullYear() + 1;
+            d.setFullYear(currentYear);
+            document.querySelector("#Date").setAttribute("data-year", d.getFullYear());
+            document.querySelector("#Date").innerHTML = "Year " + d.getFullYear();
+           $('#main-table').DataTable().ajax.reload();
+        }
+
+        function updateGoal(id, month, goal) {
+            $("#update-goal-popup").find("[name='Id']").val(id);
+            $("#update-goal-popup").find("[name='Month']").val(month);
+            $("#update-goal-popup").find("[name='Goal']").val(goal);
+            $("#update-goal-popup").find("[name='Year']").val($("#Date").attr("data-year"));
+            $("#update-goal-popup").find(".modal-title").html(`Update New Customer Goal: ${monthNames[month -1]}`);
+            $("#update-goal-popup").modal("show");
+        }
+            //function yearChange(year) {
+            //    const url = new URL(window.location.href);
+            //    url.searchParams.set('key', year);
+            //    window.location.replace(url);
+            //}
+        // this is the id of the form
+        $("#newcustomergoal-form").submit(function (e) {
+
+            e.preventDefault(); // avoid to execute the actual submit of the form.
+
+            var form = $(this);
+            var actionUrl = form.attr('action');
+
+            $.ajax({
+                type: "POST",
+                url: actionUrl,
+                data: form.serialize(), // serializes the form's elements.
+                success: function (data) {
+                    if (data.status) {
+                        var mess = $.parseJSON('{"text":"' + data.message + '", "layout":"top", "type":"success"}');
+                        dataT.ajax.reload();
+                        noty(mess);
+                        $("#update-goal-popup").modal("hide");
+                    }
+                    else {
+                        var mess = $.parseJSON('{"text":"' + data.message + '", "layout":"top", "type":"error"}');
+                        noty(mess);
+                    }
+                }
+            });
+
+        });
+    </script>
+}

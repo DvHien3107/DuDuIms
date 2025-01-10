@@ -1,0 +1,65 @@
+﻿@model List<EnrichcousBackOffice.Models.P_PayrollFiles>
+<div  id="payroll">
+    <div class="">
+
+        <div class="pull-right box-tools">
+
+
+            @*<a class="btn btn-sm btn-success btn-header-lead" onclick="export_excel()" style="font-size:12px; margin-left:5px">
+                <i class="fa fa-upload"></i> Import File <img id="img_load_excel" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+            </a>*@
+
+        </div>
+        @*<div>Construction ...</div>*@
+        <div class="box-body">
+            <table id="mytable" class="table table-bordered table-striped" data-order='[[ 0, "desc" ]]'>
+                <thead>
+                    <tr>
+                      
+                        <th>Name</th>
+                        <th>Month</th>
+                        <th>Description</th>
+                        <th style="width:150px; text-align:center">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Count > 0)
+                    {
+                        foreach (var file in Model.OrderByDescending(x=>x.PayrollDate))
+                        {
+                            <tr>
+                                <td>
+                                    @file.PayrollDate.ToString("MMMM") Salary Slip
+                                </td>
+                                <td>
+                                    @file.PayrollDate.ToString("MM-yyyy")
+                                </td>
+                                <td>
+                                </td>
+                                <td style="text-align: center">
+                                    <a href="@file.FilePath" target="_blank" style="color:white;" class="btn btn-sm btn-warning ">
+                                        <i class="fa fa-eye" aria-hidden="true"></i> View
+                                    </a>
+                                </td>
+                            </tr>
+
+                        }
+                    }
+
+                    else
+                    {
+                <tr>
+                    <td colspan="4" class="text-center">
+                      No data
+                    </td>
+                </tr>
+                    }
+
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+
+
+</div>

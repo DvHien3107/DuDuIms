@@ -1,0 +1,346 @@
+﻿@using EnrichcousBackOffice.Models
+@{
+    var vendors = ViewBag.vendors as List<Vendor>;
+}
+<table class="table table-bordered table-hover data-po-manager">
+    <thead>
+        <tr class="bg-primary">
+            <th>PO#</th>
+            <th>Vendor Name</th>
+            <th>Last Updated</th>
+            <th>SO#</th>
+            <th>Status</th>
+            <th style="width:120px"></th>
+        </tr>
+    </thead>
+    <tbody>
+    </tbody>
+</table>
+<script>
+    $(function () {
+        var tableStore = $('.data-po-manager').DataTable({
+            "language": {
+                "processing": '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>',
+                "paginate": {
+                    "first": '<i class="fa fa-angle-double-left" aria-hidden="true"></i>',
+                    "last": '<i class="fa fa-angle-double-right" aria-hidden="true"></i>',
+                    "next": '<i class="fa fa-angle-right" aria-hidden="true"></i>',
+                    "previous": '<i class="fa fa-angle-left" aria-hidden="true"></i>'
+                },
+            },
+            "pageLength": 10,
+            "serverSide": true, // for process server side
+            "processing": true, // for show progress bar
+            'paging': true,
+            'lengthChange': true,
+            'searching': false,
+            'ordering': true,
+            'info': true,
+            'autoWidth': true,
+            'stateSave': false,
+            'columnDefs': [
+                { targets: [5], orderable: false }
+            ],
+            "ajax": {
+                "url": "/po/loadpomanager",
+                "type": "POST",
+                "datatype": "json",
+                data: function (data) {
+                    data.svendor = $('#svendor option:selected').val();
+                    data.sstatus = $('#sstatus option:selected').val();
+                    data.stext = $("#stext").val();
+                    return data;
+                },
+                'dataSrc': function (data) {
+                    return data.data;
+                }
+            },
+            'fnCreatedRow': function (nRow, aData, iDataIndex) {
+                $(nRow).attr('onclick', `loadDetailPO('${aData.PO.POCode}', $(this))`);
+                $(nRow).css('cursor', 'pointer');
+            },
+            "columns": [
+                {
+                    "name": "POCode",
+                    "render": function (data, type, row) {
+                        return `<span><b style="text-success">#${row["PO"].POCode}</b></span>`;
+                    },
+                    "className": 'align-middle',
+                },
+                {
+                    "name": "VendorName",
+                    "render": function (data, type, row) {
+                        return `<span>${row["PO"].VendorName}</span>`;
+                    },
+                },
+                {
+                    "name": "LastUpdate",
+                    "render": function (data, type, row) {
+                        let offset = moment().utcOffset();
+                        let local = moment.utc(moment(row["PO"].UpdatedAt).format("MMM DD, YYYY LT")).utcOffset(offset).format("MMM DD, YYYY LT");
+                        return `<span>${local}</span>`;
+                    },
+                },
+                {
+                    "name": "SONumber",
+                    "render": function (data, type, row) {
+                        return `<span><b style="text-primary">#${row["PO"].SaleOrderNumber}</b></span>`;
+                    },
+                },
+                {
+                    "name": "Status",
+                    "render": function (data, type, row) {
+                        let html = '';
+                        if (row["PO"].Status.toLowerCase().replace(" ", "") == "readyforpurchase")
+                            html = `<label class="label label-warning">${row["PO"].Status}</label>`;
+                        else if (row["PO"].Status.toLowerCase().replace(" ", "") == "submited")
+                            html = `<label class="label label-success">${row["PO"].Status}</label>`;
+                        else if (row["PO"].Status.toLowerCase().replace(" ", "") == "purchased")
+                            html = `<label class="label label-primary">${row["PO"].Status}</label>`;
+                        else
+                            html = `<label class="label label-default">${row["PO"].Status}</label>`;
+                        return html;
+                    },
+                    "className": 'align-middle',
+                },
+                {
+                    "name": "Action",
+                    "render": function (data, type, row) {
+                        let html = '';
+                        if (row["PO"].Status == "Purchased") {
+                            html = `<a class="btn btn-default on_row _show" style="padding: 1px 15px;margin:2px;" onclick="show_edit_po('${row["PO"].POCode}')"><i class="fa fa-pencil text-yellow"></i> Edit</a>
+                                        <a class="btn btn-default on_row _input" style="padding: 1px 15px;margin:2px; display:none" onclick="save_edit_po('${row["PO"].POCode}')"><i class="fa fa-check text-green"></i></a>
+                                        <a class="btn btn-default on_row _input" style="padding: 1px 15px;margin:2px; display:none" onclick="cancel_edit_po('${row["PO"].POCode}')"><i class="fa fa-close"></i></a>`;
+                        }
+                        return html;
+                    },
+                    "className": 'align-middle',
+                }
+            ]
+        });
+        //set event click for btn search
+        $('#SearchButton').on("click", function () {
+            $(".data-po-manager").DataTable().ajax.reload();
+        })
+        // set event change input auto reload datatable
+        $('.input_change').on("change", function () {
+            $(".data-po-manager").DataTable().ajax.reload();
+        })
+        $('#request_modal').ajaxForm(function (data) {
+            if (data[0]) {
+                noty({ "text": data[1], "layout": "topRight", "type": "success" });
+                search_load();
+            }
+            else {
+                noty({ "text": data[1], "layout": "topRight", "type": "error" });
+            }
+            $('#request_modal').modal('hide');
+            $("#request_save_img_load").hide();
+        });
+        $('#CreatePO_form').submit(function () {
+            if ($('input[name="createpo"]:checked').length == 0) {
+                noty({ "text": "Please select request to create po", "layout": "topRight", "type": "error" });
+                return false;
+            }
+            overlayOn();
+        });
+    })
+
+    $("#stext").keydown(function (event) {
+        if (event.keyCode === 13) {
+            $(".data-po-manager").DataTable().ajax.reload();
+            return false;
+        }
+    });
+
+
+    $(".readyforpurchase").addClass("label label-warning");
+    $(".submited").addClass("label label-success");
+    $(".purchased").addClass("label label-success");
+    $(".cancel").addClass("label label-default");
+    //$(".PO").hover(function () { $(this).find('.btn').css('visibility', 'visible') }, function () { $(this).find('.btn').css('visibility', 'hidden') });
+    $(".tr_detail").hover(function () { $(this).find('.action_btn').css('visibility', 'visible') }, function () { $(this).find('.action_btn').css('visibility', 'hidden') });
+    $(".on_row").on("click", function (e) { e.stopPropagation() });
+    //function edit_po(url) {
+    //    if (confirm("Edit this PO will also edit all POs that share the same Requests?")) {
+    //        window.location.href = url;
+    //    }
+    //}
+    //PO
+    function show_edit_po(code) {
+
+        var el = $("#PO_" + code);
+        $("._show").show();
+        $("._input").hide();
+        el.find("._show").hide();
+        el.find("._input").show();
+    }
+    function cancel_edit_po(code) {
+        var el = $("#PO_" + code);
+        el.find("._show").show();
+        el.find("._input").hide();
+    }
+    function save_edit_po(code) {
+        var el = $("#PO_" + code);
+        var VendorId = el.find("._input._vendor").val();
+        overlayOn();
+        $.ajax({
+            method: "POST",
+            url: "/po/SaveEditPO",
+            data: { code, VendorId },
+            dataType: "json"
+        })
+            .done(function (data) {
+                if (data[0] == true) {
+                    noty({ "text": data[1], "layout": "topRight", "type": "success" });
+                    el.find("._show").show();
+                    el.find("._input").hide();
+                    el.find("._show._vendor").html(data[2]);
+                }
+                else {
+                    noty({ "text": data[1], "layout": "topRight", "type": "error" });
+                }
+            })
+            .fail(function () {
+                alert("save_edit_po fail");
+            })
+            .always(function () {
+                overlayOff();
+            });
+
+    }
+    function delete_po(code) {
+        if (confirm("Are you sure to delete this PO?")) {
+            $.ajax({
+                method: "POST",
+                url: "/po/DeletePO",
+                data: { code },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    if (data[0] == true) {
+                        noty({ "text": data[1], "layout": "topRight", "type": "success" });
+                        $("#PO_" + code).remove();
+                    }
+                    else {
+                        noty({ "text": data[1], "layout": "topRight", "type": "error" });
+                    }
+                })
+                .fail(function () {
+                    alert("delete_po fail");
+                })
+                .always(function () {
+                });
+        }
+    }
+
+    //PO detail
+    function show_edit_detail(id) {
+
+        var el = $("#detail_" + id);
+        $("._show").show();
+        $("._input").hide();
+        el.find("._show").hide();
+        el.find("._input").show();
+        el.find("._input._qty").val(el.find("._show._qty").html().trim());
+        el.find("._input._price").val(el.find("._show._price").html().trim());
+        el.find("._input._note").val(el.find("._show._note").html().trim());
+    }
+    function cancel_edit_detail(id) {
+        var el = $("#detail_" + id);
+        el.find("._show").show();
+        el.find("._input").hide();
+    }
+    function save_edit_detail(id) {
+        var el = $("#detail_" + id);
+        var Qty = el.find("._input._qty").val();
+        var Price = el.find("._input._price").val();
+        var Note = el.find("._input._note").val();
+        if (Qty == "") {
+            noty({ "text": "Please enter a quantity!", "layout": "topRight", "type": "error" });
+        } else if (Price == "") {
+            noty({ "text": "Please enter the price!", "layout": "topRight", "type": "error" });
+        } else {
+
+            overlayOn();
+            $.ajax({
+                method: "POST",
+                url: "/po/SaveEditPODetail",
+                data: { id, Qty, Price, Note },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    if (data[0] == true) {
+                        noty({ "text": data[1], "layout": "topRight", "type": "success" });
+                        el.find("._show").show();
+                        el.find("._input").hide();
+                        el.find("._show._qty").html(el.find("._input._qty").val());
+                        el.find("._show._price").html(el.find("._input._price").val());
+                        el.find("._show._note").html(el.find("._input._note").val());
+                    }
+                    else {
+                        noty({ "text": data[1], "layout": "topRight", "type": "error" });
+                    }
+                })
+                .fail(function () {
+                    alert("save_edit_detail fail");
+                })
+                .always(function () {
+                    overlayOff();
+                });
+        }
+    }
+    function delete_detail(id) {
+        if (confirm("Are you sure to delete this item?")) {
+            overlayOn();
+            $.ajax({
+                method: "POST",
+                url: "/po/DeletePODetail",
+                data: { id },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    if (data[0] == true) {
+                        noty({ "text": data[1], "layout": "topRight", "type": "success" });
+                        $("#detail_" + id).remove();
+                    }
+                    else {
+                        noty({ "text": data[1], "layout": "topRight", "type": "error" });
+                    }
+                })
+                .fail(function () {
+                    alert("delete_detail fail");
+                })
+                .always(function () {
+                    overlayOff();
+                });
+        }
+    }
+
+    ////
+    function loadDetailPO(code, e) {
+        if ($('#detail_' + code).length) {
+            $('#detail_' + code).remove();
+        }
+        else {
+            overlayOn();
+            $.ajax({
+                method: "get",
+                url: `/po/loaddetailpomanager?pocode=${code}`
+            })
+                .done(function (data) {
+                    $(".st_detail").remove();
+                    e.after(data);
+                    $(".div-detail-" + code).slideDown();
+                    //e.next("tr").show();
+                    overlayOff();
+                })
+                .fail(function () {
+                    alert("Oops! Something went wrong");
+                    overlayOff();
+                })
+                .always(function () {
+                });
+        }
+    }
+</script>

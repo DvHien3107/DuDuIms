@@ -1,0 +1,1290 @@
+﻿@model EnrichcousBackOffice.Models.C_Customer
+@using EnrichcousBackOffice.Models
+@using EnrichcousBackOffice.Services
+@using EnrichcousBackOffice.ViewModel
+@using EnrichcousBackOffice.Utils.IEnums
+@using Inner.Libs.Helpful
+@using Newtonsoft.Json
+
+@{
+    bool update = bool.Parse(ViewData["update"]?.ToString());
+    //update = false;
+    Dictionary<string, bool> p = ViewBag.p;
+    List<EnrichcousBackOffice.Models.C_CustomerAdditionalInfo> ListAddInfo = ViewBag.ListAddInfo ?? new List<EnrichcousBackOffice.Models.C_CustomerAdditionalInfo> { };
+    List<C_CustomerContact> contacts = ViewBag.Contacts ?? new List<C_CustomerContact> { };
+    int showlenght = (Model.SocialSecurity?.Length ?? 0) - 4;
+    string l4social = showlenght > 4 ? (new string('*', showlenght)) + Model.SocialSecurity.Substring(showlenght, 4) : "*****";
+    string STORE_IN_HOUSE = ViewData["STORE_IN_HOUSE"]?.ToString();
+    List<TimeZoneModel> listTimeZone = new MerchantService().ListTimeZone();
+    C_CustomerSupportingInfo SupportingInfo = ViewBag.SupportingInfo as C_CustomerSupportingInfo;
+    List<Order_Products> Hardwares = ViewBag.Hardwares as List<Order_Products>;
+    List<P_Member> MemberList = ViewBag.MemberList as List<P_Member>;
+    List<C_Partner> PartnerList = ViewBag.PartnerList as List<C_Partner> ?? new List<C_Partner>{};
+
+    var TerminalTypeAvailables = ViewBag.TerminalTypeAvailables as List<EnumValue>;
+    var SourceAvailables = ViewBag.SourceAvailables as List<EnumValue>;
+    var ProcessorAvailables = ViewBag.ProcessorAvailables as List<EnumValue>;
+
+    var DeviceNameAvailables = ViewBag.DeviceNameAvailables as List<EnumValue>;
+    var POSStructureAvailables = ViewBag.POSStructureAvailables as List<EnumValue>;
+    var DeviceSetupStructureAvailables = ViewBag.DeviceSetupStructureAvailables as List<EnumValue>;
+    //Huong dan su dung Merchant Popup
+    //--- HTML
+    //@Html.Partial("_MerchantPopupPartial", new CustomerMerchantViewModel(), new ViewDataDictionary { { "update", false } })
+    //add Partial("_MerchantProcessEditPartial");
+    //--- Java Script
+    //Goi function: update_merchant(_id, _update) --- de goi popup
+    //_id la CustomerId
+    //_update == 'true' --- la Add New or Edit
+    //_update == 'false' -- la View Detail
+    var IsExistLicenseActive = ViewBag.IsExistLicenseActive as bool?;
+}
+
+
+
+<!--Modal content-->
+<div class="modal fade" id="modal-merchant" role="dialog" data-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form id="merchant_edit_form" action="/MerchantMan/Save" method="post" onsubmit="overlayOn()">
+                <input type="hidden" name="Type" class="form-control" value="@STORE_IN_HOUSE" />
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" onclick="@if (Model.Id > 0){ @Html.Raw("reloadtab()") } else{ @Html.Raw("clearContactMP()")}" aria-label="Close">
+                        <span aria-hidden="true" style="font-size:2em">&times;</span>
+                    </button>
+                    <button type="button" class="close view_merchant" data-dismiss="modal" style="display:none" aria-label="Close">
+                        <span aria-hidden="true" style="font-size:2em">&times;</span>
+                    </button>
+                    @if (!string.IsNullOrEmpty(Model.CustomerCode))
+                    {
+                        <h4 style="float:right; font-weight:bold; margin-right:50px">
+                            #@Model.CustomerCode@Model.WordDetermine
+                        </h4>
+                    }
+
+                    <h4 id="modal-merchant-title" class="modal-title">@Model.CustomerCode</h4>
+                    @*@if (Model.Id > 0)
+                        {
+                            <h4 id="modal-merchant-title" class="modal-title">Update</h4>
+                        }
+                        else
+                        {
+                            <h4 id="modal-merchant-title" class="modal-title">Add New</h4>
+                        }*@
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <div class="nav-tabs-custom">
+                                <ul class="nav nav-tabs">
+                                    <li class="active"><a href="#owner_info" data-toggle="tab">Owner info</a></li>
+                                    @*<li><a href="#pos_info" data-toggle="tab">Mango POS</a></li>*@
+                                    @*<li><a href="#merchantprocess_info" id="mn_merchantprocess" onclick="loadMerchantProcessPartial()" data-toggle="tab">Merchant process info</a></li>*@
+                                    <li><a href="#contacts_info" id="mn_contacts" onclick="loadContactInfo()" data-toggle="tab">Other Contacts</a></li>
+                                    @*<li><a href="#additinal_info" id="mn_additinal" data-toggle="tab">Additional info</a></li>*@
+                                    @if (p.Any(k => k.Key.Equals("customer_supportinginfo")) == true && p["customer_supportinginfo"] == true)
+                                    {
+                                        <li><a href="#supporting_info" id="mn_supporting" data-toggle="tab">Supporting info</a></li>
+                                    }
+                                    @*<li><a href="#account_manager" id="mn_accountmanager" onclick="loadAccountManager()" data-toggle="tab">Account Manager</a></li>*@
+                                </ul>
+                                <div class="tab-content box box-primary box-solid" style="height:520px; overflow-y:auto; overflow-x:hidden">
+                                    <!--Tab Owner info-->
+                                    <div class="tab-pane active" id="owner_info">
+                                        <input type="hidden" name="hd_cus_id" value="@Model.Id" />
+                                        <!--<h3>Bussiness Infomation</h3>
+    <div class="row">
+    <!--column left-->
+                                        <!--<input type="hidden" name="hd_cus_id" value="@Model.Id" />
+    <div class="col-md-4">
+        <div class="form-group">
+            <label class="control-label">Business Name <span style="color:red">*</span></label>
+            <input tabindex="1" type="text" class="form-control" name="BusinessName" value="@Model.BusinessName" required />
+        </div>
+        <div class="form-group">
+            <label class="control-label" style="width:100%">Address 1 <i>(main address)</i>  <span style="color:darkblue">*</span></label>A_Country
+            <input tabindex="5" type="text" class="form-control" name="BusinessAddressStreet" value="@Model.BusinessAddressStreet" />
+        </div>
+
+        <div class="form-group">
+            <label class="control-label">State <span style="color:darkblue">*</span></label>
+            <input tabindex="8" type="text" value="@Model.BusinessState" class="form-control State" name="A_State" />
+        </div>
+
+        <div class="form-group">
+            <label class="control-label">Federal Tax Id <span style="color:darkblue">*</span></label>
+            <input tabindex="11" type="text" class="form-control" name="FederalTaxId" value="@Model.FederalTaxId" />
+        </div>
+    </div>-->
+                                        <!--/.end column left-->
+                                        <!--column midel-->
+                                        <!--<div class="col-md-4">
+        <div class="form-group">
+            <label class="control-label">legal Name <span style="color:darkblue">*</span></label>
+            <input tabindex="2" type="text" class="form-control" name="LegalName" value="@Model.LegalName" />
+        </div>
+        <div class="form-group">
+            <label class="control-label">Address 2 <i>(suite #)</i></label>
+            <input tabindex="6" type="text" class="form-control" name="BusinessAddressCivicNumber" value="@Model.BusinessAddressCivicNumber" />
+        </div>
+        <div class="form-group">
+            <label class="control-label">Country <span style="color:darkblue">*</span></label>
+            @if (ViewBag.BCountries != null)
+            {@Html.DropDownList("A_Country", (IEnumerable<SelectListItem>)ViewBag.BCountries, new { @class = "form-control select2", @tabindex = "9" })}
+
+        </div>
+        <div class="form-group">
+            <label class="control-label">Start up date  <span style="color:darkblue">*</span></label>
+            <input tabindex="12" type="datetime" readonly style="background-color:white" name="BusinessStartDate" class="form-control datepicker" value="@(Model.BusinessStartDate?.ToString("MMM dd yyyy"))" />
+        </div>
+    </div>-->
+                                        <!--/.end column midel-->
+                                        <!--column right-->
+                                        <!--<div class="col-md-4">
+        <div class="form-group">
+            <label class="control-label">Phone <span style="color:red">*</span></label>
+            <input tabindex="3" type="text" class="form-control" name="BusinessPhone" data-inputmask="'mask': '(999) 999-9999'" data-mask="" pattern="[^_]*" autocomplete="off" value="@Model.BusinessPhone" required />
+        </div>
+
+        <div class="form-group">
+            <label class="control-label">City <span style="color:darkblue">*</span></label>
+            <input tabindex="7" type="text" name="A_City" class="form-control" value="@Model.BusinessCity" />
+        </div>
+        <div class="form-group">
+            <label class="control-label">Zipcode  <span style="color:darkblue">*</span></label>
+            <input tabindex="10" type="text" name="A_ZipCode" class="form-control" pattern="[0-9]{5}" value="@Model.BusinessZipCode" />
+        </div>
+    </div>-->
+                                        <!--/.end column right-->
+                                        <!--</div>-->
+
+                                        <h3>Salon Infomation</h3>
+                                        <div class="row">
+                                            <!--column left-->
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label class="control-label" style="width:200px">Account manager</label>
+                                                    <select tabindex="1" class="form-control select2" name="MemberNumber" id="MemberNumber" value="@Model.MemberNumber" style="width:100%">
+                                                        <option value="">N/A</option>
+                                                        @foreach (var mem in MemberList)
+                                                        {
+                                                            <option value="@mem.MemberNumber" name-data="@mem.FullName" @(Model.MemberNumber == mem.MemberNumber ? "selected" : "")>#@mem.MemberNumber - @mem.FullName</option>
+                                                        }
+                                                    </select>
+                                                    <input name="FullName" id="FullName" value="@Model.FullName" type="hidden" />
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label class="control-label" style="width:200px">Company / Partner</label>
+                                                    <select tabindex="1" class="form-control select2" name="PartnerCode" id="PartnerCode" value="@Model.PartnerCode" style="width:100%">
+                                                        <option value="">Simply Pos</option>
+                                                        @foreach (var par in PartnerList)
+                                                        {
+                                                            <option value="@par.Code" name-data="@par.Name" @(Model.PartnerCode == par.Code ? "selected" : "")>#@par.Code - @par.Name</option>
+                                                        }
+                                                    </select>
+                                                    @*<input name="FullName" id="FullName" value="@Model.FullName" type="hidden" />*@
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <!--column left-->
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label class="control-label" style="width:200px">Salon email <span style="color:red">*</span></label>
+                                                    <input tabindex="1" type="email" class="form-control" name="SalonEmail" value="@Model.SalonEmail" required />
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="control-label" style="width:200px">Mango email <i>(Account Login)</i><span style="color:red">*</span></label>
+                                                    <input tabindex="4" type="email" class="form-control" name="MangoEmail" value="@Model.MangoEmail" required />
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="control-label">City <span style="color:red">*</span></label>
+                                                    <input tabindex="7" type="text" name="SalonCity" class="form-control" value="@Model.SalonCity" required />
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="control-label">Phone </label>
+                                                    <input tabindex="10" type="text" class="form-control" name="SalonPhone" data-inputmask="'mask': '(999) 999-9999'" data-mask="" pattern="[^_]*" autocomplete="off" value="@Model.SalonPhone" />
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="control-label">First Invoice Date </label>
+                                                    <input tabindex="13" type="datetime" style="background-color:white" name="BusinessStartDate" class="form-control datepicker" value="@(Model.BusinessStartDate?.ToString("MMM dd yyyy"))" />
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="control-label">Website <span class="ico-help" title="The cancel date is only available when the merchant's license is cancelled" data-original-title="The cancel date is only available when the merchant's license is cancelled."><i class="fa fa-question-circle"></i></span></label>
+                                                    <input tabindex="13" type="datetime" name="Website" class="form-control" value="@Model.Website"/>
+                                                </div>
+                                            </div>
+                                            <!--/.end column left-->
+                                            <!--column midel-->
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label class="control-label">Salon Name <span style="color:red">*</span></label>
+                                                    <input tabindex="2" type="text" class="form-control" name="BusinessName" value="@Model.BusinessName" required />
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="control-label" style="width:100%">Address 1 <i>(main address)</i>  <span style="color:red">*</span></label>
+                                                    <input tabindex="5" type="text" class="form-control" name="SalonAddress1" value="@Model.SalonAddress1" required />
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="control-label">State <span style="color:red">*</span></label>
+                                                    <input tabindex="8" type="text" value="@Model.SalonState" class="form-control State" name="SalonState" required />
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="control-label">Time zone <span style="color:red">*</span></label>
+                                                    <select tabindex="11" id="SalonTimeZone" class="form-control select2 select_timeZone" name="SalonTimeZone" style="width:100%" required>
+                                                        @if (listTimeZone.Count > 0)
+                                                        {
+                                                            if (!string.IsNullOrEmpty(Model.SalonTimeZone) && !listTimeZone.Any(x => x.Name.Contains(Model.SalonTimeZone)))
+                                                            {
+                                                                <option selected value="@(Model?.SalonTimeZone)">
+                                                                    (UTC @(Model?.SalonTimeZone_Number)) @(Model?.SalonTimeZone)
+                                                                </option>
+                                                            }
+                                                            foreach (TimeZoneModel time in listTimeZone)
+                                                            {
+                                                                <option @if (Model?.SalonTimeZone == time.Name) { @Html.Raw("selected") } value="@time.Name">
+                                                                    (UTC @time.TimeDT) @time.Name
+                                                                </option>
+                                                            }
+                                                        }
+                                                        else
+                                                        {
+                                                            if (!string.IsNullOrEmpty(Model?.SalonTimeZone) && Model?.SalonTimeZone != "VietNam" && Model?.SalonTimeZone != "Eastern" && Model?.SalonTimeZone != "Central" && Model?.SalonTimeZone != "Mountain" && Model?.SalonTimeZone != "Pacific")
+                                                            {
+                                                                <option selected value="@(Model?.SalonTimeZone)">
+                                                                    (UTC  @(Model?.SalonTimeZone_Number)) @(Model?.SalonTimeZone)
+                                                                </option>
+                                                            }
+                                                            <option @if (Model?.SalonTimeZone == "Eastern") { @Html.Raw("selected") } value="Eastern">(UTC @(TIMEZONE_NUMBER_BY_ID.Eastern.Text())) Eastern</option>
+                                                            <option @if (Model?.SalonTimeZone == "Central") { @Html.Raw("selected") } value="Central">(UTC  @(TIMEZONE_NUMBER_BY_ID.Central.Text())) Central</option>
+                                                            <option @if (Model?.SalonTimeZone == "Mountain") { @Html.Raw("selected") } value="Mountain">(UTC  @(TIMEZONE_NUMBER_BY_ID.Mountain.Text())) Mountain</option>
+                                                            <option @if (Model?.SalonTimeZone == "Pacific") { @Html.Raw("selected") } value="Pacific">(UTC  @(TIMEZONE_NUMBER_BY_ID.Pacific.Text())) Pacific</option>
+                                                            <option @if (Model?.SalonTimeZone == "VietNam") { @Html.Raw("selected") } value="VietNam">(UTC  @(TIMEZONE_NUMBER_BY_ID.VietNam.Text())) VietNam</option>
+                                                        }
+                                                    </select>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="control-label">Go-live Date</label>
+                                                    <input tabindex="13" type="datetime" style="background-color:white" name="GoLiveDate" class="form-control datepicker" value="@(Model.GoLiveDate?.ToString("MMM dd yyyy"))" />
+                                                </div>
+
+                                            </div>
+                                            <!--/.end column midel-->
+                                            <!--column right-->
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label class="control-label">Legal Name <span style="color:darkblue">*</span></label>
+                                                    <input tabindex="3" type="text" class="form-control" name="LegalName" value="@Model.LegalName" />
+                                                </div>
+
+                                                <div class="form-group">
+                                                    <label class="control-label">Address 2 <i>(suite #)</i></label>
+                                                    <input tabindex="6" type="text" class="form-control" name="SalonAddress2" value="@Model.SalonAddress2" />
+                                                </div>
+                                                @*<div class="form-group" style="display:none"><label class="control-label"></label><input type="text" class="form-control" /></div>*@
+                                                <div class="form-group">
+                                                    <label class="control-label">Zipcode <span style="color:red">*</span></label>
+                                                    <input tabindex="9" type="text" name="SalonZipcode" class="form-control" pattern="[0-9]{5}" value="@Model.SalonZipcode" required />
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="control-label">Federal Tax Id <span style="color:darkblue">*</span></label>
+                                                    <input tabindex="12" type="text" class="form-control" name="FederalTaxId" value="@Model.FederalTaxId" />
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="control-label">Cancel Date <span class="ico-help" title="The cancel date is only available when the merchant's license is cancelled" data-original-title="The cancel date is only available when the merchant's license is cancelled."><i class="fa fa-question-circle"></i></span></label>
+                                                    <input tabindex="13" type="datetime" name="CancelDate" class="form-control @(IsExistLicenseActive==true?"":"datepicker")" value="@(Model.CancelDate?.ToString("MMM dd yyyy"))" @(IsExistLicenseActive == true ? "readonly" : "") />
+                                                </div>
+                                               
+                                            </div>
+                                            <!--/.end column right-->
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <label class="control-label">Salon note</label>
+                                                    <textarea tabindex="13" type="text" class="form-control" style="min-height:40px;resize:vertical;" name="BusinessDescription">@Model.BusinessDescription</textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <hr />
+                                        <h3>Other Information</h3>
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label class="control-label">Terminal Type</label>
+                                                    <select class="form-control" name="TerminalType">
+                                                        <option value="">N/A</option>
+                                                        @foreach (var item in TerminalTypeAvailables)
+                                                        {
+                                                            <option value="@item.Value" @(Model.TerminalType == item.Value ? "selected" : "") )>@item.Name</option>
+                                                        }
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label class="control-label">MID</label>
+                                                    <input type="text" class="form-control" name="MID" value="@Model.MID" />
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-4">
+                                                <div class="form-group" style=" line-height: 59px; margin-bottom: 0px; transform: translateY(10px);">
+                                                    <label for="TerminalStatus" class="control-label" style="margin-right:5px;">Terminal Status</label>
+                                                    <input type="checkbox" id="TerminalStatus" name="TerminalStatus" value="true" @(Model.TerminalStatus == true ? "checked" : "") />
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label>Processor</label>
+                                                    <select class="form-control" name="Processor">
+                                                        <option value="">N/A</option>
+                                                        @foreach (var item in ProcessorAvailables)
+                                                        {
+                                                            <option value="@item.Value" @(Model.Processor == item.Value ? "selected" : "") )>@item.Name</option>
+                                                        }
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label class="control-label">Source</label>
+                                                    <select class="form-control" name="Source">
+                                                        <option value="">N/A</option>
+                                                        @foreach (var item in SourceAvailables)
+                                                        {
+                                                            <option value="@item.Value" @(Model.Source == item.Value ? "selected" : "") )>@item.Name</option>
+                                                        }
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label class="control-label">Device Name</label>
+                                                    <select class="form-control" name="DeviceName">
+                                                        <option value="">N/A</option>
+                                                        @foreach (var item in DeviceNameAvailables)
+                                                        {
+                                                            <option value="@item.Value" @(Model.DeviceName == item.Value ? "selected" : "") )>@item.Name</option>
+                                                        }
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label class="control-label">POS Structure</label>
+                                                    <select class="form-control" name="POSStructure">
+                                                        <option value="">N/A</option>
+                                                        @foreach (var item in POSStructureAvailables)
+                                                        {
+                                                            <option value="@item.Value" @(Model.POSStructure == item.Value ? "selected" : "") )>@item.Name</option>
+                                                        }
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label class="control-label">Device Setup Structure</label>
+                                                    <select class="form-control" name="DeviceSetupStructure">
+                                                        <option value="">N/A</option>
+                                                        @foreach (var item in DeviceSetupStructureAvailables)
+                                                        {
+                                                            <option value="@item.Value" @(Model.DeviceSetupStructure == item.Value ? "selected" : "") )>@item.Name</option>
+                                                        }
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                              <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label class="control-label">Device Note</label>
+                                                    <input type="text" class="form-control" id="DeviceNote" name="DeviceNote" value="@Model.DeviceNote"/>
+                                                </div>
+                                            </div>
+
+                                        </div>
+
+
+                                        <hr />
+                                        <h3>Bank Infomation</h3>
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label class="control-label">Bank Name <span style="color:darkblue">*</span></label>
+                                                    <input tabindex="14" type="text" class="form-control" name="DepositBankName" value="@Model.DepositBankName" />
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label>Bank DDA/Account Number <span style="color:darkblue">*</span></label>
+                                                    <input tabindex="15" type="text" class="form-control" name="DepositAccountNumber" value="@Model.DepositAccountNumber" />
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label class="control-label">Bank Transit <span style="color:darkblue">*</span></label>
+                                                    <input tabindex="16" type="text" class="form-control" name="DepositRoutingNumber" value="@Model.DepositRoutingNumber" />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <hr />
+                                        <h3>Contact (Owner)</h3>
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label>Owner/Docusign Name <span style="color:red">*</span></label>
+                                                    <input tabindex="17" type="text" class="form-control" name="ContactName" value="@Model.ContactName" required />
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="control-label">Address 1 <span style="color:darkblue">*</span></label>
+                                                    <input tabindex="20" type="text" class="form-control" name="OwnerAddressStreet" value="@Model.OwnerAddressStreet" />
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="control-label">State <span style="color:darkblue">*</span></label>
+                                                    <input tabindex="23" type="text" value="@Model.State" class="form-control State" name="State" />
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="control-label" style="width:100%">
+                                                        Social number <span style="color:darkblue">*</span>
+                                                        @if (p?.Any(k => k.Key.Equals("customer_view_merchantaccount")) == true && p?["customer_view_merchantaccount"] == true && Model.Id > 0)
+                                                        {
+                                                            <i class="fa fa-eye" onclick="show_input_pass(this,'SocialSecurity','@Model.Id')" style="color:#258e4f; cursor:pointer"></i>
+                                                        }
+                                                    </label>
+                                                    <input tabindex="29" type="password" class="form-control" data-inputmask="'mask': '999-99-9999'" data-mask="" pattern="[^_]*" name="SocialSecurity" @*pattern="[0-9]{9}"*@ value="@Model.SocialSecurity" />
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="control-label">Preferred Name <span style="color:darkblue"></span></label>
+                                                    <input type="text" class="form-control" name="PreferredName" value="@Model.PreferredName" />
+                                                </div>
+                                              
+
+                                            </div>
+                                            <div class="col-md-4">
+
+                                                <div class="form-group">
+                                                    <label class="control-label">Owner Phone <span style="color:red">*</span></label>
+                                                    <input tabindex="18" type="text" class="form-control" name="CellPhone" required data-inputmask="'mask': '(999) 999-9999'" data-mask="" pattern="[^_]*" autocomplete="off" value="@Model.CellPhone">
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="control-label">Address 2 <span style="color:darkblue">*</span></label>
+                                                    <input tabindex="21" type="text" class="form-control" name="OwnerAddressCivicNumber" value="@Model.OwnerAddressCivicNumber" />
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="control-label">Zip code <span style="color:darkblue">*</span></label>
+                                                    <input tabindex="24" type="text" name="ZipCode" class="form-control" pattern="[0-9]{5}" value="@Model.Zipcode" />
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="control-label">Birthday <span style="color:darkblue">*</span></label>
+                                                    <input tabindex="27" type="datetime" class="form-control datepicker" name="Birthday" value="@(Model.Birthday?.ToString("MMM dd yyyy"))" />
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="control-label">Manager Phone <span style="color:darkblue"></span></label>
+                                                    <input type="text" class="form-control" name="ManagerPhone" value="@Model.ManagerPhone" />
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+
+                                                <div class="form-group">
+                                                    <label class="control-label">Owner/Docusign Email<span style="color:darkblue">*</span></label>
+                                                    <input tabindex="19" type="text" class="form-control" name="Email" value="@Model.Email" />
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="control-label">City <span style="color:darkblue">*</span></label>
+                                                    <input tabindex="22" type="text" name="City" class="form-control" value="@Model.City" />
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="control-label">Country <span style="color:darkblue">*</span></label>
+                                                    @if (ViewBag.OCountries != null)
+                                                    {@Html.DropDownListFor(m => m.Country, ViewBag.OCountries as SelectList, new { @class = "form-control select2", @tabindex = "25" })}
+
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="control-label">Preferred language</label>
+                                                    <select name="PreferredLanguage" class="form-control" tabindex="28">
+                                                        <option @if (Model.PreferredLanguage == "Vietnamese") { @Html.Raw("selected") }>Vietnamese</option>
+                                                        <option @if (Model.PreferredLanguage == "English") { @Html.Raw("selected") }>English</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                    <!--/.End tab owner info-->
+                                    <!--Tab mango POS-->
+                                    <div class="tab-pane" id="pos_info">
+                                        @if (p?.Any(k => k.Key.Equals("customer_view_mangopos")) != true || p?["customer_view_mangopos"] != true)
+                                        {
+                                            <label style="color:red">You dont have permission to view</label>
+                                        }
+                                        else
+                                        {
+                                            @:Updating...
+
+                                        }
+                                    </div>
+                                    <!--Tab Merchant-->
+                                    <div class="tab-pane" id="merchantprocess_info" style="height:500px; overflow:auto">
+
+                                    </div>
+                                    <!--/.End tab Merchant-->
+                                    <!--Tab contacts info-->
+                                    <div class="tab-pane" id="contacts_info" style="height:500px; overflow:auto">
+                                    </div>
+                                    <!--/.End tab contact info-->
+                                    <!--Tab account manager-->
+                                    @*<div class="tab-pane" id="account_manager" style="height:500px; overflow:auto">
+                                        </div>*@
+                                    <!--/.End tab contact info-->
+                                    <!--Tab Additinal info-->
+                                    <div class="tab-pane" id="additinal_info" style="height:500px; overflow:auto">
+                                        <table id="add_info_table" class="table table-hover table-striped">
+                                            <thead>
+
+                                                <tr>
+                                                    <th style="text-align:center">#</th>
+                                                    <th style="width:30%">Name <span style="color: red">*</span></th>
+                                                    <th>Content</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @{ int i = 0;}
+                                                @if (ListAddInfo != null && ListAddInfo.Count > 0)
+                                                {
+                                                    foreach (var info in ListAddInfo)
+                                                    {
+                                                        i++;
+                                                        <tr class="add_info">
+                                                            <td style="text-align:center">@i</td>
+                                                            <td>
+                                                                <input type="hidden" name="info_id_@i" value="@info.Id" />
+                                                                <input type="text" name="info_name_@i" style="min-height:30px; width:100%" value="@info.InfoName" />
+                                                            </td>
+                                                            <td><textarea type="text" name="info_content_@i" rows="4" style="min-height:30px; width:100%; resize: none; overflow:auto">@info.InfoContent</textarea></td>
+                                                        </tr>
+                                                    }
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <!--/.End Additinal info-->
+                                    <!--Tab supporting info-->
+                                    <div class="tab-pane" id="supporting_info" style="overflow-x: hidden">
+                                        <h4>Contact</h4>
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <table class="table table-hover table-striped">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Name</th>
+                                                            <th>Authorization/Relationship</th>
+                                                            <th>Email</th>
+                                                            <th>Phone number</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td>@Model.ContactName</td>
+                                                            <td><span class="label label-default">Owner</span></td>
+                                                            <td>@Model.Email</td>
+                                                            <td>@Model.CellPhone</td>
+                                                        </tr>
+                                                        @foreach (var con in contacts)
+                                                        {
+                                                            <tr>
+                                                                <td>@con.Name</td>
+                                                                <td>
+                                                                    @foreach (var re in con.Authorization.Split(','))
+                                                                    {
+                                                                        <span class="label label-default">@re</span>
+                                                                    }
+                                                                </td>
+                                                                <td>@con.Email</td>
+                                                                <td>@con.PhoneNumber</td>
+                                                            </tr>
+                                                        }
+                                                    </tbody>
+                                                </table>
+                                            </div>
+
+                                        </div>
+                                        <h4>Salon</h4>
+                                        <div class="row">
+                                            @if (update)
+                                            {
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label class="control-label">Login email:</label><span> @(Model.MangoEmail ?? "___")</span>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label class="control-label">Password:</label>
+                                                        <span id="Password_hidden">******</span>
+                                                        @if (p.Any(k => k.Key.Equals("customer_view_mangopos")) == true && p["customer_view_mangopos"] == true)
+                                                        {
+                                                            <i class="fa fa-eye eye-icon-password" onclick="show_pass_customer()" style="color:#258e4f; cursor:pointer"></i>
+                                                        }
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-12">
+                                                    <div class="form-group">
+                                                        <label class="control-label">Remote login</label>
+                                                        <input tabindex="1" type="password" class="form-control" id="RemoteLogin" name="RemoteLogin" value="@SupportingInfo.RemoteLogin" />
+                                                        <i class="fa fa-eye icon_login_remote" style="color:#258e4f;cursor:pointer;position:absolute;top:35px;right:25px;"
+                                                           onclick="$('.icon_login_remote').toggleClass('fa-eye fa-eye-slash');
+                                                                document.getElementById('RemoteLogin').type=document.getElementById('RemoteLogin').type=='text'?'password':'text'"></i>
+                                                    </div>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <div class="col-md-12">
+                                                    <div class="form-group">
+                                                        <label class="control-label">Login email:</label><span> @(Model.MangoEmail ?? "___")</span>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label class="control-label">Password:</label>
+                                                        <span id="Password_hidden">******</span>
+                                                        <i class="fa fa-eye eye-icon-password" onclick="show_pass_customer()" style="color:#258e4f; cursor:pointer"></i>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label class="control-label">Remote login:</label>
+                                                        <span id="Remote_hidden">******</span>
+                                                        <i class="fa fa-eye eye-icon-remote" onclick="show_remote_customer()" style="color:#258e4f; cursor:pointer"></i>
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                        <h4>Hardware</h4>
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <table class="table table-hover table-striped">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Product name</th>
+                                                            <th>Description</th>
+                                                            <th style="width:53px"></th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach (var har in Hardwares)
+                                                        {
+                                                            <tr>
+                                                                <td>@har.ProductName</td>
+                                                                <td>
+                                                                    @{
+                                                                        var productNumbers = (har.InvNumbers ?? har.SerNumbers ?? har.CusNumbers ?? "").Split(',').Where(s => !string.IsNullOrWhiteSpace(s));
+                                                                    }
+                                                                    @foreach (var num in productNumbers.Take(5))
+                                                                    {
+                                                                        <span class="label label-default label-product-number">@num</span>
+                                                                    }
+                                                                    @if (productNumbers.Count() == 0)
+                                                                    {
+                                                                        <span>N/A</span>
+                                                                    }
+                                                                    else if (productNumbers.Count() > 5)
+                                                                    {
+                                                                        <span class="btn btn-link" data-toggle="tooltip" title="@string.Join(", ", productNumbers)">more...</span>
+                                                                    }
+                                                                </td>
+                                                                <td></td>
+                                                            </tr>
+                                                        }
+                                                        @foreach (var har in (SupportingInfo.MoreHardware ?? string.Empty).Split('|').Where(s => !string.IsNullOrWhiteSpace(s)))
+                                                        {
+                                                            var hardware = JsonConvert.DeserializeObject<Order_Products>(har);
+                                                            <tr id="more_product_@hardware.Id">
+                                                                <td>@hardware.ProductName</td>
+                                                                <td>@hardware.CusNumbers</td>
+                                                                <td>
+                                                                    <button type="button" class="btn btn-danger" onclick="remove_more_product(@hardware.Id)" data-toggle="tooltip" title="Remove product"><i class="fa fa-minus" aria-hidden="true"></i></button>
+                                                                </td>
+                                                            </tr>
+                                                        }
+                                                        @if (update)
+                                                        {
+                                                            <tr id="add_more_product_grp">
+                                                                <td><input type="text" class="form-control" id="add_product_name" value="" placeholder="Product name" /></td>
+                                                                <td><input type="text" class="form-control" id="add_product_number" value="" placeholder="Description" /></td>
+                                                                <td>
+                                                                    <input type="hidden" value="@SupportingInfo.MoreHardware" name="MoreHardware" id="MoreHardware" />
+                                                                    <button type="button" class="btn btn-success" onclick="add_more_product()" data-toggle="tooltip" title="Add more product"><i class="fa fa-plus" aria-hidden="true"></i></button>
+                                                                </td>
+                                                            </tr>
+                                                        }
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                        <h4>Other information</h4>
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <table class="table table-hover table-striped">
+                                                    <tbody>
+                                                        @foreach (var note in (SupportingInfo.OtherNotes ?? string.Empty).Split('|').Where(s => !string.IsNullOrWhiteSpace(s)))
+                                                        {
+                                                            var itemNote = (note ?? string.Empty).Split(',');
+                                                            <tr id="other_note_@itemNote.First()">
+                                                                <td style="white-space: pre-line;">@itemNote.Skip(1).First()</td>
+                                                                <td style="white-space: pre-line;">@itemNote.Last()</td>
+                                                                <td><button type="button" class="btn btn-danger" onclick="remove_other_note('@note')" data-toggle="tooltip" title="Remove product"><i class="fa fa-minus" aria-hidden="true"></i></button></td>
+                                                            </tr>
+                                                        }
+                                                        @if (update)
+                                                        {
+                                                            <tr id="add_other_notes_grp">
+                                                                <td><textarea type="text" style="min-height:50px;resize:vertical;" class="form-control" id="add_note_key" value="" placeholder="Name"></textarea></td>
+                                                                <td><textarea type="text" style="min-height:50px;resize:vertical;" class="form-control" id="add_note_value" value="" placeholder="Description"></textarea></td>
+                                                                <td style="width:53px">
+                                                                    <textarea style="display:none" value="@SupportingInfo.OtherNotes" name="OtherNotes" id="OtherNotes">@SupportingInfo.OtherNotes</textarea>
+                                                                    <button type="button" class="btn btn-success" onclick="add_other_notes()" data-toggle="tooltip" title="Add other information"><i class="fa fa-plus" aria-hidden="true"></i></button>
+                                                                </td>
+                                                            </tr>
+                                                        }
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!--/.End supporting info-->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="pull-left" style="text-align:left">
+                        <label><span style="color:red"> * </span> is required fields </label><br />
+                        <label><span style="color:darkblue"> * </span> is necessary fields for Nuvei registration</label>
+                    </div>
+
+                    <div class="pull-right">
+                        <input type="hidden" name="Active" value="1" />
+                        @*@if (Model.Id > 0)
+                            {
+                                <div class="form-group pull-left" style="width:230px">
+                                    <div class="input-group">
+                                        <div class="input-group-addon" style="background-color:navajowhite">
+                                            <b>Status:</b>
+                                        </div>
+                                        <select id="sel-active" class="form-control" name="Active">
+                                            <option style="color:#28a745; font-weight:bold" @if (Model.Active == 1) { @Html.Raw("selected") } value="1">Active</option>
+                                            <option style="color:orangered; font-weight:bold" @if (Model.Active == -1) { @Html.Raw("selected") } value="-1">Not processing</option>
+                                            <option style="color:grey; font-weight:bold" @if (Model.Active == 0) { @Html.Raw("selected") } value="0">Inactive</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                @Html.Raw("&nbsp;&nbsp");
+                            }*@
+
+                        @*@if (!update)
+                            {
+                                <button type="button" onclick="sendQuestionareEmail('@Model.CustomerCode')" class="btn btn-info view_merchant">
+                                    <i class="fa fa-send"></i> Email questionare <img src="~/Content/ajax-loaders/ajax-loader-1.gif" style="width:24px;display:none" class="loading_send_questionare" />
+                                </button>
+                            }*@
+
+                        @if (p?.Any(k => k.Key.Equals("customer_addnew")) == true && p?["customer_addnew"] == true && Model.Id == 0)
+                        {
+                            <button type="submit" class="btn btn-primary" style="margin: 0 5px">Save</button>
+                        }
+
+                        @if (p?.Any(k => k.Key.Equals("customer_update")) == true && p?["customer_update"] == true && Model.Id > 0)
+                        {
+                            <button type="submit" @*onclick="submitformUpdate()"*@ class="btn btn-primary" style="margin: 0 5px">Update </button>
+                        }
+
+                        <img id="mcsaveloading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none;height:20px" />
+
+                        <button type="button" class="btn btn-default" data-dismiss="modal" style="margin: 0 5px" onclick="
+                                @if (Model.Id > 0){ @Html.Raw("reloadtab()") } else{ @Html.Raw("clearContactMP()")}">
+                            Close
+                        </button>
+
+                        <button type="button" class="btn btn-default view_merchant" data-dismiss="modal" style="display:none">Close</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<!--/.End-->
+<!--icheck-->
+<link rel="stylesheet" href="/content/admin/plugins/iCheck/all.css" />
+<!--icheck-->
+<script src="/content/admin/plugins/iCheck/icheck.min.js"></script>
+<!-- InputMask -->
+<script src="~/Content/Admin/plugins/input-mask/jquery.inputmask.js"></script>
+<script src="~/Content/Admin/plugins/input-mask/jquery.inputmask.date.extensions.js"></script>
+<script src="~/Content/Admin/plugins/input-mask/jquery.inputmask.extensions.js"></script>
+
+<!--US State City-->
+<script src="~/Scripts/us-zip-city-state.js"></script>
+<script src="~/Scripts/us-zip-city-state_2.js"></script>
+
+<script>
+    //Datepicker
+    $(function () {
+        $("#merchant_edit_form").on("submit", function () {
+            $("#mcsaveloading").show();
+        })
+        $("#merchant_edit_form").ajaxForm(function (data) {
+            //SaveComplete(data);
+            overlayOff();
+            $("#mcsaveloading").hide();
+            if (data[0] == true) {
+                location.reload();
+            }
+            else {
+                error(data[1]);
+            }
+
+
+        })
+    })
+    $('#SalonTimeZone').select2();
+    $('#MemberNumber').select2();
+    $('#PartnerCode').select2();
+    $('#MemberNumber').on('select2:select', function (e) {
+        $('#FullName').val($('option:selected', this).attr("name-data"));
+    });
+
+    $(".datepicker").datepicker({
+        changeMonth: true,
+        changeYear: true,
+        yearRange: '1950:2050',
+        dateFormat: 'M dd yy'
+    });
+    //autofit textarea
+    //$('.add_info').on('change keyup keydown paste cut', 'textarea', function () {
+    //$(this).height(0).height(this.scrollHeight);
+    //}).find('textarea').change();
+    //iCheck for checkbox and radio inputs
+    $('input[type="checkbox"].minimal').iCheck({
+        checkboxClass: 'icheckbox_minimal-blue'
+    });
+    changeCountry('@Model.BusinessCountry', "BusinessState");
+    changeCountry('@Model.Country', "State");
+    //Inactive checked khi xem chi tiet
+    $('input[type="checkbox"].inactive_unchecked').on('ifChanged', function (e) {
+        var isChecked = e.currentTarget.checked;
+        if (isChecked == false) {  //neu uncheck thi gan lai la check
+            this.iCheck('check');
+        }
+        else {  //neu uncheck thi gan lai la check
+            this.iCheck('uncheck');
+        }
+    });
+
+        $.ajax({
+        method: "POST",
+        url: "/Merchantman/LoadListState",
+        dataType: "json"
+    })
+        .done(function (data) {
+            $(".State").autocomplete({
+                source: data[0],
+                minLength:0
+            }).focus(function () {
+                    $(this).autocomplete('search', $(this).val())
+                });;
+
+        })
+
+    var update = '@update';
+    var STORE_IN_HOUSE = '@STORE_IN_HOUSE';
+    MerchantViewOnly();
+    function MerchantViewOnly() {
+        $('#modal-merchant-title').html($('#modal-merchant-title').html() != "" ? "View merchant infomation" : (STORE_IN_HOUSE != "" ? "Add new Store in House" : "Add new merchant" ));
+        if (update == "False") {
+            $("#modal-merchant input, #modal-merchant textarea, #modal-merchant .select2").each(function () {
+                var id = $(this).attr('id') || $(this).attr('name');
+                if (id != undefined) {
+                    if ($(this).attr('type') == "hidden") { }
+                    else if ($(this).attr('type') == "checkbox") {
+                        id = $(this).attr('name');
+                        if (!$('#' + id).length)
+                            $(this).replaceWith("<div id='" + id + "'>___</div>");
+                        else {
+                            $(this).remove();
+                        }
+                    }
+                    else if ($(this).attr('type') == "password") {
+                        if (id == "SocialSecurity")
+                            $(this).replaceWith("<div id='" + id + "'>@l4social</div><div id='" + id + "_show'></div>");
+                        else {
+                            $(this).replaceWith("<div id='" + id + "'>*****</div><div id='" + id + "_show'></div>");
+                        }
+                    }
+                    else if ($(this).hasClass('select_timeZone')) {
+                        console.log($(this).find(':selected').text());
+                        $(this).replaceWith("<div id='" + id + "'>" + $(this).find(':selected').text() + "</div>");
+                        $('#modal-merchant .select2').hide();
+                    }
+                    else if ($(this).val()) {
+                        $(this).replaceWith("<div id='" + id + "'>" + $(this).val() + "</div>");
+                    }
+                    else
+                        $(this).replaceWith("<div id='" + id + "'>___</div>");
+                }
+        });
+        $("#modal-merchant select").each(function () {
+            var id = $(this).attr('id');
+            if (id == "sel-active") {
+                $("#sel-active").prop("disabled", true);
+            }
+            else {
+                $(this).replaceWith("<div id='" + id + "'>" + $("option:selected", this).text() + "</div>");
+            }
+        });
+            $("#modal-merchant button, #modal-merchant .btn").each(function () {
+            if ($(this).hasClass('view_merchant')) {
+                $(this).show();
+            }
+            else
+                $(this).remove();
+        });
+            $('.ck_label').remove();
+        }
+    };
+    function submitformUpdate() {
+        $('#merchant_edit_form').submit();
+    }
+    //add row info
+    AddRowInfo();
+    function AddRowInfo(inp = null) {
+
+        $(inp).removeAttr("onkeydown");
+        var i = $('.add_info').length + 1;
+        $("#add_info_table tbody").append(
+            '<tr class="add_info">' +
+            '<td style="text-align:center">' + i + '</td>' +
+            '<td><input type="text" name="info_name_' + i + '" onkeydown="AddRowInfo(this)" style="min-height:30px; width:100%"/></td>' +
+            '<td><textarea type="text" rows="4" name="info_content_' + i + '" style="min-height:30px; width:100%; resize: none;"/></td>' +
+            '</tr>');
+        //$('.add_info').on('change keyup keydown paste cut', 'textarea', function () {
+        //$(this).height(0).height(this.scrollHeight);
+        //}).find('textarea').change();
+        $("input [name=BusinessStartDate]").datepicker({
+            changeMonth: true,
+            changeYear: true,
+            yearRange: '1950:2050'
+        });
+    }
+    //Phone inputmask
+    $('[data-mask]').inputmask();
+    function show_input_pass(icon, name,id=null) {
+        var input = $('input[name=' + name + ']'); //get by name
+        if (input.length == 0)
+            input = $('#' + name + ":input"); //get by id
+        if (input.length) {
+
+            //edit
+            if (input.attr('type') == "password") {
+                input.prop("type", "text");
+                $(icon).addClass("fa-eye-slash");
+                $(icon).removeClass("fa-eye");
+            }
+            else {
+                input.prop("type", "password");
+                $(icon).addClass("fa-eye");
+                $(icon).removeClass("fa-eye-slash");
+            }
+        }
+        else {
+            //view
+            if ($("#" + name).is(":hidden")) {
+                $("#" + name + "_show").hide();
+                $("#" + name).show();
+            }
+            else {
+                $.ajax({
+                    method: "POST",
+                    url: "/merchantman/GetPasswordValue",
+                    data: { id, name },
+                    dataType: "json"
+                })
+                    .done(function (data) {
+                        if (data[0] == true) {
+                            $("#" + name + "_show").html(data[1]);
+                            $("#" + name + "_show").show();
+                            $("#" + name).hide();
+                        }
+                        else {
+                            var Error = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"error"}');
+                            noty(Error);
+                        }
+                    });
+            }
+        }
+    }
+    function showPass(input_pass_name) {
+        var input_type = $("input[name='" + input_pass_name + "']").prop('type');
+
+        if (input_type == "password") {
+            $("input[name='" + input_pass_name + "']").prop("type", "text");
+            $("#" + input_pass_name + "_unshow").show();
+            $("#" + input_pass_name + "_show").hide();
+        }
+        else {
+            $("input[name='" + input_pass_name + "']").prop("type", "password");
+            $("#" + input_pass_name + "_unshow").hide();
+            $("#" + input_pass_name + "_show").show();
+        }
+    }
+    function showPassDetail(span_id_show, span_id_unshow) {
+        $("#" + span_id_show + "").show();
+        $("#" + span_id_unshow + "").hide();
+    }
+    //Load merchant partial
+    function loadMerchantProcessPartial() {
+        var Code = "@Model.CustomerCode";
+        $.ajax({
+            method: "POST",
+            url: "/merchantMan/loadMerchantProcessPartial",
+            data: {
+                Code
+            },
+            dataType: "html"
+        })
+            .done(function (data) {
+                    $('#merchantprocess_info').html(data);
+                    MerchantViewOnly(); //set view only if update=false
+
+            })
+            .fail(function(){
+                alert("false");
+            })
+
+    }
+    //Load contact partial
+    function loadContactInfo() {
+        if ($('#contacts_info').children().length > 0) return;
+        overlayOn();
+        var Id = "@Model.Id";
+        $.ajax({
+            method: "POST",
+            url: "/merchantMan/loadContactPartial",
+            data: {
+                Id
+            },
+            dataType: "html"
+        })
+            .done(function (data) {
+                $('#contacts_info').html(data);
+                MerchantViewOnly(); //set view only if update=false
+                overlayOff();
+            })
+            .fail(function(){
+                alert("false");
+                overlayOff();
+            })
+    }
+    //Load contact partial
+    @*function loadAccountManager() {
+        if ($('#account_manager').children().length > 0) return;
+        overlayOn();
+        var customerCode = "@Model.CustomerCode";
+        $.ajax({
+            method: "POST",
+            url: "/merchantMan/loadAccountManagerPartial",
+            data: { customerCode },
+            dataType: "html"
+        })
+            .done(function (data) {
+                $('#account_manager').html(data);
+                MerchantViewOnly(); //set view only if update=false
+                overlayOff();
+            })
+            .fail(function(){
+                alert("false");
+                overlayOff();
+            })
+    }*@
+    //Show textbox phone number
+    function EPreContactChange(item) {
+        if ($(item).val() == "Mobile")
+            $('#EdivPhoneNumber').show(300);
+        else
+            $('#EdivPhoneNumber').hide(300);
+    }
+    //Clear contacts, merchantprocess
+    function clearContactMP() {
+        $.ajax({
+            method: "POST",
+            url: "/Merchantman/clearContactMP",
+        })
+    }
+    //address load
+    function changeCountry(select_ct, state_ename) {
+        if (select_ct == "United States" || !select_ct) {
+            if ($("#s_" + state_ename +" option").length <= 1) {
+
+
+            $.ajax({
+                method: "POST",
+                url: "/merchantman/loadState",
+                dataType: "json"
+            })
+                .done(function (data) {
+                    if (data[0] = true) {
+                        for (var i = 0; i < data[1].length; i++) {
+                            var opt = new Option(data[1][i]['name'], data[1][i]['abbreviation'], false, false);
+                            $("#s_" + state_ename).append(opt);
+                        }
+                    }
+                })
+                .fail(function () {
+                    alert("fail");
+                    });
+            }
+            $("#s_" + state_ename).show().attr("required", true).prop("name", state_ename);
+            $("#i_" + state_ename).hide().removeAttr("required").prop("name", "_"+state_ename);
+        }
+        else {
+            $("#i_" + state_ename).show().attr("required", true).prop("name", state_ename);
+            $("#s_" + state_ename).hide().removeAttr("required").prop("name", "_"+state_ename);
+        }
+    }
+     /**
+         * send questionare email to customer
+         * @@param code customercode
+         */
+    function sendQuestionareEmail(code) {
+
+
+        var sms = false;
+        if (confirm("Would you like to add a SMS notification with the message?"))
+        {
+            sms = true;
+        }
+            $(".loading_send_questionare").show();
+            $.ajax({
+                method: "POST",
+                url: "/merchantman/SendQuestionareEmail",
+                data: { code,sms },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    if (data[0]) {
+                         var Success = $.parseJSON('{"text":"'+data[1]+'", "layout":"top", "type":"success"}');
+                         noty(Success);
+                    }
+                    else {
+                        var Error = $.parseJSON('{"text":"'+data[1]+'", "layout":"top", "type":"error"}');
+                        noty(Error);
+                    }
+
+
+                    if (window.location.href.indexOf("ticket") > 0) {
+                        //reload timeline if belong to ticket page
+                        Gettimeline();
+                    }
+
+                })
+                .fail(function () {
+                    //alert("Oops! Something went wrong");
+                     var Error = $.parseJSON('{"text":"Oops! Something went wrong", "layout":"top", "type":"error"}');
+                     noty(Error);
+                }).always(function () {
+                    //alert("send ok");
+                    $(".loading_send_questionare").hide();
+                });
+    }
+    function add_more_product() {
+        let item = {
+            Id: Date.now().valueOf(),
+            ProductName: $("#add_product_name").val().replaceAll('|', ''),
+            CusNumbers: $("#add_product_number").val().replaceAll('|', '')
+        }
+        let jsonItem = ($("#MoreHardware").val() == null || $("#MoreHardware").val() == '' ? '' : '|') + JSON.stringify(item);
+        let hardware = $("#MoreHardware").val() + jsonItem;
+        $("#MoreHardware").val(hardware);
+
+        let html = `<tr id="more_product_${item.Id}"><td>${item.ProductName}</td>
+                    <td>${item.CusNumbers}</td>
+                    <td><button type="button" class="btn btn-danger" onclick="remove_more_product(${item.Id})" data-toggle="tooltip" title="Remove product"><i class="fa fa-minus" aria-hidden="true"></i></button></td></tr>`;
+        $("#add_more_product_grp").before(html);
+        $("#add_product_name").val('');
+        $("#add_product_number").val('');
+    }
+    function remove_more_product(id) {
+        let hardwares = $("#MoreHardware").val().split('|');
+        let tempHardwares = [];
+        let newHardwares = [];
+        hardwares.forEach(function (item) {
+            tempHardwares.push(JSON.parse(item));
+        })
+        tempHardwares.filter(c => c.Id != id).forEach(function (item) {
+            newHardwares.push(JSON.stringify(item));
+        })
+        $("#MoreHardware").val(newHardwares.join('|'));
+        $("#more_product_" + id).remove();
+    }
+    function add_other_notes() {
+        let id = Date.now().valueOf();
+        let note = id + "," + $("#add_note_key").val().replaceAll('|', '') + "," + $("#add_note_value").val().replaceAll('|', '');
+        let jsonNote = ($("#OtherNotes").val() == null || $("#OtherNotes").val() == '' ? '' : '|') + note;
+        let otherNotes = $("#OtherNotes").val() + jsonNote;
+        $("#OtherNotes").val(otherNotes);
+        let html = `<tr id="other_note_${id}">
+                        <td class="breakline"><span>${$("#add_note_key").val()}</span></td>
+                        <td class="breakline"><span>${$("#add_note_value").val()}</span></td>
+                        <td><button type="button" class="btn btn-danger" onclick="remove_other_note(${note})" data-toggle="tooltip" title="Remove product"><i class="fa fa-minus" aria-hidden="true"></i></button></td>
+                    </tr>`;
+        $("#add_other_notes_grp").before(html);
+        $("#add_note_key").val('');
+        $("#add_note_value").val('');
+    }
+    function remove_other_note(id) {
+        let otherNotes = $("#OtherNotes").val().split('|').filter(c => c.indexOf(id) == -1).join('|');
+        $("#OtherNotes").val(otherNotes);
+        $("#other_note_" + id).remove();
+    }
+    function show_pass_customer() {
+        $('.eye-icon-password').toggleClass('fa-eye fa-eye-slash');
+        if ($('#Password_hidden').html() == '******')
+            $('#Password_hidden').html('@Model.Password');
+        else
+            $('#Password_hidden').html('******');
+    }
+    function show_remote_customer() {
+        $('.eye-icon-remote').toggleClass('fa-eye fa-eye-slash');
+        if ($('#Remote_hidden').html() == '******')
+            $('#Remote_hidden').html('@SupportingInfo.RemoteLogin');
+        else
+            $('#Remote_hidden').html('******');
+    }
+</script>
+<style>
+    .ui-widget.ui-widget-content {
+        z-index: 9999;
+    }
+
+    .label-product-number {
+        font-size: 11px;
+    }
+   
+</style>
+
+
+
+
+

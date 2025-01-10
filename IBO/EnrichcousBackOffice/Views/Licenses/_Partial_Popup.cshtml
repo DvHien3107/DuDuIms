@@ -1,0 +1,74 @@
+﻿<div class="modal fade in" id="popup" style="display: none;">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <h4 id="modal-department-title" class="modal-title">Edit</h4>
+            </div>
+            <form id="LP_Item" action="/Licenses/Save_LicenseProductItem" method="post">
+                <div class="modal-body">
+                    <input type="hidden" id="productId" name="productId" />
+                    <input type="hidden" name="Code" />
+                    <input type="hidden" id="itemType" name="itemType" />
+
+
+                    <div class="row">
+                        <div class="col-md-6" style="margin-bottom:20px">
+                            <label>Price</label>
+                            <div class="input-group">
+                                <span class="input-group-addon">$</span>
+                                <input id="price" name="Price" type="number" step="0.01" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="col-md-6 subscrip no_count" style="margin-bottom:20px">
+                            <label>Period</label>
+                            <input id="period" name="period" class="form-control" readonly />
+
+                        </div>
+                        <div class="col-md-6 count" style="margin-bottom:20px">
+                            <label>Count Limit</label>
+                            <input id="countlimit" type="number" name="countlimit" class="form-control" />
+                        </div>
+                        <div class="col-md-6 count" style="margin-bottom:20px">
+                            <label>Count warning level</label>
+                            <input type="number" name="CountWarning" class="form-control" />
+                        </div>
+                    </div>
+                    <label>Description</label>
+                    <textarea id="description" name="description" class="form-control"></textarea>
+                    <input name="buildin" type="checkbox" value="true" checked style="display:none">
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary pull-right">
+                        <img id="loading" src="/Content/ajax-loaders/ajax-loader-1.gif" style="display:none"> Save
+                    </button>
+                    <div class=" pull-right" style="margin:10px">
+                        <label for="enable_item" >Enable</label>
+                        <label class="switch" style="vertical-align: text-top;">
+                            <input id="enable_item" name="enable_item" type="checkbox" value="true">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                    
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    $("[name=period_amount]").on("click", function () {
+        if ($("[name=period_amount]:checked").val() == 1) {
+            $("#keepfor").show(200);
+            $("#keepfor").find("select").removeAttr("disabled");
+        }
+        else {
+            $("#keepfor").hide(200);
+            $("#keepfor").find("select").attr("disabled", true);
+        }
+    })
+    $("#price, #countlimit").on("input", function () { $("#enable_item").prop("checked", true); })
+</script>

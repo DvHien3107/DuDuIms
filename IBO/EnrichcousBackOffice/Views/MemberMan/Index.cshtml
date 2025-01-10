@@ -1,0 +1,645 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.CustomizeModel.MemberMan_View>
+@using EnrichcousBackOffice.Models;
+@using EnrichcousBackOffice.AppLB;
+
+@{
+    ViewBag.Title = "Member management";
+    WebDataModel db = new WebDataModel();
+    List<P_MemberType> mtype = ViewBag.listMemberType ?? new List<P_MemberType>();
+    List<P_Department> depart = ViewBag.listDepartment ?? new List<P_Department>();
+    Dictionary<string, bool> p = ViewBag.p ?? Authority.GetAccessAuthority();
+    var curMem = Authority.GetCurrentMember();
+    var curMem_maxRoleLevel = db.A_Role.Where(r => curMem.RoleCode.Contains(r.RoleCode)).ToList().Max(r => r.RoleLevel);
+    var Sites = db.Sites.Where(c => c.IsEnable ==true).ToList();
+    var CompanyProductName = db.SystemConfigurations.FirstOrDefault().ProductName ?? db.SystemConfigurations.FirstOrDefault().CompanyName;
+}
+
+<link href="~/Content/Admin/bower_components/bootstrap-daterangepicker/daterangepicker.css" rel="stylesheet" />
+<link rel="stylesheet" href="/Content/infor-Member/StyleSheet1.css" />
+<style>
+
+    .table > thead > tr > th {
+        height: 25px !important;
+    }
+
+    .d-flex {
+        display: flex;
+    }
+</style>
+
+<section class="content-header">
+    <h1>
+        Employee List
+        <small>Employee management</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li class="active">Member management</li>
+    </ol>
+
+</section>
+
+<!-- Main content -->
+<section class="content">
+    <div class="row">
+        <!-- /.col -->
+        <div class="col-md-12">
+            <div class="box box-primary">
+                <div class="box-header" style="border: 0">
+                    <div class="filter-group">
+                        <!--<div class="col-lg-3 col-md-4 col-sm-6 form-group">
+        <div class="input-group" style="width:100%">
+            <div class="input-group-addon">
+                <i class="fa fa-calendar"></i> Date
+            </div>-->
+                        @*<input type="text" name="fdate" style="max-width:125px" class="form-control datepicker" value="@Model.FromDate">*@
+                        <!--<input type="text" class="form-control search-input" id="date_search" />
+        </div>
+    </div>-->
+                        <div class="col-lg-3 col-md-4 col-sm-6 form-group">
+                            <div class="input-group" style="width:100%">
+                                <div class="input-group-addon">
+                                    Departments
+                                </div>
+                                <select class="form-control change-search select2" id="s_department" name="s_department" onchange="submit_search()">
+                                    <option value="">All</option>
+                                    @foreach (var item in depart)
+                                    {
+                                        <option value="@item.Id">@item.Name</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-4 col-sm-6 form-group">
+                            <div class="input-group" style="width:100%">
+                                <div class="input-group-addon">
+                                    Member type
+                                </div>
+                                <select class="form-control change-search" id="s_member_type" name="s_member_type" onchange="submit_search()">
+                                    <option value="">All</option>
+                                    @foreach (var item in mtype.OrderByDescending(c => c.MemberType))
+                                    {
+                                        <option value="@item.MemberType">@item.Name</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-4 col-sm-6 form-group">
+                            <div class="input-group" style="width:100%">
+                                <div class="input-group-addon">
+                                    Status
+                                </div>
+                                <select class="form-control change-search" id="s_active" name="s_active" onchange="submit_search()">
+                                    <option value="" style="font-weight:bold;">All</option>
+                                    <option value="active" style="font-weight:bold;color:green">Active</option>
+                                    <option value="deactive" style="font-weight:bold;color:darkred">Deactive</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-4 col-sm-6 form-group">
+                            <div class="input-group" style="width:100%">
+                                <div class="input-group-addon">
+                                    Work Status
+                                </div>
+                                <select class="form-control change-search" id="s_workstatus" name="s_workstatus" onchange="submit_search()">
+                                    <option value="">All</option>
+                                    <option value="Working">Working</option>
+                                    <option value="Resigned">Resigned</option>
+                                </select>
+                            </div>
+                        </div>
+                        @if (curMem.SiteId==1)
+                        {
+                            <div class="col-lg-3 col-md-4 col-sm-6 form-group">
+                                <div class="input-group" style="width:100%">
+                                    <div class="input-group-addon">
+                                        Partner
+                                    </div>
+                                    <select class="form-control select2 change-search" id="siteId" name="siteId" onchange="submit_search()">
+                                        <option value="">All</option>
+                                        @foreach (var item in Sites)
+                                        {
+                                            <option value="@item.Id">@item.Name</option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                        }
+
+                        <div class="col-lg-3 col-md-4 col-sm-6 form-group">
+                            <div class="input-group" style="width:100%">
+                                <div class="input-group-addon">
+                                    Completed Profile
+                                </div>
+                                <select class="form-control select2 change-search" id="s_completeprofile" name="s_completeprofile" onchange="submit_search()">
+                                    <option value="">All</option>
+                                    <option value="true">Completed</option>
+                                    <option value="false">Not Complete</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-4 col-sm-6 form-group">
+                            <div class="input-group" style="width:100%">
+                                <div class="input-group-addon">
+                                    Search Text
+                                </div>
+                                <input type="text" class="form-control" id="s_search_text" name="s_search_text" placeholder="Input Employee Id, Name, Email, Phone ..." value="@TempData["s_search_text"]" onchange="submit_search()" />
+                            </div>
+                        </div>
+
+                        <div class="col-md-12 col-sm-12 text-center">
+                            <button onclick="submit_search()" class="btn btn-primary"><i class="fa fa-search" aria-hidden="true"></i> Search</button>
+                        </div>
+
+                    </div>
+                </div>
+
+                @if (TempData["e"] != null)
+                {
+                    <div class="alert alert-warning alert-dismissible">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                        <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+                    </div>
+                    <span class="hidden">@TempData.Remove("e")</span>
+
+                }
+                else if (TempData["s"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                        <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+                    </div>
+                    <span class="hidden">@TempData.Remove("s")</span>
+                }
+                <div class="box-body">
+                    <div class="pull-right box-tools">
+
+
+                        <button type="button" class="btn btn-sm btn-success btn-header-lead" id="export_excel_button" onclick="export_excel()" style="font-size:12px; margin-left:5px">
+                            <i class="fa fa-file-excel-o"></i> Export excel <img id="img_load_excel" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                        </button>
+                        <button type="button" class="btn btn-sm btn-primary btn-header-lead" onclick="addEmployee()" style="font-size:12px; margin-left:5px">
+                            <i class="fa fa-plus" aria-hidden="true"></i> Add User <img id="img_load_add_member" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                        </button>
+                    </div>
+
+
+
+
+                    <table id="mytable" class="table  table-hover table-bordered table-striped dataTable">
+                        <thead>
+                            <tr>
+
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Department</th>
+                                <th>Create At</th>
+                                <th style="white-space:nowrap;">Completed Profile</th>
+                                <th style="white-space:nowrap;">Work Status</th>
+                                <th>Status</th>
+                                <th style="width:150px"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+
+                </div>
+            </div>
+
+        </div>
+        <!-- /.col -->
+    </div>
+    <!-- /.row -->
+</section>
+
+
+<!--Xem chi tiet thong tin nhan vien-->
+<div class="modal fade" id="modal-default">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Member profile</h4>
+            </div>
+            <div class="modal-body">
+                <p id="loading"><img src="~/Content/ajax-loaders/ajax-loader-1.gif" /></p>
+                <div id="modal-content">
+                    <!--_MemberProfileSimplePartial Partial-->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+
+<div id="render_popup_add_member">
+
+</div>
+
+@section style
+{
+    <style>
+        tr.strikeout {
+            text-decoration: line-through;
+        }
+
+        .display-inline-block {
+            display: inline-block;
+        }
+
+        .display-flex {
+            display: flex;
+        }
+    </style>
+
+    <!--icheck-->
+    <link rel="stylesheet" href="/content/admin/plugins/iCheck/all.css" />
+    <!--datatable-->
+    <link rel="stylesheet" href="~/content/admin/bower_components/datatables.net-bs/css/dataTables.bootstrap.min.css" />
+
+}
+
+@section script
+{
+    <script src="~/Content/Admin/bower_components/bootstrap-daterangepicker/daterangepicker.js"></script>
+    <script src="~/content/admin/bower_components/datatables.net/js/jquery.dataTables.min.js"></script>
+    <script src="~/content/admin/bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js"></script>
+    <!--icheck-->
+    <script src="/content/admin/plugins/iCheck/icheck.min.js"></script>
+
+    <script type="text/javascript">
+
+        $(function () {
+            $('.select2').select2({ width: 'element' });
+            $('input[type="checkbox"].flat-red, input[type="radio"].flat-red').iCheck({
+                checkboxClass: 'icheckbox_flat-blue',
+                radioClass: 'iradio_flat-blue'
+            })
+            $('#all_deparments').on('ifChecked', function () {
+                $('.department').prop('checked', true).iCheck('update');
+            });
+            $('#all_deparments').on('ifUnchecked', function () {
+                $('.department').prop('checked', false).iCheck('update');
+            });
+            $('.department').on("ifUnchecked", function () {
+                $('#all_deparments').prop('checked', false).iCheck('update');
+            })
+
+            if ($(".department:not(:checked)").length > 0) {
+                $('#all_deparments').prop('checked', false).iCheck('update');
+            }
+            var tableMember = $('#mytable').DataTable({
+                "language": {
+                    "processing": '<img src="/Content/ajax-loaders/loading2.gif" width="60px" />',
+                    "paginate": {
+                        "first": '<i class="fa fa-angle-double-left" aria-hidden="true"></i>',
+                        "last": '<i class="fa fa-angle-double-right" aria-hidden="true"></i>',
+                        "next": '<i class="fa fa-angle-right" aria-hidden="true"></i>',
+                        "previous": '<i class="fa fa-angle-left" aria-hidden="true"></i>'
+                    },
+                },
+                "pageLength": 10,
+                "serverSide": true, // for process server side
+                "processing": true, // for show progress bar
+                'paging': true,
+                'lengthChange': true,
+                'searching': false,
+                'ordering': true,
+                'order': [[3, 'desc']],
+                'info': true,
+                'autoWidth': false,
+                'stateSave': false,
+              
+                "ajax": {
+                    "url": "/MemberMan/GetListMember",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (data) {
+                      //  data.FromDate = $("#date_search").data('daterangepicker').startDate.format('YYYY-MM-DD');
+                       // data.ToDate = $("#date_search").data('daterangepicker').endDate.format('YYYY-MM-DD');
+                        data.s_search_text = $('#s_search_text').val();
+                        data.s_member_type = $('#s_member_type').val();
+                        data.s_department = $('#s_department').val();
+                        data.siteId = $('#siteId').val();
+                        data.s_active = $('#s_active').val(); 
+                        data.s_workstatus = $("#s_workstatus").val();
+                        data.s_completeprofile = $("#s_completeprofile").val();
+                        return data;
+                    },
+                    'dataSrc': function (data) {
+
+                        return data.data;
+                    }
+                },
+                "columns": [
+
+                    {
+                        "name": "EmployeeId",
+                        "render": function (data, type, row) {
+                            return '<strong>' + row["EmployeeId"] + '</strong>'
+                        },
+                        "className": 'align-middle',
+                    },
+                    {
+                        "name": "FullName",
+                         //"width":"200",
+                        "render": function (data, type, row) {
+                            //let status = '';
+                            //if (row["Active"])
+                            //    status = 'active';
+                            //else
+                            //    status = 'deactive';
+                            let src = `/Upload/Img/${row['Gender'] ?? 'Male'}.png`;
+                            let Errsrc = `/Upload/Img/${row['Gender'] ?? 'Male'}.png`;
+                            if (row['Avatar'] != null && row['Avatar'] != "")
+                                src = row['Avatar'];
+
+                            let html = `<a href="/memberman/save?mn=${row["MemberNumber"]}" class="d-flex"><img src="${src}" onError="this.src='${Errsrc}';" class="img-circle" alt="${row["MemberNumber"]}" width="40" height="40" style="vertical-align:top;object-fit: cover;">`;
+                            html += '<div class="display-inline-block" style="margin-left:3px;">';
+                            html += `<span><span  class="text-primary" style="font-weight:900; position:relative;padding-left:5px;white-space:nowrap">${row["FullName"]}</span>`;
+                            html += '<br/>';
+                            //if (row['GoogleAuth']) {
+                            //    html += '<label class="label label-default"><span class="text text-success">Google Authorized</span></label>';
+                            //}
+                            //else if (row['IsSendEmailGoogleAuth']) {
+                            //    html += '<span onclick="sendEmailGoogleAuth(this,\'resend\',\'' + row['PersonalEmail'] + '\')" class="btn btn-xs btn-default"><i class="fa fa-repeat" aria-hidden="true"></i> Resend Email Google Auth <img class="loading" style="display:none;" src="/Content/ajax-loaders/ajax-loader-1.gif" /></span>'
+                            //}
+                            //else {
+                            //    html += '<span onclick="sendEmailGoogleAuth(this,\'send\',\'' + row['PersonalEmail'] + '\')" class="btn btn-xs btn-default"><img style="width:13px;margin-right:3px;transform: translateY(-1px);" src="/icons/google-icon.png" />Require Google Auth <img class="loading" style="display:none;" src="/Content/ajax-loaders/ajax-loader-1.gif" /></span>'
+                            //}
+                            html += `<span  style="color:#333;padding-left:5px;white-space:nowrap">Email: ${row["PersonalEmail"]}</span>`;
+                            html += '<br/>';
+                            html += `<span  style="color:#333;padding-left:5px;white-space:nowrap">Phone: ${row["CellPhone"]}</span>`;
+                            @if (curMem?.SiteId == 1)
+                            {
+                                <text>
+                                html += '<br/>';
+                                if (row['BelongToPartner'] != null && row['BelongToPartner'] != '') {
+                                    row['BelongToPartner'].split(',').forEach(function (item) {
+                                        html += ' <span class="label label-default">' + item + '</span>'
+                                    })
+                                }
+                                </text>
+                            }
+                          
+                            html += '</div>'
+                            html += '</a>'
+                            return html;
+                        },
+                        "className": 'align-middle',
+                    },
+                  
+                    {
+                        "name": "Department",
+                        "orderable": false,
+                        "render": function (data, type, row) {
+                            if (row["DepartmentName"]) {
+                                return '<span class="">' + row["DepartmentName"]?.replaceAll(",", ", ") + '</span>';
+                            }
+                            else {
+                                return '';
+                            }
+                        },
+                        "className": 'align-middle',
+                    },
+                    {
+                        "name": "CreateAt",
+                        "orderable": true,
+                        "render": function (data, type, row) {
+                            return '<span class="">' + row["CreateAt"]+ '</br>' + row["CreateBy"]+'</span>';
+                        },
+                        "className": 'align-middle',
+                    },
+                    
+                    {
+                        "name": "IsCompleteProfile",
+                        "orderable": false,
+                        "render": function (data, type, row) {
+                            if (row["IsCompleteProfile"]) {
+                                return '<span class="text text-success"><i class="fa fa-check" aria-hidden="true"></i></span>';
+                            }
+                            else {
+                                return '<span class="text text-danger"><i class="fa fa-times" aria-hidden="true"></i></span>';
+                            }
+                        },
+                        "className": 'align-middle',
+                    },
+                    {
+                        "name": "WorkStatus",
+                        "orderable": false,
+                        "render": function (data, type, row) {
+                            if (row["EmployeeStatus"] =="Working") {
+                                return '<span class="label label-success">' + row["EmployeeStatus"] + '</span>';
+                            }
+                            else {
+                                return '<span class="label label-default">' + row["EmployeeStatus"] + '</span>';
+                            }
+                        },
+                        "className": 'align-middle',
+                    },
+                    {
+                        "name": "Status",
+                        "orderable": false,
+                        "render": function (data, type, row) {
+                            let html = "";
+                            if (row["Active"])
+                                html = '<label class="label label-success">Active</label>';
+                            else
+                                html = '<label class="label label-default">Deactive</label>';
+                            return html;
+                        },
+                        "className": 'align-middle text-center ' ,
+                    },
+                    {
+                        "width": '50',
+                        "className": 'text-center',
+                        "orderable": false,
+                        "render": function (data, type, row) {
+                                let html = ``;
+                                html += `<div class="btn-group">`;
+                                html += `<div class="dots-menu btn-group">`;
+                                html += `<div class="dropdown-dot" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></div>`;
+                                html += `<ul class="dropdown-menu dropdown-menu-right">`;
+                                let partners_updatemember = @p["partners_updatemember"].ToString().ToLower();
+                                if (partners_updatemember == true) {
+                                    html += `<li><a href="/memberman/save?mn=${row["MemberNumber"]}" style="margin-right: 5px;"><i class="glyphicon glyphicon-search" style="font-size:12px"></i>  Detail</a></li>`;
+                                }
+                                let curMem_maxRoleLevel = @curMem_maxRoleLevel;
+                                if (partners_updatemember == true && curMem_maxRoleLevel >= row["MaxRoleLevel"]) {
+                                    html += `<li><a href="/memberman/delete?mn=${row["MemberNumber"]}" onclick="return confirm('You want to delete this member?')" style="margin-right: 5px"><i class="glyphicon glyphicon-trash" style="font-size:12px"></i>  Delete</a></li>`;
+                                }
+                                html += `</ul>`;
+                                html += `</div>`;
+                                html += `</div>`;
+                                return html;
+                        },
+                    }
+
+                ]
+            });
+
+        });
+
+        $('.search-member').click(function () {
+            $("#mytable").DataTable().ajax.reload();
+        })
+
+        function submit_search() {
+            $("#mytable").DataTable().ajax.reload();
+        }
+
+        /**
+         * view detail: thong tin co ban nhan vien
+         * @@param mn membernumber
+         */
+        function viewdetail(mn) {
+            $("#modal-default").modal('show');
+            $.ajax({
+                method: "POST",
+                url: "/account/GetMemberInfoSimple",
+                data: { "mn": mn },
+                dataType: "html"
+            })
+                .done(function (data) {
+                    $("#modal-content").html(data);
+                })
+                .fail(function () {
+                    alert("Oops! Something went wrong");
+                    $("#modal-default").modal('hide');
+                })
+                .always(function () {
+                    $("#loading").hide();
+                });
+        }
+
+        function sendEmailGoogleAuth(el,command,email) {
+            $(el).find('.loading').show();
+            $.ajax({
+                method: "POST",
+                url: "/MemberMan/SendEmailRequireGoogleAuth",
+                data: { email },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    if (data.status) {
+                        noty({ "text": data.message, "layout": "topRight", "type": "success" });
+                        $(el).removeClass('btn-default btn-primary').addClass('btn-default').html('<span class="text text-success">' + data.message + ' <i class="fa fa-check" aria-hidden="true"></i></label>')
+                    }
+                    else {
+                        noty({ "text": data.message, "layout": "topRight", "type": "error" });
+                        noty(error);
+                    }
+                })
+                .fail(function () {
+                    alert("Oops! Something went wrong");
+                })
+                .always(function () {
+                    $(el).find('.loading').hide();
+                });
+        }
+
+        function addEmployee() {
+            $("#img_load_add_member").show();
+              $.ajax({
+                method: "get",
+                  url: "/MemberMan/GetPopUpInsertOrUpdateMember",
+            
+                dataType: "html"
+            })
+                .done(function (data) {
+                    $("#render_popup_add_member").html(data);
+                    $("#editInfor").modal('show');
+                })
+                .fail(function () {
+                    alert("Oops! Something went wrong");
+                })
+                .always(function () {
+                    $("#img_load_add_member").hide();
+                });
+        
+        }
+    </script>
+
+    <script>
+
+        $(".datepicker").datepicker({
+            changemonth: true,
+            changeyear: true,
+            yearrange: '1950:2050'
+        });
+        function cb(start, end) {
+            //debugger;
+            //if (!start.isValid()) {
+            //    $('#date_search').val('All time');
+            //} else {
+            //    $('#date_search span').val(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+            //}
+        }
+        $('#date_search').daterangepicker(
+            {
+                "showDropdowns": true,
+                "minYear": 1950,
+                "maxYear": 2050,
+                "autoApply": true,
+                //"alwaysShowCalendars": true,
+                "ranges": {
+                    'All Time': [null, null],
+                    'This Month': [moment().startOf('month'), moment().endOf('month')],
+                    'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')],
+                    'Nearest 3 months': [moment().subtract(3, 'month').startOf('month'), moment()],
+                    'This Year': [moment().startOf('year'), moment().endOf('year')],
+                    'Last Year': [moment().subtract(1, 'year').startOf('year'), moment().subtract(1, 'year').endOf('year')]
+                },
+                "locale": {
+                    "customRangeLabel": "Custom Date",
+                    "format": "MMM D, YYYY",
+                },
+                "startDate": moment().subtract(3, 'month').startOf('month'),
+                "endDate": moment(),
+            }, cb)
+
+        function export_excel() {
+            $("#export_excel_button").attr("disabled",true)
+            $("#img_load_excel").show();
+            $.ajax({
+                method: "POST",
+                url: "/memberman/ExportExcel",
+                data:{
+                    //data.FromDate = $("#date_search").data('daterangepicker').startDate.format('YYYY-MM-DD');
+                    //data.ToDate = $("#date_search").data('daterangepicker').endDate.format('YYYY-MM-DD');
+                    's_search_text' : $('#s_search_text').val(),
+                    's_member_type' : $('#s_member_type').val(),
+                    's_department' : $('#s_department').val(),
+                    's_partner' : $('#s_partner').val(),
+                    's_active' : $('#s_active').val(),
+                    's_workstatus' : $("#s_workstatus").val(),
+                    's_completeprofile' : $("#s_completeprofile").val()
+                 
+                },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    if (data.status) {
+                        window.location.href = "/Upload/DownloadFile_?file=" + data.path;
+                    }
+                    else {
+
+                    }
+                })
+                .fail(function () {
+                    alert("Oops! Something went wrong");
+                })
+                .always(function () {
+                    $("#img_load_excel").hide();
+                    $("#export_excel_button").attr("disabled", false)
+                });
+        }
+    </script>
+}

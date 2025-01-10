@@ -1,0 +1,299 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.PO_Request>
+@using EnrichcousBackOffice.Models;
+@{
+}
+<section class="content-header">
+    <h1>
+        Items Requested
+        <small>Purchase Order</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Home</a></li>
+        <li><i class="fa fa-reorder"></i> Purchase Order</li>
+        <li class="active">Items Requested</li>
+    </ol>
+</section>
+
+<section class="content">
+    @if (TempData["e"] != null)
+    {
+        <div class="alert alert-warning alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+        </div>
+    }
+    else if (TempData["s"] != null)
+    {
+        <div class="alert alert-success alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+        </div>
+    }
+    <div class="row">
+        <div class="col-md-12">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Items Requested</h3>
+                </div>
+                <div class="box-body">
+                    <div class="row" style="padding-bottom:20px">
+                        <div class="row col-md-12" style="padding-bottom:20px">
+                            <a class="btn btn-primary pull-right" onclick="open_request()"><i class="fa fa-plus"></i> New request</a>
+                        </div>
+                        <div id="search_select_group">
+                            <form id="search_form">
+                                <div class="col-md-3">
+                                    <div class="input-group">
+                                        <span class="input-group-addon">
+                                            Status
+                                        </span>
+                                        <select name="sstatus" id="sstatus" onchange="submit_form()" class="form-control">
+                                            <option value="" @(TempData["sstatus"]?.ToString().Equals("") == true ? "selected" : "")>--All--</option>
+                                            <option value="Requested" @(TempData["sstatus"]?.ToString().Equals("Requested") == true ? "selected" : "")>Requested</option>
+                                            <option value="Inventory Issue" @(TempData["sstatus"]?.ToString().Equals("Inventory Issue") == true ? "selected" : "")>Inventory Issue</option>
+                                            <option value="Submited" @(TempData["sstatus"]?.ToString().Equals("Submited") == true ? "selected" : "")>Submited</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="input-group">
+                                        <span class="input-group-addon">
+                                            Product
+                                        </span>
+                                        <select name="sproduct" id="sproduct" class="form-control" onchange="submit_form()">
+                                            <option value="" @(TempData["sproduct"]?.ToString().Equals("") == true ? "selected" : "")>--All--</option>
+                                            @foreach (O_Product p in ViewBag.product)
+                                            {
+                                                <option @(TempData["sproduct"]?.ToString().Equals(p.Code) == true ? "selected" : "") value="@p.Code">@p.Name</option>
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <div class="input-group">
+                                        <span class="input-group-addon">
+                                            Color
+                                        </span>
+                                        <select name="scolor" id="scolor" class="form-control selectize" onchange="submit_form()">
+                                            <option value="" @(TempData["scolor"]?.ToString().Equals("") == true ? "selected" : "") >--All--</option>
+                                            @foreach (string color in ViewBag.color)
+                                            {
+                                                <option value="@color" @(TempData["scolor"]?.ToString().Equals(color) == true ? "selected" : "") >@color</option>
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="input-group">
+                                        <span class="input-group-addon">
+                                            Model #
+                                        </span>
+                                        <input name="smodel" id="smodel" class="form-control" oninput="submit_form()" />
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <form id="CreatePO_form" action="/PO/CreatePO" method="post">
+                        <table class="table table-bordered table-striped data-item-request">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>DATE</th>
+                                    <th>IMAGE</th>
+                                    <th>Model</th>
+                                    <th>COLOR</th>
+                                    <th>Request QTY <br />(Purchase Qty)</th>
+                                    <th>STATUS</th>
+                                    <th width="80"></th>
+                                    <th style="width:50px"><button type="submit" class="btn btn-primary">Create PO</button></th>
+                                </tr>
+                            </thead>
+                            <tbody id="List_purchase_order">
+                                @*@Html.Partial("_RequestsList_load", Model)*@
+                            </tbody>
+                        </table>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+@Html.Partial("_EditPO_modal")
+<link href="~/Content/Selectize/css/selectize.default.css" rel="stylesheet" />
+<script src="~/Content/Selectize/js/standalone/selectize.min.js"></script>
+@section script{
+    <script src="~/Scripts/_EditPO_modal.js"></script>
+    <script>
+        $(function () {
+            var tableStore = $('.data-item-request').DataTable({
+                "language": {
+                    "processing": '<img src="/Content/ajax-loaders/loading2.gif" width="60px" />',
+                },
+                "pageLength": 10,
+                "serverSide": true, // for process server side
+                "processing": true, // for show progress bar
+                'paging': true,
+                'lengthChange': true,
+                'searching': false,
+                'ordering': true,
+                'info': false,
+                'autoWidth': true,
+                'stateSave': false,
+                'columnDefs': [
+                    { targets: [7, 8], orderable: false }
+                ],
+                "ajax": {
+                    "url": "/po/loaditemrequest",
+                    "type": "POST",
+                    "datatype": "json",
+                    data: function (data) {
+                        data.sstatus = $('#sstatus option:selected').val();
+                        data.sproduct = $('#sproduct option:selected').val();
+                        data.scolor = $("#scolor option:selected").val();
+                        data.smodel = $("#smodel").val();
+                        return data;
+                    },
+                    'dataSrc': function (data) {
+                        return data.data;
+                    }
+                },
+                'fnCreatedRow': function (nRow, aData, iDataIndex) {
+                    //$(nRow).css('cursor', 'pointer');
+                },
+                "columns": [
+                    {
+                        "name": "RequestCode",
+                        "render": function (data, type, row) {
+                            return `<span><b>#${row["Code"]}</b></span>`;
+                        },
+                        "className": 'align-middle',
+                    },
+                    {
+                        "name": "CreateDate",
+                        "render": function (data, type, row) {
+                            let offset = moment().utcOffset();
+                            let local = moment.utc(moment(row["CreatedAt"]).format("MMM DD, YYYY LT")).utcOffset(offset).format("MMM DD, YYYY LT");
+                            return `<span>${local} by ${row["CreatedBy"]}</span>`;
+                        },
+                    },
+                    {
+                        "name": "Image",
+                        "render": function (data, type, row) {
+                            return `<img src="${row["ModelPicture"]}" height="60" onerror="this.onerror=null; this.src='/Upload/Img/no_image.jpg'" />`;
+                        },
+                    },
+                    {
+                        "name": "Model",
+                        "render": function (data, type, row) {
+                            return `<label style="color:#a43a04">${row["ModelName"]}</label><br /><span style="color:gray">${row["ProductName"]}</span>`;
+                        },
+                    },
+                    {
+                        "name": "Color",
+                        "render": function (data, type, row) {
+                            return row["Color"] ?? "N/A";
+                        },
+                        "className": 'align-middle',
+                    },
+                    {
+                        "name": "RequestQty",
+                        "render": function (data, type, row) {
+                            return `${row["RequestQty"]} <b>${row["Qty"] ? "(" + row["Qty"] + ")" : ""}</b>`;
+                        },
+                        "className": 'align-middle',
+                    },
+                    {
+                        "name": "Status",
+                        "render": function (data, type, row) {
+                            let html = '';
+                            if (row["Status"] == "Requested")
+                                html = `<label class="label label-warning">${row["Status"]}</label>`;
+                            else
+                                html = `<label class="label label-primary">${row["Status"]}</label>`;
+                            return html;
+                        },
+                        "className": 'align-middle',
+                    },
+                    {
+                        "name": "Action",
+                        "render": function (data, type, row) {
+                            let html = '';
+                            if (row["Status"] == "Requested" && row["CreatedbyId"] == '@ViewBag.cMemId' || '@ViewBag.manager' == 'True')
+                            {
+                                html = `<a class="btn btn-warning" onclick="open_request('${row["Code"]}', $(this).find('.fa'))"><i class="fa fa-pencil"></i></a>
+                                        <a class="btn btn-danger" onclick="delete_request('${row["Code"]}',$(this).find('.fa'))"><i class="fa fa-trash"></i></a>`
+                            }
+                            return html;
+                        },
+                        "className": 'align-middle',
+                    },
+                    {
+                        "name": "CreatePO",
+                        "render": function (data, type, row) {
+                            let html = '';
+                            if (row["Status"] == "Requested") {
+                                html = `<input type="checkbox" style="height:25px; width:25px" name="createpo" value="${row["Code"]}" />`;
+                            }
+                            return html;
+                        },
+                        "className": 'align-middle',
+                    }
+                ]
+            });
+
+            $(".requested").addClass("label label-warning");
+            $(".submited").addClass("label label-primary");
+
+
+            $('.select2').select2();
+            $('#request_modal').ajaxForm(function (data) {
+                if (data[0]) {
+                    noty({ "text": data[1], "layout": "topRight", "type": "success" });
+                    search_load();
+                }
+                else {
+                    noty({ "text": data[1], "layout": "topRight", "type": "error" });
+                }
+                $('#request_modal').modal('hide');
+                $("#request_save_img_load").hide();
+            });
+        $('#CreatePO_form').submit(function(){
+            if($('input[name="createpo"]:checked').length==0){
+                noty({"text":"Please select request to create po" , "layout":"topRight", "type":"error"});
+                return false;
+            }
+            overlayOn();
+        });
+        })
+
+        function submit_form() {
+            $('#search_form').submit();
+        }
+
+        function search_load() {
+            var status = $("#status_select").val();
+            var product = $("#product_select").val();
+            var color = $("#color_select").val();
+            //var vendor = $("#vendor_select").val();
+            var model = $("#model_select").val();
+            $.ajax({
+                method: "POST",
+                url: "/PO/searchrequest",
+                data: { status, product, color, model },
+                dataType: "html"
+            })
+                .done(function (data) {
+                    $('#List_purchase_order').html(data);
+                })
+                .fail(function () {
+                })
+                .always(function () {
+                });
+        };
+        function check_CreatePO_submit(){
+
+        }
+    </script>
+}

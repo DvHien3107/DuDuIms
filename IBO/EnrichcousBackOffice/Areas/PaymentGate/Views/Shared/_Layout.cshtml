@@ -1,0 +1,389 @@
+﻿<!DOCTYPE html>
+<html lang="en-us">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>@RenderSection("title", false)</title>
+    <!-- Tell the browser to be responsive to screen width -->
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+    <link rel="icon" href="~/Areas/PaymentGate/Content/Images/favicon.ico" />
+    <!-- Font: family=Roboto -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap" rel="stylesheet">
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="~/Areas/PaymentGate/Content/plugins/bootstrap/bootstrap.min.css">
+    <!-- font-awesome -->
+    <link rel="stylesheet" href="~/Areas/PaymentGate/Content/plugins/font-awesome/css/font-awesome.min.css" />
+    <!-- Noty -->
+    <link rel="stylesheet" href="~/Content/noty/jquery.noty.css" />
+    <link rel="stylesheet" href="~/Content/noty/noty_theme_default.css" />
+
+    <!-- Layout MasterPage css -->
+    <link rel="stylesheet" href="~/Areas/PaymentGate/Content/page/_layout.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.css">
+    <!-- Layout ContentPage css -->
+    @RenderSection("content_page_style", false)
+</head>
+<body style="overflow-x: auto;background-color: aliceblue;">
+    <div id="overlay">
+        <img src="~/Content/ajax-loaders/loading2.gif" />
+    </div>
+    <h3 style="padding: 20px 0;width: 100%;text-align: center;margin-bottom: 0;">
+        <img src="~/Content/Img/logo_enrich.png" width="120" />
+    </h3>
+
+    @{
+        var isAgent = ViewBag.AgentAction ?? false;
+    }
+    <div style="margin: auto; max-width:100%;width:@(ViewBag.page_width??"1000px")">
+        @if (!string.IsNullOrEmpty((TempData["e"] ?? "").ToString()))
+        {
+            <text>
+                <div class="alert alert-warning alert-dismissible alert-di">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                    <span><i class="icon fa fa-warning"></i> @TempData["e"].ToString()</span>
+                </div>
+
+            </text>
+            TempData["e"] = null;
+        }
+        @if (!string.IsNullOrEmpty((TempData["s"] ?? "").ToString()))
+        {
+            <text>
+                <div class="alert alert-success alert-dismissible alert-di">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                    <span><i class="icon fa fa-check"></i> @TempData["s"].ToString()</span>
+                </div>
+            </text>
+            TempData["s"] = null;
+        }
+        @if ((ViewBag.Error ?? "") != "" && ((ViewBag.Auth ?? false) || isAgent))
+        {
+            <div class="alert alert-warning alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-warning"></i> @ViewBag.Error</span>
+            </div>
+        }
+        else if ((ViewBag.Info ?? "") != "")
+        {
+            <div class="alert alert-success alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-check"></i> @ViewBag.Info</span>
+            </div>
+        }
+    </div>
+    <div class="row container payment-container" style="margin: auto; width:@(ViewBag.page_width??"1000px");background-color: white;padding: 15px;">
+        @RenderBody()
+        <div class="payment-content" style="width: 100%;">
+            <div class="row flex-column-reverse flex-sm-row" style="padding:0px; margin-bottom:5px">
+                @RenderSection("content_header", true)
+            </div>
+            <div class="row" style="padding:0px 10px;">
+                @RenderSection("content_left", true)
+                @RenderSection("content_right", true)
+            </div>
+        </div>
+    </div>
+
+    <div style="text-align: center;margin-top: 20px;">
+        <p style="color: rgb(154, 154, 152);font-family: sans-serif;font-size: 15px;">
+            ©2020 SIMPLY POWERED BY <img src="/Areas/PaymentGate/Content/Images/logo.png" height="20" style="margin-top: -5px;margin-left: 10px; display:inline-block">
+        </p>
+    </div>
+
+
+    <div class="modal fade" id="login" role="dialog" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-content">
+            <div class="modal-header">
+                <div class="modal-title pull-left"><h4>Please login to continue</h4></div>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="display: none">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning alert-dismissible" style="display: @((ViewBag.Error ?? "") == "" ? "none" : "unset")">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                    <span><i class="icon fa fa-warning"></i><span class="msg-login">@(ViewBag.Error ?? "")</span></span>
+                </div>
+                <link rel="stylesheet" type="text/css" href="/content/login/css/util.css">
+                <link rel="stylesheet" type="text/css" href="/content/login/css/main.css">
+
+                <@Html.Raw((ViewBag.ActionLogin ?? "") != "" ? "form action='"+(ViewBag.ActionLogin)+"'" : "div") method="post" id="login_form" class="login100-form validate-form" style="padding: 20px 40px 30px 160px">
+                    <input type="hidden" name="key" value="@ViewBag.Key ?? ''" />
+                    <div class="wrap-input100 validate-input m-b-26" data-validate="Email is required">
+                        <span class="label-input100">Your Email</span>
+                        <input class="input100" type="text" name="email" placeholder="Enter your email">
+                        <span class="focus-input100"></span>
+                    </div>
+
+                    <div class="wrap-input100 validate-input m-b-18" data-validate="Password is required">
+                        <span class="label-input100">Password</span>
+                        <input class="input100" type="password" name="password" placeholder="Enter password">
+                        <span class="focus-input100"></span>
+                    </div>
+
+                    <div class="container-login100-form-btn">
+                        <button class="login100-form-btn payment-login" onclick="$('#login_img_load').show()" type="submit">
+                            Login <img id="login_img_load" style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" />
+                        </button>
+                    </div>
+                    </@Html.Raw((ViewBag.ActionLogin ?? "") != "" ? "form" : "div")>
+            </div>
+        </div>
+    </div>
+    <style>
+
+        .detail-invoice-pc {
+            display: block;
+        }
+
+        .detail-invoice-mobile {
+            display: none;
+        }
+
+        @@media (max-width: 767.98px) {
+            .payment-container {
+                max-width: none !important;
+                width: 100% !important;
+                max-height: none !important;
+                height: auto !important;
+            }
+
+            #pay_slide {
+                width: 100% !important;
+                margin-left: unset !important;
+            }
+
+            #login .modal-body #login_form.login100-form {
+                padding: 43px 15px 57px 15px !important;
+            }
+
+            #login .modal-dialog.modal-content {
+                width: 96%;
+            }
+
+            .payment-content iframe#invoice-view {
+                width: 1000px;
+                height: 85vh
+            }
+            /* .payment-content .content-left {
+            overflow: auto;
+        }*/
+            .payment-content .custom-scroll::-webkit-scrollbar {
+                height: 3px;
+            }
+
+
+            #new_credit .col-md-6 {
+                padding-left: 0 !important;
+                padding-right: 0 !important;
+            }
+
+            .jconfirm-box.jconfirm-hilight-shake.jconfirm-type-default.jconfirm-type-animated {
+                width: 80% !important;
+            }
+
+            #viewhistory {
+                float: initial !important;
+                margin-top: 20px;
+                display: block;
+                text-align: center !important;
+            }
+
+            #new_credit .btn-prev-list-card {
+                display: none;
+            }
+
+            #card_info_show {
+                margin-right: 10% !important;
+                width: 70% !important;
+                z-index: 9;
+            }
+
+            #Invoice .modal-dialog.modal-content {
+                width: 96% !important;
+                min-width: 96% !important;
+            }
+            /* #Invoice .modal-dialog.modal-content iframe {
+                width: 1000px !important
+            }*/
+            /*#Invoice .modal-body {
+            margin-top: -34% !important;
+            margin-bottom: -88% !important;
+            transform: scale(0.7);
+            padding: 0 !important;
+            overflow-y: auto;
+            height: 1000px !important;
+            width: 140% !important;
+            left: -20% !important;
+        }*/
+
+            .detail-invoice-pc {
+                display: none;
+            }
+
+            .detail-invoice-mobile {
+                display: block;
+                padding: 0;
+                background: aliceblue;
+            }
+
+            .main .bg-white {
+                padding: 0px 10px;
+            }
+
+            .main .bg-white {
+                padding: 0px 10px;
+                margin: 10px 0px;
+                background: #FFFFFF;
+                height: auto;
+            }
+
+            .main .bg-white .info-customer {
+                text-align: right;
+                padding-right: 10px;
+                border-bottom: 1px solid #DFE3E7;
+            }
+
+                .main .bg-white .info-customer p {
+                    font-weight: 400;
+                    font-size: 18px;
+                    padding: 10px 0px;
+                }
+
+            .main .bg-white .print {
+                padding: 10px 0px;
+            }
+
+                .main .bg-white .print button {
+                    background-color: transparent;
+                    border: 0px;
+                    font-size: 16px;
+                }
+
+            .main .bg-white .adress {
+                padding: 10px 0px;
+            }
+
+            .main .bg-white .info-invoice {
+                padding: 10px 0px;
+            }
+
+                .main .bg-white .info-invoice .invoice {
+                    display: flex;
+                    justify-content: space-between;
+                    padding: 7px 0px;
+                }
+
+                .main .bg-white .info-invoice .btn-pending {
+                    background: #F0AD4E1A;
+                    color: #F0AD4E;
+                    border: 1px solid #F0AD4E;
+                    padding: 2px 8px;
+                    border-radius: 5px;
+                    font-size: 12px;
+                }
+                .main .bg-white .info-invoice .btn-danger-cus {
+                    background: #F0AD4E1A;
+                    color: #db6060;
+                    border: 1px solid #db6060;
+                    padding: 2px 8px;
+                    border-radius: 5px;
+                    font-size: 12px;
+                }
+                .main .bg-white .info-invoice .btn-success-cus {
+                    background: #F0AD4E1A;
+                    color: #41ad3d;
+                    border: 1px solid #41ad3d;
+                    padding: 2px 8px;
+                    border-radius: 5px;
+                    font-size: 12px;
+                }
+
+            .main .bg-white .card {
+                padding: 10px 0px;
+            }
+
+                .main .bg-white .hardware {
+                    border-bottom: 1px dashed #DFE3E7;
+                }
+                .main .bg-white .card .hardware:last-child .price {
+                    border-bottom: none;
+                }
+
+                .main .bg-white .card .product {
+                    padding-top: 5px;
+                    color: #666666;
+                    font-weight: 500;
+                }
+
+                    .main .bg-white .card .product label{
+                        display:inline-block;
+                    }
+
+                    .main .bg-white .card .properties {
+                        font-size: 13px;
+                        color: #494D5EB3;
+                        display: flex;
+                    }
+
+                .main .bg-white .card .price {
+                    display: flex;
+                    justify-content: space-between;
+                    padding-bottom: 5px;
+                    font-weight: 400px;
+                }
+
+                    .main .bg-white .description {
+                        /*border-top: 1px solid #DFE3E7;*/
+                        padding: 10px 0px;
+                    }
+
+                .main .bg-white .description .subtotal {
+                    border-top: 2px dashed #DFE3E7;
+                    padding: 10px 0px;
+                    display: flex;
+                    justify-content: space-between;
+                }
+
+            .main .payment {
+                padding: 0px 10px;
+                margin-bottom: 10px;
+            }
+
+            .main .btn-payment {
+                background: #28A745;
+                color: #FFFFFF;
+                width: 100%;
+                border: 0px;
+                border-radius: 5px;
+                padding: 10px 0px;
+                font-size: 18px;
+            }
+        }
+    </style>
+
+    <script src="~/Areas/PaymentGate/Content/plugins/jquery/jquery-3.5.1.min.js"></script>
+    <script src="~/Areas/PaymentGate/Content/plugins/bootstrap/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.js"></script>
+    <script src="~/Areas/PaymentGate/Content/js/card.js"></script>
+    <script src="~/Content/noty/jquery.noty.js"></script>
+    <script>
+        $(function () {
+            $("._text").each(function () {
+                if ($(this).val() != "") {
+                    $(this).next("._label").addClass("is_valid");
+                }
+            })
+            $("._text").on("change", function () {
+
+                if ($(this).val() != "") {
+                    $(this).next("._label").addClass("is_valid");
+                } else {
+                    $(this).next("._label").removeClass("is_valid");
+                }
+            });
+        })
+    </script>
+    @RenderSection("content_page_script", false)
+</body>
+</html>

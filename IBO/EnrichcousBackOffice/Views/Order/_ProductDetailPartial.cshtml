@@ -1,0 +1,240 @@
+﻿@model EnrichcousBackOffice.Models.CustomizeModel.DetailProductLicenseOrder
+@using EnrichcousBackOffice.Models
+
+@if (Model.ProductItemPriceView?.Count() == 0 && Model.SubscriptionDuration?.ToLower() != "monthly")
+{
+    return;
+}
+<style>
+    .detail-license tr th {
+        vertical-align: middle !important;
+    }
+</style>
+<div class="custom-scroll detail_@Model.ProductType" style="border: 1px solid #c1c1c1; max-height: 400px; overflow-y:auto;margin:10px">
+    @if (Model.SubscriptionDuration?.ToLower() == "monthly")
+    {
+        <table class="table table-striped table-bordered detail-license" style="border: 1px solid #dad6d6 !important;margin-bottom:0px;">
+            <tbody>
+                <tr>
+                    <th class="col-md-3">Auto Renew</th>
+                    <td>
+                        <div class="form-control"
+                             style="vertical-align:middle; font-weight:bold; height:34px; display: table-cell;">
+                            <label class="switch" style="vertical-align: text-top; margin:2px auto; display:block;">
+                                <input id="renewal" name="Renewal_@Model.SubscriptionId" type="checkbox" value="true" @(Model?.AutoRenew == true ? "checked" : "")
+                                         onclick="if ($(this).is(':checked') != true) {
+                                                        $('#recurring_price_custom_@Model.SubscriptionId').fadeOut();
+                                                        update_selected('@Model.SubscriptionId', '@(Model.ProductType)', 1, null, '@Model.PriceType', null, null, true, null);
+                                                    }
+                                                    else { $('#recurring_price_custom_@Model.SubscriptionId').fadeIn(); $('#recurring_price_txt_@Model.SubscriptionId').show(); }">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                    </td>
+                </tr>
+                <tr id="recurring_price_custom_@Model.SubscriptionId" style="@(Model?.AutoRenew != true ? "display:none" : "")">
+                    <th class="col-md-3">Recurring price <i class="fa fa-exclamation-circle" aria-hidden="true" data-toggle="tooltip" title="Empty to set default subscription price"></i></th>
+                    <td>
+                        <div class="input-group" style="width: 130px" id="gr_recurringprice_@Model.SubscriptionId">
+                            <div class="input-group-addon"><i class="fa fa-dollar"></i></div>
+                            <input type="number" step="0.01" min="0" class="form-control recurring-value hide_arrow disable-enter" onchange="" style="text-align: right; font-weight:bold"
+                                   value="@(Model.RecurringPrice)" name="RecurringPrice_@Model.SubscriptionId" data-toggle="tooltip" title="Recurring price"/>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="col-md-3">Custom date <i class="fa fa-exclamation-circle" aria-hidden="true" data-toggle="tooltip" title="Turn off to set start date is paid date"></i></th>
+                    <td>
+                        <div class="form-control"
+                             style="vertical-align:middle; font-weight:bold; height:34px; display: table-cell;">
+                            <label class="switch" style="vertical-align: text-top; margin:2px auto; display:block;">
+                                <input id="ApplyDate_@Model.SubscriptionId" name="ApplyDate_@Model.SubscriptionId"
+                                       onclick="if ($(this).is(':checked') != true) {  $('.date_picker_@Model.SubscriptionId').fadeOut();
+                                                    update_selected('@Model.SubscriptionId', '@(Model.ProductType)', 1, null, '@Model.PriceType', null, null, true, new Date().toLocaleDateString('en-US')); } else $('.date_picker_@Model.SubscriptionId').fadeIn();"
+                                       type="checkbox" value="true" @(Model?.ApplyPaidDate != true ? "" : "checked")>
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                    </td>
+                </tr>
+                <tr class="date_picker_@Model.SubscriptionId" style="@(Model?.ApplyPaidDate != true ? "display:none" : "")">
+                    <th class="col-md-3">Effective start date</th>
+                    <td>
+                        <input class="form-control datepicker start-date-data" name="Effective_start_date_@(Model?.SubscriptionId)" readonly style="background-color:#fff;width:150px;" value="@(Model?.Effective_StartDate.Value.ToString("MM/dd/yyyy"))" />
+                    </td>
+                </tr>
+                <tr class="date_picker_@Model.SubscriptionId" style="@(Model?.ApplyPaidDate != true ? "display:none" : "")">
+                    <th class="col-md-3">Expires date</th>
+                    <td>
+                        <input class="form-control datepicker" type="text" name="Expiry_date_@(Model?.SubscriptionId)" readonly style="background-color: #fff; width: 150px;" value="@(Model?.Expiry_Date.Value.ToString("MM/dd/yyyy"))" />
+                    </td>
+                </tr>
+                @if (Model.ProductType == "license")
+                {
+                    <tr>
+                        <th class="col-md-3">Price Type</th>
+                        <td>
+                            <div style="display:flex;transform: translateY(3px);">
+                                @if (Model.TrialMonths > 0)
+                                {
+                                    <label id="License_Trial" style="margin-right: 15px;">
+                                        <input type="checkbox" value="Trial" data-month="@Model.TrialMonths" name="PriceTypeDetail" style="width: 18px" class="iradio_flat-blue minimal-pricetype PriceTypeDetail" @(Model.PriceType.Split(',').Contains("Trial") ? "checked" : "")>
+                                        <span style="transform:translateY(2px);margin-left:5px;display:inline-block;">
+                                            @(Model.TrialMonths == 1 ? "Trial (" + Model.TrialMonths + " month)": "Trial (" + Model.TrialMonths + " months)")
+                                        </span>
+                                    </label>
+                                }
+                                @if (Model.Promotion_Apply_Status == true && Model.Promotion_Apply_Months > 0)
+                                {
+                                    <label style="margin-right:15px" id="License_PromotionalPrice">
+                                        <input type="checkbox" value="Promotional" data-month="@Model.Promotion_Apply_Months" name="PriceTypeDetail" style="width:18px" class="iradio_flat-blue minimal-pricetype PriceTypeDetail" @((Model.PriceType ?? "").Split(',').Contains("Promotional") ? "checked" : "")>
+                                        <span style="transform:translateY(2px);margin-left:5px;display:inline-block;">
+                                            @(Model.Promotion_Apply_Months == 1 ? "Promotional (" + Model.Promotion_Apply_Months + " month)": "Promotional (" +  Model.Promotion_Apply_Months + " months)")
+                                        </span>
+                                    </label>
+                                }
+                                <label id="License_RealPrice">
+                                    <input type="checkbox" value="Real" data-month="@Model.NumberOfPeriod" name="PriceTypeDetail" style="width:18px" class="iradio_flat-blue minimal-pricetype PriceTypeDetail" @(((Model.PriceType ?? "").Split(',').Contains("Real") || string.IsNullOrEmpty(Model.PriceType)) ? "checked" : "")>
+                                    <span style="transform:translateY(2px);margin-left:5px;display:inline-block;">
+                                        @("Regular (" + Model.NumberOfPeriod + " " + (string.IsNullOrEmpty(Model.PeriodRecurring) ? "month" : Model.PeriodRecurring.ToLower().Replace("ly", "")) + (Model.NumberOfPeriod == 1 ? "" : "s") + ")")
+                                    </span>
+                                </label>
+                                <label>
+                                    <span style="transform:translateY(-3px);margin:5px;display:inline-block;"> X </span>
+                                    <input type="number" class="form-control hide_arrow" placeholder="1" min="1" step="1" value="@(Model.SubscriptionQuantity == 0 ? 1 : Model.SubscriptionQuantity)"
+                                           onchange="update_selected('@Model.SubscriptionId', '@(Model.ProductType)', 1, null, '@Model.PriceType', null, null, true, null, $(this).val());"
+                                           style="transform:translateY(-4px);width:50px;height:35px" />
+                                    <button class="btn btn-flat btn-default" type="button" style="transform: translateY(-4px); margin-left:-4px;height:35px"
+                                            onclick="if($('#ip_quantity_@Model.SubscriptionId').val() > 1) $('#ip_quantity_@Model.SubscriptionId').val($('#ip_quantity_@Model.SubscriptionId').val() - 1).trigger('change')">
+                                        <i class="fa fa-minus"></i>
+                                    </button>
+                                    <button class="btn btn-flat btn-default" type="button" style="transform: translateY(-4px); margin-left:-4px;height:35px"
+                                            onclick="$('#ip_quantity_@Model.SubscriptionId').val(parseInt($('#ip_quantity_@Model.SubscriptionId').val()) + 1).trigger('change')">
+                                        <i class="fa fa-plus"></i>
+                                    </button>
+                                </label>
+
+                            </div>
+                            <div>
+                                <span style="font-style:italic;margin-top: 6px;display:block;color:red;">(Note : License expiration time will be accrued according to the selected price type.)</span>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                else if (Model.ProductType == "addon")
+                {
+                    <tr>
+                        <th class="col-md-3">Quantity</th>
+                        <td>
+                            <label>
+                                <input type="number" class="form-control hide_arrow" placeholder="1" min="1" step="1" value="@(Model.SubscriptionQuantity == 0 ? 1 : Model.SubscriptionQuantity)"
+                                       onchange="update_selected('@Model.SubscriptionId', '@(Model.ProductType)', 1, null, '@Model.PriceType', null, null, true, null, $(this).val());"
+                                       style="transform:translateY(-4px);width:78px;height:35px" />
+                                <button class="btn btn-flat btn-default" type="button" style="transform: translateY(-4px); margin-left:-4px;height:35px"
+                                        onclick="if($('#ip_quantity_@Model.SubscriptionId').val() > 1) $('#ip_quantity_@Model.SubscriptionId').val($('#ip_quantity_@Model.SubscriptionId').val() - 1).trigger('change')">
+                                    <i class="fa fa-minus"></i>
+                                </button>
+                                <button class="btn btn-flat btn-default" type="button" style="transform: translateY(-4px); margin-left:-4px;height:35px"
+                                        onclick="$('#ip_quantity_@Model.SubscriptionId').val(parseInt($('#ip_quantity_@Model.SubscriptionId').val()) + 1).trigger('change')">
+                                    <i class="fa fa-plus"></i>
+                                </button>
+                            </label>
+                        </td>
+                    </tr>
+                }
+
+                <tr>
+                    <th class="col-md-3">Total Amount</th>
+                    <td><input class="form-control" id="License_Total_Price" style="width:150px;background:transparent;font-weight:bold;border:none;color:red;" name="License_Total_Price" value="$@string.Format("{0:#,0.00}", Model.TotalAmount)" readonly /></td>
+                </tr>
+            </tbody>
+        </table>
+    }
+    else if (Model.ProductItemPriceView?.Count() > 0)
+    {
+
+        <table class="table table-bordered table-striped" style="margin:0">
+            <thead style="background-color: #aad3ea">
+                <tr>
+                    <th>License</th>
+                    <th>Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.ProductItemPriceView)
+                {
+                    <tr id="@item.ID" class="hover _striped" style="cursor:pointer" onclick="$(this).find('[type=checkbox]').trigger('click')">
+                        <td>
+                            <label class="text-olive">@item.Name</label>
+                            <i>@item.Desc</i>
+                            <br />
+                        </td>
+                        <td>
+                            <b>
+                                @if (item.Type == "COUNT")
+                                {
+                                    @Html.Raw(item.Value)
+                                }
+                                else
+                                {
+                                    @Html.Raw(item.Value == 1 ? "Yes" : "No")
+                                }
+                            </b>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+</div>
+<style type="text/css">
+    ._striped > td {
+        border-left-width: 0 !important;
+        border-right-width: 0 !important;
+        border-bottom-color: lightblue !important;
+    }
+</style>
+<script>
+
+    $('input[type="checkbox"].minimal-pricetype').iCheck({
+        checkboxClass: 'icheckbox_minimal-blue'
+    })
+    $(".datepicker").datepicker({
+        changeMonth: true,
+        changeYear: true,
+        yearRange: '1950:2050'
+    });
+    $(document).ready(function () {
+        $('input[name="PriceTypeDetail"]').off('ifChanged').on('ifChanged', function (e) {
+            var pricetypeArray = [];
+            $('input[name="PriceTypeDetail"]:checked').each(function () {
+                pricetypeArray.push($(this).val());
+            });
+            if (pricetypeArray.length == 0) {
+                $(this).iCheck('check');
+                alert('There must be a price type selected !');
+                return;
+            }
+            $('input[name="PriceType"]').attr('checked', false);
+            $('input[name="PriceTypeDetail"]:checked').each(function () {
+                var PriceType = $(this).val();
+                $('input[name="PriceType"][value="' + PriceType + '"]').attr('checked', true)
+            });
+            $('input[name="PriceType"]').iCheck('update');
+            $('input[name="PriceType"][value="' + $(this).val() + '"]').trigger('ifChanged');
+        })
+    })
+
+    $('input[name="RecurringPrice_@(Model?.SubscriptionId)"]').off('change').on('change', function (e) {
+        update_selected("@Model.SubscriptionId", "@(Model.ProductType)", 1, null, "@Model.PriceType", null, null, true, null);
+    })
+    $('input[name="Effective_start_date_@(Model?.SubscriptionId)"]').off('change').on('change', function (e) {
+        var startDate = $('input[name="Effective_start_date_@Model.SubscriptionId"]').val();
+        update_selected("@Model.SubscriptionId", "@(Model.ProductType)", 1, null, "@Model.PriceType", null, null, true, startDate);
+    })
+    $('input[name="Expiry_date_@(Model?.SubscriptionId)"]').off('change').on('change', function (e) {
+        $('#Effective_date_@(Model?.SubscriptionId)').html($('input[name="Effective_start_date_@(Model?.SubscriptionId)"]').val() + " - " + $('input[name="Expiry_date_@(Model?.SubscriptionId)"]').val()).trigger('change');
+        update_selected("@Model.SubscriptionId", "@(Model.ProductType)", 1, null, "@Model.PriceType", null, null, true, null, null, $('input[name="Expiry_date_@(Model?.SubscriptionId)"]').val());
+    })
+</script>

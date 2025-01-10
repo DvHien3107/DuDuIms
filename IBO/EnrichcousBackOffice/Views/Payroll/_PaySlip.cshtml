@@ -1,0 +1,388 @@
+﻿@{
+    var access = EnrichcousBackOffice.AppLB.Authority.GetAccessAuthority();
+}
+<style>
+
+</style>
+<div class="tab-pane active">
+    <div style="text-align:center">
+        <img id="load_partial_tab" src="~/Content/ajax-loaders/loading-partial.gif" style="display:none" />
+    </div>
+    <div class="content-tab-load">
+        <div id="partial_tab">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title"></h3>
+                   
+                </div>
+                <div class="box-body">
+                    @if ((access.Any(k => k.Key.Equals("payroll_accounting")) == true && access["payroll_accounting"] == true) || (access.Any(k => k.Key.Equals("payroll_viewall")) == true && access["payroll_viewall"] == true))
+                    {
+                        <div class="row">
+                            <div class="input-group col-sm-2 pull-left" style="padding: 2px">
+                                <label class="input-group-addon" style="min-width:100px">
+                                    Search By
+                                </label>
+                                <input type="text" id="SearchText" name="SearchText" placeholder="Name/ID/Email/Phone" class="form-control change-filter" value="">
+                            </div>
+                            <div class="input-group col-sm-2 pull-left" style="padding: 2px">
+                                <label class="input-group-addon" style="min-width:100px">
+                                    Department
+                                </label>
+                                <select id="DepartMentId" name="DepartMentId" class="form-control change-filter">
+                                </select>
+                                <div class="loading-dropdown-dep" style="position: absolute;top: 8px;right: 7px;z-index: 999;background: white;font-size:17px">
+                                    <i class="fa fa-spinner fa-spin"></i>
+                                </div>
+                            </div>
+                            <div class="input-group col-sm-2 pull-left groups-div" style="padding: 2px;">
+                                <label class="input-group-addon label-groups">
+                                    Groups
+                                </label>
+                                <select id="Groups" name="Groups" class="form-control change-filter">
+                                    <option value="">Please Select</option>
+                                </select>
+                                <div class="loading-dropdown-gr" style="position: absolute;top: 8px;right: 7px;z-index: 999;background: white;font-size:17px;display:none">
+                                    <i class="fa fa-spinner fa-spin"></i>
+                                </div>
+                            </div>
+                            <div class="input-group col-sm-3 pull-left groups-div" style="padding: 2px;">
+                                <label class="input-group-addon label-groups">
+                                    Status Send Mail
+                                </label>
+                                <select id="Status" name="Status" class="form-control change-filter">
+                                    <option value="">All</option>
+                                    <option value="Yes">Sended</option>
+                                    <option value="No">Not Send</option>
+                                </select>
+                            </div>
+                            <div class="input-group pull-left" style="padding: 2px">
+                                <button id="search-button" class="btn btn-primary"><i class="fa fa-search" aria-hidden="true"></i> Search</button>
+                            </div>
+                        </div>
+                    }
+                    <br />
+                    <div>
+                        <div style="margin-bottom:1rem">
+                            <style>
+                                .fc-button-group {
+                                    display: flex;
+                                    justify-content: center;
+                                }
+
+                                #Date {
+                                    width: 125px;
+                                    font-weight: bold;
+                                    border: none;
+                                    font-size: 16px;
+                                    color: white;
+                                    background: #2C3E50;
+                                }
+                            </style>
+                            <div class="fc-button-group">
+                                <button onclick="PrevMonth()" type="button" class="btn btn-primary-custom" aria-label="prev" style="background: #2c3e50;color: white;border-radius: 7px 0px 0px 7px;margin-right: 1px;">
+                                    <i class="fa fa-angle-left" aria-hidden="true"></i>
+                                </button>
+                                <input class="text-center" id="Date" name="Date" value="@DateTime.UtcNow.ToString("MMMM yyyy")" readonly />
+                                <button onclick="NextMonth()" type="button" class="btn btn-primary-custom" aria-label="next" style="background: #2c3e50;color: white;border-radius: 0px 7px 7px 0px;margin-left: 1px;">
+                                    <i class="fa fa-angle-right" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                            @if (access.Any(k => k.Key.Equals("payroll_accounting")) == true && access["payroll_accounting"] == true)
+                            {
+                                <div class="row" style="margin:0px !important;text-align:right;">
+                                    <button class="btn btn-primary" id="send-payslip" onclick="SendAllPayslip()" ><i class="fa fa-envelope-o" aria-hidden="true"></i> Send Email All Payslip</button>
+                                    <button class="btn btn-success" onclick="GetPopupPayslip()" id="upload-payslip"><i class="fa fa-upload" aria-hidden="true"></i> Upload Payslip</button>
+                                </div>
+                            }
+                        </div>
+                        <table id="pending_payment" class="table dataTable table-hover table-bordered table-striped" style="width:100%;">
+                            <thead>
+
+                            </thead>
+                            <tbody>
+                            </tbody>
+                           
+                        </table>
+                     
+                    </div>
+                </div>
+                <!-- /.box-body -->
+            </div>
+
+        </div>
+        <div class="loadding-tab" style="position: absolute; right: 50%;top: 50%;transform: translate(50%, -50%) ;display:none">
+            <img src="/Content/ajax-loaders/loading-partial.gif" width="75">
+        </div>
+    </div>
+</div>
+
+<div id="render-payslip-upload-popup">
+
+</div>
+
+
+
+<script>
+    var t = $(".dataTable").DataTable({
+        "language": {
+            "processing": '<img src="/Content/ajax-loaders/loading2.gif" width="60px" />',
+            "paginate": {
+                "first": '<i class="fa fa-angle-double-left" aria-hidden="true"></i>',
+                "last": '<i class="fa fa-angle-double-right" aria-hidden="true"></i>',
+                "next": '<i class="fa fa-angle-right" aria-hidden="true"></i>',
+                "previous": '<i class="fa fa-angle-left" aria-hidden="true"></i>'
+            },
+        },
+        'paging': true,
+        "pageLength": 10,
+        "serverSide": true, // for process server side
+        "processing": true, // for show progress bar
+        'lengthChange': false,
+        'searching': false,
+        'ordering': false,
+        'stateSave': true,
+        'info': false,
+        "scrollX": true,
+        'autoWidth': true,
+        "ajax": {
+            "url": "/Payroll/LoadListPayslip",
+            "type": "POST",
+            "datatype": "json",
+            data: function (data) {
+                data.SearchText = $('#SearchText').val();
+                data.DepartMentId = $('#DepartMentId').val();
+                data.Groups = $('#Groups').val();
+                data.Date = $('#Date').val();
+                data.Status = $("#Status").val();
+                return data;
+            },
+            'dataSrc': function (data) {
+                totalBaseSalary = data.totalBaseSalary;
+                totalCommission = data.totalCommission;
+                totalAll = data.totalAll;
+                return data.data;
+            },
+        },
+        'fnCreatedRow': function (nRow, aData, iDataIndex) {
+            $(nRow).attr('id', 'tr_' + aData.PayslipId.toString());
+        },
+        "columns": [
+            {
+                "title": 'Employee Id',
+                "render": function (data, type, row) {
+                    return '<span>' + row["EmployeeId"] + '</span>';
+                },
+            },
+            {
+                "title": 'Employee Name',
+                "data": "EmployeeName",
+            },
+            {
+                "title": 'Is Send Mail',
+                "render": function (data, type, row) {
+                    html = '';
+                    html += `<div id="status_sendmail_${row["PayslipId"]}">`;
+                    if (row['IsSendEmail']) {
+                        html += '<span class="text text-success"><i class="fa fa-check"></i></span>';
+                    }
+                    else {
+                        html += '<span class="text text-danger"><i class="fa fa-times"></i></span>';
+                    }
+                    html += '</div>';
+                    return html;
+
+                },
+            },
+            {
+                "title": '',
+                "width": '50',
+                "render": function (data, type, row) {
+                        let html = ``;
+                        html += `<div class="btn-group">`;
+                        html += `<div class="dots-menu btn-group">`;
+                        html += `<div class="dropdown-dot" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></div>`;
+                        html += `<ul class="dropdown-menu dropdown-menu-right">`;
+                    if (row['IsSendEmail']) {
+                        html += `<li><a id="button_sendmail_${row["PayslipId"]}" onclick="SendMailByPayslipId('${row["PayslipId"]}')" style="margin-right: 5px;"><i class="fa fa-refresh"></i>  Resend Email</a></li>`;
+                    }
+                    else {
+                        html += `<li><a id="button_sendmail_${row["PayslipId"]}" onclick="SendMailByPayslipId('${row["PayslipId"]}')" style="margin-right: 5px;"><i class="fa fa-envelope"></i>  Send Email</a></li>`;
+                    }
+                 
+                      
+                    html += `<li><a target="_blank" href="${row['FilePath']}"  style="margin-right: 5px"><i class="fa fa-eye"></i>  View</a></li>`;
+                        
+                        html += `</ul>`;
+                        html += `</div>`;
+                        html += `</div>`;
+                        return html;
+                },
+                "className": "text-center",
+
+            }
+        ],
+
+    });
+    // change dep
+    $("#DepartMentId").change(function () {
+        $(".loading-dropdown-gr").show();
+        var DepartMentId = $('#DepartMentId').val();
+        if (DepartMentId == "" || DepartMentId == "Other") {
+            $('#Groups').html('');
+            $('#Groups').append($('<option value="">Please Select</option>'));
+            $(".loading-dropdown-gr").hide();
+        }
+        else {
+            $.ajax({
+                type: "Post",
+                url: "/Payroll/LoadGroups",
+                data: { "DepartMentId": DepartMentId },
+                success: function (data) {
+                    $('#Groups').html('');
+                    $.each(data, function (id, option) {
+                        $('#Groups').append($('<option></option>').val(option.Value).html(option.Text));
+                    });
+                },
+                error: function (xhr, ajaxOptions, thrownError) {
+                    alert('fail');
+                },
+                complete: function () {
+                    $(".loading-dropdown-gr").hide();
+                }
+            });
+        }
+    })
+    function PrevMonth() {
+        const d = new Date($("#Date").val());
+        d.setDate(1);
+        d.setMonth(d.getMonth() - 1);
+        $("#Date").val(monthNames[d.getMonth()] + " " + d.getFullYear());
+        $(".dataTable").DataTable().ajax.reload();
+    }
+    function NextMonth() {
+        const d = new Date($("#Date").val());
+        d.setDate(1);
+        d.setMonth(d.getMonth() + 1);
+        $("#Date").val(monthNames[d.getMonth()] + " " + d.getFullYear());
+        $(".dataTable").DataTable().ajax.reload();
+    }
+    function PrevYear() {
+        const d = new Date($("#Date").attr("data-year"));
+        d.setFullYear(d.getFullYear() - 1);
+        $("#Date").attr("data-year", d.getFullYear());
+        $("#Date").html("Year " + d.getFullYear());
+        LoadPaymentMethod_Date();
+        $(".dataTable").DataTable().ajax.reload();
+    }
+    function NextYear() {
+        const d = new Date($("#Date").attr("data-year"));
+        d.setFullYear(d.getFullYear() + 1);
+        $("#Date").attr("data-year", d.getFullYear());
+        $("#Date").html("Year " + d.getFullYear());
+        LoadPaymentMethod_Date();
+        $(".dataTable").DataTable().ajax.reload();
+    }
+    function LoadDep() {
+        $(".loading-dropdown-dep").show();
+        var Date = $('#Date').val();
+        $.ajax({
+            type: "Post",
+            url: "/Payroll/LoadDepartment",
+            //data: { "Date": Date },
+            success: function (data) {
+                $('#DepartMentId').html('');
+                $.each(data, function (id, option) {
+                    $('#DepartMentId').append($('<option></option>').val(option.Value).html(option.Text));
+                });
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                alert('fail');
+            },
+            complete: function () {
+                $(".loading-dropdown-dep").hide();
+            }
+        });
+    }
+    LoadDep();
+
+    function GetPopupPayslip() {
+        overlayOn();
+        var Date = $('#Date').val();
+        $.ajax({
+            type: "Post",
+            url: "/Payroll/GetPopupPayslip",
+            dataType: "html",
+            data: { Date},
+            success: function (data) {
+                $("#render-payslip-upload-popup").html(data);
+                $("#upload-payslip-modal").modal("show");
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                alert('fail');
+            },
+            complete: function () {
+                $(".loading-dropdown-dep").hide();
+            }
+        });
+        overlayOff();
+    }
+
+    function SendMailByPayslipId(Id) {
+        if (confirm('Are you sure send this payslip to employee ?')) {
+            $(`#button_sendmail_${Id}`).find(".loading").show();
+            $.ajax({
+                type: "Post",
+                url: "/Payroll/SendMailByPayslipId",
+                dataType: "json",
+                data: { Id },
+                success: function (data) {
+                    if (data.status == true) {
+
+                        $(`#send_email_${Id}`).html('<span class="label label-success">Send Success <i class="fa fa-check" aria-hidden="true"></i></span>');
+                        $(`#status_sendmail_${Id}`).html('<i class="fa fa-check text text-success" aria-hidden="true"></i>');
+                        noty({ "text": data.message, "layout": "topRight", "type": "success" });
+
+                    }
+                    else {
+                        error(data.message);
+                    }
+                },
+                error: function (xhr, ajaxOptions, thrownError) {
+                    alert('fail');
+                },
+                complete: function () {
+                    $(`#button_sendmail_${Id}`).find(".loading").hide();
+                }
+            });
+        }
+    }
+    function SendAllPayslip() {
+        if (confirm('Are you sure send email all payslip not yet sended ?')) {
+            var Date = $('#Date').val();
+            overlayOn();
+            $.ajax({
+                type: "Post",
+                url: "/Payroll/SendEmailAllPayslip",
+                dataType: "json",
+                data: { Date },
+                success: function (data) {
+                    if (data.status == true) {
+                        noty({ "text": data.message, "layout": "topRight", "type": "success" });
+                        $(".dataTable").DataTable().ajax.reload();
+                    }
+                    else {
+                        error(data.message);
+                    }
+                },
+                error: function (xhr, ajaxOptions, thrownError) {
+                    alert('fail');
+                },
+                complete: function () {
+
+                    overlayOff();
+                }
+            });
+        }
+    }
+</script>

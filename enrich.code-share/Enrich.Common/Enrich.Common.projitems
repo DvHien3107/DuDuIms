@@ -1,0 +1,58 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>b0fc7136-0858-4ef1-b048-24513ef32454</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>Enrich.Common</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)CommonExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)CommonHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Constants.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Enums\AuthMode.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Enums\AuthStatus.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Enums\DataType.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Enums\EnrichCors.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Enums\EnrichSMSService\EnrichSMSEnum.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Enums\FilterType.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Enums\GoHighLevelConnector\GoHighLevelConnectorEnum.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Enums\GridConfig.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Enums\IMSModes\BaseServiceEnum.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Enums\IMSModes\BusinessEventEnum.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Enums\IMSModes\ConfigEnum.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Enums\IMSModes\CustomerEnum.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Enums\IMSModes\DepartmentEnum.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Enums\IMSModes\EnumValueNameSpace.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Enums\IMSModes\OrderEnum.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Enums\IMSModes\PaymentEnum.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Enums\IMSModes\RecurringEnum.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Enums\IMSModes\SalesLeadEnum.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Enums\IMSModes\SendGridTemplate.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Enums\IMSModes\SubscriptionEnum.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Enums\IMSModes\TimeZone.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Enums\ItemStateType.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Enums\ClickUpConnector\ClickUpConnectorEnum.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Enums\Language.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Enums\ListViewMode.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Enums\MondayConnector\MondayConnectorEnum.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Enums\OtpType.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Enums\SortDirectionEnum.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Enums\ValidationMessages.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\ConvertHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\EnumHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)CommonHelper.Retry.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\JsonPatchHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\LanguageHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\ObjectHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\SecurityHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\SqlHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\StringHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\TimeHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\UrlHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)HttpResponseException.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MultipleTasks.cs" />
+  </ItemGroup>
+</Project>

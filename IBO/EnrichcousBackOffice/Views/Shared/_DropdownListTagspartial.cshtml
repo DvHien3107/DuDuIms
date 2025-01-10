@@ -1,0 +1,29 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.T_Tags>
+
+
+    @*<link href="~/Content/DropdownStyle/dropdown.css" rel="stylesheet" />*@
+
+<div class="custom-select-wrapper" style="display: inline-block;margin-top:3px">
+    <div class="custom-select">
+        <div class="custom-select__trigger">
+            <span id="-1" style="padding: 4px 12px; border-radius: 5px">All Label</span>
+            <div class="arrow"></div>
+        </div>
+        <div class="custom-options scroll-style">
+            <div id="0|white" class="custom-option selected">
+                <span style="background-color:white; color: black" data-value="">All Label</span>
+            </div>
+
+            @foreach (var item in Model)
+            {
+                <div id="@(item.Name + "|" + item.Color)" class="custom-option">
+                    <span style="background-color:@(item.Color);" data-value="@(item.Name)">
+                        @(item.Name?.Replace("[", "").Replace("]", ""))
+                    </span>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<script src="~/Content/DropdownStyle/dropdown.js"></script>

@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<root>
+	<customer>
+		<word_determine>
+			<subscription>K</subscription>
+			<processing>H</processing>
+			<both>Q</both>
+			<trial>Trial</trial>
+			<slice>Slice</slice>
+			<note>
+				and for client ID's. I need to be able to specify if a customer is subscription only, terminal only, or both.  Im thikning
+				Client ID - a letter
+				Example, K- subscription, H- Processing (Terminal Only), Q- Both subscription &#38; processing
+				A1234-K
+				A1234-H
+				A1234-Q
+				So when we run reports we know H &#38; Q count towards our minimim requirements
+			</note>
+		</word_determine>
+	</customer>
+
+	<!--Cau hinh SMS template -->
+	<sms_template>
+		<!--
+    <new_ticket>
+      [Enrich]You have a new ticket #{ticket_number}. Please login IMS Enrich to follow.
+    </new_ticket>
+    -->
+		<questionare_notice_merchant>[Spos]Please help us to configure the complete salon pos system and be ready to work, Please complete the questionnaire following the link : {url}</questionare_notice_merchant>
+		<questionare_complete>[Spos]Customer security questions form already completed. Please check your ticket #{ticket_number}.</questionare_complete>
+		<shipping_ready>[Spos]Your order has been prepared and is ready for delivery. Please call +1234567890 if you need help.</shipping_ready>
+		<!--
+    <shipping>
+      [Enrich]Your packages are shipping. Please call +180007425877 if you need help.
+    </shipping>
+    <shipping_complete>
+      [Enrich]Your package has been delivered. Please call +180007425877 if you need help.
+    </shipping_complete>
+    -->
+	</sms_template>
+
+	<!--Cau hinh email template tu sendgrid-->
+	<sendgrid_template>
+		<shipping_email>
+			<from>dev@sposus.co</from>
+			<name>IMS SPOS</name>
+			<template_id>d-0f526b9538444a76bb033f9fa9185fff</template_id>
+			<note>Gui email thong bao giao hang</note>
+		</shipping_email>
+		<questionare_email>
+			<from>dev@sposus.co</from>
+			<name>IMS SPOS</name>
+			<template_id>d-c41bb57f9490414e93857a0d928dc291</template_id>
+			<note>Gui email link questionare form cho khach hang</note>
+		</questionare_email>
+		<merchant_form>
+			<from>dev@sposus.co</from>
+			<name>IMS SPOS</name>
+			<template_id>d-05062a27202e4f60b82ee5723126e870</template_id>
+			<note>Gui email link merchant form cho khach hang</note>
+		</merchant_form>
+		<merchant_form_staff>
+			<from>dev@sposus.co</from>
+			<name>IMS SPOS</name>
+			<template_id>d-e40c0433b8ee4d66b912de608840fa9e</template_id>
+			<note>Noty cho nhan vien da gui merchant form da submitted</note>
+		</merchant_form_staff>
+		<questionnaire_email_notice>
+			<from>dev@sposus.co</from>
+			<name>IMS SPOS</name>
+			<template_id>d-23ab7264a153456cb5a6f97fd064106d</template_id>
+			<note>Gui email link questionare form va ticket cho nhan vien khi khach hang submit questionnaire form</note>
+		</questionnaire_email_notice>
+		<giftcards_ordering_form_email>
+			<from>dev@sposus.co</from>
+			<name>IMS SPOS</name>
+			<template_id>d-1d5cf27d83c241149cfd2c8631177786</template_id>
+			<note>Gui email link gift card ordering form</note>
+		</giftcards_ordering_form_email>
+		<notify_sales_giftcards>
+			<from>dev@sposus.co</from>
+			<name>IMS SPOS</name>
+			<template_id>d-9cda85d380a84c11b87915e6c72470f2</template_id>
+			<note>Gui thong bao cho sales khi customer submit gift cards ordering form</note>
+		</notify_sales_giftcards>
+		<notify_reset_password>
+			<from>dev@sposus.co</from>
+			<name>IMS SPOS</name>
+			<template_id>d-e31de748fb764229a4858be876db6739</template_id>
+			<note>Gửi tài khoản và mật khẩu đăng nhập mới cho salon</note>
+		</notify_reset_password>
+		<notify_installation_complete>
+			<from>dev@sposus.co</from>
+			<name>IMS SPOS</name>
+			<template_id>d-6193c6ac823246f199e91b1a5629c768</template_id>
+			<note>Gửi email thông báo khi installation complete </note>
+		</notify_installation_complete>
+		<verify_demo_register>
+			<from>dev@sposus.co</from>
+			<name>IMS SPOS</name>
+			<template_id>d-875c57bc4cce4a49b2d26834221cf857</template_id>
+			<note>Gửi email verify  </note>
+		</verify_demo_register>
+		<salon_forgot_password>
+			<from>dev@sposus.co</from>
+			<name>IMS SPOS</name>
+			<template_id>d-0203b2856881459c98483a9cc21fb88c</template_id>
+			<note>Gửi email forgot password cho merchant </note>
+		</salon_forgot_password>
+		<salon_payment_confirm_and_pay>
+			<from>dev@sposus.co</from>
+			<name>IMS SPOS</name>
+			<template_id>d-c60e532f39c54f71924dc59809316011</template_id>
+			<note>Gửi email confirm thanh toán cho merchant </note>
+		</salon_payment_confirm_and_pay>
+		<receipt_payment>
+			<from>dev@sposus.co</from>
+			<name>IMS SPOS</name>
+			<template_id>d-d9aa19363d68438ab0d5ead68d909d3b</template_id>
+			<note>Gửi hóa đơn thanh toán cho merchant </note>
+		</receipt_payment>
+		<notification_assigned>
+			<from>dev@sposus.co</from>
+			<name>IMS SPOS</name>
+			<template_id>d-8bf0dc54b8d04dd688f6da2f3f403f96</template_id>
+			<note>Thông báo có khach hang moi(assigned) trong sales lead.</note>
+		</notification_assigned>
+		<boss_create>
+			<from>dev@sposus.co</from>
+			<name>IMS SPOS</name>
+			<template_id>d-efe6d540e049470f938d972ad6ca0e76</template_id>
+			<note>Create new boss.</note>
+		</boss_create>
+		<boss_changepassword>
+			<from>dev@sposus.co</from>
+			<name>IMS SPOS</name>
+			<template_id>d-19c437ac90f14a919d2c0ee62f81a7a0</template_id>
+			<note>Change password BOSS.</note>
+		</boss_changepassword>
+		<customer_outgoing>
+			<from>dev@sposus.co</from>
+			<name>IMS SPOS</name>
+			<template_id>d-48ab6a08f8644885b087a27d55a183f2</template_id>
+			<note>Email outgoing.</note>
+		</customer_outgoing>
+		<enrich_template>
+			<from>dev@sposus.co</from>
+			<name>IMS Enrich</name>
+			<template_id>d-f8cc939038514dda98fcba32b60eaa56</template_id>
+			<note>Gui email with enrich template</note>
+		</enrich_template>
+	</sendgrid_template>
+
+	<store-url>
+		<VER2
+			domain="https://uat-apipos.enrichcous.com:4431"
+			store-profile="/StoreProfile/?id="
+			store-change="/api/RCPStore/StoreChange"
+			define-feature="/api/DefineFeatures/DefineFeatures"
+			add-feature="/api/DefineFeatures/AddEditDefineFeatures"
+			remove-feature="/api/DefineFeatures/DeleteDefineFeatures"
+			get-feature="/api/DefineFeatures/GetDefineFeaturesByStore?IDIMS="
+			checkin_link="https://dev-checkin.enrichcous.com/"
+			saloncenter_slice_link="https://dev-slice.enrichcous.com/"
+			hard-reset="/api/ControlSystem/HardReset?IDIMS="
+			soft-reset="/api/ControlSystem/SoftReset?IDIMS="
+			DelPairingCode="/api/ApiPosManager/DelPairingCodeWithStoreID?storeId="
+			OrderGiftCard="/api/ControlSystem/OrderGiftCard?"
+			reportSMSusedlist="/api/SMSEmail/ListSMS?"
+			reportSMSusedstore="/api/SMSEmail/SMS?"
+		/>
+	</store-url>
+
+	<boss-manage>
+		<url
+			add_edit="https://uat-apipos.enrichcous.com:4431/api/BossManage/AddEditBossManage"
+			add_store="https://uat-apipos.enrichcous.com:4431/api/BossManage/AddStoreManage"
+			get_store="https://uat-apipos.enrichcous.com:4431/api/BossManage/GetStoreManage?IDBossManage="
+			del_store="https://uat-apipos.enrichcous.com:4431/api/BossManage/DelStoreManage?IDBossManage="
+			leave_boss="https://uat-apipos.enrichcous.com:4431/api/BossManage/ResetStore?IDIMS="
+			change_pass="https://uat-apipos.enrichcous.com:4431/api/BossManage/ChangePassWord"
+			/>
+	</boss-manage>
+
+	<mango-pos>
+		<timezone-url>https://uat-manage.enrichcous.com:4443/admin/salon/getLstTimeZoneAPI</timezone-url>
+	</mango-pos>
+
+	<mango-demo-trial>
+		<trial-duration-days>30</trial-duration-days>
+	</mango-demo-trial>
+
+</root>

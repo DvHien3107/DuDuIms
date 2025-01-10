@@ -1,0 +1,41 @@
+﻿
+.ng-trigger.ng-trigger-accordionItemBody {
+    overflow: hidden;
+    visibility: hidden;
+    height: 0px;
+}
+
+
+nb-accordion-item[type="show"] .ng-trigger.ng-trigger-accordionItemBody {
+    overflow: hidden;
+    visibility: visible;
+    height: unset;
+}
+
+nb-accordion-item[type="show"] .ng-trigger-expansionIndicator .ng-star-inserted {
+    transform: rotate(180deg);
+}
+
+.menu-sidebar.sidebar_class.left.ng-star-inserted.compacted nb-accordion-item-header nb-icon,
+.menu-sidebar.sidebar_class.left.ng-star-inserted.compacted nb-accordion-item-header span {
+    display: none;
+}
+
+.menu-sidebar.sidebar_class.left.ng-star-inserted.compacted .custom-row.menu, .menu-sidebar.sidebar_class.left.ng-star-inserted.compacted .custom-row.logo {
+    width: 100%;
+    display: flex;
+    justify-content: flex-start;
+    overflow: hidden;
+    margin: 0;
+    padding: 0 !important;
+}
+
+.menu-sidebar.sidebar_class.left.ng-star-inserted.compacted .custom-box {
+    width: 100%;
+}
+.menu-sidebar.sidebar_class.left.ng-star-inserted.compacted .logo-container {
+    padding:0;
+}
+.chevron.collapsed .appearance-outline.size-small.shape-rectangle.status-basic.nb-transition {
+    margin: 0;
+}

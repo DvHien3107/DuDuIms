@@ -1,0 +1,502 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.I_Bundle>
+@using EnrichcousBackOffice.Models;
+@{
+    ViewBag.Title = "Packaging";
+    List<I_Bundle> list_history = ViewBag.history;
+}
+
+<section class="content-header">
+    <h1>
+        Bunlde packaging
+        <small>Device</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Dashboard</a></li>
+        <li><a href="/Device"><i class="fa fa-file-o"></i> Device</a></li>
+        <li class="active">Bunlde packaging</li>
+    </ol>
+</section>
+@*<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>*@
+<!-- Main content -->
+<section class="content">
+    @if (TempData["e"] != null)
+    {
+        <div class="alert alert-warning alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+        </div>
+    }
+    else if (TempData["s"] != null)
+    {
+        <div class="alert alert-success alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+        </div>
+    }
+    <div class="row">
+        <div class="col-md-9">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Bundle packaging</h3>
+                    <div class="pull-right box-tools">
+
+                    </div>
+                </div>
+                <div class="box-body">
+                    <div class="col-md-12">
+                        <a class="btn btn-primary" style="float:right; margin-bottom: 10px" onclick="new_packaging()"><i class="fa fa-inbox"></i> PACKAGING A BUNDED</a>
+                    </div>
+                    <div class="col-md-12">
+                        <table id="bundle_package_list" class="table table-bordered table-striped dataTable">
+                            <thead>
+                                <tr>
+                                    <th>Order#</th>
+                                    <th>Merchant name</th>
+                                    <th>Bundle Number</th>
+                                    <th>Progress status</th>
+                                    <th>Agent</th>
+                                    <th style="width:109px"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.Count() > 0)
+                                {
+                                    foreach (var item in Model)
+                                    {
+                                        <tr id="bundle_@item.Id">
+                                            <td>#<b>@item.OrderCode</b></td>
+                                            <td>@item.MerchantName</td>
+                                            <td>#<label class="text-info">@item.BundleCode</label></td>
+                                            <td class="_status">
+                                                @if (item.Status == "COMPLETED")
+                                                {
+                                                    <div class="label label-success">COMPLETED</div>
+                                                }
+                                                else if (item.Status == "DELIVERY")
+                                                {
+                                                    <div class="label label-warning">DELIVERY</div>
+                                                }
+                                                else if (item.Status == "READY TO DELIVERY")
+                                                {
+                                                    <div class="label label-primary">READY TO DELIVERY</div>
+                                                }
+                                                else if (item.Status == "PACKAGING")
+                                                {
+                                                    <div class="label label-danger">PACKAGING</div>
+                                                }
+                                                else if (item.Status == "READY TO PACK")
+                                                {
+                                                    <div class="label label-info">READY TO PACK</div>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (item.UpdateAt.HasValue)
+
+                                                {<div>
+                                                        By<b> @item.UpdateBy</b><br />At @*@(item.UpdateAt.Value.Add(TimeZoneInfo.Local.BaseUtcOffset).ToString("MMM dd,yyyy hh:mmtt"))*@
+                                                        <span id="localtime-@item.Id">
+                                                            <script>convertLocalTime(@item.Id, "@item.UpdateAt")</script>
+                                                        </span>
+                                                    </div>}
+                                                else
+                                                {<div>
+                                                        By<b> @item.CreateBy</b><br />At @*@(item.CreateAt.Value.Add(TimeZoneInfo.Local.BaseUtcOffset).ToString("MMM dd,yyyy hh:mmtt"))*@
+                                                        <span id="localtime-create-@item.Id">
+                                                            <script>convertLocalTime("create-" + @item.Id, "@item.CreateAt")</script>
+                                                        </span>
+                                                    </div>}
+                                            </td>
+                                            <td style="padding:5px"><a class="btn btn-warning" onclick="update_package(@item.Id)">Update</a></td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="7" style="text-align:center">(No bundle packaging)</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 stick">
+            <div class="box box-warning">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Notification</h3>
+                </div>
+                <!-- /.box-header -->
+                <div class="box-body" style="height:80vh; overflow: auto">
+                    <div id="List_history">
+                        @foreach (var item in list_history)
+                        {
+                            <div class="col-md-12 history_item" style="border: 1px solid orange; padding:10px; margin-bottom:10px">
+                                <b><a style="color:#337ab7" onclick="update_package(@item.Id,'@item.Status')">Order: #@item.OrderCode</a></b>
+                                <i class="pull-right">
+                                    @*@if (item.UpdateAt.HasValue)
+                                        {@item.UpdateAt.Value.Add(TimeZoneInfo.Local.BaseUtcOffset).ToString("MMM dd,yyyy hh:mmtt")}*@
+                                    <span id="localtime-@item.Id">
+                                        <script>convertLocalTime(@item.Id, "@item.UpdateAt")</script>
+                                    </span>
+                                </i><br />
+
+                                <i class="pull-right">by <b>@item.UpdateBy</b></i><br />
+                                <label style="color:gray">Bundle: #@item.BundleCode</label>
+                                <label>Merchant:</label> @item.MerchantName <i class="pull-right">@item.Status</i><br />
+
+                            </div>
+                        }
+                    </div>
+                    <button type="button" class="btn btn-block btn-flat btn-success" id="add_history" onclick="load_more_history()" style="@if (!ViewBag.canViewMore) { @Html.Raw("display:none")}">
+                        View more...<img id="load_history_img" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<div class="modal fade" id="packaging_bundle" role="dialog">
+    <div class="modal-dialog" style="width:800px; max-width:100%">
+
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Package a Bundle</h4>
+            </div>
+            <div class="modal-body" style="overflow:auto; padding-right:5px">
+                <form id="packaging_info" action="/device/packagingSave" method="post" style="max-height:70vh; overflow-x:hidden">
+                    <input type="hidden" id="update_bundle_id" name="update_bundle_id" />
+                    <div class="form-group" style="padding-top:10px" id="select_bundle_group">
+                        <label>Bundle:</label>
+                        <select class="select2" id="bundle_id" name="bundle_id" onchange="Load_Bundle_Info($(this).val())" style="width:100%">
+                            <option value="">----- Select bundle -----</option>
+                            @foreach (I_Bundle item in ViewBag.pend_bundle)
+                            {
+                                <option value="@item.Id">Bundle: #@item.BundleCode - @item.Name, Order: #@item.OrderCode - @item.MerchantName</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <img id="Load_Bundle_Info_img" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+
+                            <div class="col-md-12" style="border: dotted 1px orange; padding:0px;margin-bottom:20px">
+                                <div class="col-md-12" style="padding:0px">
+                                    <table class="table table-striped" style="margin-bottom:0">
+                                        <tbody>
+                                            <tr>
+                                                <th>Bundle number</th>
+                                                <td>#<b id="bundle_info_code">------</b> (Order: #<b id="bundle_order_code">-----</b>)</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Name</th>
+                                                <td id="bundle_info_name">------</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Merchant</th>
+                                                <td id="bundle_info_merchantname">------</td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="2">
+                                                    <b>Info: </b>
+                                                    <p id="bundle_info_info">----------</p>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="2">
+                                                    <b>Devices: </b>
+                                                    <div class="row">
+                                                        <div class="col-md-12" id="bundle_info_code_device"></div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+
+                                </div>
+
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+
+                            <ul class="nav nav-tabs">
+                                <li class="active"><a data-toggle="tab" href="#packaging_fill" style="">Packaging progress</a></li>
+                                <li class="disabled"><a>Delivery progress</a></li>
+                            </ul>
+                            <div class="col-md-12 tab-content" style="border: solid 1px #ddd; border-top:none">
+                                <div id="packaging_fill" class="tab-pane fade in active" style="padding:10px 0">
+                                    <table class="table table-striped table-hover">
+                                        <tbody>
+                                            @foreach (I_ProcessSetting item in ViewBag.fill)
+                                            {
+                                                <tr>
+                                                    <td>
+                                                        <label> @item.FieldName </label> @if (item.Requirement == true)
+                                                        {@Html.Raw("<span style='color:red'> * </span>")}
+                                                        <input style="margin:auto" type="text" class="form-control  @if (item.Requirement == true) { @Html.Raw("fill_required") }" id="fill_@item.Id" name="fill_@item.Id" />
+                                                    </td>
+                                                </tr>
+                                            }
+                                            <tr>
+                                                <td>
+                                                    <label>Additional note</label>
+                                                    <textarea id="Add_note_packaging" name="Add_note_packaging" class="form-control"></textarea>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+
+                                    <input id="packaging_completed" name="packaging_completed" type="checkbox" style="padding:10px;display:none" value="checked" />
+
+
+                                    @*<div class="row" id="uploadmorefile_partial_packaging" style="margin-bottom:20px">
+                                            @Html.Partial("_UploadMoreFilesPartial_Small_clone", new List<UploadMoreFile>(), new ViewDataDictionary { { "upload", true } })
+                                        </div>*@
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                <br />
+                <hr id="Progress_line" style="height:2px; margin-left:40px; margin-right: 40px; " />
+                <ul id="Delivery_step" style="margin-top:-40px" class="list-unstyled multi-steps">
+                    <li class="step1">Ready to pack</li>
+                    <li class="step2">Packaging</li>
+                    <li class="step3">Ready to delivery</li>
+                    <li class="step4">Delivery</li>
+                    <li class="step5">Completed</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <a class="btn btn-primary" id="btn_submit" style="" onclick="submitform(false)">
+                    Save change
+                </a>
+                <a class="btn btn-success" id="btn_submit_next" onclick="submitform(true)">
+                    Ready to delivery
+                </a><img id="packaging_info_submit_img" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+            </div>
+        </div>
+    </div>
+</div>
+<!--datatables-->
+<link rel="stylesheet" href="~/content/admin/bower_components/datatables.net-bs/css/dataTables.bootstrap.min.css">
+<script src="~/content/admin/bower_components/datatables.net/js/jquery.dataTables.min.js"></script>
+<script src="~/content/admin/bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js"></script>
+
+
+<link href="~/Content/progress-tracker.css" rel="stylesheet" />
+<script src="~/Scripts/slidebar.js"></script>
+<script src="~/Scripts/upload_and_review.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.form/4.2.2/jquery.form.min.js" integrity="sha384-FzT3vTVGXqf7wRfy8k4BiyzvbNfeYjK+frTVqZeNDFl8woCbF0CYG6g2fMEFFo/i" crossorigin="anonymous"></script>
+<script type="text/javascript">
+    $(function () {
+        $(".dataTable").dataTable({ "ordering": false });
+        $("#bundle_package_list_filter input").css("width", "250px");
+        $('#packaging_info').ajaxForm(function (data) {
+            if (data[0] == true) {
+                var Success = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"success"}');
+                noty(Success);
+                //close/reset modal
+                $('#packaging_bundle').modal('hide');
+                $('#bundle_id option[value="' + data[2]["Id"] + '"]').remove();
+                $('#bundle_id').trigger('change');
+                //remove old row
+                $("#bundle_" + data[2]["Id"]).remove();
+                if (data[2]["Status"] == "READY TO DELIVERY") {
+                    return true;
+                }
+                //Add new row
+                var status = "";
+                if (data[2]["Status"] == "PACKAGING") {
+                    status = "<div class='label label-danger'>PACKAGING</div>";
+                }
+                if (data[2]["Status"] == "READY TO PACK") {
+                    status = "<div class='label label-info'>READY TO PACK</div>";
+                }
+                var Update = "";
+                if (data[2]["UpdateAt"]) {
+                    var UpdateAt = new Date(parseInt(data[2]["UpdateAt"].substr(6))).format("mmm dd,yyyy hh:MMTT");
+                    Update = 'By <b>' + data[2]["UpdateBy"] + "</b><br/>At <i>" + UpdateAt || "------" + '</i>';
+                }
+                $('#bundle_package_list td[colspan="7"]').parent().remove();
+                $('#bundle_package_list tbody').prepend(
+                    '<tr id="bundle_' + data[2]["Id"] + '"><td>#<b>' + data[2]["OrderCode"] + '</b></td>' +
+                    '<td>' + data[2]["MerchantName"] + '</td>' +
+                    '<td>#<b>' + data[2]["BundleCode"] + '</b></td>' +
+                    '<td>' + status + '</td>' +
+                    '<td>' + Update + '</td>' +
+                    '<td style="padding:5px"><a class="btn btn-warning" onclick="update_package(' + data[2]["Id"] + ')">Update</a></td>' +
+                    '</tr>'
+                );
+            }
+            else {
+                var Error = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"error"}');
+                noty(Error);
+            }
+            $('#packaging_info_submit_img').hide();
+        });
+
+
+        var id = sessionStorage.getItem("id");
+        if (id) {
+            update_package(id);
+            sessionStorage.removeItem("id");
+        }
+    });
+    function new_packaging() {
+
+        $('#packaging_info input[type=text]').val('');
+        $('#bundle_info_code_device').empty();
+        $('#load_uploaded_file').empty();
+        $('#bundle_info_code').html('-----');
+        $('#bundle_order_code').html('-----');
+        $('#bundle_info_name').html('-----');
+        $('#bundle_info_merchantname').html('-----');
+        $('#bundle_info_info').html('----------');
+        $('#select_bundle_group').show();
+        $('#update_bundle_id').val("");
+        $('#bundle_id').val("");
+        $('.is-active').removeClass("is-active");
+        $("#Delivery_step .step1").addClass("is-active");
+        $("#Progress_line").css("background", "linear-gradient(to right, green 0%, #ddd 0%)");
+        $('#packaging_bundle .modal-title').html("Packaging a bundle");
+        $('#packaging_bundle').modal('show');
+    }
+    function submitform(completed) {
+        if (completed && $('#btn_submit_next').hasClass("disabled")) {
+            noty($.parseJSON('{"text":"Please fill required fields!", "layout":"topRight", "type":"error"}'));
+        } else {
+            $('#packaging_info_submit_img').show();
+            $('#packaging_completed').prop("checked", completed);
+            $('#packaging_info').submit();
+        }
+    }
+    function check_required_fill() {
+        if ($("#Delivery_step .step2").hasClass("is-active")) {
+            var result = true;
+            $(".feature_item").each(function () {
+                var str = $(this).find(".select2").val().join();
+                var c_selected = 0;
+                if (str) {
+                    c_selected = str.split(',').length;
+                }
+                if ($(this).find(".f_quantity").html() != c_selected) {
+                    result = false;
+                    return false;
+                }
+            });
+            var c = $(".fill_required").filter(function () {
+                return $.trim($(this).val()).length == 0;
+            }).length;
+            if (c == 0 && result) {
+                $('#btn_submit_next').removeClass('disabled');
+            } else {
+                $('#btn_submit_next').addClass('disabled');
+            }
+        }
+    }
+    function update_package(id, status, hideselect = true) {
+        $.ajax({
+            method: "POST",
+            url: "/device/getPackageInfo",
+            data: { id, "type": "Packaging" },
+            dataType: "json"
+        })
+            .done(function (data) {
+                if (data[0] == true) {
+                    $('#packaging_info input[type=text]').val('');
+                    $('#update_bundle_id').val(data[1]['Id']);
+
+                    $('#packaging_bundle .modal-title')
+                        .html('Update process bundle #' + data[1]['BundleCode'] + ' - ' + data[1]['Name']);
+                    $('#bundle_info_code').html(data[1]["BundleCode"]);
+                    $('#bundle_info_name').html(data[1]["Name"]);
+                    $('#bundle_info_merchantname').html(data[1]["MerchantName"]);
+                    $('#bundle_info_info').html(data[1]["Info"]);
+                    $('#bundle_info_code_device').empty();
+                    $('#bundle_order_code').html(data[1]["OrderCode"]);
+                    $('#bundle_info_code_device').html(data[2]);
+                    for (var i = 0; i < data[3].length; i++) {
+                        $('#fill_' + data[3][i]['FieldFillId']).val(data[3][i]['Content']);
+                    }
+                    if (data[1]["Status"] == "READY TO PACK") {
+                        $("#btn_submit_next").html("Packaging <i class='fa fa-arrow-right'></i>");
+                    }
+                    else {
+                        $('#btn_submit_next').removeClass('disabled');
+                        $("#btn_submit_next").html("Ready to delivery <i class='fa fa-arrow-right'></i>");
+                        check_required_fill();
+                        $('.fill_required').on('keyup', function () {
+                            check_required_fill();
+                        });
+                    }
+                    $('.is-active').removeClass("is-active");
+                    if (data[1]["Status"] == "PACKAGING") {
+                        $("#Delivery_step .step2").addClass("is-active");
+                        Check_filled_sn();
+                        $("#Progress_line").css("background", "linear-gradient(to right, green 25%, #ddd 25%)");
+                    } else if (data[1]["Status"] == "READY TO PACK") {
+                        $("#Delivery_step .step1").addClass("is-active");
+                        $("#Progress_line").css("background", "linear-gradient(to right, green 5%, #ddd 5%)");
+                    }
+                    //$('#uploadmorefile_partial').html(data[4]);
+                    $('#packaging_completed').prop("checked", false);
+                    if (hideselect) { $('#select_bundle_group').hide(); }
+                    $('#packaging_bundle').modal('show');
+                }
+            })
+            .fail(function () {
+            })
+            .always(function () {
+            });
+
+    }
+    function Load_Bundle_Info(id = null) {
+        if (id == null) {
+            var id = $('#update_bundle_id').val();
+        }
+        if (id) { update_package(id, "", false); }
+
+    }
+    function load_more_history() {
+        $("#load_history_img").show();
+        var count = $('.history_item').length;
+        $.ajax({
+            method: "POST",
+            url: "/device/LoadHistory",
+            data: {
+                count, "page": "preparation"
+            },
+            dataType: "json"
+        })
+            .done(function (data) {
+                $('#List_history').append(data[1]);
+                if (data[2] == false)
+                    $('#add_history').hide();
+            })
+            .fail(function () {
+            })
+            .always(function () {
+                $("#load_history_img").hide();
+            });
+    }
+
+</script>
+<style>
+    .sticky {
+        position: fixed;
+        top: 0;
+        right: 0;
+        width: 22%;
+    }
+
+    a.btn.disabled {
+        pointer-events: auto;
+    }
+</style>

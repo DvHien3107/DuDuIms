@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>4e6754ee-d17f-41d0-8fe3-caf1174d9e00</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>Enrich.BusinessEvents</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Enrich.IMS\Order\OrderPaymentEvent.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Enrich.IMS\Order\OrderPaymentEvent.Fail.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Enrich.IMS\Order\OrderPaymentEvent.Latter.cs" />
+  </ItemGroup>
+</Project>

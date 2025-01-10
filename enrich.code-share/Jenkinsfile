@@ -1,0 +1,66 @@
+pipeline {
+    agent any
+	environment {
+        CURRENT_BRANCH = 'master'
+    }
+    stages {
+        stage('Build') {
+            steps {
+                echo 'Just for test kick build'
+            }
+        }
+        stage('for branch dev') {
+            when {
+                expression {
+                    return env.BRANCH_NAME.equals(env.CURRENT_BRANCH)
+                }
+            }
+            stages {
+                stage ('alert branch name') {
+                    steps {
+                        slackSend botUser: true,
+                        channel: '#ims-dev-ims-bitbucket',
+                        color: '#00ff00',
+                        message: '[START] BUIL SMS Services' + env.BRANCH_NAME + " ${env.JOB_NAME} ${env.BUILD_NUMBER} ",
+                        tokenCredentialId: 'slack-ims-token'
+                    }
+                }
+                stage ('Clean workspace') {
+                    steps {
+						script {
+							try {
+								cleanWs()
+							} catch(all) {
+								
+							} 
+						}		
+                    }
+                }
+                stage ('Git Checkout CodeShare') {
+                    steps {
+                        git branch: 'master', credentialsId: 'quocdoduy', url: 'https://quocdoduy@bitbucket.org/enrich-ims/enrich-code-share.git'
+                    }
+                }               
+            }
+        }
+    }
+    post {
+        always {
+            echo 'Just for test kick build'
+        }
+        success {
+            slackSend botUser: true,
+            channel: '#ims-dev-ims-bitbucket',
+            color: '#00ff00',
+            message: '[SUCCESS] ' + env.BRANCH_NAME + " ${env.JOB_NAME} ${env.BUILD_NUMBER} after ${env.BUILD_DURATION} (<${env.BUILD_URL}|View detail>",
+            tokenCredentialId: 'slack-ims-token'
+        }
+        failure {
+            slackSend botUser: true,
+            channel: '#ims-dev-ims-bitbucket',
+            color: '#00ff00',
+            message: '[FAIL] ' + env.BRANCH_NAME + " ${env.JOB_NAME} ${env.BUILD_NUMBER} after ${env.BUILD_DURATION} (<${env.BUILD_URL}|View detail>",
+            tokenCredentialId: 'slack-ims-token'
+        }
+    }
+}

@@ -1,0 +1,140 @@
+﻿@model EnrichcousBackOffice.Models.CustomizeModel.Ticket_Task_Template.TicketTaskTemplateDetail
+<div colspan="11" class="task_quick_detail_content task_quick_detail_content_@Model.Id" style="padding:10px 20px;background-color: #e8e8e8;margin-bottom:10px;">
+    <div class="nav-tabs-custom col-md-10  tabs div-detail-@Model.Id" style="margin: auto; float: none; padding: 10px;display:none">
+        <div class="tab-content tab-content-note" style="border: 0px 1px 1px 1px solid #ddd">
+            <div class="tab-pane active">
+                <div class="panel">
+                    <table class="table table-bordered table-striped" data-task-id="@Model.Id" id="table-status-task-@Model.Id" style="margin-bottom:0">
+                        <thead>
+                            <tr>
+                                <th style="padding:0px;">
+                                    <label for="task_expand_input_@Model.Id" class="pull-left" style="line-height: 29px; cursor: pointer; width: 100%; margin: 0; padding: 8px;">@Model.TaskName</label>
+                                </th>
+                                <th style="width:100px;text-align:center">
+                                    <input type="checkbox" id="task_expand_input_@Model.Id" data-type="task" data-id="@Model.Id" onchange="quickCompleteTask(this)" name="CompleteAll" @if (Model.Complete == true) { @Html.Raw("checked") } />
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.SubTaskTemplateList.Count() > 0)
+                            {
+                                int i = 0;
+                                foreach (var item in Model.SubTaskTemplateList)
+                                {
+                                    <tr>
+                                        <td style="padding:0px !important;vertical-align:middle">
+                                            <label style="cursor:pointer;width:100%;font-weight:normal;height:100%;margin:0px;padding:9px 8px;" for="task_expand_input_@item.Id">@item.Name</label>
+                                        </td>
+                                        <td style="padding:0px !important;vertical-align:middle">
+                                            <center>
+                                                <input type="checkbox" id="task_expand_input_@item.Id" class="expand_subtask_@Model.Id" onchange="quickCompleteTask(this)" name="CompleteSubTask" data-id="@item.Id" data-type="subtask" @if (item.Complete == true) { @Html.Raw("checked") } style="cursor:pointer" />
+                                            </center>
+                                        </td>
+                                    </tr>
+                                    i++;
+                                }
+
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <div>
+                    <div  style="margin-top:10px;display:flex;align-items:center;">
+                        <label for="Note" style="margin:0px 5px;"><i>Note: </i></label>
+                        <textarea class="form-control input-noborder-custom noteTextarea" id="task_expand_note_@(Model.Id)" style="height:50px" name="Note" readonly>@Model.Note</textarea>
+                        <button type="button" class="pullButton" id="pull-note-@Model.Id" onclick="toggleTextarea_@(Model.Id)()">
+                            <i class="fa fa-angle-double-down" aria-hidden="true"></i>
+                        </button>
+                        <div style="display:flex;vertical-align:top;margin-left:5px;width:100px;">
+                            <button class="btn btn-sm btn-warning btn-comment-update-@(Model.Id)" onclick="updateCommentClick_@(Model.Id)();" style="margin-right:5px"><i class="fa fa-pencil"></i></button>
+                            <button class="btn btn-sm btn-success btn-comment-submit-@(Model.Id)" onclick="submitCommentClick_@(Model.Id)();" style="margin-right:5px;display:none;"><i class="fa fa-check"></i></button>
+                            <button class="btn btn-sm btn-danger btn-comment-cancel-@(Model.Id)" onclick="cancelCommentClick_@(Model.Id)();" style="margin-right:5px;display:none;"><i class="fa fa-times"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-11" style="margin: auto;float: none;padding: 10px 10px 10px 0;text-align: right;display: flex;flex-wrap: wrap;">
+        <button onclick="expandTask(@Model.Id,false)" class="btn btn-default btn-sm" style="margin-left:auto !important">Close</button>
+    </div>
+</div>
+<style>
+    .tab-content-note{
+        position:relative;
+    }
+
+    .noteTextarea {
+        height: auto;
+        transition: height 0.3s ease-in-out;
+    }
+
+    .pullButton {
+        z-index: 999;
+        border: navajowhite;
+        position: absolute;
+        bottom: -13px;
+        background: transparent;
+        right: 50%;
+        transform: translateX(50%);
+        color: blue;
+        font-weight: bold;
+        font-size: 17px;
+    }
+</style>
+<script>
+    var saveComment_@(Model.Id);
+    function updateCommentClick_@(Model.Id)() {
+        $('#task_expand_note_@(Model.Id)').attr('readonly', false);
+        saveComment_@(Model.Id) =  $('#task_expand_note_@(Model.Id)').val();
+        $('.btn-comment-update-@(Model.Id)').hide();
+        $('.btn-comment-submit-@(Model.Id)').show();
+        $('.btn-comment-cancel-@(Model.Id)').show();
+    }
+    function cancelCommentClick_@(Model.Id)() {
+        $('#task_expand_note_@(Model.Id)').attr('readonly', true);
+        $('#task_expand_note_@(Model.Id)').val(saveComment_@(Model.Id));
+        $('.btn-comment-update-@(Model.Id)').show();
+        $('.btn-comment-submit-@(Model.Id)').hide();
+        $('.btn-comment-cancel-@(Model.Id)').hide();
+    }
+    function submitCommentClick_@(Model.Id)() {
+
+        var Note = $('#task_expand_note_@(Model.Id)').val();
+        $.ajax({
+            url: "/TasksMan/UpdateNote",
+            type: 'POST',
+            dataType: 'Json',
+            data: { 'TaskId': @Model.Id, Note },
+            success: function (res) {
+                if (res.status) {
+                    noty({ "text": res.message, "layout": "topRight", "type": "success" });
+                    $('#task_expand_note_@(Model.Id)').attr('readonly', true);
+                    $('.btn-comment-update-@(Model.Id)').show();
+                    $('.btn-comment-submit-@(Model.Id)').hide();
+                    $('.btn-comment-cancel-@(Model.Id)').hide();
+                    Gettimeline();
+                }
+                else {
+                    noty({ "text": res.message, "layout": "topRight", "type": "error" });
+                }
+            },
+            error: function (res) {
+                console.log(res.message);
+            }
+        });
+    }
+
+    function toggleTextarea_@(Model.Id)(){
+        var textarea = document.getElementById("task_expand_note_@(Model.Id)");
+        var button = document.getElementById("pull-note-@Model.Id");
+        const elementHeight = (textarea.scrollHeight) + "px";
+        if (textarea.style.height === elementHeight) {
+            textarea.style.height = "50px"; // Adjust this value based on your design
+            button.innerHTML = '<i class="fa fa-angle-double-down" aria-hidden="true"></i>';
+        } else {
+            textarea.style.height = elementHeight;
+            button.innerHTML = '<i class="fa fa-angle-double-up" aria-hidden="true"></i>';
+        }
+    }
+</script>

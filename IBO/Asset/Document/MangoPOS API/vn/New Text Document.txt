@@ -1,0 +1,10 @@
+UAT
+POS:https://devvn-apimango.enrichcous.com:4443/
+CheckIn:https://devvn-checkinmango.enrichcous.com:4443/login
+API: https://devvn-apimango.enrichcous.com:4443/swagger/
+
+
+Live:
+POS: https://pos.mangoforsalon.vn/
+API: https://api.mangoforsalon.vn/
+Check In : https://checkin.mangoforsalon.vn/

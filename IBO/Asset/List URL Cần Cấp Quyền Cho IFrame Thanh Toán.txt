@@ -1,0 +1,14 @@
+UAT-Check In: https://uat-checkin.enrichcous.com:4443/login
+UAT-POS: https://uat-manage.enrichcous.com:4443/ 
+UAT-Slice: https://uat-slice.enrichcous.com:4443/
+
+Staging-Check In : https://staging-checkin.enrichcous.com/
+Staging-POS: https://staging-manage.enrichcous.com/
+Staging Slice: https://staging-slice.enrichcous.com/
+
+Dev-Check In: http://dev-checkin.enrichcous.com/home
+Dev-POS: https://dev-manage.enrichcous.com/
+
+ProductUSA Check In: https://checkin.mangoforsalon.com/
+ProductUSA POS: https://manage2.mangoforsalon.com/
+Product Slice: https://slice.mangoforsalon.com/

@@ -1,0 +1,32 @@
+﻿@model EnrichcousBackOffice.Models.CustomizeModel.Ticket_Task_Template.SubTaskTemplate
+@using EnrichcousBackOffice.Models
+@{
+    int? i = ViewBag.Index as int?;
+}
+<tr class="number-item-task-template">
+    <td>
+        <input type="hidden" class="form-control SubTaskTemplateList_Id" name="SubTaskTemplateList[@i].Id" value="@Model.Id" />
+        <input type="hidden" class="form-control SubTaskTemplateList_Description" name="SubTaskTemplateList[@i].Description" value="@Model.Description" />
+        <input type="text" class="form-control SubTaskTemplateList_Name" name="SubTaskTemplateList[@i].Name" value="@Model.Name" required />
+        <div class="row">
+            <div class="col-md-12">
+                @if (!string.IsNullOrEmpty(Model.Description))
+                {
+                    <span style="font-size:13px;"><i class="fa fa-info-circle" style="color:#7d7d7d" aria-hidden="true"></i> : <i>@Model.Description</i></span>
+                }
+
+            </div>
+            <div class="col-md-12">
+                @Html.Partial("_UploadAttachments", Model.Files ?? new List<UploadMoreFile>(), new ViewDataDictionary { { "upload", true }, { "unique", Model.Id } })
+            </div>
+        </div>
+
+    </td>
+    <td>
+        <center><input type="checkbox" name="SubTaskTemplateList[@i].Complete" value="true" class="check_completed_task_ticket SubTaskTemplateList_Complete" @if (Model.Complete == true) { @Html.Raw("checked") } onclick="refresh_progress_bar_task_ticket()" style="cursor:pointer" /></center>
+    </td>
+    <td>
+        @*<button type="button" class="btn btn-sm btn-default" title="update subtask" onclick="update_sub_task_template()"><i class="fa fa-pencil-square-o" aria-hidden="true"></i></button>*@
+        <button type="button" class="btn btn-sm btn-danger"  title="Delete" onclick="detete_subtask_template(this)"><i class="fa fa-trash-o"></i></button>
+    </td>
+</tr>

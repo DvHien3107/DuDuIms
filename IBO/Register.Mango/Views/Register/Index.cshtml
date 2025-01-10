@@ -1,0 +1,363 @@
+﻿
+@{ ViewBag.title = "Sign up for a free trial"; }
+@section css{
+    <style>
+        *,
+        .row,
+        div,
+        p {
+            margin: 0;
+            padding: 0;
+        }
+
+        body,
+        html {
+            width: 100%;
+            height: 100vh;
+            position: relative;
+            background-color: #03bed5;
+            font-family: "Montserrat";
+            font-weight: 400;
+        }
+
+        .master-wrapper-page {
+            width: 100%;
+            min-height: 100vh;
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: -moz-box;
+            display: -ms-flexbox;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            background-size: cover;
+            background-attachment: fixed;
+            height: 100%;
+            background-position: center;
+        }
+
+        .form-register-wrapper {
+            width: 33.33%;
+            -webkit-box-shadow: 10px 6px 25px -13px rgba(0,0,0,0.75);
+            -moz-box-shadow: 10px 6px 25px -13px rgba(0,0,0,0.75);
+            box-shadow: 10px 6px 25px -13px rgba(0,0,0,0.75);
+            position: relative;
+            border-radius: 6px;
+            border-left: 1px solid #69d8e6;
+            border-top: 1px solid white;
+        }
+
+        .logo img {
+            width: 60%;
+        }
+
+        .list-icon {
+            list-style: none;
+            margin-bottom: 0;
+        }
+
+        .header {
+            justify-content: space-between;
+            align-items: center;
+            background-image: linear-gradient(to right, #03bed5, #04d4ec);
+            padding: 15px 30px
+        }
+
+        .list-icon li {
+            width: 8px;
+            margin-bottom: 6px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: white;
+        }
+
+        .form-content {
+            background-color: white;
+            border-radius: 0px 0px 8px 8px;
+        }
+
+        .form-group {
+            margin-bottom: 0px;
+            padding-bottom: 15px;
+        }
+
+        .title-register {
+            font-size: 30px;
+            border-bottom: 2px solid #bcbcbd;
+            padding: 30px 0px 4px;
+            font-weight: 600;
+            color: #606161;
+        }
+
+        .title-register,
+        .content {
+            padding-bottom: 1rem;
+            margin: 0px 30px 0px 30px;
+        }
+
+        .title-1,
+        .title-2 {
+            font-size: 20px;
+            padding: 17px 0px;
+            color: #606161;
+            font-weight: 500;
+        }
+
+        .input-field {
+            outline: none;
+            border: none;
+            padding-left: 0px;
+            padding-bottom: 0px;
+            border-bottom: 1px solid #d7d7de;
+            border-radius: 0;
+        }
+
+        .label-field {
+            color: #bcbcbd;
+            position: absolute;
+            color: #bcbcbd;
+            top: 7px;
+            left: 0;
+            font-size: 14px;
+            transition: .2s;
+        }
+
+        .mdc-text-field {
+            position: relative;
+        }
+
+        .form-control:focus {
+            border: none;
+            border-bottom: 1px solid #03c8e0;
+            outline: 0;
+            box-shadow: unset;
+        }
+
+        .input-field:focus ~ label,
+        .input-field:valid ~ label {
+            top: -10px;
+            font-size: 11px;
+        }
+
+        .no-select {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        .button-submit {
+            background-color: #F99D20;
+            color: white;
+            cursor: pointer;
+            border: none;
+            outline: none;
+            padding: 8px 40px;
+            font-weight: 600;
+            text-transform: uppercase;
+            border-radius: 20px;
+            bottom: 0;
+        }
+
+            .button-submit:hover {
+                opacity: 0.8;
+            }
+
+            .button-submit span {
+                transform: translateY(2px);
+                display: inline-block;
+            }
+
+            .button-submit:focus, input, label {
+                outline: none;
+            }
+
+        .policy, .mcfwp-agree-input {
+            color: #91919c;
+            font-size: 15px;
+        }
+
+        .policy {
+            text-decoration: underline;
+        }
+
+            .policy:hover {
+                color: #F99D20;
+            }
+
+        .circle-1 {
+            position: absolute;
+            width: 30%;
+            padding-bottom: 30%;
+            top: -7%;
+            right: -9%;
+            z-index: 1;
+            -webkit-filter: blur(3px);
+            background-color: #b2e1e65c;
+            border-radius: 50%;
+        }
+
+        form {
+            position: relative;
+            z-index: 9;
+        }
+
+        .circle-2 {
+            position: absolute;
+            border-radius: 50%;
+            width: 50%;
+            padding-bottom: 50%;
+            bottom: -20%;
+            left: -25%;
+            overflow: hidden;
+            z-index: 1;
+            -webkit-filter: blur(3px);
+            background-color: #b2e1e65c;
+            border-radius: 50%;
+        }
+
+        @@media all and (max-width: 769px) {
+            .form-register-wrapper {
+                margin: 1rem 0px;
+                min-width: 400px;
+            }
+        }
+
+        @@media all and (max-width: 502px) {
+            .circle-2 {
+                display: none;
+            }
+
+            .circle-1 {
+                display: none;
+            }
+
+            .form-register-wrapper {
+                margin: 0;
+                min-width: 100vw;
+                background: #03a6ba;
+                min-height: 100vh;
+            }
+
+                .form-register-wrapper .form-content {
+                    min-height: calc(100vh - 74px);
+                }
+
+            .title-1, .title-2 {
+                font-size: 17px;
+            }
+
+            .title-register {
+                font-size: 20px;
+            }
+        }
+    </style>
+}
+<div class="master-wrapper-page">
+    <div class="form-register-wrapper">
+        <form id="form-register" action="/Register" method="post">
+            @Html.AntiForgeryToken()
+            <div class="header d-flex">
+                <div class="logo">
+                    <img src="/images/logo.png" />
+                </div>
+                <div class="icon-bar">
+                    <ul class="list-icon">
+                        <li></li>
+                        <li></li>
+                        <li></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="form-content">
+                <div class="title-register">Create Account</div>
+                <div class="content">
+                    <div class="title-1">
+                        LOGIN INFORMATION
+                    </div>
+                    <div class="info">
+                        <div class="form-group mdc-text-field">
+                            <input type="email" id="Email" class="form-control input-field"
+                                   name="Email" required="required" autocomplete="">
+                            <label class="label-field" for="Email">Email</label>
+                        </div>
+                        <div class="form-group mdc-text-field">
+                            <input type="password" maxlength="60" id="Password" class="form-control input-field"
+                                   name="Password" required="required" autocomplete="">
+                            <label class="label-field" for="Password">Password</label>
+                        </div>
+                    </div>
+                    <div class="title-2">
+                        CONTACT INFORMATION
+                    </div>
+                    <div class="info">
+                        <div class="form-group mdc-text-field">
+                            <input type="text" maxlength="60" id="FName" class="form-control input-field"
+                                   name="FName" required="required" autocomplete="">
+                            <label class="label-field" for="FName">First Name</label>
+                        </div>
+                        <div class="form-group mdc-text-field">
+                            <input type="text" maxlength="60" id="LName" class="form-control input-field"
+                                   name="LName" required="required" autocomplete="">
+                            <label class="label-field" for="LName">Last Name</label>
+                        </div>
+                        <div class="form-group mdc-text-field">
+                            <input type="tel" maxlength="15" id="PhoneNumber" class="form-control input-field"
+                                   name="PhoneNumber" required="required" autocomplete="">
+                            <label class="label-field" for="PhoneNumber">Phone</label>
+                        </div>
+                    </div>
+                    @*<div>
+                            <label class="mcfwp-agree-input no-select">
+                                <input class="inited no-select"
+                                       name="i_agree_privacy_policy" required="" type="checkbox" value="1"> &nbsp;Tôi đồng ý
+                                với&nbsp;<a href="/privacy-policy/" class="policy" target="_blank"> điều khoản</a>
+                            </label>
+                        </div>*@
+                    <div class="button-content text-center" style="margin:1rem">
+                        <button class="button-submit" type="submit"><span>Register</span><i class="fa fa-spinner fa-spin fa-fw loading" style="display: none;margin-left: 8px; "></i></button>
+                    </div>
+
+                </div>
+            </div>
+        </form>
+        @*<div class="circle-1"></div>
+        <div class="circle-2"></div>*@
+    </div>
+</div>
+@section scripts{
+    <script>
+        $("#form-register").submit(function (e) {
+            $('.loading').show();
+            e.preventDefault(); // avoid to execute the actual submit of the form.
+            if (!isEmail($("#Email").val())) { warning("Email không đúng định dạng"); $("#Email").focus(); return }
+            else if ($("#PhoneNumber").val().indexOf("_") != -1) { warning("Số điện thoại không đúng"); $("#PhoneNumber").focus(); return }
+            var form = $(this);
+            var url = form.attr('action');
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: form.serialize(), // serializes the form's elements.
+                success: function (data) {
+                    if (data[0]) {
+                        window.location = '/UpdateInfoStore?key=' + data[1];
+                    }
+                    else {
+                        warning(data[1]);
+                        $('.loading').hide();
+                    }
+
+                }
+            });
+        });
+
+        $('#PhoneNumber').inputmask("(999) 999-9999");
+        function isEmail(email) {
+            var regex = /^([a-zA-Z0-9_.+-])+\@@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,4})+$/;
+            return regex.test(email);
+        }
+    </script>
+}

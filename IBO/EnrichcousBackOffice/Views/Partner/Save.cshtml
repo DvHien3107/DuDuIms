@@ -1,0 +1,1152 @@
+﻿@model EnrichcousBackOffice.Models.C_Partner
+@using EnrichcousBackOffice.Models
+@using EnrichcousBackOffice.AppLB
+@using Inner.Libs.Helpful
+@using Enrichcous.Payment.Mxmerchant.Config.Enums
+
+@{
+    ViewBag.Title = Model.Code + " | Update profile - IMS";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var SaleMembers = ViewBag.SaleMembers as List<P_Member>;
+    List<Ad_Country> country = ViewBag.country ?? new List<Ad_Country>();
+    List<Ad_USAState> states = ViewBag.states ?? new List<Ad_USAState>();
+    List<C_PartnerCard> cards = ViewBag.credit ?? new List<C_PartnerCard>();
+    var default_card = cards.FirstOrDefault(card => card.IsDefault);
+    List<C_PartnerCard> expired_cards = ViewBag.expired_credit ?? new List<C_PartnerCard>();
+    List<C_PartnerCard> deactive_cards = ViewBag.deactive_credit ?? new List<C_PartnerCard>();
+    Dictionary<string, bool> access = ViewBag.access;
+}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.css">
+<link rel="stylesheet" href="~/Areas/PaymentGate/Content/page/pay.css" />
+<style>
+    .custom-scroll::-webkit-scrollbar {
+        width: 7px;
+        background-color: #f1f1f1;
+    }
+
+    .custom-scroll::-webkit-scrollbar-track {
+        -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+        border-radius: 10px;
+        background-color: #f1f1f1;
+    }
+
+    .custom-scroll::-webkit-scrollbar-thumb {
+        border-radius: 10px;
+        -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+        background-color: var(--main-color-1);
+    }
+
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+
+    .overlay_img {
+        position: absolute;
+        z-index: 1000;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 100%;
+        background: rgba( 255, 255, 255, 0.4 ) url('../../Content/ajax-loaders/loading-partial.gif') 50% 50% no-repeat;
+    }
+
+    .btn-outline-warning {
+        background-color: #fff;
+        color: #ffc107;
+        border-color: #ffc107;
+    }
+
+    .btn-outline-danger {
+        background-color: #fff;
+        color: #dc3545;
+        border-color: #dc3545;
+    }
+
+    .btn-outline-primary {
+        background-color: #fff;
+        color: #007bff;
+        border-color: #007bff;
+    }
+
+    .form-control {
+        margin-bottom: 5px;
+    }
+
+    card_info_show .form-control {
+        border-radius: 5px;
+    }
+
+    .credit_card:not(.active):hover {
+        background-color: #c8eafe;
+        color: #222;
+    }
+
+    .credit_card {
+        border: 1px solid blue;
+        border-radius: 5px;
+        padding: 10px;
+    }
+
+    #card_info {
+        padding: 5px;
+        margin-bottom: 10px;
+        margin-right: 0px;
+        background-color: #fff;
+        box-shadow: 0px 0px 20px 1px gray;
+    }
+
+        #card_info > div {
+            margin-bottom: 3px;
+        }
+
+        #card_info > ._input {
+            margin-bottom: 0px;
+        }
+
+        #card_info > .col-md-3,
+        #card_info > .col-md-4,
+        #card_info > .col-md-5,
+        #card_info > .col-md-6,
+        #card_info > .col-md-7,
+        #card_info > .col-md-8,
+        #card_info > .col-md-12 {
+            margin: 0;
+            padding: 1px 3px;
+        }
+
+    #btn_group .toggle-group label {
+        padding: 4px 8px;
+    }
+
+    #btn_group .toggle-group span {
+        padding: 0;
+        display: none;
+    }
+
+    #tabs1 {
+        background-color: var(--main-color-1);
+        margin: -10px;
+        margin-bottom: 10px;
+        padding: 5px;
+        padding-bottom: 0;
+    }
+
+        #tabs1 > li > a {
+            padding: 5px 50px;
+        }
+
+        #tabs1 > li:not(.active):not(:hover) > a {
+            color: #fff;
+        }
+</style>
+
+<section class="content-header">
+    <h1>
+        Update partner
+        <small>Partner management</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Dashboard</a></li>
+        <li><a href="/partner">Partners</a></li>
+        <li class="active">Update partner</li>
+    </ol>
+</section>
+
+<!-- Main content -->
+<section class="content container-fluid">
+    <div class="row">
+        @if (TempData["e"] != null)
+        {
+            <div class="alert alert-warning alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-warning"></i>@TempData["e"]</span>
+            </div>
+        }
+        else if (TempData["s"] != null)
+        {
+            <div class="alert alert-success alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-check"></i>@TempData["s"]</span>
+            </div>
+        }
+
+        <div class="col-md-8">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title"></h3>
+                    <div class="box-tools pull-right">
+                        <a href="/partner" class="btn" data-toggle="tooltip" title="Go back" data-original-title="Go back" onclick="overlayOn()">
+                            <i class="fa fa-arrow-left"></i> Go back
+                        </a>
+                        @*<button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="" data-original-title="Collapse">
+                                <i class="fa fa-minus"></i>
+                            </button>*@
+                    </div>
+                </div>
+                <div class="box-body">
+                    <form id="form_save_partner" role="form" action="/partner/save" method="post" class="form-horizontal" enctype="multipart/form-data" onsubmit="overlayOn()">
+                        @Html.HiddenFor(m => m.Id)
+                        <div class="box-body">
+                            <input type="hidden" class="form-control" id="Id" name="Id" value="@Model.Id" />
+                            <h4>Partner information</h4>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Company logo</label>
+                                <div class="col-sm-9">
+                                    <input type="file" accept="image/png, image/gif, image/jpeg" id="pic0" name="pic0" onchange="reviewUpload(this)" />
+                                    <div style="padding:0px;display:@(string.IsNullOrEmpty(Model.Logo) ? "none" : "block")" class="col-sm-12" id="review_pic0">
+                                        <p class="col-sm-12" style="border:1px dotted red; padding:3px;margin-bottom:0">
+                                            <img id="img_pic0" src="@Model.Logo" @*onerror="this.src='../Content/Img/noimage.png'"*@ style="height:100px;margin-left:0" alt="Preview" />
+                                            <i style="padding-left:5px" id="fname_pic0"></i>
+                                            <a onclick="upload_delete('pic0')" href="#" data-toggle="tooltip" id="btn_remove_img" title="Delete file" class="pull-right text-danger">
+                                                <i class="fa fa-trash"></i>
+                                            </a>
+                                        </p>
+                                        <input type="hidden" name="hdPicDelete_pic0" id="hdPicDelete_pic0" value="0" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Name <span style="color:red">*</span></label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="Name" class="form-control" value="@Model.Name" required />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Partner code <span style="color:red">*</span></label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="Code" class="form-control" value="@(Model.Code ?? ViewBag.NewPartnerCode)" required />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Key for license <span style="color:red">*</span></label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="KeyLicense" class="form-control" value="@Model.KeyLicense" required />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Email <span style="color:red">*</span></label>
+                                <div class="col-sm-9">
+                                    <input type="email" name="Email" class="form-control" value="@Model.Email" required />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Hotline </label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="Hotline" class="form-control" value="@Model.Hotline" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Description </label>
+                                <div class="col-sm-9">
+                                    <textarea type="text" class="form-control" id="Description" name="Description" style="resize:vertical; min-height: 100px">@Model.Description</textarea>
+                                </div>
+                            </div>
+                            <hr />
+                            <h4>Contact information</h4>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Contact name <span style="color:blue">*</span></label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="ContactName" class="form-control" value="@Model.ContactName" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Phone number <span style="color:blue">*</span></label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="Phone" class="form-control" value="@Model.Phone" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Address <span style="color:blue">*</span></label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="Address" class="form-control" value="@Model.Address" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">City <span style="color:blue">*</span></label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="City" class="form-control" value="@Model.City" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">State <span style="color:blue">*</span></label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="State" class="form-control" value="@Model.State" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Zipcode <span style="color:blue">*</span></label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="Zipcode" class="form-control" value="@Model.Zipcode" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Country </label>
+                                <div class="col-sm-9">
+                                    @*<input type="text" name="Country" class="form-control" value="@Model.Country" />*@
+                                    <select class="form-control select2" name="Country">
+                                        @foreach (var con in ViewBag.country ?? new List<Ad_Country> { } as List<Ad_Country>)
+                                        {
+                                            <option value="@con.CountryCode" @(Model.Country == con.CountryCode ? "selected" : "")>@con.Name</option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                            <h5 style="text-align:right"><b style="color:blue;">*</b> is necessary fields for payment registration</h5>
+                            <hr />
+                            <h4>Url reference</h4>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Partner website </label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="Url" class="form-control" value="@Model.Url" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Checkin Url </label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="CheckinUrl" class="form-control" value="@Model.CheckinUrl" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Login Url </label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="LoginUrl" class="form-control" value="@Model.LoginUrl" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Manage Url </label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="ManageUrl" class="form-control" value="@Model.ManageUrl" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">Pos Api Url </label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="PosApiUrl" class="form-control" value="@Model.PosApiUrl" />
+                                </div>
+                            </div>
+                            <hr />
+                            <h4>Partner configuration</h4>
+                            @*<div class="form-group">
+                                    <label class="col-sm-3 control-label">Sale share percent </label>
+                                    <div class="col-sm-9">
+                                        <input type="number" name="SalesSharePercent" min="0" max="100" step="1" class="form-control" value="@(Model.SalesSharePercent ?? 0)" />
+                                    </div>
+                                </div>*@
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label"></label>
+                                <div class="col-sm-9">
+                                    <label class="control-label" style="margin-right: 10px">
+                                        <input type="radio" class="flat-red form-control" name="PriceType" id="PriceType" value="partner" @(string.IsNullOrEmpty(Model.PriceType) || Model.PriceType == "partner" ? "checked" : "") /> Partner
+                                    </label>
+                                    <label class="control-label" style="margin-right: 10px">
+                                        <input type="radio" class="flat-red form-control" name="PriceType" id="PriceType" value="membership" @(Model.PriceType == "membership" ? "checked" : "") /> Membership
+                                    </label>
+                                    <label class="control-label" style="">
+                                        <input type="radio" class="flat-red form-control" name="PriceType" id="PriceType" value="agent" @(Model.PriceType == "agent" ? "checked" : "") /> Agent
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label"></label>
+                                <div class="col-sm-9">
+                                    <input type="checkbox" class="flat-red form-control" name="Active" id="Active" @(Model.Status == 0 ? "" : "checked") /> Active
+                                </div>
+                            </div>
+
+                            <div class="col-md-12" style="padding-top: 15px; border-top: 1px solid #f4f4f4">
+                                @if (string.IsNullOrEmpty(Model.Id))
+                                {
+                                    <button type="submit" class="btn btn-primary pull-right"><i class="fa fa-floppy-o" aria-hidden="true"></i> Save</button>
+                                }
+                                else
+                                {
+                                    <button type="submit" class="btn btn-primary pull-right" id="btn_save_change"><i class="fa fa-floppy-o" aria-hidden="true"></i> Save change</button>
+                                }
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div id="card_info_show" style="position:absolute;right:0; margin-right:0;opacity:0; background-color: #fff; width:400px; display:none; z-index:99">
+            <div class="overlay_img"> </div>
+            <div id="card_info" class="col-md-12" style="border: 1px solid lightgray; border-radius:5px;padding: 20px;">
+                <div class="col-md-12">
+                    <button class="btn btn-default btn-sm" id="close_edit_btn" style="float:right; margin-right: -20px; margin-top:-20px; height: 25px"><i class="fa fa-close" style="vertical-align:top"></i></button>
+                </div>
+                <input type="hidden" id="CardId" value="" />
+                <div class="col-md-12">
+                    <label>Card number <span style="color:red">*</span></label>
+                    <div>
+                        <i class="fa fa-credit-card pull-left" style="margin:8px;position: absolute;font-size: 20px;"></i>
+                        <input class="form-control" type="number" id="CardNumber" name="CardNumber" required style="text-indent: 25px;font-weight:bolder;font-size:17px; color:#007bff" placeholder="@(default_card?.CardNumber)" />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <span>Expired (MM/YY) <span style="color:red">*</span></span>
+                    <input class="form-control req" id="CardExpiry" name="CardExpiry" required value="@(default_card?.CardExpiry)" />
+                </div>
+                <div class="col-md-6">
+                    <span>CSC <span style="color:red">*</span></span>
+                    <input class="form-control req CardCSC" id="CardCSC" name="CardCSC" required placeholder="****" />
+
+                </div>
+                @*<div class="col-md-6">
+                        <span>First Name <span style="color:red">*</span></span>
+                        <input class="form-control" id="CardFirstName" name="CardFirstName" value="@(default_card?.CardFirstName)" autocomplete="nope" />
+
+                    </div>
+                    <div class="col-md-6 pull-left">
+                        <span>Last Name <span style="color:red">*</span></span>
+                        <input class="form-control" id="CardLastName" name="CardLastName" value="@(default_card?.CardLastName)" autocomplete="nope" />
+
+                    </div>*@
+                <div class="col-md-12 pull-left">
+                    <span>Card holder name</span>
+                    <input class="form-control" id="CardHolderName" name="CardHolderName" value="@(default_card?.CardHolderName)" autocomplete="nope" />
+
+                </div>
+                <div class="col-md-12 pull-left">
+                    <span>Street address</span>
+                    <input class="form-control" id="CardAddressStreet" name="CardAddressStreet" value="@(default_card?.CardAddressStreet)" autocomplete="nope" />
+
+                </div>
+                <div class="col-md-12 pull-left">
+                    <span>Postal code</span>
+                    <input class="form-control" id="CardZipCode" name="CardZipCode" value="@(default_card?.CardZipCode)" autocomplete="nope" />
+                </div>
+
+                @*<div class="col-md-6 pull-left">
+                        <span>City</span>
+                        <input class="form-control" id="CardCity" name="CardCity" value="@(default_card?.CardCity)" autocomplete="nope" />
+                    </div>*@
+                @*<div class="col-md-6 pull-left">
+                        <div class="_input">
+                            <input class="form-control"  id="CardState_input" value="@(default_card?.CardState)" autocomplete="nope"/>
+                            <span>State</span>
+                        </div>
+                    </div>*@
+                @*<div class="col-md-6 pull-left">
+                        <span>State</span>
+                        <select class="form-control" id="CardState_select">
+                            @foreach (var state in states)
+                            {
+                                <option value="@state.abbreviation">@state.name</option>
+                            }
+                        </select>
+
+                    </div>*@
+                <!--<div class="col-md-6 pull-right">
+
+                <span>Country</span>-->
+                @*<input class="form-control"  id="CardCountry_read" value="@(default_card?.CardCountry)" />*@
+                @*<select class="form-control" id="CardCountry" name="CardCountry">
+                        @foreach (var c in country)
+                        {
+                            <option value="@c.Name" @if (c.Name.Equals(default_card?.CardCountry ?? "United States")) { @Html.Raw("selected") }>@c.Name</option>
+                        }
+                    </select>*@
+                <!--</div>-->
+
+                <div class="col-md-12 pull-left">
+                    <span>Phone</span>
+                    <input class="form-control" id="CardPhone" name="CardPhone" value="@(default_card?.CardPhone)" autocomplete="nope" />
+
+                </div>
+                <div class="col-md-12 pull-left">
+                    <span>Email</span>
+                    <input class="form-control" id="CardEmail" name="CardEmail" value="@(default_card?.CardEmail)" autocomplete="nope" />
+
+                </div>
+
+                <div class="col-md-12 pull-left">
+                    <button type="button" id="btn_save" onclick="save_edit()" class="btn btn-primary pull-right"><i class="fa fa-check"></i> Save</button>
+                </div>
+
+                <div id="btn_group" class="col-md-12 pull-left" style="@(default_card==null?"display:none;":"") border-top: 1px solid lightgray;padding-top:10px; margin-top:10px">
+                    <button id="card_active" style="padding: 4px 8px" class="btn">Active</button>
+                    @*<input type="checkbox" id="card_default" checked="@(default_card?.IsDefault==true?"true":"false")" data-toggle="toggle" data-width="110" data-height="29" data-onstyle="primary" data-offstyle="secondary" data-on="Default" data-off="Make default">*@
+                </div>
+
+            </div>
+        </div>
+
+        <div class="col-md-4 content-right" style="padding-left:0">
+            <div class="box box-primary" style="border-radius:unset;padding:0;font-family:Poppins-Regular,sans-serif;">
+                <div class="box-header with-border">
+                    <h4 class="box-title">Cards list</h4>
+                </div>
+                <div class="box-body">
+                    <div class="col-md-12" style="padding:0; overflow-x:hidden;">
+                        <div id="pay_slide" style="width:200%">
+                            <form id="new_card_form" action="/partner/AddNewCard" method="post">
+                                <input type="hidden" name="CardId" value="@(cards.FirstOrDefault(card => card.IsDefault)?.Id)" />
+                                <input type="hidden" name="PartnerCode" value="@(Model?.Code)" />
+                                <div class="col-md-6 custom-scroll" style='float:left;max-height: 75vh; overflow-y: auto;'>
+                                    <div id="active_cards" style="text-align:center;">
+                                        @foreach (var card in cards.OrderByDescending(c => c.IsDefault == true))
+                                        {
+                                            <div class="credit_card_row">
+                                                <div class="col-md-12 pull-left credit_card" style="margin-bottom:10px" id="@card.Id" data-status="active">
+                                                    <div class="col-md-12" onclick="">
+                                                        <div class="card-view creditCardInput" style="width: fit-content; float: left; padding: 0; line-height: unset;">
+                                                            <i class="fa fa-credit-card pull-left" style="margin:2px 0;position: absolute;font-size: 20px;"></i>
+                                                            <div class="cardIcon @(Ext.EnumParse<ECardType>(card.CardType).Code<string>())"></div>
+                                                        </div>
+                                                        <b>@card.CardType-<span id="cardnumber_@card.Id">@card.CardNumber</span></b>
+                                                        @if (!string.IsNullOrEmpty(card.MerchantCardReference) && access.Any(k => k.Key.Equals("customer_view_cardnumber")) == true && access["customer_view_cardnumber"] == true)
+                                                        {
+                                                            <span class="cardhidden" id="cardhidden_@card.Id" style="margin-left: 10px;cursor:pointer" onclick="showCardNumber('@card.Id', '@card.CardNumber')"><i class="fa fa-eye" aria-hidden="true"></i></span>
+                                                        }
+                                                        <div class="pull-right" style="margin:0; padding:0;">
+                                                            <button type="button" class="btn btn-outline-warning btn-sm edit_btn" onclick="show_credit('@card.Id')"> <i class="fa fa-pencil"></i></button>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-12">
+                                                        <table style="margin:auto">
+                                                            <tbody>
+                                                                <tr>
+                                                                    <td style="text-align:left;width:150px">Default</td>
+                                                                    <td><input class="set_default" data-card="@card.Id" type="checkbox" @(card.IsDefault == true ? "checked" : "") data-toggle="toggle" data-size="mini"></td>
+                                                                </tr>
+                                                                <!--if (card.IsDefault)
+                                                                {
+                                                                    <tr>
+                                                                        <td style="padding-top:10px;padding-right:10px;text-align:left;width:150px">Recurring activation</td>
+                                                                        <!--<td style="padding-top:10px;"><input class="set_recurring" @(card.IsRecurring == true ? "checked" : "") data-mxcard="@card.MxMerchant_Id" type="checkbox"-->--> <!--@*@(recurring_cards.Contains(card.MxMerchant_Id) ? "checked" : "")*@--> <!--data-toggle="toggle" data-size="mini"></td>-->
+                                                                    <!--</tr>
+                                                                }-->
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+
+                                    <div id="deactive_cards_box" class="btn btn-default" style="width:100%; margin-bottom:10px">
+                                        <i class="fa fa-caret-down"></i> Deactive Cards (<span id="deactive_cards_count">@deactive_cards.Count</span>)
+                                    </div>
+                                    <div id="deactive_cards" style="text-align:center; display:none;">
+
+                                        @foreach (var card in deactive_cards)
+                                        {
+                                            <!--<div class="credit_card_row">
+                                            <div class="col-md-10 btn btn-outline-danger credit_card pull-left" onclick="" data-status="deactive" style="margin-bottom:10px" id="@card.Id">
+                                                <div class="card-view creditCardInput" style="width: fit-content; float: left;padding: 0;line-height: unset;">
+                                                    <i class="fa fa-credit-card pull-left" style="margin:2px 0;position: absolute;font-size: 20px;"></i>
+                                                    <div class="cardIcon @(Ext.EnumParse<ECardType>(card.CardType).Code<string>())"></div>
+                                                </div>
+                                                <b>@card.CardNumber<span class="label label-warning" style="margin-left: 10px;@if (card.IsDefault == false){ @Html.Raw("display:none;")}">default</span></b>-->
+                                            @*<i class="fa fa-credit-card pull-left" style="margin-top:4px;"></i>
+                                                <b> @card.CardNumber </b>*@
+                                            <!--</div>
+                                                <div class="col-md-2 pull-right" style="margin:0; padding:0;padding-left:10px;">
+                                                    <button type="button" class="btn btn-outline-warning edit_btn" onclick="show_credit('@card.Id')" style="width:100%"> <i class="fa fa-pencil"></i></button>
+                                                </div>
+                                            </div>-->
+
+                                            <div class="credit_card_row">
+                                                <div class="col-md-12 pull-left credit_card" style="margin-bottom:10px;border:1px solid red" id="@card.Id" data-status="active">
+                                                    <div class="col-md-12" onclick="">
+                                                        <div class="card-view creditCardInput" style="width: fit-content; float: left; padding: 0; line-height: unset;">
+                                                            <i class="fa fa-credit-card pull-left" style="margin:2px 0;position: absolute;font-size: 20px;"></i>
+                                                            <div class="cardIcon @(Ext.EnumParse<ECardType>(card.CardType).Code<string>())"></div>
+                                                        </div>
+                                                        <b>@card.CardType-<span id="cardnumber_@card.Id">@card.CardNumber</span></b>
+                                                        @if (!string.IsNullOrEmpty(card.MerchantCardReference) && access.Any(k => k.Key.Equals("customer_view_cardnumber")) == true && access["customer_view_cardnumber"] == true)
+                                                        {
+                                                            <span class="cardhidden" id="cardhidden_@card.Id" style="margin-left: 10px;cursor:pointer" onclick="showCardNumber('@card.Id', '@card.CardNumber')"><i class="fa fa-eye" aria-hidden="true"></i></span>
+                                                        }
+                                                        <div class="pull-right" style="margin:0; padding:0;">
+                                                            <button type="button" class="btn btn-outline-warning btn-sm edit_btn" onclick="show_credit('@card.Id')"> <i class="fa fa-pencil"></i></button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+
+                                    </div>
+                                    <div id="expired_cards_box" class="btn btn-default" style="width:100%;">
+                                        <i class="fa fa-caret-down"></i> Expried Cards (<span id="expired_cards_count">@expired_cards.Count</span>)
+                                    </div>
+                                    <div id="expired_cards" style="text-align:center; display:none; background-color:#fff">
+                                        @foreach (var card in expired_cards)
+                                        {
+                                            <div class="credit_card_row">
+                                                <div class="col-md-10 btn btn-outline-warning credit_card pull-left" onclick="" data-status="expired" style="margin-bottom:10px"
+                                                     id="@card.Id">
+                                                    <div class="card-view creditCardInput" style="width: fit-content; float: left;padding: 0;line-height: unset;">
+                                                        <i class="fa fa-credit-card pull-left" style="margin:2px 0;position: absolute;font-size: 20px;"></i>
+                                                        <div class="cardIcon @(Ext.EnumParse<ECardType>(card.CardType).Code<string>())"></div>
+                                                    </div>
+                                                    <b>@card.CardType-<span id="cardnumber_@card.Id">@card.CardNumber</span></b>
+                                                    @if (!string.IsNullOrEmpty(card.MerchantCardReference) && access.Any(k => k.Key.Equals("customer_view_cardnumber")) == true && access["customer_view_cardnumber"] == true)
+                                                    {
+                                                        <span class="cardhidden" id="cardhidden_@card.Id" style="margin-left: 10px;cursor:pointer" onclick="showCardNumber('@card.Id', '@card.CardNumber')"><i class="fa fa-eye" aria-hidden="true"></i></span>
+                                                    }
+                                                </div>
+                                                <div class="col-md-2 pull-right" style="margin:0; padding:0;padding-left:10px;">
+                                                    <button type="button" class="btn btn-outline-warning edit_btn" onclick="show_credit('@card.Id')" style="width:100%"> <i class="fa fa-pencil"></i></button>
+                                                </div>
+                                            </div>
+
+                                        }
+
+                                    </div>
+
+                                    <div style="text-align:center; margin:5px auto; clear:both">
+                                        <hr />
+                                    </div>
+                                    <button type="button" class="btn btn-success btn-slide-new-card" style="width:100%; font-weight:bold" data-value="new" onclick="addNewCard()">Add new card</button>
+                                </div>
+                                <div id="new_credit" class="col-md-6 custom-scroll" style="float:right;max-height: 75vh; overflow-y: auto; display: none;">
+                                    <div class="row">
+                                        <input type="hidden" name="CardId" value="" />
+                                        <div style="padding:5px">
+                                            <lable class="btn btn-sm btn-outline-primary btn-prev-list-card" style="border:none" onclick="prev()"><i class="fa fa-arrow-left"></i><b> Back</b></lable>
+                                          
+                                        </div>
+                                        <div class="col-md-12">
+                                            <label>Card number <span style="color:red">*</span></label>
+                                            <div>
+                                                <i class="fa fa-credit-card pull-left" style="margin:8px;position: absolute;font-size: 20px;"></i>
+                                                <input style="text-indent: 25px" class="form-control" type="number" name="CardNumber" value="" required onchange="checkCardType(this)" />
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label>Expired (MM/YY) <span style="color:red">*</span></label>
+                                            <input class="form-control req" id="new_card_expiry" name="CardExpiry" value="" required />
+
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label>CSC <span style="color:red">*</span></label>
+                                            <input class="form-control  CardCSC" name="CardCSC" value="" required />
+
+                                        </div>
+                                        <div class="col-md-12">
+                                            <label>Card holder name <span style="color:red">*</span></label>
+                                            <input class="form-control " name="CardHolderName" value="" autocomplete="off" required />
+
+                                        </div>
+
+                                        @*<div class="col-md-6">
+                                                <label>First name <span style="color:red">*</span></label>
+                                                <input class="form-control " name="CardFirstName" value="" autocomplete="off" required />
+
+                                            </div>
+
+                                            <div class="col-md-6">
+                                                <label>Last Name <span style="color:red">*</span></label>
+                                                <input class="form-control" name="CardLastName" value="" autocomplete="off" required />
+
+                                            </div>*@
+                                        <hr />
+                                        <div class="col-md-12" style="text-align:center;padding:0">
+                                            @*<span style=" background-color: #fff; padding: 5px;">-----------------------------------</span>*@
+                                            <hr />
+                                        </div>
+                                        <div class="col-md-12">
+                                            <label>Address <span style="color:red">*</span></label>
+                                            <input class="form-control" name="CardAddressStreet" value="" autocomplete="nope" minlength="5" required />
+                                        </div>
+
+                                        @*<div class="col-md-6">
+                                                <label>City</label>
+                                                <input class="form-control" name="CardCity" value="" autocomplete="nope" />
+                                            </div>
+
+                                            <div class="col-md-6" style="display:none">
+                                                <label>State</label>
+                                                <input class="form-control" name="CardState" disabled value="" autocomplete="nope" />
+                                            </div>
+
+                                            <div class="col-md-6">
+                                                <label>State</label>
+                                                <select class="form-control" name="CardState">
+                                                    @foreach (var state in states)
+                                                    {
+                                                        <option value="@state.abbreviation">@state.name</option>
+                                                    }
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label>Country/Region</label>
+                                                <select class="form-control" name="CardCountry">
+                                                    @foreach (var c in country)
+                                                    {
+                                                        <option value="@c.Name">@c.Name</option>
+                                                    }
+                                                </select>
+                                            </div>*@
+
+                                        <div class="col-md-12">
+                                            <label>Postal code <span style="color:red">*</span></label>
+                                            <input class="form-control" name="CardZipCode" value="" autocomplete="nope" required />
+                                        </div>
+
+                                        <div class="col-md-12">
+                                            <label>Phone number</label>
+                                            <input class="form-control" name="CardPhone" value="" autocomplete="nope" />
+                                        </div>
+
+                                        <div class="col-md-12">
+                                            <label>Email</label>
+                                            <input class="form-control" name="CardEmail" value="" autocomplete="nope" />
+                                        </div>
+                                    </div>
+                                    <br />
+                                    <button type="submit" class="btn btn-primary pay-with-new-card" style="width:100%; font-weight:bold">
+                                        Submit
+                                        <img src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" class="loading_img" />
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+<script src="~/Areas/PaymentGate/Content/js/card.js"></script>
+<!--icheck-->
+<script src="/content/admin/plugins/iCheck/icheck.min.js"></script>
+<script src="~/Scripts/upload_and_review.js"></script>
+
+<link href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css" rel="stylesheet">
+<script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.js"></script>
+<script>
+    function addNewCard() {
+        //$("#new_credit input[type='text']").each((i, el)=>{
+        //    $(el).attr("required", true);
+        // });
+        $("#new_credit").show();
+        $("#pay_slide").animate({ marginLeft: "-100%" }, 300);
+    }
+    function prev() {
+        $("#pay_slide").animate({ marginLeft: "0px" }, 300);
+        // $("#new_credit input[type='text']").each((i, el)=>{
+        //     $(el).removeAttr('required');
+        //  });
+    }
+
+    function checkCardType(el) {
+        $(el).parent("div._input").find(".cardIcon").attr('class', `cardIcon ${CardType($(el).val())}`)
+    }
+    function show_credit(cardId) {
+        event.stopPropagation();
+        $(".credit_card").not("#" + cardId).removeClass("active");//.find(".fa-check-circle").hide();
+        $("#" + cardId).addClass("active");//.find(".fa-check-circle").show();
+        //table.columns(0).search(cardId).draw();
+
+        $('#card_info_show .overlay_img').show();
+        $('#card_info_show').show().animate({ marginRight: '33%', opacity: 1 }, 200);
+
+        $.ajax({
+            method: "POST",
+            url: "/partner/GetCardInfo",
+            data: { cardId },
+            dataType: "json"
+        })
+            .done(function (data) {
+
+                if (data[0]) {
+                    let card_active = data[1].Active;
+                    let card_default = data[1].IsDefault;
+                    $("#CardId").val(data[1].Id);
+                    $("#card_active").data('value', card_active).removeClass(!card_active ? "btn-danger" : "btn-success").addClass(card_active ? "btn-danger" : "btn-success").html(card_active ? "Deactive" : "Active");
+                    //$("#card_default").bootstrapToggle(card_default === true ? "on" : "off", true);
+                    $("#CardNumber").attr("placeholder", data[1].CardNumber);
+                    $("#CardExpiry").val(data[1].CardExpiry);
+                    $("#CardEmail").val(data[1].CardEmail);
+                    $("#CardPhone").val(data[1].CardPhone);
+                    $("#CardFirstName").val(data[1].CardFirstName);
+                    $("#CardLastName").val(data[1].CardLastName);
+                    $("#CardAddressStreet").val(data[1].CardAddressStreet);
+                    $("#CardCity").val(data[1].CardCity);
+                    $("#CardCountry").val(data[1].CardCountry);
+                    $("#CardCountry_read").val(data[1].CardCountry);
+                    $("#CardState_select").val(data[1].CardState);
+                    $("#CardState_input").val(data[1].CardState);
+                    $("#CardZipCode").val(data[1].CardZipCode);
+                    $("#card_info .cardIcon").attr('class', `cardIcon ${data[1].CardType}`)
+                    if (card_default) {
+                        $("#card_active").hide();
+                    } else {
+                        $("#card_active").show();
+                    }
+                    $("#CardNumber").val("");
+                    $("#CardCSC").val("");
+
+                    if (card_active && data[2]) {
+                        $("#card_default").closest(".toggle.btn").show();
+                    } else {
+                        $("#card_default").closest(".toggle.btn").hide();
+                    }
+
+                    $("#card_info input").trigger("blur");
+                    $("#card_info select").trigger("change");
+
+                    $("#btn_group").show();
+                    $("._text").each(function () {
+                        if ($(this).val() != "") {
+                            $(this).next("._label").addClass("is_valid");
+                        } else {
+                            $(this).next("._label").removeClass("is_valid");
+                        }
+                    })
+                }
+                else {
+                    warning(data[1]);
+                    $('#card_info_show').hide();
+                }
+            })
+            .fail(function (err) {
+                noty({ "text": data[1], "layout": "topRight", "type": "error" });
+            })
+            .always(function () {
+                overlayOff();
+                $('#card_info_show .overlay_img').hide();
+                $("body").children().on("mousedown", function (event) {
+                    if (!($(event.target).closest(".credit_card_row, #card_info_show, #overlay").length > 0) || $(event.target).closest("#close_edit_btn").length) {
+                        close_edit();
+                    }
+                })
+            });
+    }
+    function close_edit() {
+        $('#card_info_show').animate({ marginRight: 0, opacity: 0 }, 200, function () { $('#card_info_show').hide() });
+        $("body").children().unbind("mousedown");
+    }
+    function save_edit() {
+        let partner_Code = '@Model.Code';
+        let Id = $("#CardId").val();
+        let CardNumber = $("#CardNumber").val();
+        let CardExpiry = $("#CardExpiry").val();
+        let CardEmail = $("#CardEmail").val();
+        let CardPhone = $("#CardPhone").val();
+        let CardCSC = $("#CardCSC").val();
+        let CardFirstName = $("#CardFirstName").val();
+        let CardLastName = $("#CardLastName").val();
+        let CardAddressStreet = $("#CardAddressStreet").val();
+        let CardCity = $("#CardCity").val();
+        let CardCountry = $("#CardCountry").val();
+        let CardState = CardCountry?.toLowerCase() === "united states" ? $("#CardState_select").val() : $("#CardState_input").val();
+        let CardZipCode = $("#CardZipCode").val();
+        if (CardNumber.length < 4) {
+            noty({ "text": "Please fill your Card number!", "layout": "topRight", "type": "warning" });
+            $("#CardNumber").focus();
+            return;
+        } else if (CardExpiry.length !== 5) {
+            noty({ "text": "Please fill your Card expiry!", "layout": "topRight", "type": "warning" });
+            $("#CardExpiry").focus();
+            return;
+        } else if (CardCSC.length !== 3 && CardCSC.length !== 4) {
+            noty({ "text": "Please fill your CardCSC!", "layout": "topRight", "type": "warning" });
+            $("#CardCSC").focus();
+            return;
+        }
+        $('#card_info_show .overlay_img').show();
+        $.ajax({
+            method: "POST",
+            url: "/partner/SaveEditCard",
+            data: { partner_Code, Id, CardNumber, CardExpiry, CardFirstName, CardLastName, CardEmail, CardPhone, CardAddressStreet, CardCity, CardCountry, CardState, CardZipCode },
+            dataType: "json"
+        })
+            .done(function (data) {
+                if (data[0]) {
+                    noty({ "text": "Save card info completed", "layout": "topRight", "type": "success" });
+                    //$(".credit_card.active").trigger("click");
+                    el_card_change($("#" + Id), data[1], data[2]);
+                    close_edit();
+                    //$(".credit_card.active").trigger("click");
+                } else {
+                    noty({ "text": data[1], "layout": "topRight", "type": "warning" });
+                }
+            })
+            .fail(function () {
+            })
+            .always(function () {
+                $('#card_info_show .overlay_img').hide();
+            });
+    }
+    function el_card_change(e_card, active, valid_date) {
+        let e_card_row = e_card.closest(".credit_card_row");
+        //if (#=> deactive card)
+        if (active === false && !e_card.closest("#deactive_cards").length) {
+            e_card_row.appendTo("#deactive_cards");
+            e_card.removeClass("btn-outline-primary").removeClass("btn-outline-warning").addClass("btn-outline-danger");
+            if (!$("#deactive_cards").is(":visible")) {
+                $("#deactive_cards").slideDown(200);
+            }
+
+        }
+        //if (# => expired card)
+        if (active === true && valid_date === false && !e_card.closest("#expired_cards").length) {
+            e_card_row.appendTo("#expired_cards");
+            e_card.removeClass("btn-outline-danger").removeClass("btn-outline-primary").addClass("btn-outline-warning");
+            if (!$("#expired_cards").is(":visible")) {
+                $("#expired_cards").slideDown(200);
+            }
+
+        }
+
+        //if (# => active card)
+        if (active === true && valid_date === true && !e_card.closest("#active_cards").length) {
+            e_card_row.appendTo("#active_cards");
+            e_card.removeClass("btn-outline-danger").removeClass("btn-outline-warning").addClass("btn-outline-primary");
+        }
+        $("#deactive_cards_count").html($("#deactive_cards .credit_card_row").length);
+        show_card_box();
+    }
+    function show_card_box() {
+        if ($("#deactive_cards").find(".credit_card").length) {
+            if (!$("#deactive_cards_box").is(":visible")) {
+                $("#deactive_cards_box").show();
+            }
+        } else if ($("#deactive_cards_box").is(":visible")) {
+            $("#deactive_cards_box").hide();
+        }
+
+        if ($("#expired_cards").find(".credit_card").length) {
+            if (!$("#expired_cards_box").is(":visible")) {
+                $("#expired_cards_box").show();
+            }
+        } else if ($("#expired_cards_box").is(":visible")) {
+            $("#expired_cards_box").hide();
+        }
+    }
+
+
+    $(function () {
+        $("#form_save_partner").ajaxForm(function (data) {
+            if (data[0]) {
+                var mess = $.parseJSON('{"text":"' + data[1] + '", "layout":"top", "type":"success"}');
+                noty(mess);
+            } else {
+                var mess = $.parseJSON('{"text":"' + data[1] + '", "layout":"top", "type":"error"}');
+                noty(mess);
+            }
+            overlayOff();
+        });
+
+        $("#new_card_form").on("submit", function () {
+            $(this).find(".loading_img").show();
+        })
+        $("#new_card_form").ajaxForm(function (data, form) {
+            if (data[0]) {
+                overlayOn();
+                location.reload();
+            } else {
+                warning(data[1]);
+            }
+            $("#new_card_form").find(".loading_img").hide();
+        })
+        //$('#form_save_partner')
+        //    .on('keyup change paste', 'input, select, textarea', function () {
+        //        $('#btn_save_change').show();
+        //    })
+        //    .on('click', '#btn_remove_img', function () {
+        //        $('#btn_save_change').show();
+        //    });
+        //$('#Active').on('ifChanged', function (event) {
+        //    $('#btn_save_change').show();
+        //});
+        $('.select2').select2();
+        $(".set_default").on("change", function () {
+            var toggle = $(this).data('bs.toggle');
+            if (!$(this).prop('checked') || !confirm("Are you sure to set this card is default?")) {
+                if ($(this).prop('checked')) {
+                    // call off with silent = true
+                    toggle.off(true);
+                } else {
+                    // call on with silent = true
+                    toggle.on(true);
+                }
+            } else {
+                overlayOn();
+                var cardId = $(this).data("card");
+                $.ajax({
+                    method: "POST",
+                    url: "/partner/ChangeDefaultCard",
+                    data: { cardId },
+                    dataType: "json"
+                })
+                    .done(function (data) {
+                        //if (data[0]) {
+                        //    noty({ "text": "Set default card completed", "layout": "topRight", "type": "success" });
+                        //    //location.reload();
+                        //} else
+                        //{
+                        //    noty({ "text": "fail: " + data[1], "layout": "topRight", "type": "error" });
+                        //    if ($(this).prop('checked')) {
+                        //        toggle.off(true);
+                        //    } else {
+                        //        toggle.on(true);
+                        //    }
+                        //}
+                    })
+                    .fail(function () {
+                    })
+                    .always(function () {
+                        location.reload();
+                    });
+            }
+        })
+        $(".set_recurring").on("change", function () {
+            var isActive = $(this).prop('checked');
+            var toggle = $(this).data('bs.toggle');
+            if (confirm("Are you want to " + (isActive ? "turn on" : "turn off") + " recurring on this card?")) {
+                overlayOn();
+                var MxCardId = $(this).data("mxcard");
+                $.ajax({
+                    method: "POST",
+                    url: "/partner/ChangeSubscriptionRenew_byCard",
+                    data: { MxCardId, isActive },
+                    dataType: "json"
+                })
+                    .done(function (data) {
+                        //if (data[0]) {
+                        //    noty({ "text": data[1], "layout": "topRight", "type": "success" });
+                        //    //location.reload();
+                        //} else {
+                        //    noty({ "text": "fail: " + data[1], "layout": "topRight", "type": "error" });
+                        //    if ($(this).prop('checked')) {
+                        //        toggle.off(true);
+                        //    } else {
+                        //        toggle.on(true);
+                        //    }
+                        //}
+                    })
+                    .fail(function () {
+                    })
+                    .always(function () {
+                        location.reload();
+                    });
+            }
+        })
+        $('#card_active').on("click", function () {
+            let id = $("#CardId").val();
+            let e_card = $("#" + id);
+            let active = !$('#card_active').data('value');
+            $.ajax({
+                method: "POST",
+                url: "/partner/ChangeStatusCard",
+                data: { id, active },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    //if (data[0]) {//{success, active, expiry}
+                    //    noty({ "text": "Change status completed", "layout": "topRight", "type": "success" });
+                    //    el_card_change(e_card, data[1], data[2]);
+                    //    $('#card_active').data('value', active).removeClass(!active ? "btn-danger" : "btn-success").addClass(active ? "btn-danger" : "btn-success").html(card_active ? "Active" : "Deactive");
+                    //    close_edit();
+                    //    //$(".credit_card.active").trigger("click");
+                    //} else {
+                    //    noty({ "text": data[1], "layout": "topRight", "type": "warning" });
+                    //}
+                })
+                .fail(function () { })
+                .always(function () {
+                    overlayOn();
+                    location.reload();
+                });
+        });
+        $("#expired_cards_box").on("click", function (event) {
+            if (!$(event.target).closest("#expired_cards").length) {
+                $("#expired_cards").slideToggle(300);
+            }
+        });
+        $("#deactive_cards_box").on("click", function (event) {
+            if (!$(event.target).closest("#deactive_cards").length) {
+                $("#deactive_cards").slideToggle(300);
+            }
+        });
+        show_card_box();
+    })
+
+    $('#CardExpiry,#new_card_expiry').inputmask('99/99', { showMaskOnHover: false });
+    $('.CardCSC').inputmask({ "mask": "9", "repeat": 4, "greedy": false, showMaskOnHover: false });
+    $('input[type="checkbox"].flat-red, input[type="radio"].flat-red').iCheck({
+        checkboxClass: 'icheckbox_flat-blue',
+        radioClass: 'iradio_flat-blue'
+    })
+
+    $('#Phone').inputmask("(999) 999-9999");
+    $('#Hotline').inputmask("(9999) 9999-9999");
+
+    $('.cardhidden').on('click', function (e) {
+        e.stopPropagation();
+    });
+
+
+    function showCardNumber(id, card) {
+        $('#cardhidden_' + id + ' i').toggleClass('fa-eye-slash', 'fa-eye');
+        if ($('#cardhidden_' + id + ' i').hasClass('fa-eye-slash')) {
+            $.confirm({
+                title: `<span style="font-size:16px;">Please input key</b></span>`,
+                content: `<form action="" method="post" id="">
+                       <div class="form-group">
+                                <input type="password" class="form-control disable-enter" style="text-align: left; width: 100%; font-weight:bold" value="" name="Hiddenkey" id="Hiddenkey" />
+                        </div>
+                    </form>`,
+                buttons: {
+                    formSubmit: {
+                        text: 'Save',
+                        btnClass: 'btn-blue',
+                        action: function () {
+                            overlayOn();
+                            var Hiddenkey = this.$content.find('#Hiddenkey').val();
+                            $.ajax({
+                                url: '/merchantman/ShowCardNumber',
+                                type: 'Post',
+                                dataType: 'Json',
+                                data: { 'Id': id, 'Hiddenkey': Hiddenkey },
+                                success: function (data) {
+                                    if (data[0]) {
+                                        if (data[1] != null) $('#cardnumber_' + id).html(' ' + data[1]);
+                                        else {
+                                            noty({ "text": "Key incorrect", "layout": "topRight", "type": "warning" });
+                                            $('#cardhidden_' + id + ' i').toggleClass('fa-eye-slash', 'fa-eye');
+                                        }
+                                    }
+                                    else {
+                                        noty({ "text": data[1], "layout": "topRight", "type": "warning" });
+                                        $('#cardhidden_' + id + ' i').toggleClass('fa-eye-slash', 'fa-eye');
+                                    }
+                                },
+                                error: function (res) {
+                                    noty({ "text": "Show card number failed.", "layout": "topRight", "type": "warning" });
+                                    $('#cardhidden_' + id + ' i').toggleClass('fa-eye-slash', 'fa-eye');
+                                }
+                            }).always(function () {
+                                overlayOff();
+                            });;
+                        }
+                    },
+                    cancel: function () {
+                        //close
+                    },
+                },
+                onContentReady: function () {
+                    // bind to events
+                    var jc = this;
+                    this.$content.find('form').on('submit', function (e) {
+                        // if the user submits the form by pressing enter in the field.
+                        e.preventDefault();
+                        jc.$$formSubmit.trigger('click'); // reference the button and click it
+                    });
+                }
+            });
+        }
+        else {
+            $('#cardnumber_' + id).html(card);
+        }
+    }
+</script>

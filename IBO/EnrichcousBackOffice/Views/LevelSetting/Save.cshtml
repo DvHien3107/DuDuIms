@@ -1,0 +1,158 @@
+﻿@model EnrichcousBackOffice.Models.P_Level
+@{
+
+}
+<section class="content-header">
+    <h1>
+        Level Setting
+        <small>@ViewBag.Title</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="/home"><i class="fa fa-dashboard"></i> Dashboard</a></li>
+        <li><a href="/levelsetting/"><i class="fa fa-gear"></i> Level setting</a></li>
+        <li class="active">@ViewBag.Title</li>
+    </ol>
+</section>
+
+
+<section class="content">
+    <div class="row">
+        @if (TempData["e"] != null)
+        {
+            <div class="alert alert-warning alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-warning"></i> @TempData["e"]</span>
+            </div>
+        }
+        else if (TempData["s"] != null)
+        {
+            <div class="alert alert-success alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <span><i class="icon fa fa-check"></i> @TempData["s"]</span>
+            </div>
+        }
+
+
+        <div class="col-md-10">
+            <div class="box">
+                <div class="box-header with-border">
+                    <h3 class="box-title">@ViewBag.Title</h3>
+                </div>
+
+
+                <form role="form" class="form-horizontal" action="/levelsetting/save/" method="post">
+                    @Html.HiddenFor(m => m.Level)
+
+
+                    <div class="box-body">
+                                               
+                        <div class="form-group">
+                            <div class="form-inline col-md-12">
+                                <p class="control-label col-md-2 title-head" for="name">Level<span style="color:red">(*)</span> </p>
+                                @Html.TextBoxFor(m => m.Level, new { @class = "form-control col-md-6" })
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="form-inline col-md-12">
+                                <p class="control-label col-md-2 title-head" for="fileInput">Level Name<span style="color:red">(*)</span></p>
+                                @Html.TextBoxFor(m => m.LevelName, new { @class = "form-control col-md-6" })
+                            </div>
+                        </div>
+
+                        <br />
+                        <div class="control-group">
+                            <label style="font-weight:bold">Conditions to be promoted to this level</label>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="form-inline col-md-12">
+                                <p class="control-label col-md-2 title-head">Option1: </p>
+                                <div>
+                                    Must achieve &nbsp; @Html.TextBoxFor(m => m.OptionPromote1_RequirementLevel_Qty, new { style = "width:60px", @class = "form-control" })
+                                    &nbsp;
+                                    <select name="OptionPromote1_RequirementLevel" class="form-control">
+                                        <option>N/A</option>
+                                        @foreach (var item in ViewBag.listLevel)
+                                        {
+                                            <option value="@item.Level" @if (Model.OptionPromote1_RequirementLevel == item.Level) { @Html.Raw(@"selected=""selected""") }>@item.LevelName</option>
+                                        }
+                                    </select>
+                                    &nbsp; in team
+
+                                    <span>and each level should reach </span>
+                                    @Html.TextBoxFor(m => m.OptionPromote1_RequirementLevel_RequimentEveryLevel_QtyContract, new { style = "width:60px", @class = "form-control" })
+                                    &nbsp;<span>contracts</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="form-inline col-md-12">
+                                <p class="control-label col-md-2" for="name">Option2:</p>
+                                <div>
+                                    Personally brought in at least  &nbsp;
+                                    @Html.TextBoxFor(m => m.OptionPromote1_RequirementLevel_RequimentEveryLevel_QtyContract, new { style = "width:60px", @class = "form-control" })
+                                    contracts
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="form-inline col-md-12">
+                                <p class="control-label col-md-2" for="IsActive">Active Status</p>
+                                @Html.CheckBox("IsActive", (Model.IsActive.HasValue == true ? (Model.IsActive ?? false) : false), new { @class = "minimal" })
+                            </div>
+                        </div>
+
+
+
+                        @*<div class="form-group">
+                                <label class="col-sm-3 control-label">Notification email</label>
+                                <div class="col-sm-9">
+                                    <input type="text" name="NotificationEmail" class="form-control" value="@Model.NotificationEmail" />
+                                </div>
+                            </div>*@
+
+
+                    </div>
+
+                    <div class="box-footer">
+                        <a href="/levelsetting" class="btn btn-default"><i class="glyphicon glyphicon-arrow-left"></i> Go back</a>
+                        <button type="submit" class="btn btn-primary" name="submit" value="0">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+
+@section style
+{
+
+    <!--icheck-->
+    <link rel="stylesheet" href="/content/admin/plugins/iCheck/all.css" />
+
+}
+
+@section script
+{
+    <!--icheck-->
+    <script src="/content/admin/plugins/iCheck/icheck.min.js"></script>
+
+
+    <script type="text/javascript">
+        $(function () {
+         
+            //iCheck for checkbox and radio inputs
+            $('input[type="checkbox"].minimal').iCheck({
+                checkboxClass: 'icheckbox_minimal-blue'
+            })
+        })
+
+
+    </script>
+
+}

@@ -1,0 +1,25 @@
+$.ajax({
+                        url: "/quanly/device/typesave",
+                        method: "post",
+                        data: { type: typeId, name: typeName },
+                        dataType: "json"
+                    })
+                        .done(function (rdata) {
+                            //{true/false,'message',typeid}
+                            if (rdata[0] === true) {
+                                $("select[name='Type'] option:selected").remove();
+                                var options = $.parseJSON('{"text":"' + rdata[1] + '","layout":"topRight","type":"success"}');
+                                noty(options);
+
+                                var opt = new Option(typeName, rdata[2], false, true);
+                                $("select[name='Type']").append(opt);
+
+                            }
+                            else {
+                                var options = $.parseJSON('{"text":"' + rdata[1] + '","layout":"topRight","type":"error"}');
+                                noty(options);
+                            }
+                        })
+                        .fail(function (jqXHR, textStatus, errorThrown) {
+                            alert("S? c?, hãy th? l?i. " + errorThrown);
+                        });

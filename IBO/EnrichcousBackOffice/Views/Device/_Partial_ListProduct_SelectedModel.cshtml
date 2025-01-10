@@ -1,0 +1,62 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.CustomizeModel.O_Product_Model_Selected_view>
+@{
+    List<EnrichcousBackOffice.Models.CustomizeModel.ProductPicture> product_pic = ViewBag.ProductPicture;
+}
+
+@foreach (var m in Model)
+{
+
+    <tr class="model_item" id="model_item_@m.ModelCode.Replace(" ","_")" style="padding-bottom:10px">
+        <td style="width:80px;padding-left:20px; border:1px solid #ddd; border-right:none">
+            <img onerror="this.onerror=null; this.src='/Upload/Img/no_image.jpg'" width="80" class="model_img" src="@m.Picture">
+        </td>
+        <td style="padding:10px; border:1px solid #ddd; border-left:none">
+            <p class="col-md-12 text-success">
+                <b>@m.ProductName</b>
+                <a class="text-danger pull-right" onclick="unselect_model('@m.ModelCode')">
+                    <i class="fa fa-close"></i>Remove
+                    <img class="loading_img" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                </a>
+            </p>
+            <div class="col-md-6">
+                <p>Model: <b>@m.ModelName</b></p>
+                <span>Color: </span><label>@(!string.IsNullOrEmpty(m.Color) ? m.Color : "N/A")</label>
+            </div>
+            <div class="col-md-6">
+                <div class="input-group" style="padding-bottom:5px">
+
+                    <span class="input-group-addon">Price: $</span>
+                    <input class="form-control model_price" type="number" min="0" step="any"
+                           name="price_@m.ModelCode" value="@(m.Price)" oninput="update_price(this)" style="height:28px; text-align:right;padding-right:0" required />
+                </div>
+                <div class="input-group" style="padding-bottom:5px">
+                    <span class="input-group-addon">Qty</span>
+                    <input class="qty_input form-control" name="model_qty_@m.ModelCode" oninput="update_price(this)"
+                           type="number" value="@m.Quantity" style="height:28px; text-align:right; padding-right:0" min="1" />
+                </div>
+                <span>Total:</span>
+                <label class="label label-success pull-right" style="font-size:13px"><span class="model_total">@(m.Price * m.Quantity)</span> $</label>
+            </div>
+
+            <div class="col-md-6 col-md-offset-6">
+                
+            </div>
+        </td>
+    </tr>
+
+}
+
+<script>
+    function update_price(e) {
+        var e_model = $(e).closest('.model_item');
+        var price = e_model.find('.model_price').val();
+        if ($(e).val() < 0) { $(e).val(1) };
+        var qty = e_model.find('.qty_input').val();
+        e_model.find('.model_total').html((price * qty).toFixed(2));
+        var package_total = 0;
+        $(".model_item").each(function () {
+            package_total += parseFloat($(this).find('.model_total').html());
+        })
+        $("#package_total").html(package_total.toFixed(2));
+    }
+</script>

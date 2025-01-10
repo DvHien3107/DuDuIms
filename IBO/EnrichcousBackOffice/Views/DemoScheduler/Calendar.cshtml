@@ -1,0 +1,813 @@
+﻿@{
+    Layout = null;
+    var Salon = ViewBag.Salon as EnrichcousBackOffice.Models.C_Customer;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Demo Scheduler</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/content/admin/bower_components/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700,300italic,400italic,600italic">
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar-scheduler@5.8.0/main.min.css' rel='stylesheet' />
+    <link href='~/Content/Admin/bower_components/semantic-ui/UI-Button/button.min.css' rel='stylesheet' />
+    <link href='~/Content/Admin/bower_components/semantic-ui/UI-Dropdown/dropdown.min.css' rel='stylesheet' />
+    <link href='~/Content/Admin/bower_components/semantic-ui/UI-Image/image.min.css' rel='stylesheet' />
+    <link href='~/Content/Admin/bower_components/semantic-ui/UI-Transition/transition.min.css' rel='stylesheet' />
+    <link href='~/Content/Admin/bower_components/semantic-ui/UI-Label/label.min.css' rel='stylesheet' />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.min.css" rel="stylesheet" />
+    <link rel="stylesheet" type="text/css" href="/content/login/vendor/select2/select2.min.css">
+    <link rel="stylesheet" type="text/css" href="~/Content/noty/jquery.noty.css" />
+    <link rel="stylesheet" type="text/css" href="~/Content/noty/noty_theme_default.css" , />
+    <style>
+        body {
+            font-family: 'Source Sans Pro','Helvetica Neue',Helvetica,Arial,sans-serif;
+            font-weight: 400;
+            background-color: #ebedef;
+        }
+        .wrapper{
+            background-color:white;
+            margin:0px 15px 15px 15px;
+            padding:3rem;
+        }
+        .fc .fc-col-header-cell-cushion {
+            display: flex;
+            padding: 10px 0px;
+            justify-content: center;
+        }
+        .avatar-select-2 {
+            width: 15px;
+            height: auto;
+            margin-right: 5px;
+        }
+        .fc-axis.fc-widget-content > span {
+            text-transform: uppercase;
+        }
+
+        .fc-today {
+            background: transparent !important; /* hack. because demo will always start out on current day */
+        }
+
+        .avatar-member-resource {
+            width: 27px;
+        }
+
+        .ui.mini.image, .ui.mini.images .image, .ui.mini.images img, .ui.mini.images svg {
+            width: 30px;
+        }
+
+        .name-member-resource {
+            display: block;
+            text-transform: uppercase;
+            font-weight: 600;
+            line-height: 29px;
+            margin-left: 10px;
+        }
+
+        #calendar {
+            margin: 20px auto 0px;
+        }
+
+        .fc-license-message {
+            display: none;
+        }
+
+        .fc-timegrid-slot-label-cushion, .fc-timegrid-axis-cushion {
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .fc-day-today {
+            background-color: transparent !important; /* hack. because demo will always start out on current day */
+        }
+
+        .fc th {
+            /* background-color: #ebedef;*/
+        }
+
+        .fc-scroller.fc-scroller-liquid-absolute::-webkit-scrollbar-thumb {
+            border-radius: 10px;
+            width: 5px;
+            -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+            background-color: #555;
+        }
+
+        .fc-button {
+            text-transform: capitalize !important;
+        }
+
+        .disable-time {
+            pointer-events: none;
+            cursor: not-allowed;
+        }
+
+        .salon-title {
+            text-align: center;
+            font-weight: 500;
+            font-size: 23px;
+            text-transform: uppercase;
+            display: block;
+            color: #3c4b64;
+        }
+
+        .ui.dropdown .menu > .item {
+            font-size: 14px;
+        }
+
+            .ui.dropdown .menu > .item > .image, .ui.dropdown .menu > .item > img, .ui.dropdown > .text > .image, .ui.dropdown > .text > img {
+                transform: translateY(2px);
+            }
+
+        .resource-wrapper {
+            position: relative;
+            display: flex;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+           
+            line-height: 34px !important;
+        }
+        .select2-container .select2-selection--single{
+            height:34px;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__arrow b{
+            margin-top:1px;
+        }
+        .icon-verify {
+            display: inline-block;
+            position: absolute;
+            width: 15px;
+            left: 19px;
+            bottom: -4px;
+            background: white;
+            border-radius: 50%;
+            width: 15px;
+            font-size: 9px;
+            border: 1px solid #ebedef;
+        }
+
+            .icon-verify.verified {
+                color: #2eb85c;
+            }
+
+            .icon-verify.notyet-verify {
+                color: #e55353;
+            }
+
+        .modal-content {
+            border: none;
+        }
+
+        #form-event-demo-scheduler .modal-header {
+            background: #636f83;
+            color: white;
+            border-radius: 5px 5px 0px 0px;
+        }
+
+        #form-event-demo-scheduler .close, #form-event-demo-scheduler .close:focus, #form-event-demo-scheduler .close:hover {
+            color: white;
+            opacity: 1;
+        }
+
+        .circular-loading {
+            animation: rotate 2s linear infinite;
+            height: 50px;
+            transform-origin: center center;
+            width: 50px;
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            margin: auto;
+        }
+       
+        .path {
+            stroke-dasharray: 1, 200;
+            stroke-dashoffset: 0;
+            animation: dash 1.5s ease-in-out infinite, color 6s ease-in-out infinite;
+            stroke-linecap: round;
+        }
+
+        @@keyframes rotate {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @@keyframes dash {
+            0% {
+                stroke-dasharray: 1, 200;
+                stroke-dashoffset: 0;
+            }
+
+            50% {
+                stroke-dasharray: 89, 200;
+                stroke-dashoffset: -35px;
+            }
+
+            100% {
+                stroke-dasharray: 89, 200;
+                stroke-dashoffset: -124px;
+            }
+        }
+
+        @@keyframes color {
+            100%, 0% {
+                stroke: #d62d20;
+            }
+
+            40% {
+                stroke: #0057e7;
+            }
+
+            66% {
+                stroke: #008744;
+            }
+
+            80%, 90% {
+                stroke: #ffa700;
+            }
+        }
+        .select2-container--default .select2-selection--single .select2-selection__placeholder {
+            color: #999;
+            text-align: left !important;
+            display: block;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 33px !important;
+            text-align: left !important;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <input type="hidden" id="calendarDemoSchedulerId" value="@ViewBag.DemoSchedulerId" />
+    <div class="c-header">
+        <div class="container-fluid" style="position:relative;padding:10px;">
+            <div class="center-toolbar-custom">
+                <span class="salon-title">@Salon.BusinessName</span>
+            </div>
+            <button style="position:absolute;right:15px;top:10px;" class="btn btn-info button" onclick="window.close()">Done</button>
+        </div>
+    
+    </div>
+    <div class="container-fluid wrapper">
+
+        <div class="row">
+            <div class="col-12">
+                <div class="header-toolbar-custom">
+                    <div class="row">
+                        <div class="col-sm-6 col-xs-6">
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div style="display:flex;flex-wrap:nowrap;">
+                                        <div class="ui big icon buttons" style="margin-right:5px;">
+                                            <button id="prev-calendar-button" class="ui primary button">
+                                                <span class="fc-icon fc-icon-chevron-left"></span>
+                                            </button>
+                                            <button class="ui primary basic button">
+                                                <span style="font-weight:bold" id="view-title">
+                                                </span>
+                                            </button>
+                                            <button id="next-calendar-button" class="ui primary button">
+                                                <span class="fc-icon fc-icon-chevron-right"></span>
+                                            </button>
+                                        </div>
+                                        <button id="today-button" class="ui vk big button">Today</button>
+                                    </div>
+
+                                </div>
+                                <div class="col-sm-12" style="margin-top:15px">
+                                    <a class="ui big label">
+                                        <i class="fa fa-globe" aria-hidden="true"></i>
+                                        TimeZone : (@(Salon.SalonTimeZone_Number??("-05:00"))) @ViewBag.TimeZoneId
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        @*<div class="col-sm-4 col-xs-2">
+                            <div class="center-toolbar-custom">
+                                <span class="salon-title">@Salon.BusinessName</span>
+                            </div>
+                        </div>*@
+                        <div class="col-sm-6 col-xs-6 text-right">
+                            
+                                    @*<div class="ui fluid search scrolling selection dropdown">
+            <input type="hidden" id="MemberNumber" name="MemberNumber">
+            <i class="dropdown icon"></i>
+            <div class="default text">Select Member</div>
+            <div class="menu">
+                <div class="item" data-value="">
+                    All Member
+                </div>
+                @foreach (var member in ViewBag.ListMember as List<EnrichcousBackOffice.Models.P_Member>)
+                {
+                    <div class="item" data-value="@member.MemberNumber">
+                        <img class="ui mini avatar image" src="@(!string.IsNullOrEmpty(member.Picture)?member.Picture:(member.Gender=="Male"?"/Upload/Img/Male.png":"/Upload/Img/FeMale.png"))">
+                        @member.FullName
+                    </div>
+                }
+            </div>
+        </div>*@
+                            <select style="z-index:9999;" name="MemberNumberFilter" id="MemberNumberFilter">
+                                <option></option>
+                                <option value="all">All Member</option>
+                                @foreach (var m in ViewBag.ListMember as List<EnrichcousBackOffice.Models.P_Member>)
+                                {
+                                    <option @(ViewBag.MemberNumber == m.MemberNumber ? "selected" : "") value="@m.MemberNumber" data-avatar="@(!string.IsNullOrEmpty(m.Picture)?m.Picture:(m.Gender=="Male"?"/Upload/Img/Male.png":"/Upload/Img/FeMale.png"))">@m.FullName #@m.MemberNumber</option>
+                                }
+                            </select>
+                                    <div class="right-toolbar-custom pull-right" style="margin-left:5px">
+                                        <div class="ui big buttons">
+                                            <button id="view-by-day" class="ui big positive button">Day</button>
+                                            <div class="or" data-text="or"></div>
+                                            <button id="view-by-week" class="ui big button">Week</button>
+                                        </div>
+                                    </div>
+                              
+                        </div>
+                    </div>
+                </div>
+                <div id='calendar'></div>
+            </div>
+        </div>
+    </div>
+    <div class="loading-calendar" style="position: absolute;z-index:999; right: 50%;top: 50%;transform: translate(50%, -50%) ;display:none">
+        <svg class="circular-loading" viewBox="25 25 50 50"><circle class="path" cx="50" cy="50" r="20" fill="none" stroke-width="2" stroke-miterlimit="10"></circle></svg>
+    </div>
+    <div id="render-modal-event-calendar">
+    </div>
+    <div class="modal fade" id="modal-send-email-authorize">
+        <div class="modal-dialog modal-md" style="max-width:800px;">
+            <div class="modal-content">
+                <form id="form-send-email-authorize" method="post" action="/MemberMan/SendEmailRequireGoogleAuth">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">×</span>
+                        </button>
+                        <h4 id="modal-department-title" class="modal-title">
+                            Send Email Google Auth
+                        </h4>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="Email" value="" />
+                        <div class="col-12">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    This account not yet google authorized  , do you want to send google authorization email to this person ?
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="col-12">
+                            <button type="button" onclick="FetchReloadData()" class="btn btn-default" data-dismiss="modal" aria-label="Close">
+                                Cancel
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                Send Email
+                                <img class="loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none">
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- rrule lib -->
+    <script src='https://cdn.jsdelivr.net/npm/rrule@2.6.4/dist/es5/rrule.min.js'></script>
+    <script src="~/Content/Admin/bower_components/moment/min/moment.min.js"></script>
+    @*<script src='https://cdn.jsdelivr.net/npm/moment-timezone@0.5.31/builds/moment-timezone-with-data.min.js'></script>*@
+    <script src="/Content/Admin/bower_components/jquery/dist/jquery.min.js"></script>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar-scheduler@5.8.0/main.min.js'></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/js/bootstrap-datetimepicker.min.js"></script>
+    <script src="~/Content/Admin/bower_components/semantic-ui/UI-Transition/transition.min.js"></script>
+    <script src="~/Content/Admin/bower_components/semantic-ui/UI-Dropdown/dropdown.min.js"></script>
+    <script src="/content/login/vendor/select2/select2.min.js"></script>
+    <script src="~/Content/noty/jquery.noty.js"></script>
+    @*<script src='https://cdn.jsdelivr.net/npm/@('@')fullcalendar/moment@5.5.0/main.global.min.js'></script>*@
+    <!-- the rrule-to-fullcalendar connector. must go AFTER the rrule lib -->
+    <script src='https://cdn.jsdelivr.net/npm/@('@')fullcalendar/rrule@5.5.1/main.global.min.js'></script>
+
+    <script>
+        const SalonTimeZone_Number = '@(Salon.SalonTimeZone_Number)';
+    var calendar;
+    var date_now = '@(ViewBag.DefaultDate)';
+    var date = new Date();
+    var d = date.getDate();
+    var m = date.getMonth();
+    var y = date.getFullYear();
+        var timeZone = '@(Salon.SalonTimeZone?? "Eastern")';
+        //moment.tz.setDefault(timeZone);
+        function renderCalendar() {
+            //var d = new Date();
+            //var m = (d.getMonth() + 1) >= 10 ? (d.getMonth() + 1) : '0' + (d.getMonth() + 1);
+            //var da = d.getDate() >= 10 ? d.getDate() : '0' + d.getDate();
+            //var date_now = d.getFullYear() + "-" + m + "-" + da;
+            var calendarEl = document.getElementById('calendar');
+            calendar = new FullCalendar.Calendar(calendarEl, {
+                views: {
+                    timeGrid: {
+                        titleFormat: { // will produce something like "Tuesday, September 18, 2018"
+                            month: 'short',
+                            year: 'numeric',
+                            day: 'numeric',
+                            weekday: 'short'
+                        },
+                    }
+
+                },
+                loading: function (isLoading) {
+                    if (isLoading) {
+                        $('.loading-calendar').show();
+                    }
+                    else {
+                        $('.loading-calendar').hide();
+                    }
+                },
+                timeZone: timeZone,
+                initialDate: date_now,
+                headerToolbar: false,
+                allDaySlot: false,
+                dateClick: function (arg) {
+                // use *UTC* methods on the native Date Object
+                    // will output something like 'Sat, 01 Sep 2018 00:00:00 GMT'
+                },
+                selectAllow: function (selectInfo) {
+                    var events = calendar.getEvents();
+                    let eventsFilter = events.filter((evt) => evt.start <= selectInfo.start
+                        && evt.end >= selectInfo.end
+                        && evt.id == selectInfo.resource.id);
+                    if (eventsFilter.length == 0) {
+                        return false;
+                    }
+                    return true;
+                },
+                //eventAllow: function (dropInfo, draggedEvent) {
+                //    console.log(dropInfo);
+                //    if (draggedEvent.id === '999') {
+                //        return dropInfo.start < new Date(2016, 0, 1); // a boolean
+                //    }
+                //    else {
+                //        return true;
+                //    }
+                //},
+                initialView: 'resourceTimeGridDay',
+                resources: {
+                    url: '/DemoScheduler/getMemberBySupportDeparment',
+                    method: 'POST',
+                    extraParams: function () {
+                        return {
+                            "MemberNumber": $("#MemberNumberFilter").val()
+                        };
+                    }
+                },
+                eventContent: function (arg) {
+
+                    let innerText = '';
+                    if (arg.event.groupId === 'disable-time') {
+                        return { html: innerText }
+                    }
+
+                },
+                resourceLabelContent: (info) => {
+                    let splitTitle = info.resource.title.split('|');
+                    let html = '';
+                    html += '<div class="resource-wrapper">';
+                    html += '<img class="avatar-member-resource image ui mini circular image" src="' + splitTitle[0] + '" >';
+
+                    if (splitTitle[2] === "0") {
+                        html += '<span class="icon-verify notyet-verify"><i class="fa fa-times" aria-hidden="true"></i></span>';
+                    }
+                    else {
+                        html += '<span class="icon-verify verified"><i class="fa fa-check" aria-hidden="true"></i></span>';
+                    }
+                    html += '<span class="name-member-resource">' + splitTitle[1] + '<spSSalonlSalonTimeZone_NumberSalonTimeZone_Numberonn>';
+                    html += '</div>';
+                    return { html: html }
+                },
+                //eventDidMount: function (arg) {
+                //    //console.log(arg.event.start);
+                //    arg.event.start = moment(arg.event.start).tz('Pacific/Eastern');
+                //    arg.event.end = moment(arg.event.end).tz('Pacific/Eastern');
+
+                //},
+                events: function (fetchInfo, successCallback, failureCallback) {
+
+                    jQuery.ajax({
+                        type: 'get',
+                        url: '/DemoScheduler/GetAllEventDemoschedulerCalendar',
+                        data: {
+                            NumberTimeZone: SalonTimeZone_Number,
+                            TimeZone: fetchInfo.timeZone,
+                            requestStartDate: fetchInfo.startStr,
+                            requestEndDate: fetchInfo.endStr,
+                        },
+                        success: function (events) {
+                            successCallback(events);
+                        }
+                    });
+                },
+                //events: [
+                //    {
+                //        "id": "000002",
+                //        "title": null,
+                //        "resourceId": "000002",
+                //        "groupId": "disable-time",
+                //        "display": "inverse-background",
+                //        "classNames": "disable-time",
+                //        "backgroundColor": "#c4c9d0",
+                //        "daysOfWeek": null,
+                //        "start": null,
+                //        "end": null,
+                //        "startTime": null,
+                //        "endTime": null,
+                //        "rrule": {
+                //            "freq": "weekly",
+                //            "interval": 1,
+                //            "byweekday": [
+                //                "MO",
+                //                "TU",
+                //                "WE",
+                //                "TH",
+                //                "FR"
+                //            ],
+                //            "dtstart": "20210724T210000Z",
+                //            "until": "20210802"
+                //        },
+                //        "exdate": [
+                //            "20210728T210000Z"
+                //        ],
+                //        "duration": "12:00"
+                //    },
+                //],
+
+                eventTimeFormat: { // like '14:30:00'
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    meridiem: true
+                },
+
+                height: 630,
+                //defaultDate: date_now,
+                navLinks: true, // can click day/week names to navigate views
+                selectable: true,
+                selectMirror: true,
+                dayMinWidth: 200,
+                editable: true,
+                slotDuration: "00:15:00",
+                slotLabelInterval: "01:00",
+                //slotMinTime: '00:00:00',
+                //slotMaxTime: '24:00:00',
+                select: function (arg) {
+                    let splitTitle = arg.resource._resource.title.split('|');
+                    if (splitTitle[2] === "0") {
+                        showPopupSendEmailAuthorize(arg.resource._resource.id)
+                    }
+                    else {
+                        new_event(arg.startStr, arg.endStr, arg.resource._resource.id);
+                    }
+                    calendar.unselect()
+                },
+                eventClick: function (info) {
+
+                    info.el.style.borderColor = 'red';
+                    view_update_event(info.event.id);
+                    info.el.style.borderColor = '';
+                },
+                eventResize: function (info) {
+                    if (!confirm("Is this okay?")) {
+                      info.revert();
+                    }
+                    else {
+                        update_start_end_event(info);
+                    }
+                },
+                eventDrop: function (info) {
+                    info.revert();
+                    info.el.style.borderColor = 'red';
+                    debugger;
+                    let timeZoneEvent = parseInt(info.event.extendedProps.timeZoneNumber.substring(0, info.event.extendedProps.timeZoneNumber.length - 3));
+                    var timezoneBalance = timeZoneEvent - parseInt(SalonTimeZone_Number.substr(0, SalonTimeZone_Number.length - 3));
+                    let currentStart = info.event.startStr;
+                    let startDate = (new Date(currentStart.substring(0, 19)));
+                    var start = startDate.setHours(startDate.getHours() + timezoneBalance);
+                    let currentEnd = info.event.endStr;
+                    let endDate = (new Date(currentEnd.substring(0, 19)));
+                    var end = endDate.setHours(endDate.getHours() + timezoneBalance);
+                  
+                    view_update_event(info.event.id, start, end);
+                        info.el.style.borderColor = '';
+
+                },
+        });
+            calendar.render();
+        }
+        renderCalendar();
+        function showPopupSendEmailAuthorize(MemberNumber) {
+            $.ajax({
+                type: "get",
+                url: '/MemberMan/GetMemberByMemberNumber',
+                data: { MemberNumber }, // serializes the form's elements.
+                success: function (data) {
+                    $("#form-send-email-authorize").find('[name="Email"]').val(data.PersonalEmail);
+                    $("#modal-send-email-authorize").modal("show");
+                },
+                complete: function () {
+                    //$(loading).hide();
+                },
+            });
+        }
+        $("#form-send-email-authorize").submit(function (e) {
+            e.preventDefault(); // avoid to execute the actual submit of the form.
+            var form = $(this);
+            var url = form.attr('action');
+            var email = form.find('[name="Email"]').val();
+            var loading = form.find('.loading');
+            $(loading).show();
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: { email }, // serializes the form's elements.
+                success: function (data) {
+                    if (data.status) {
+                        $("#modal-send-email-authorize").modal("hide");
+                        let MsgSuccess = $.parseJSON('{"text":"Send email success !", "layout":"topRight", "type":"success"}');
+                        noty(MsgSuccess);
+                    }
+                    else {
+                        let MsgError = $.parseJSON('{"text":' + data.message + ', "layout":"topRight", "type":"error"}');
+                        noty(MsgError);
+                    }
+
+                },
+                complete: function () {
+                    $(loading).hide();
+                },
+            });
+
+        });
+        function new_event(start, end, membernumber) {
+            $('.loading-calendar').show();
+        var DemoSchedulerId = $("#calendarDemoSchedulerId").val();
+            $.ajax({
+                type: "POST",
+                url: "/DemoScheduler/ShowEventPopup",
+                data: { 'MemberNumber': membernumber, 'DemoSchedulerId':DemoSchedulerId },
+                dataType: "html",
+                success: function (data) {
+                    $("#render-modal-event-calendar").html(data);
+                    $("#modal-event-demo-scheduler").modal("show");
+                    //$.post("/demoscheduler/getclienttimezone", { id: Intl.DateTimeFormat().resolvedOptions().timeZone }, function (data) {
+                    //    $(".TimeZoneCrud").val(data).change();
+                    //});
+
+                    $("#form-event-demo-scheduler").find("#StartTime").val(moment(new Date(start)).format("MM/DD/YYYY h:mm A")).change();
+                    $("#form-event-demo-scheduler").find("#EndTime").val(moment(new Date(end)).format("MM/DD/YYYY h:mm A")).change();
+                    $('.loading-calendar').hide();
+                }
+            });
+        }
+        function view_update_event(id, start = null, end = null) {
+            $('.loading-calendar').show();
+            //var MemberNumber = $("#calendarMemberNumber").val();
+            //var DemoSchedulerId = $("#calendarDemoSchedulerId").val();
+            $.ajax({
+            type: "POST",
+                url: "/DemoScheduler/ShowEventPopup",
+                data: { "EventId": id },
+                dataType: "html",
+                success: function (data) {
+                    $("#render-modal-event-calendar").html(data);
+                    $("#modal-event-demo-scheduler").modal("show");
+                    console.log(moment(new Date(start)).format("MM/DD/YYYY h:mm A"));
+                    if (start !== null) {
+                        $("#form-event-demo-scheduler").find("#StartTime").val(moment(new Date(start)).format("MM/DD/YYYY h:mm A")).change();
+
+                    };
+                    if (end !== null) {
+                        $("#form-event-demo-scheduler").find("#EndTime").val(moment(new Date(end)).format("MM/DD/YYYY h:mm A")).change();
+                    }
+                    $('.loading-calendar').hide();
+                }
+            });
+        }
+        function resetForm() {
+            $("#create_or_update_form").find("#Id").val("");
+            $("#create_or_update_form").find("#Title").val("");
+            $("#create_or_update_form").find("#StartTime").val("");
+            $("#create_or_update_form").find("#EndTime").val("");
+            $("#create_or_update_form").find("#Location").val("");
+            $("#create_or_update_form").find("#Note").val("");
+            $("#create_or_update_form").find("#Attendees").val("");
+        }
+        function CreateOrUpdateSubmit() {
+            $.ajax({
+                type: "POST",
+                url: "/DemoScheduler/InsertOrUpdateEvent",
+                data: $("#create_or_update_form").serialize() + "&username=" + $("#calendarUsername").val(),
+                dataType: "Json",
+                success: function (result) {
+                    $("#create_or_update_modal").modal('hide');
+
+                    localStorage.setItem('Demoscheduler-ChangeDataDetail',true);
+                    refesh_event();
+                }
+            });
+        }
+        //$(function () {
+        //    // Reference the hub.
+        //    var hubNotif = $.connection.calendarHub;
+        //    $.connection.hub.start();
+        //    // Start the connection.
+        //    //$.connection.hub.start().done(function () {
+        //    //    //loadList();
+        //    //});
+        //    // Notify while anyChanges.
+        //    hubNotif.client.updatedData = function () {
+        //        refesh_event();
+        //    };
+        //});
+        function refesh_event() {
+            calendar.refetchEvents();
+        }
+        function refesh_resource() {
+            calendar.refetchResources();
+        }
+        $('#MemberNumberFilter').on('change', function () {
+            calendar.refetchResources();
+        });
+
+        //customer toolbar header
+        document.getElementById('next-calendar-button').addEventListener('click', function () {
+            calendar.next();
+            updateCalendarToolbarHeader();
+
+        });
+        document.getElementById('prev-calendar-button').addEventListener('click', function () {
+            calendar.prev();
+            updateCalendarToolbarHeader();
+
+        });
+        document.getElementById('today-button').addEventListener('click', function () {
+            calendar.today();
+            updateCalendarToolbarHeader();
+            calendar.refetchEvents();
+        });
+        document.getElementById('view-by-week').addEventListener('click', function () {
+            document.querySelector('#view-by-day').classList.remove('positive');
+            this.classList.add('positive');
+            calendar.changeView("resourceTimeGridWeek");
+            updateCalendarToolbarHeader();
+            calendar.refetchEvents();
+        });
+        document.getElementById('view-by-day').addEventListener('click', function () {
+            document.getElementById('view-by-week').classList.remove('positive');
+            this.classList.add('positive');
+            calendar.changeView("resourceTimeGridDay");
+            updateCalendarToolbarHeader();
+            calendar.refetchEvents();
+        });
+        let Today = calendar.getDate();
+        function updateCalendarToolbarHeader(){
+            var view = calendar.view;
+            document.getElementById('view-title').innerHTML = view.title;
+            var currentdate = calendar.getDate();
+            if (currentdate.setHours(0, 0, 0, 0) == Today.setHours(0, 0, 0, 0)) {
+                document.getElementById('today-button').classList.remove('basic');
+            }
+            else {
+                document.getElementById('today-button').classList.add('basic');
+            }
+
+        }
+        updateCalendarToolbarHeader();
+        function formatMember(member) {
+            if (!member.id) {
+                return member.text;
+            }
+            var avatar = $(member.element).attr("data-avatar");
+            if (member.id !== 'all') {
+                var $member = $(
+                    '<span><img class="avatar-select-2" src="' + avatar + '" class="img-flag" /> ' + member.text + '</span>'
+                );
+                return $member;
+            }
+            else {
+                return member.text;
+            }
+
+
+
+        };
+
+        $("#MemberNumberFilter").select2({
+            placeholder: "Select a member",
+            templateResult: formatMember
+        })
+    </script>
+</body>
+</html>

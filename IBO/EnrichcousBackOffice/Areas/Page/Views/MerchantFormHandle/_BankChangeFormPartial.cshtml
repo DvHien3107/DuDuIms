@@ -1,0 +1,251 @@
+@using EnrichcousBackOffice.Areas.Page.Models.Customize;
+
+@{
+    var data = Session["BankChangeFormData"] as FormModel.BankChangeForm_Data;
+}
+
+
+@if (ViewBag.Error != null)
+{
+    <p class="text-center"><b>@ViewBag.Error</b></p>
+}
+else
+{
+    <div class="container">
+        <form id="BankChangeForm" action="/Page/MerchantFormHandle/ChangeData_BCF">
+            <div class="row">
+                <h1 style="font-weight: 900;">MODIFICATION OF MERCHANT SETTLEMENT INFORMATION</h1>
+                <h2>AUTHORIZATION FORM</h2>
+                <div class="instructions col-md-12">
+                    <h3>Instructions:</h3>
+                    <ul>
+                        <li>1. The person signing this form must also be the person who signed the Service Agreement.</li>
+                        <li>2. Please attach a void check from your new account or a bank letter confirming the routing and account number.</li>
+                        <li>3. Submit the completed form and the void check to our ACH Department:</li>
+                        <li style="font-size: 16px;"><span style="font-weight: bold;">Fax:</span> 866-607-4868</li>
+                        <li style="font-size: 16px;"><span style="font-weight: bold;">Email:</span> ach@merchant-support.com</li>
+                    </ul>
+                </div>
+                <div class="personal col-md-12">
+                    <h3>Personal Information</h3>
+                    <div>
+                        <div class="input-group">
+                            <div class="input-group-addon">
+                                <span class="input-group-text">Name of Owner/Principal:</span>
+                            </div>
+                            <input type="text" class="form-control" name="OwnerName" value="@(data?.OwnerName?.ToUpper())" onblur="changeData()">
+                        </div>
+                        <p class="text-center">(Please print name)</p>
+                        <div class="input-group">
+                            <div class="input-group-addon">
+                                <span class="input-group-text">Company Name:</span>
+                            </div>
+                            <input type="text" class="form-control" name="CompanyName" value="@(data?.CompanyName)" onblur="changeData()">
+                        </div>
+                        <div class="input-group">
+                            <div class="input-group-addon">
+                                <span class="input-group-text">Address:</span>
+                            </div>
+                            <input type="text" class="form-control" name="Address" value="@(data?.Address)" onblur="changeData()">
+                        </div>
+                        <div class="input-group">
+                            <div class="input-group-addon">
+                                <span class="input-group-text">Date:</span>
+                            </div>
+                            <input type="text" class="form-control-date" name="Month" value="@(data?.Month)" onblur="changeData()"> / <input type="text" class="form-control-date" name="Day" value="@(data?.Day)" onblur="changeData()"> / <input type="text" class="form-control-date" name="Year" value="@(data?.Year)" onblur="changeData()"> <span style="font-style: italic;">(mm / dd / yyyy )</span>
+                        </div>
+                        <div class="input-group">
+                            <div class="input-group-addon">
+                                <span class="input-group-text">Merchant email (required to confirm changes):</span>
+                            </div>
+                            <input type="text" class="form-control" name="Email" value="@(data?.Email)" onblur="changeData()">
+                        </div>
+                        <div class="input-group">
+                            <div class="input-group-addon">
+                                <span class="input-group-text">Merchant ID:</span>
+                            </div>
+                            <input type="text" class="form-control" name="MID" value="@(data?.MID)" onblur="changeData()">
+                        </div>
+                    </div>
+                </div>
+                <div class="banking col-md-12">
+                    <h3>Banking Information</h3>
+                    <p style="font-style: italic;">Please note that the account must be drawn on a checking account. If you have an Amex account please call Amex directly to update.</p>
+                    <div>
+                        <div class="col-md-8 col-xs-8" style="padding-left: 0;">
+                            <div class="input-group">
+                                <div class="input-group-addon">
+                                    <span class="input-group-text">Account Holder Name:</span>
+                                </div>
+                                <input type="text" class="form-control" name="CardHolder" value="@(data?.CardHolder)" onblur="changeData()">
+                            </div>
+                            <div class="input-group">
+                                <div class="input-group-addon">
+                                    <span class="input-group-text">Routing/ABA Number:</span>
+                                </div>
+                                <input type="text" class="form-control" name="Transit" value="@(data?.Transit)" onblur="changeData()">
+                            </div>
+                            <div class="input-group">
+                                <div class="input-group-addon">
+                                    <span class="input-group-text">Account Number:</span>
+                                </div>
+                                <input type="text" class="form-control" name="BankAccountNumber" value="@(data?.BankAccountNumber)" onblur="changeData()">
+                            </div>
+                            <div class="input-group">
+                                <div class="input-group-addon">
+                                    <span class="input-group-text">Bank Name:</span>
+                                </div>
+                                <input type="text" class="form-control" name="BankName" value="@(data?.BankName)" onblur="changeData()">
+                            </div>
+                            <div class="input-group">
+                                <div class="input-group-addon">
+                                    <span class="input-group-text">Account Type:</span>
+                                </div>
+                                <input type="text" class="form-control" name="AccountType" value="@(data?.AccountType)" onblur="changeData()">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <p style="text-decoration: underline;">For Canadian Merchants select:</p>
+                            <div class="form-check">
+                                <span class="form-check-label">Credit Card Settlement</span>
+                                <input class="form-check-input" type="checkbox" name="CreditCard" value="1" onclick="changeData()" @if (data?.CreditCard == true) { @Html.Raw("checked") }>
+                            </div>
+                            <div class="form-check">
+                                <span class="form-check-label">Debit/Interac Settlement</span>
+                                <input class="form-check-input" type="checkbox" name="Debit" value="1" onclick="changeData()" @if (data?.Debit == true) { @Html.Raw("checked") }>
+                            </div>
+                        </div>
+
+                        <p style="display: inline-block; margin-top: 20px;">
+                            I hereby authorize all credits and debits related to the above referenced merchant ID, in accordance with the Service Agreement, to post by ACH to the bank account listed above and corresponding to the attached void check or bank letter.
+                        </p>
+                    </div>
+
+                    <div class="input-group">
+                        <div class="input-group-addon">
+                            <span class="input-group-text">Signature of Owner/Principal:</span>
+                        </div>
+                        <input type="text" class="form-control" disabled>
+                    </div>
+
+                </div>
+            </div>
+            <span style="float: right; margin-top: 100px;">BCF - 031413</span>
+        </form>
+    </div>
+
+    <style type="text/css">
+        .h1, h1 {
+            font-size: 25px;
+        }
+
+        .h2, h2 {
+            font-size: 23px;
+        }
+
+        .h3, h3 {
+            font-size: 20px;
+        }
+
+        .h1, .h2, .h3, h1, h2, h3 {
+            font-weight: bold;
+            color: #4c4c4e;
+        }
+
+        .container h3 {
+            text-decoration: underline;
+        }
+
+        ul {
+            list-style-type: none;
+        }
+
+        .input-group-addon {
+            padding: 6px 5px;
+            font-size: 14px;
+            font-weight: 400;
+            line-height: 1;
+            color: #555;
+            text-align: center;
+            background-color: transparent;
+            border: none;
+        }
+
+        .form-control, .form-control-date {
+            font-family: inherit;
+            width: 100%;
+            border: 0;
+            border-bottom: 1px solid #505050;
+            outline: 0;
+            font-size: 14px;
+            padding: 7px 0 2px 0;
+            background: transparent;
+            border-radius: 0px;
+            box-shadow: none;
+            height: 25px;
+            font-weight: bold;
+        }
+
+            .form-control:focus {
+                border-bottom: 1px solid #505050;
+                outline: 0;
+                box-shadow: none;
+            }
+
+        .form-control-date {
+            width: 10%;
+        }
+
+        .form-control[disabled] {
+            background-color: transparent;
+        }
+
+        @@media (max-width: 900px) {
+            .h1, h1 {
+                font-size: 20px;
+                margin-bottom: 5px;
+                padding-left: 15px;
+                padding-right: 15px;
+            }
+
+            .h2, h2 {
+                font-size: 20px;
+                margin-top: 0;
+                padding-left: 15px;
+                padding-right: 15px;
+            }
+
+            .h3, h3 {
+                font-size: 18px;
+            }
+        }
+
+        .form-control[disabled], fieldset[disabled] .form-control {
+            cursor: DEFAULT;
+        }
+    </style>
+
+}
+
+<script type="text/javascript">
+    
+    function changeData() {
+        $("#BankChangeForm").submit();
+    }
+
+    $("#BankChangeForm").submit(function (e) {
+        e.preventDefault(); //avoid to execute the actual submit of the form.
+        var form = $(this);
+        var url = form.attr('action');
+        
+        $.ajax({
+            type: "POST",
+            url: url,
+            data: form.serialize(), //serializes the form's elements.
+            success: function (data) {
+                //alert(data); // show response from the php script.
+            }
+        });
+    });
+    
+</script>

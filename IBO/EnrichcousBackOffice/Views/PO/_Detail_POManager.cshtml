@@ -1,0 +1,90 @@
+﻿@model EnrichcousBackOffice.Models.CustomizeModel.PO_manager_view
+@using EnrichcousBackOffice.Models;
+
+@{
+    WebDataModel db = new WebDataModel();
+    var po = Model ?? new EnrichcousBackOffice.Models.CustomizeModel.PO_manager_view();
+    //var locations = new EnrichcousBackOffice.Models.WebDataModel().Locations.ToList();
+    //List<PO_Detail_Checkin> checkedin_list = db.PO_Detail_Checkin.Where(c => c.POCode == po.PO.POCode).ToList();
+}
+
+
+<tr class="st_detail" id="detail_@po.PO.POCode">
+    <td colspan="6" style="background-color:#eee; padding:10px;">
+        <div class="col-md-12">
+            <div style="border:1px solid orange; margin-bottom:10px">
+                <table class="table" style="margin:0">
+                    <thead>
+                        <tr>
+                            <th>Request #</th>
+                            <th>Model</th>
+                            <th>Color</th>
+                            <th>Image</th>
+                            <th>QTY</th>
+                            <th>Price</th>
+                            <th style="width: 20%">Note</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var detail in po.Detail)
+                        {
+                            <tr id="detail_@detail.Detail.Id" class="tr_detail">
+                                <td><b style="color:orange">#@detail.Detail.RequestCode</b></td>
+                                <td><b>@detail.Detail_request.ModelName</b><br /><span style="color:gray">@detail.Detail_request.ProductName</span></td>
+                                <td>@detail.Detail_request.Color</td>
+                                <td><img height="50" src="@detail.Detail_request.ModelPicture" /></td>
+                                <td>
+                                    <span class="_qty _show">@detail.Detail.Qty</span>
+                                    <input class="form-control _qty _input" style="max-width:60px; display:none" />
+                                </td>
+                                <td>
+                                    <span class="_price _show">@detail.Detail.Price</span>
+                                    <input class="form-control _price _input" style="max-width:100px; display:none" />
+                                </td>
+                                <td>
+                                    <span class="_note _show">@detail.Detail.Note</span>
+                                    <input class="form-control _note _input" style="max-width:200px; display:none" />
+                                </td>
+                                <td>
+                                    @if (po.PO.Status != "Purchased")
+                                    {
+                                        <div class="action_btn" style="visibility:hidden">
+                                            <a class="btn btn-warning btn-sm _show" onclick="show_edit_detail('@detail.Detail.Id')"><i class="fa fa-pencil"></i></a>
+                                            <a class="btn btn-danger btn-sm _show" onclick="delete_detail('@detail.Detail.Id')"><i class="fa fa-trash"></i></a>
+                                            <a class="btn btn-success btn-sm _input" style="display:none" onclick="save_edit_detail('@detail.Detail.Id')"><i class="fa fa-check"></i></a>
+                                            <a class="btn btn-default btn-sm _input" style="display:none" onclick="cancel_edit_detail('@detail.Detail.Id')"><i class="fa fa-close"></i></a>
+                                        </div>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-md-12" style="padding:0">
+                <div class="pull-left">
+                    <a class="btn btn-primary" onclick="importPDF('@po.PO.POCode')"><i class="fa fa-download"></i> Download PDF</a>
+                </div>
+                <div class="pull-right">
+                    <div class="input-group">
+                        <div class="input-group-addon"><b>Status</b></div>
+                        <select id="u_status_@po.PO.POCode" class="form-control" style="width:200px">
+                            <option @if (po.PO.Status == "Ready for purchase") { @Html.Raw("selected") }>Ready for purchase</option>
+                            <option @if (po.PO.Status == "Submited") { @Html.Raw("selected") }>Submited</option>
+                            <option @if (po.PO.Status == "Purchased") { @Html.Raw("selected") }>Purchased</option>
+                            <option @if (po.PO.Status == "Cancel") { @Html.Raw("selected") }>Cancel</option>
+                        </select>
+                        <div class="input-group-btn">
+                            <a class=" btn btn-success" onclick="update_status('@po.PO.POCode', '@po.PO.SaleOrderNumber', $(this).find('img'))">
+                                Update
+                                <img src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                            </a>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </td>
+</tr>

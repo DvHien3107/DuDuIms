@@ -1,0 +1,24 @@
+table.hardware-table th {
+    text-align: center;
+}
+
+.header-right .btn-outline-primary:hover a{
+    color: #fff !important;
+    background-color: #007bff !important;
+    border-color: #007bff !important;
+    transition: unset;
+    -webkit-transition: unset;
+}
+
+i.icon.fa.fa-warning {
+    margin-right: 7px;
+    font-size: 20px;
+}
+
+.icon-select{
+    display:none;
+}
+
+.credit_card.active .icon-select {
+    display: inline-block;
+}

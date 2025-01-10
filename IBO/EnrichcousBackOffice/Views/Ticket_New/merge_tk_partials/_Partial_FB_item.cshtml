@@ -1,0 +1,99 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.T_TicketFeedback>
+<li class="time-label">
+    <span class="bg-green">
+        @DateTime.Now.ToString("dd MMM yyyy")
+    </span>
+</li>
+@foreach (var m in Model)
+{
+    string dateago = EnrichcousBackOffice.AppLB.CommonFunc.DateTimeRemain(m.CreateAt.Value);
+    <li onmouseover="mouse_over_out('@m.Id','over')" onmouseout="mouse_over_out('@m.Id','out')">
+        <i class="fa fa-comments bg-yellow"></i>
+        <div class="timeline-item">
+
+            <div class="timeline-header">
+                <table style="width:100%">
+                    <tr>
+                        <td><h5><a>@m.CreateByName</a></h5></td>
+                        <td style="text-align:right">
+                            <span style="color: #999;font-size:12px"><i class="fa fa-clock-o"></i> @dateago</span>
+                            &nbsp;&nbsp;
+
+                            <input type="hidden" id="hdglobal-@m.Id" value="@m.GlobalStatus" />
+                            @*<input type="hidden" id="hdshare-@m.Id" value="@(m.Share == true ? '1': '0')" />*@
+                            <a class="btn-xs btn-primary" id="iconpublish-@m.Id" style="margin-right:10px;@if (m.GlobalStatus != "publish")
+                              {@Html.Raw("display:none") }">
+                                <i class="fa fa-users"></i> Publish
+                            </a>
+
+                            <a class="btn-xs btn-warning" id="iconprivate-@m.Id" style="margin-right:10px;@if (m.GlobalStatus == "publish")
+                              {@Html.Raw("display:none") }">
+                                <i class="fa fa-user"></i> Private
+                            </a>
+
+                            @* TypeId tu 2000 den 2999 la Development ticket *@
+                            @*@if (m.TypeId < 2000)
+                                {
+                                    <a class="btn-xs btn-info" id="iconshare-@m.Id" st style="margin-right:10px;@if (m.Share != true) {@Html.Raw("display:none") }"><i class="fa fa-share-alt"></i> Shared</a>
+                                }*@
+
+                        </td>
+                    </tr>
+                </table>
+                @m.FeedbackTitle
+            </div>
+            <div class="timeline-body timeline-@m.Id" style="max-width:100%; overflow-x:auto">
+                <div class="noi-dung-ticket">
+                    @Html.Raw(m.Feedback)
+                </div>
+                <script type="text/javascript">
+                    zoomWrapper(".timeline-@m.Id .noi-dung-ticket").then(() => {
+                        $('.timeline-@m.Id .noi-dung-ticket .zoom.wrapper').simpleLightbox();
+                    });
+                </script>
+                <br />
+                @Html.Partial("_AttachmentsPartial", m.Attachments, new ViewDataDictionary { { "upload", false } })
+            </div>
+            <div class="timeline-footer">
+                <table class="table-responsive" style="width:100%">
+                    <tr>
+                        <td id="update-@m.Id">
+                            @if (string.IsNullOrWhiteSpace(m.UpdatedHistory) == false)
+                            {
+                                var history = m.UpdatedHistory.Split(new char[] { '|' });
+                                foreach (var itemH in history.Reverse())
+                                {
+                                    if (!string.IsNullOrWhiteSpace(itemH))
+                                    {
+                                        <i>@itemH</i><br />
+                                    }
+
+                                }
+                            }
+                        <i>
+                            Created at
+                            <span id="localtime-@m.Id">
+                                <script>convertLocalTime("@m.Id", "@m.CreateAt")</script>
+                            </span>
+                        </i>
+
+                        </td>
+                        <td style="text-align:right">
+                            <!--publish/private-->
+                            <a id="publish-@m.Id" style="display:none" class="btn btn-sm" onclick="fbaction('@m.Id', 'publish')" title="Click to publish" data-toggle="tooltip">
+                                <i class="fa fa-users"></i> <span> Publish</span>
+                            </a>
+
+                            <a id="private-@m.Id" style="display:none" class="btn btn-sm" onclick="fbaction('@m.Id', 'private')" title="Click to private" data-toggle="tooltip">
+                                <i class="fa fa-user"></i> <span> Private</span>
+                            </a>
+
+
+                        </td>
+                    </tr>
+                </table>
+
+            </div>
+        </div>
+    </li>
+}

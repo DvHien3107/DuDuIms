@@ -1,0 +1,57 @@
+﻿@model EnrichcousBackOffice.Models.O_Product_Model
+@{
+    var _access = EnrichcousBackOffice.AppLB.Authority.GetAccessAuthority();
+    var accessDelete = (_access.Any(k => k.Key.Equals("products_deletedevice")) == true && _access["products_deletedevice"] == true);
+    var accessEdit = (_access.Any(k => k.Key.Equals("products_updatedevice")) == true && _access["products_updatedevice"] == true); 
+}
+<tr id="model_@Model.ModelCode.Replace(" ","_")" onclick="edit_model('@Model.ModelCode')" class="hover model">
+    <td><b style="color:orange" class="model_name">@Model.ModelName</b></td>
+    <td><img height="60" src="@(!string.IsNullOrEmpty(Model.Picture)? Model.Picture:"/Upload/Img/no_image.jpg")" class="model_picture" /> </td>
+    @*<td class="model_vendor">@Model.VendorName</td>*@
+    <td class="model_color">@Model.Color</td>
+    <td class="model_price">@Model.Price</td>
+    <td class="model_status">@Model.Status</td>
+    <td class="model_active">
+        @if (Model.Active != false)
+        {<label class="label label-success">Active</label>}
+        else
+        {<label class="label label-danger">Deactive</label>}
+    </td>
+    <td class="model_devicerequired">
+        @if (Model.DeviceRequired == true)
+        {
+            <label class="label label-success">Yes</label>
+        }
+        else
+        {
+            <label class="label label-danger">No</label>
+        }
+    </td>
+    <td class="model_merchantonboarding">
+        @if (Model.MerchantOnboarding == true)
+        {
+            <label class="label label-success">Yes</label>
+        }
+        else
+        {
+            <label class="label label-danger">No</label>
+        }
+    </td>
+    <td>
+        @if (accessEdit)
+        {
+            <button type="button" class="btn btn-sm btn-warning editmodel" style="color:white" onclick="edit_model('@Model.ModelCode')"><i class="fa fa-pencil-square"></i></button>
+        }
+        @if (accessDelete)
+        {
+            <button type="button" onclick="deleteProductModel('@Model.ModelCode')" class="btn btn-sm btn-danger editmodel"><i class="fa fa-trash" aria-hidden="true"></i></button>
+        }
+
+    </td>
+</tr>
+<tr><td id="edit_model_@Model.ModelCode.Replace(" ","_")" colspan="9" style="padding:0; border-top:none"></td></tr>
+<script>
+    $('.edit_product,.editmodel').click(function (e) {
+        e.stopPropagation();
+    });
+</script>

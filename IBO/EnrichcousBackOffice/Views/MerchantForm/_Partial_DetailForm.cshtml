@@ -1,0 +1,67 @@
+﻿@model EnrichcousBackOffice.Models.C_MerchantForm
+
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+    <h4 id="modal-group_detail-title" class="modal-title">@(string.IsNullOrEmpty(Model.Id) ? "Create new Form library" : "Detail Form library") <b>@(string.IsNullOrEmpty(Model.Id) ? "" : "#" + Model.TemplateCode)</b></h4>
+</div>
+<div class="modal-body">
+    <div class="row">
+        <form id="save_library_form" action="/merchantform/save" method="post" onsubmit="overlayOn()">
+            <input type="hidden" class="form-control" id="Id" name="Id" value="@Model.Id" />
+            <div class="form-group col-md-12">
+                <label class="control-label" style="">Form code</label>
+                <input type="text" class="form-control" value="#@(Model.TemplateCode ?? ViewBag.NextCode)" readonly disabled />
+            </div>
+            <div class="form-group col-md-12">
+                <label class="control-label" style="">Name <span style="color:red">*</span></label>
+                <input tabindex="1" type="text" class="form-control" id="Name" name="Name" value="@Model.Name" required />
+            </div>
+            <div class="form-group col-md-12">
+                <label class="control-label" style="">Description</label>
+                <textarea tabindex="2" type="text" class="form-control" id="Description" name="Description" style="resize:vertical; min-height: 100px">@Model.Description</textarea>
+            </div>
+            <div class="form-group col-md-6">
+                <label class="control-label" style="">
+                    <input type="checkbox" class="flat-red form-control" name="Status" id="Status" @(Model.Status == 1 ? "checked" : "" ) /> Ready for send
+                </label>
+            </div>
+            <div class="col-md-12" style="padding-top: 15px; border-top: 1px solid #f4f4f4">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                @if (string.IsNullOrEmpty(Model.Id))
+                {
+                    <button type="submit" class="btn btn-primary pull-right"><i class="fa fa-floppy-o" aria-hidden="true"></i> Save</button>
+                }
+                else
+                {
+                    <button type="submit" class="btn btn-primary pull-right" id="btn_save_change"><i class="fa fa-floppy-o" aria-hidden="true"></i> Save change</button>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        $("#save_library_form").ajaxForm(function (data) {
+            if (data[0]) {
+                var mess = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"success"}');
+                noty(mess);
+                //$('#form_library_list').DataTable().ajax.reload();
+                //$('#save_form_modal').modal("hide");
+                setTimeout(function () { window.location.href = "/merchantform/design?key=" + data[2] }, 500);
+            } else {
+                var mess = $.parseJSON('{"text":"' + data[1] + '", "layout":"topRight", "type":"error"}');
+                noty(mess);
+            }
+            overlayOff();
+        });
+    })
+
+    $('input[type="checkbox"].flat-red, input[type="radio"].flat-red').iCheck({
+        checkboxClass: 'icheckbox_flat-blue',
+        radioClass: 'iradio_flat-blue'
+    })
+
+</script>

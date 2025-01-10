@@ -1,0 +1,207 @@
+﻿
+@model string
+@{
+    bool upload = bool.Parse(ViewData["upload"].ToString());
+    //neu cho phep upload, can phai co them cac thuoc tinh nay.
+    string table_id = ViewData["table_id"]?.ToString();
+    string table_name = ViewData["table_name"]?.ToString();
+    string column_name = ViewData["column_name"]?.ToString();
+}
+
+@if (!string.IsNullOrWhiteSpace(Model))
+{
+
+    foreach (var item in Model.Split(new char[] { ';' }).ToList())
+    {
+        if (string.IsNullOrWhiteSpace(item))
+        {
+            continue;
+        }
+        //190525112454215_filename.jpg
+        string file_id = item.Split(new char[] { '_' })[0];
+        string filename = "";
+        if (item.Length > 30)
+        {
+            filename = "..." + item.Substring(item.Length - 30);
+        }
+        else
+        {
+            filename = item;
+        }
+
+        if (upload == false)
+        {
+            <!--khong cho phep update-->
+
+            if (item.Contains("http") == false && item.Contains("www") == false)
+            {
+                <div class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-9">
+                        <div style="padding-left:0px;" class="col-md-12">
+                            <p class="col-md-12" style="border:1px dotted red; padding:3px">
+                                <img style="height:25px;margin-left:0" src="~/Upload/Img/attach.png" />
+                                <i style="padding-left:10px">@filename</i>
+                                <img src="" />
+                                <a style="padding-left:10px" href="@Url.Action("downloadfile_", "upload", new { file = item})" data-toggle="tooltip" class="pull-right" title="Download">
+                                    <i class="glyphicon glyphicon-download"></i>
+                                </a>
+                                <a style="padding-left:10px" href="@item" target="_blank" data-toggle="tooltip" class="pull-right" title="View file">
+                                    <i class="glyphicon glyphicon-zoom-in"></i>
+                                </a>
+
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-9">
+                        <div style="padding-left:0px;" class="col-md-12">
+                            <p class="col-md-6" style="border:1px dotted red; padding:3px">
+                                <img style="height:25px;margin-left:0" src="~/Upload/Img/attach.png" />
+                                <i style="padding-left:5px">@filename</i>
+                                <a href="@item" target="_blank" data-toggle="tooltip" class="pull-right" title="View file">
+                                    <i class="glyphicon glyphicon-zoom-in"></i>
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            }
+
+        }
+        else
+        {
+            var avatar = "";
+            if (item.LastIndexOf(".pdf") == 0)
+            {
+                avatar = "/upload/img/pdf.png";
+            }
+            else if (item.LastIndexOf(".doc") == 0 || item.LastIndexOf(".doc") == 1)
+            {
+                avatar = "/upload/img/word.png";
+            }
+            else if (item.LastIndexOf(".xls") == 0 || item.LastIndexOf(".xls") == 1)
+            {
+                avatar = "/upload/img/excel.jpg";
+            }
+            else if (item.LastIndexOf(".jpeg") == -1 && item.LastIndexOf(".jpg") == -1 &&
+                item.LastIndexOf(".png") == -1 && item.LastIndexOf(".gif") == -1 &&
+                item.LastIndexOf(".bmp") == -1)
+            {
+                avatar = "~/Upload/Img/attach.png";
+            }
+
+            <!--duoc phep update-->
+            if (item.Contains("http") == false && item.Contains("www") == false)
+            {
+                <div class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-9">
+                        <div style="padding-left:0px;" class="col-md-12" id="f_@file_id">
+                            <p class="col-md-12" style="border:1px dotted red; padding:3px">
+
+                                <img style="height:25px;margin-left:0" alt="picture" src="@avatar" />
+
+                                <i style="padding-left:5px">@filename</i>
+                                <a style="padding-left:10px" href="@Url.Action("downloadfile", "upload", new { file = item })" data-toggle="tooltip" class="pull-right" title="Download">
+                                    <i class="glyphicon glyphicon-download"></i>
+                                </a>
+                                <a style="padding-left:10px" href="@item" target="_blank" data-toggle="tooltip" class="pull-right" title="View file">
+                                    <i class="glyphicon glyphicon-zoom-in"></i>
+                                </a>
+                                <a style="padding-left:10px" onclick="fdelete_with_filename_id('@file_id','@table_id','@table_name','@column_name')" data-toggle="tooltip" class="pull-right" title="Delete file">
+                                    <i class="glyphicon glyphicon-trash"></i>
+                                </a>
+                                &nbsp; <img src="~/Content/ajax-loaders/ajax-loader-1.gif" id="floading_@file_id" style="display:none" />
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-9">
+                        <div style="padding-left:0px;" class="col-md-12" id="f_@file_id">
+                            <p class="col-md-12" style="border:1px dotted red; padding:3px">
+                                <img style="height:25px;margin-left:0" alt="picture" src="@avatar" />
+                                <i style="padding-left:10px">@filename</i>
+                                <a href="@item" target="_blank" data-toggle="tooltip" class="pull-right" title="View file">
+                                    <i class="glyphicon glyphicon-zoom-in"></i>
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+
+    }
+}
+
+@if (upload)
+{
+    <div id="divmorefiles">
+        <div class="row">
+            <div class="col col-sm-3">
+                <label class="control-label pull-right" style="padding-top: 0;">Attachments</label>
+            </div>
+            <div class="col col-sm-9">
+                <input type="file" id="pic1" name="morefiles_1" onchange="reviewUpload(this)" />
+                <div style="padding-left:0px;display:none" class="col-md-12" id="review_pic1">
+                    <p class="col-md-12" style="border:1px dotted red; padding:3px">
+                        <img id="img_pic1" style="height:25px;margin-left:0" src="~/Upload/Img/attach.png" />
+                        <i style="padding-left:5px" id="fname_pic1"></i>
+                        <a onclick="upload_delete('pic1')" data-toggle="tooltip" class="pull-right" title="Xóa file này">
+                            <i class="glyphicon glyphicon-trash"></i>
+                        </a>
+                    </p>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="row" style="display:block;">
+        <label class="col-sm-3 control-label"></label>
+        <div class="col-sm-9" style="padding-top: 10px">
+            <input type="hidden" id="filescount" name="filescount" value="1" />
+            <button type="button" onclick="attach_more_files();">+ Add more</button>
+        </div>
+    </div>
+    <div class="clearfix"></div>
+
+}
+
+
+<script type="text/javascript">
+    function attach_more_files() {
+
+        var filescount = Number($("#filescount").val()) + 1;
+        var content = "<div class='form-group' > <label  class='col-sm-3 control-label'></label><div class='col-sm-9' style='padding-top:10px'>"
+            + "<input type='file' name='morefiles_" + filescount + "' id='pic" + filescount + "' onchange=\"reviewUpload(this)\" />"
+            + "<div style='padding-left:0px;display:none' class='col-md-12' id='review_pic" + filescount + "'>"
+            + "<p class=\"col-md-12\" style=\"border:1px dotted red; padding:3px\">"
+            + "<img id=\"img_pic" + filescount + "\" style=\"height:25px;margin-left:0\" alt=\"xem trước\" src=\"~/Upload/Img/attach.png\"/>"
+            + "<i style=\"padding-left:5px\" id=\"fname_pic" + filescount + "\"></i>"
+            + "<a onclick=\"upload_delete('pic" + filescount + "')\" data-toggle=\"tooltip\" class=\"pull-right\" title=\"Xóa file này\">"
+            + "       <i class=\"glyphicon glyphicon-trash\"></i>"
+            + "    </a>"
+            + "</p>"
+            + "</div></div></div>";
+
+        $("#filescount").val(filescount);
+        $("#divmorefiles").append(content);
+
+    }
+</script>
+
+
+

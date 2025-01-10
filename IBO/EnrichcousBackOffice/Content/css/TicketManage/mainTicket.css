@@ -1,0 +1,284 @@
+﻿:root {
+    --background-gradient: linear-gradient(178deg, #ffff33 10%, #3333ff);
+    --gray: #34495e;
+    --darkgray: #2c3e50;
+}
+
+.ticket-header_select select {
+    border-radius: 50px;
+}
+
+nb-card-header.card-header-title, nb-card-header .card-header-title {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+nb-card-header h4 {
+    margin: 0;
+}
+
+h4, .h4 {
+    font-size: var(--text-heading-4-font-size);
+    font-family: var(--text-heading-4-font-family);
+    font-weight: var(--text-heading-4-font-weight);
+    line-height: var(--text-heading-4-line-height);
+}
+
+.ticket-manage_content {
+    margin: 10px;
+    background: var(--gauzy-card-2);
+    max-height: 100%;
+    min-height: 100%;
+    width: 98%;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+}
+
+.content-wrapper {
+    display: flex;
+}
+
+select {
+    /* Reset Select */
+    appearance: none;
+    outline: 10px red;
+    border: 0;
+    box-shadow: none;
+    /* Personalize */
+    flex: 1;
+    padding: 0 1em;
+    background-color: var(--gauzy-card-1);
+    color: var(--text-basic-color);
+    background-image: none;
+    cursor: pointer;
+}
+    /* Remove IE arrow */
+    select::-ms-expand {
+        display: none;
+    }
+/* Custom Select wrapper */
+.select {
+    position: relative;
+    display: flex;
+    width: 20em;
+    height: 3em;
+    border-radius: .25em;
+    overflow: hidden;
+}
+    /* Arrow */
+    .select::after {
+        content: '\25BC';
+        position: absolute;
+        top: 0;
+        right: 0;
+        padding: 1em;
+        background-color: var(--gauzy-card-2);
+        transition: .25s all ease;
+        pointer-events: none;
+    }
+    /* Transition */
+    .select:hover::after {
+        color: #f39c12;
+    }
+
+[nbButton].appearance-filled.status-success, .appearance-filled.status-success[nbButtonToggle] {
+    background-color: var(--button-filled-success-background-color);
+    border-color: var(--button-filled-success-border-color);
+    color: var(--button-filled-success-text-color);
+}
+
+[nbButton].appearance-filled.size-small, .appearance-filled.size-small[nbButtonToggle] {
+    padding: var(--button-filled-small-padding);
+}
+
+[nbButton].appearance-filled, .appearance-filled[nbButtonToggle] {
+    border-style: var(--button-filled-border-style);
+    border-width: var(--button-filled-border-width);
+    text-transform: var(--button-filled-text-transform);
+}
+
+[nbButton].shape-rectangle, .shape-rectangle[nbButtonToggle] {
+    border-radius: var(--button-rectangle-border-radius);
+}
+
+[nbButton].size-small, .size-small[nbButtonToggle] {
+    font-size: var(--button-small-text-font-size);
+    line-height: var(--button-small-text-line-height);
+}
+
+[nbButton].nb-transition, .nb-transition[nbButtonToggle] {
+    transition-duration: .15s;
+    transition-property: background-color, border-color, box-shadow, color;
+    transition-timing-function: ease-in;
+}
+
+button[_ngcontent-ng-c231674514] {
+    margin: 5px;
+}
+
+button:not(:disabled), [type=button]:not(:disabled), [type=reset]:not(:disabled), [type=submit]:not(:disabled) {
+    cursor: pointer;
+}
+
+[nbButton], [nbButtonToggle] {
+    appearance: none;
+    text-align: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    -webkit-user-select: none;
+    user-select: none;
+    cursor: var(--button-cursor);
+    font-family: var(--button-text-font-family);
+    font-weight: var(--button-text-font-weight);
+}
+
+.ticket-manage_header {
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 1rem 0;
+    height: 75px;
+    gap: 10px;
+    width: 100%;
+    padding: 2rem 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.ticket-header_button {
+    height: 100%;
+    font-size: 27px;
+}
+
+[_nghost-ng-c3392879810] {
+    font-size: 24px;
+    font-weight: 300;
+    line-height: 30px;
+    letter-spacing: 0em;
+    text-align: left;
+}
+
+    [_nghost-ng-c3392879810] span {
+        font-weight: 600;
+    }
+
+button.status-success.appearance-filled.size-small.shape-rectangle.icon-start.ng-star-inserted.nb-transition {
+    height: 100%;
+    font-size: 14px;
+    display: flex;
+    gap: 10px;
+    margin: 0;
+}
+
+nb-icon {
+    height: 100%;
+}
+
+[_nghost-ng-c2373987709] angular2-smart-table :nth-child(2) {
+    overflow-x: unset !important;
+}
+
+[_nghost-ng-c586304700] * {
+    box-sizing: border-box;
+}
+
+[_nghost-ng-c586304700] table {
+    line-height: 1.5em;
+    border-collapse: collapse;
+    border-spacing: 0;
+    display: table;
+    width: 100%;
+    max-width: 100%;
+    overflow: auto;
+    word-break: normal;
+    word-break: keep-all;
+}
+
+.table-scroll-container table thead, .grid-scroll-container table thead {
+    position: sticky;
+    z-index: 100;
+    height: 100%;
+    top: -1px;
+}
+
+    .table-scroll-container table thead tr:nth-of-type(1), .grid-scroll-container table thead tr:nth-of-type(1) {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 2 !important;
+    }
+
+    .table-scroll-container table thead th:first-child, .grid-scroll-container table thead th:first-child {
+        border-left: 1px solid var(--gauzy-border-table);
+        border-radius: var(--border-radius) 0 0 var(--border-radius);
+    }
+
+.table-scroll-container angular2-smart-table table tr th, .grid-scroll-container angular2-smart-table table tr th {
+    border-top: 1px solid var(--gauzy-border-table);
+    border-bottom: 1px solid var(--gauzy-border-table);
+    padding-top: 1em;
+    padding-bottom: 1em;
+}
+
+[_nghost-ng-c586304700] table tr td, [_nghost-ng-c586304700] table tr th {
+    font-size: .875em;
+    margin: 0;
+    padding: .5em 1em;
+}
+
+[_nghost-ng-c586304700] table tr th {
+    font-weight: 700;
+    position: relative;
+}
+
+.table-scroll-container table thead th, .grid-scroll-container table thead th {
+    border-left: none;
+    border-right: none;
+}
+
+[_nghost-ng-c2373987709] angular2-smart-table :nth-child(2) {
+    overflow-x: unset !important;
+}
+
+.table-scroll-container table thead th:last-child, .grid-scroll-container table thead th:last-child {
+    border-right: 1px solidvar(--gauzy-border-table);
+    border-radius: 0 var(--border-radius) var(--border-radius) 0;
+}
+
+angular2-smart-table table tr.angular2-smart-titles th a.sort {
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    line-height: 15px;
+    letter-spacing: 0;
+    color: var(--gauzy-text-color-2) !important;
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: center;
+    justify-content: flex-end;
+    gap: .25rem;
+    text-decoration: none;
+}
+/* =========================================================================================================== */
+.ticket-header_label {
+    display: flex;
+    max-width: 510px;
+    width: 100%;
+    gap: 8px;
+}
+
+.ticket-header_select {
+    width: 100%;
+}
+
+.select::after {
+    border-radius: 0 25px 25px 0;
+    height: 100%;
+    /* padding: 12px; */
+}

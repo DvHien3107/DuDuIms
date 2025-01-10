@@ -1,0 +1,1200 @@
+﻿@model EnrichcousBackOffice.Models.T_SupportTicket
+@using EnrichcousBackOffice.AppLB
+@using EnrichcousBackOffice.Models
+@using EnrichcousBackOffice.Models.CustomizeModel
+@using EnrichcousBackOffice.Utils
+@using EnrichcousBackOffice.Models.CustomizeModel.Ticket
+@using EnrichcousBackOffice.Utils.IEnums
+@{ 
+    var db = new WebDataModel();
+
+    var AvailablesProject = ViewBag.AvailablesProject ?? new List<T_Project_Milestone>();
+    var AvailablesMainVersion = ViewBag.AvailablesMainVersion ?? new List<T_Project_Milestone>();
+    var AvailablesAsssignMember = ViewBag.AvailablesAsssignMember as List<P_Member>;
+    var AvailablesTagsMember = ViewBag.AvailablesTagsMember as List<P_Member>;
+    var AvailablesSeverities = ViewBag.AvailablesSeverities as List<T_TicketSeverity>;
+    var AvailablesStatus = ViewBag.AvailablesStatus ?? new List<T_TicketStatus>();
+    var AvailablesSubversion = ViewBag.AvailablesSubversion ?? new List<T_Project_Milestone>();
+    var AvailablesTags = ViewBag.AvailablesTags as List<T_Tags>;
+    var AvailablesPriorities = ViewBag.AvailablesPriorities as List<T_Priority>;
+    List<P_Department> DepartmentList = ViewBag.AvailablesDepartment as List<P_Department>;
+
+    var access = EnrichcousBackOffice.AppLB.Authority.GetAccessAuthority();
+    //var cMem_FullName = EnrichcousBackOffice.AppLB.Authority.GetCurrentMember()?.FullName;
+    //List<EnrichcousBackOffice.Models.T_SupportTicket> ticketRelated = ViewBag.ticketRelated == null ? new List<EnrichcousBackOffice.Models.T_SupportTicket>() : ViewBag.ticketRelated;
+    List<T_Project_Stage> AvailablesStages = ViewBag.AvailablesStages ?? new List<T_Project_Stage>();
+
+    //T_TicketStage_Status ts_status = ViewBag.ts_status ?? new T_TicketStage_Status();
+    List<ForwardStage_view> list_forwardStages = ViewBag.list_forwardStage ?? new List<ForwardStage_view>();
+
+    //T_Project_Stage stage = ViewBag.stage ?? new T_Project_Stage();
+    //T_Project_Milestone project_version = ViewBag.project_version ?? new T_Project_Milestone();
+
+
+    var accessEditCustomer = access.Any(k => k.Key.Equals("customer_update")) == true && access["customer_update"] == true;
+
+
+    var customer = db.C_Customer.FirstOrDefault(c => c.CustomerCode == Model.CustomerCode);
+    var canUpdateCategory = AppFunc.CanAccess(AccessRole.TICKET_CATEGORY_UPDATE);
+    var Page = ViewBag.Page as string;
+    string PageDeployment = "DeploymentTicket";
+    string PageSupportTicket = "SupportTicket";
+    string PageDevelopmentsTicket = "DevelopmentsTicket";
+    List<T_SupportTicket> ticketRelated = ViewBag.TicketRelated == null ? new List<T_SupportTicket>() : ViewBag.ticketRelated;
+
+}
+<style type="text/css">
+    #divSubcribeUser span {
+        background-color: var(--main-color-1);
+        border: 1px solid var(--main-color-1);
+        padding: 3px 10px;
+        color: #FFF;
+        border-radius: 4px;
+        margin-top: 7px;
+        margin-left: 7px;
+        display: inline-block;
+    }
+
+    .avatar-select-2 {
+        width: 20px;
+        height: auto;
+        margin-right: 5px;
+    }
+
+    .color-label {
+        width: 18px;
+        height: 18px;
+        margin-top: 2px;
+        border-radius: 2px;
+        margin-right: 7px
+    }
+
+    .select2-container--default .select2-results__option[aria-disabled=true] {
+        display: none;
+    }
+
+    .form-group span.select2-container {
+        width: 100% !important;
+    }
+
+    .hide {
+        display: none;
+    }
+    .related-ticket{
+        max-height:60px;
+        overflow-y:scroll;
+    }
+
+        .related-ticket::-webkit-scrollbar {
+            width: 8px;
+        }
+
+
+
+        .related-ticket::-webkit-scrollbar-thumb {
+            background: #adadad;
+            border-radius: 5px;
+        }
+
+
+        .related-ticket::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 5px;
+        }
+    .account-manager-detail {
+        margin-right: 10px;
+        transform: translateY(-1px);
+        display: inline-block;
+    }
+    .input-icon-remove {
+        display: none;
+    }
+    .input-group:hover .input-icon-remove {
+        position: absolute;
+        top: 5px;
+        right: 4px;
+        color:dimgray;
+        z-index: 10;
+        padding: 3px 3px;
+        cursor: pointer;
+    }
+</style>
+<input type="hidden" id="Page" name="Page" value="@Page" />
+<input type="hidden" class="unsetChange" id="ActionFeedBack" name="ActionFeedBack" value="false" />
+<input type="hidden" id="excludeTicketUpdateNotice" name="excludeTicketUpdateNotice" value="" />
+<div>
+    <!--ktra member/product da load complete hay chua-->
+    @Html.HiddenFor(m => m.Id)
+
+    <input type="hidden" id="load_member" value="0" />
+    <input type="hidden" id="load_member_group" value="0" />
+    <input type="hidden" id="load_product" value="0" />
+
+
+
+    <div class="box box-primary" id="ticket_info_partial">
+
+        <div class="box-header with-border main-header" style="z-index:100; background-color:#fff">
+            @*<h3 class="box-title">Ticket infomation</h3>*@
+            @if (ViewContext.RouteData.Values["action"].ToString().ToLower() != "update")
+            {
+                <button type="submit" id="save_change_btn" class="btn btn-primary btn-block">Save changes &nbsp; <img id="loading_info" style="display:none" src="~/Content/ajax-loaders/ajax-loader-1.gif" /></button>
+            }
+        </div>
+        <div class="box-body">
+            <fieldset style="border: 1px #ccc solid; padding:10px; margin-bottom: 20px">
+                <div class="form-group">
+                    <label>Merchant</label>
+                    <div class="pull-right">
+                        @*<a style="cursor:pointer; margin-right:5px" onclick="update_merchant(0, '@(accessEditCustomer==true ? "true":"false")' == 'true', $('#merchant').val(), true)" title="Account manager" data-toggle="tooltip"><i class="fa fa-cogs" aria-hidden="true"></i></a>*@
+
+                        <span class="account-manager-detail">
+                            @if (customer != null)
+                            {
+                                <i class="fa fa-user" aria-hidden="true"></i> @(customer.FullName??"N/A")
+                            }
+
+                        </span>
+                        <a style="cursor:pointer; margin-right:5px" onclick="update_merchant(0, '@(accessEditCustomer==true ? "true":"false")' == 'true' ,$('#merchant').val())" title="Edit merchant detail" data-toggle="tooltip"><i class="glyphicon glyphicon-edit"></i></a>
+                        <a style="cursor:pointer" id="redirect_to_merchant" href="/merchantman" target="_blank" title="View merchant detail" data-toggle="tooltip"><i class="glyphicon glyphicon-eye-open"></i></a>
+                    </div>
+                    <input type="hidden" name="hdmerchant" value="@Model.CustomerCode" />
+                    <img id="loading_merchant" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="width:20px;display:none" />
+                    <select name="merchant" id="merchant" class="form-control select2">
+                        <option value="">N/A</option>
+                        @if (customer != null)
+                        {
+                            <option data-partner="@(customer.PartnerCode??"Mango")" value="@customer.CustomerCode" data-customerid="@customer.Id" selected>@(customer?.BusinessName) - @(customer?.AddressLine())</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-group  @(Page!=PageDevelopmentsTicket?"hide":"")">
+                    <label>Project</label>
+                    <select id="Project_select" name="Project_select" class="form-control " required>
+                        <option value="">--Select project--</option>
+                        @foreach (var p in AvailablesProject)
+                        {
+                            <option value="@p.Id" @(Model.ProjectId == p.Id ? "selected" : "")>@p.Name</option>
+                        }
+                    </select>
+                </div>
+
+                @*fake stage to type*@
+
+                <div class="form-group">
+                    <label>Assign Members</label>
+                    <select class="form-control select2-member" name="Assigned" multiple>
+                        <option value="auto">Assign to Leader Automation</option>
+
+                        @foreach (var member in AvailablesAsssignMember)
+                        {
+                            <option value="@member.MemberNumber" data-avatar="@(!string.IsNullOrEmpty(member.Picture)?member.Picture:("/Upload/Img/" + member.Gender + ".png"))" @(Model.AssignedToMemberNumber?.Split(',').Any(x => x == member.MemberNumber) == true ? "selected" : "")>@member.FullName (#@member.MemberNumber)</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Member Tags</label>
+                    <select class="form-control select2-member" name="TagMemberNumber" multiple>
+                        @foreach (var member in AvailablesTagsMember)
+                        {
+                            <option value="@member.MemberNumber" data-avatar="@(!string.IsNullOrEmpty(member.Picture)?member.Picture:("/Upload/Img/" + member.Gender + ".png"))" @(Model.TagMemberNumber?.Split(',').Any(x => x == member.MemberNumber) == true ? "selected" : "")>@member.FullName (#@member.MemberNumber)</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Status</label>
+                    <span class="pull-right">
+                        <a><i class="fa fa-pencil-square-o" style="font-weight:bold; padding:3px" onclick="getListStatus()"></i>  <img id="loading_status" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="width:20px;display:none" /></a>
+                    </span>
+                    <img id="loading_status" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="width:20px;display:none" />
+                    <select id="status" class="form-control" name="StatusId" required>
+                        @if (AvailablesStatus?.Count > 0)
+                        {
+                            foreach (var s in AvailablesStatus)
+                            {
+                                <option value="@s.Id" @(Model?.T_TicketStatusMapping.Any(y => y.StatusId == s.Id) == true ? "selected" : "")>@s.Name</option>
+                            }
+                        }
+                        else
+                        {
+                            <option value="">Open</option>
+                        }
+                    </select>
+                </div>
+
+                <!--Tags-->
+                <!--/end Tags-->
+                <div class="form-group">
+                    <label>Type</label>
+                    <span class="pull-right">
+                        <a onclick="getListType()"><i class="fa fa-pencil-square-o" style="font-weight:bold; padding:3px"></i> <img id="loading_type" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="width:20px;display:none" /></a>
+                    </span>
+                    <input type="hidden" name="hdtype" value="@Model.TypeId" />
+                    <img id="loading_type" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="width:20px;display:none" />
+                    <select name="type" id="type" class="form-control select2" multiple required>
+                        @foreach (var item in ViewBag.AvailablesTypes as List<T_TicketType>)
+                        {
+                            <option value="@item.Id" @(Model?.T_TicketTypeMapping.Any(y => y.TypeId == item.Id) == true ? "selected" : "")>@item.TypeName</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <span class="pull-left">
+                            Label <img id="choose_tags_loading" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                        </span>
+                    </label>
+                    <span class="pull-right">
+                        <a><i class="fa fa-plus" onclick="AddTag()" style="font-weight:bold; color:var(--main-color-1); cursor:pointer;margin-right:5px" title="add or update label"></i></a>
+                        <a> <i class="fa fa-edit" onclick="ChooseTags()" style="font-weight:bold; color:var(--main-color-1); cursor:pointer;" title="add or update label"></i></a>
+                    </span>
+                    <select id="form-label" name="label" class="form-control" multiple="multiple" data-placeholder="Not yet...">
+                        @foreach (var label in AvailablesTags)
+                        {
+                            <option @(!string.IsNullOrEmpty(Model.Tags) ? (Model.Tags.Split(',').Contains(label.Id) ? "selected" : "") : "") data-color="@label.Color" value="@label.Id">@label.Name</option>
+                        }
+                    </select>
+                </div>
+
+                @*<a onclick="new_attribute()"><i class="fa fa-plus"></i> New Attribute</a>*@
+            </fieldset>
+            <fieldset style="border: 1px #ccc solid; padding:10px">
+
+                <legend style="border: 1px #ccc solid; width:auto; padding:0 10px; margin:0 5px; background-color:#fff; font-size:16px"><b>Ticket Option</b></legend>
+
+                <div class="form-group">
+                    <label>Deadline  <span class="GMT_display">@TimezoneHelper.IMSTimezoneGMT()</span></label>
+                    <div class="input-group input-has-remove-icon">
+                        <div class="input-group-addon">
+                            <i class="fa fa-clock-o"></i>
+                        </div>
+                        <input name="Deadline" id="Deadline" class="form-control" placeholder="Deadline" value="@(Model.Deadline.HasValue ? Model.Deadline.Value.UtcToIMSDateTime().ToString("MM/dd/yyyy hh:mm tt"):"")" />
+                        <span class="input-icon-remove" id="clear-deadline"><i class="fa fa-times" aria-hidden="true"></i></span>
+                    </div>
+
+                </div>
+
+                <div class="form-group">
+                    <label>Estimated Completion Time <span>@TimezoneHelper.IMSTimezoneGMT()</span></label>
+                    <input type="hidden" name="GMT" id="GMT" value="" />
+                    <div class="row" style="position:relative">
+                        <div class="col-sm-6">
+                            <div class="input-group input-has-remove-icon" style="width:100%">
+                                <input class="form-control" name="EstimatedCompletionTimeFrom" placeholder="From" value="@(Model.EstimatedCompletionTimeFrom.HasValue ? Model.EstimatedCompletionTimeFrom.Value.UtcToIMSDateTime().ToString("MM/dd/yyyy hh:mm tt"):"")" id="estimate-complete-time-from" />
+                                <span class="input-icon-remove" id="clear-deadline"><i class="fa fa-times" aria-hidden="true"></i></span>
+                            </div>
+
+
+                        </div>
+                        <span style="position:absolute;left:50%;bottom:7px;transform:translateX(-50%)">To</span>
+                        <div class="col-sm-6">
+                            <div class="input-group input-has-remove-icon" style="width:100%">
+                                <input class="form-control" name="EstimatedCompletionTimeTo" placeholder="To" value="@(Model.EstimatedCompletionTimeTo.HasValue ? Model.EstimatedCompletionTimeTo.Value.UtcToIMSDateTime().ToString("MM/dd/yyyy hh:mm tt"):"")" id="estimate-complete-time-to" />
+                                <span class="input-icon-remove" id="clear-deadline"><i class="fa fa-times" aria-hidden="true"></i></span>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>KB <input style="margin-left:10px" type="checkbox" name="kb" @if (Model.KB == true) { @Html.Raw("checked") } /></label><br />
+                </div>
+                @if (Model.Id > 0)
+                {
+
+                    <div class="form-group">
+                        <label>
+                            Visible &nbsp;<input type="checkbox" name="visible" @if (Model.Visible == true) { @Html.Raw("checked") } />
+                        </label>
+                    </div>
+                    @*<div class="form-group">
+                    <button type="button" style="margin-right:5px;" onclick="showTranferTicket('@Model.Id')" class="btn btn-info btn-sm"><i class="fa fa-exchange" aria-hidden="true"></i> Transfer Ticket </button>
+                    <div id="transfer-content">
+
+                    </div>
+                </div>*@
+                }
+
+            </fieldset>
+
+            <fieldset style="border: 1px #ccc solid; padding:10px; margin-bottom:20px; background-color:#f0f0f0;margin-top:1rem;">
+                <div class="form-group">
+                    <label><i class="fa fa-pencil" aria-hidden="true"></i> Note</label>
+                    <div class="textarea-container">
+                        <textarea class="form-control" name="Note" style="height: 100px" id="noteTextarea">@Model.Note</textarea>
+                        <button class="btn btn-sm" type="button" id="pullButton" onclick="toggleTextarea()"><i class="fa fa-angle-double-down" aria-hidden="true"></i></button>
+                    </div>
+                </div>
+            </fieldset>
+            <style>
+                .textarea-container {
+                    position: relative;
+                }
+
+                #noteTextarea {
+                    height: auto;
+                    transition: height 0.3s ease-in-out;
+                }
+
+                #pullButton {
+                    position: absolute;
+                    bottom: -34px;
+                    background: transparent;
+                    right: 50%;
+                    transform: translateX(50%);
+                    color: blue;
+                    font-weight: bold;
+                    font-size: 20px;
+                }
+            </style>
+
+            <script>
+                function toggleTextarea() {
+                    var textarea = document.getElementById("noteTextarea");
+                    var button = document.getElementById("pullButton");
+                    const elementHeight = (textarea.scrollHeight) + "px";
+                    if (textarea.style.height === elementHeight) {
+                        textarea.style.height = "100px"; // Adjust this value based on your design
+                        button.innerHTML = '<i class="fa fa-angle-double-down" aria-hidden="true"></i>';
+                    } else {
+                        textarea.style.height = elementHeight;
+                        button.innerHTML = '<i class="fa fa-angle-double-up" aria-hidden="true"></i>';
+                    }
+                }
+
+                // Check if the textarea content overflows its current height
+                function checkOverflow() {
+                    var textarea = document.getElementById("noteTextarea");
+                    var button = document.getElementById("pullButton");
+
+                    if (textarea.scrollHeight > textarea.clientHeight) {
+                        button.style.display = "block"; // Show the button
+                    } else {
+                        button.style.display = "none"; // Hide the button
+                    }
+                }
+
+                // Call the overflow check initially and whenever the window is resized
+                window.addEventListener("load", checkOverflow);
+                window.addEventListener("resize", checkOverflow);
+            </script>
+        </div>
+    </div>
+
+    <div class="modal fade" id="merge_ticket">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title">Merge Ticket</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="row merge_ticket" style="max-height:65vh;overflow-y:auto;overflow-x:hidden;">
+                        <div style="width:200%">
+                            <div class="col-md-6" id="mt_s1">
+
+                            </div>
+                            <div class="col-md-6" id="mt_s2">
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary mt_s1_btn" onclick="mt_s1_submit('@Model.Id')">
+                        Next <i class="fa fa-step-forward"></i>
+                        <img id="mt_s1_img" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                    </button>
+                    <button type="button" class="btn btn-warning mt_s2_btn" onclick="prev_s1()" style="display:none">
+                        <i class="fa fa-step-backward"></i> Prev
+                    </button>
+                    <button type="button" class="btn btn-primary mt_s2_btn" onclick="mt_s2_submit('@Model.Id')" style="display:none">
+                        Merge
+                        <img id="mt_s2_img" src="~/Content/ajax-loaders/ajax-loader-1.gif" style="display:none" />
+                    </button>
+                </div>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
+
+    <!--Tags Popup Modal-->
+    <div id="tags_popup_modal">
+        <!--Append _TagsPopupPartial-->
+    </div>
+    @*popup create or update type*@
+</div>
+@*<script src="/content/admin/bower_components/ckeditor/ckeditor.js"></script>*@
+<script src="~/Content/Admin/bower_components/ckeditor2/ckeditor.js"></script>
+@*<script src="~/Scripts/noty-cfg.js"></script>*@
+
+<script>
+    $("#estimate-complete-time-from").datetimepicker({
+        sideBySide: true
+    });
+    $("#estimate-complete-time-to").datetimepicker({
+        sideBySide: true
+    });
+  
+   /* $(".GMT_display").html("(" + moment().format("Z") + ")")*/
+    $("#GMT").val(moment().format("Z"));
+    $(document).ready(function () {
+        initLabelSelect2();
+        //let currentEstimatedCompletionTimeFrom = $("#estimate-complete-time-from").val();
+        //let currentEstimatedCompletionTimeTo = $("#estimate-complete-time-to").val();
+        //if (currentEstimatedCompletionTimeFrom != '') {
+        //    $("#estimate-complete-time-from").val(moment.utc(currentEstimatedCompletionTimeFrom).format("MM/DD/YYYY HH:mm A")).trigger('change');
+        //}
+        //if (currentEstimatedCompletionTimeTo != '') {
+        //    $("#estimate-complete-time-to").val(moment.utc(currentEstimatedCompletionTimeTo).format("MM/DD/YYYY HH:mm A")).trigger('change');
+        //}
+        //let Deadline = $("#Deadline").val();
+        //if (Deadline != '') {
+        //    $("#Deadline").val(moment.utc(Deadline).format("MM/DD/YYYY HH:mm A")).trigger('change');
+        //}
+    });
+
+    $("#estimate-complete-time-from").on('dp.change', function () {
+        if ($("#estimate-complete-time-from").val()=='') {
+            $("#estimate-complete-time-to").val('');
+        }
+        else {
+            $("#estimate-complete-time-to").val(moment($("#estimate-complete-time-from").val()).add('days', 1).format("MM/DD/YYYY HH:mm A"));
+        }
+      
+       // addValidateEstimateCompletionTime();
+    })
+
+    $("#estimate-complete-time-to").on('dp.change',function () {
+      //  addValidateEstimateCompletionTime();
+    })
+    //addValidateEstimateCompletionTime();
+    //function addValidateEstimateCompletionTime() {
+    //    if ($("#estimate-complete-time-from").val() != '' || $("#estimate-complete-time-to").val() != '') {
+    //        $("#estimate-complete-time-from").attr("required", "required");
+    //        $("#estimate-complete-time-to").attr("required", "required");
+    //    }
+    //    else {
+    //        $("#estimate-complete-time-from").removeAttr("required", "required");
+    //        $("#estimate-complete-time-to").removeAttr("required", "required");
+    //    }
+    //}
+    function initLabelSelect2() {
+        $('#form-label').select2(
+            {
+                templateResult: formatState,
+                templateSelection: function (data, colorLabel) {
+                    var color = $(data.element).attr("data-color");
+                    $(colorLabel).attr('style', 'background-color: ' + color + ' !important');
+                    return data.text;
+                },
+            }
+        );
+    }
+    function formatState(state) {
+        if (!state.id) { return state.text; }
+        var color = $(state.element).attr("data-color");
+        let $state = $(
+            '<span style="display:flex; "> <div class="color-label" style="background:' + color + '" ></div> ' + state.text + '</span>'
+        );
+        return $state;
+    }
+</script>
+<script type="text/javascript">
+    let usersMentions =@Html.Raw(Json.Encode(AvailablesTagsMember.Select(x=>new { id=x.MemberNumber,x.MemberNumber,x.FullName,Avatar =(!string.IsNullOrEmpty(x.Picture) ? x.Picture.Replace(@"\\","/") : ("/Upload/Img/" + x.Gender + ".png")) }).GroupBy(x=>x.FullName.ToLower()).Select(x=>x.FirstOrDefault())));
+ 
+    $(function () {
+
+        function formatMemberAssign(member) {
+            if (!member.id) {
+                return member.text;
+            }
+            var avatar = $(member.element).attr("data-avatar");
+            if (member.id !== 'auto' && member.id !== '') {
+                var $member = $(
+                    '<span><img class="avatar-select-2" src="' + avatar + '" class="img-flag" /> ' + member.text + '</span>'
+                );
+                return $member;
+            }
+            else {
+                return member.text;
+            }
+        };
+
+        $(".select2-member").select2({
+            templateResult: formatMemberAssign
+        })
+        $("#merchant").select2();
+        $('.select2[multiple]').select2({
+            //closeOnSelect: false
+        });
+        $('#redirect_to_merchant').attr("href", "/merchantman/detail/" + $("option[value='" + $("#merchant").val() + "']", '#merchant').attr("data-customerid"));
+        //xac dinh "new salon form" duoc goi tu dau.
+        //=> xac dinh ham duoc goi sau khi submit thanh cong.
+        $("#newsalon_form").val("ticket");
+        $('[data-toggle="tooltip"]').tooltip();
+        //reselect assigned/subcriber/product
+       // setTimeout(selectmember, 500);
+        $("#stage_status form").on("submit", function () { overlayOn(); })
+        $("#stage_status form").ajaxForm(function (data) {
+            if (data[0]) {
+                success(data[1]);
+                //var e = $("#status option[value=" + data[2].Id + "]");
+                //if (e.length == 0) {
+                //    //let opt = new Option(data[2].Name, data[2].Id, false, true).attr("data-stg_ver", data[2].StageId + "|" + data[2].ProjectVersionId);
+                //    $("#status").append($('<option />')
+                //        .val(data[2].Id)
+                //        .text(data[2].Name)
+                //        .attr({ "data-stg_ver": data[2].StageId + "|" + data[2].ProjectVersionId, "selected": true }));
+
+                //}
+                //else {
+                //    e.html(data[2].Name);
+                //}
+                //$("#status option[value=" + data[2].Id + "]").data("order", data[2].Order);
+                //$("#stage_status").modal("hide");
+            } else {
+                error(data[1]);
+            }
+            overlayOff();
+        })
+        $(".vs_view").matchHeight();
+        // mentions
+
+        $(function () {
+                CKEDITOR.replace('comment', {
+                extraPlugins: 'mentions',
+                mentions: [
+                    {
+                    feed: dataFeed,
+                        itemTemplate: '<li data-id="{MemberNumber}">' +
+                            '<img class="photo" src="{Avatar}" />' +
+                            '<strong class="username">#{MemberNumber}</strong>' +
+                            '<span class="fullname">{FullName}</span>' +
+                            '</li>',
+                        outputTemplate: '<a href="#Mentions_{MemberNumber}">@('@'){FullName}</a><span>&nbsp;</span>',
+                        minChars: 0
+                    },
+                ],
+            });
+
+                function dataFeed(opts, callback) {
+                    var matchProperty = 'FullName',
+                        data = usersMentions.filter(function (item) {
+                        return item[matchProperty].toLowerCase().includes(opts.query.toLowerCase());
+                    });
+
+                data = data.sort(function (a, b) {
+                    return a[matchProperty].localeCompare(b[matchProperty], undefined, { sensitivity: 'accent' });
+                });
+                callback(data);
+            }
+        })
+       // Neo nut save change
+        var fixmeTop = $('#ticket_info_partial .main-header').offset().top;
+        var fixmeTop_width = $('#ticket_info_partial .main-header').outerWidth();
+
+        $(window).scroll(function () {
+            var currentScroll = $(window).scrollTop();
+            if (currentScroll >= fixmeTop) {
+                $('#ticket_info_partial .main-header').css({
+                position: 'fixed',
+                    top: '0',
+                    width: fixmeTop_width,
+                });
+            } else {
+                $('#ticket_info_partial .main-header').css({
+                position: 'static',
+                    width: '',
+                });
+            }
+        });
+
+        //$("#department").on("change", function () {
+        //    $("#stages").trigger("change");
+        //})
+
+        //$("#Other_Department").on("change", function () {
+        //    $("#stages").trigger("change");
+        //})
+
+        //$("#stages").on('select2:unselecting', function (e) {
+        //    var data = e.params.args.data.element.classList.contains("cur_stage");
+        //    if (data) { warning("You can't unselect current stage!"); e.preventDefault(); }
+        //})
+
+        //let firstLoadStage = true;
+
+        //$('#stages').on('change', function (e) {
+        //    if (!firstLoadStage) {
+        //        try { setonunload(); } catch (e) { }
+        //    }
+        //    firstLoadStage = false;
+        //});
+
+        function formatMember(member) {
+            if (!member.id) {
+                return member.text;
+            }
+            var avatar = $(member.element).attr("avatar");
+            if (member.id !== 'all') {
+                var $member = $(
+                    '<span><img class="avatar-select-2" src="' + avatar + '" class="img-flag" /> ' + member.text + '</span>'
+                );
+                return $member;
+            }
+            else {
+                return member.text;
+            }
+        };
+
+        $("#tag_member").select2({
+        templateResult: formatMember
+        })
+
+
+
+        $('#stages').select2();
+
+         function loadCategory() {
+        $('#category_loading').show();
+        var categorySelectedId = "@Model.CategoryId";
+        $.ajax({
+            method: "POST",
+            url: "/Ticket_New/LoadCategory",
+            dataType: "json"
+        })
+            .done(function (data) {
+                $('#MainFormTicket select[name="category"]').empty();
+                $('#MainFormTicket select[name="category"]').append("<option value=''>N/A</option>")
+                $.each(data, function (i, item) {
+                    $('#MainFormTicket select[name="category"]').append($('<option>', {
+                        value: item.Id,
+                        text: item.Name
+                    }));
+                });
+                if (categorySelectedId !== "" && $('#MainFormTicket  select[name="category"] option[value=' + categorySelectedId + ']').length) {
+                    $('#MainFormTicket select[name="category"]').val(categorySelectedId);
+                }
+                $('#MainFormTicket select[name="category"]').trigger("change.select2")
+
+            })
+            .fail(function () {
+                alert("Oops! load category failure");
+            })
+            .always(function () {
+                $("#category_loading").hide();
+            });
+    }
+        loadCategory();
+
+
+    });
+
+    //function resultState(data, container) {
+    //    if (data.element) {
+    //        $(container).addClass($(data.element).attr("class"));
+    //    }
+    //    return data.text;
+    //}
+
+    function update_merchant(_id, _update, code, accountMan = false) {
+        $("#loading_merchant").show();
+        if (_id || code) {
+            //    alert(_id + "|" + _update);
+            $.ajax({
+                method: "POST",
+                url: "/merchantman/GetMerchantInfo",
+                data: { id: _id, update: _update, cuscode: code },
+                dataType: "html"
+            })
+                .done(function (data) {
+                    $("#merchant_popup").html(data);
+                    $("#modal-merchant").modal('show');
+                    if (accountMan == true) {
+                        $('a[href="#account_manager"]').trigger('click');
+                    }
+                })
+                .fail(function () {
+                    $("#modal-merchant").modal('hide');
+                })
+                .always(function () {
+                    $("#loading_merchant").hide();
+                });
+        } else {
+            warning("Select a merchant to view!");
+            $("#loading_merchant").hide();
+        }
+    }
+    //function change_assigned_share(el, e) {
+    //    if ($(el).val().length > 0) {
+    //        var selected = $(el).val().filter(item => item !== "auto");
+    //        if (e.params.data.id=="") {
+    //            $(el).val("");
+    //        } else {
+    //            $(el).val(selected.filter(item => item !== ""));
+    //        }
+    //    } else {
+    //        $(el).val("auto");
+    //    }
+    //    $(el).trigger('change.select2');
+    //}
+
+    function new_stage_status() {
+        if (!$("select[name=Project_select]").val()) {
+            warning("Please select a project !"); return;
+        }
+        $.ajax({
+            method: "POST",
+            url: "/ProjectManagement/getProject",
+            data: { "Id": $("select[name=Project_select]").val() },
+            dataType: "json"
+        })
+            .done(function (data) {
+                $("#stage_status input[name=projectId]").val(data[1].Id);
+                $("#stage_status input[name=projectName]").val(data[1].Name);
+                $("#stage_status input[name=Id]").val("");
+                $("#stage_status input[name=Name]").val("");
+                $("#stage_status input[name=Order]").val(0);
+                $("#stage_status select[name=Type]").attr("disabled", false);
+                $("#stage_status [name=Type]").prop("selectedIndex", 0);
+                $("#stage_status .modal-title").html("Create new status");
+                $("#status-delete-button").hide();
+                $("#stage_status").modal("show");
+            })
+    }
+    function edit_stage_status() {
+        let Id = $("#status").val();
+        if (!Id) {
+            warning("Please select the status to edit");
+            return;
+        } else {
+            $.ajax({
+                method: "POST",
+                url: "/Ticket_New/getStageStatus",
+                data: { Id },
+                dataType: "json"
+            }).done(function (data) {
+                    if (data.status) {
+                        $("#stage_status input[name=projectId]").val(data.projectId);
+                        $("#stage_status input[name=projectName]").val(data.projectName);
+                        $("#stage_status input[name=Id]").val(data.Id);
+                        $("#stage_status input[name=Name]").val(data.Name);
+                        $("#stage_status select[name=Type]").val(data.Type);
+                        $("#stage_status select[name=Type]").attr("disabled",true);
+                        $("#stage_status input[name=Order]").val(data.Order);
+                        $("#status-delete-button").show();
+                    } else {
+                        error(data.message);
+                    }
+                })
+                .fail(function () {
+                    alert("Oops! Something went wrong !");
+                })
+                .always(function () {
+                });
+
+            $("#stage_status .modal-title").html("Edit status");
+            $("#stage_status").modal("show");
+        }
+    }
+
+    function delete_status_ticket() {
+        if (confirm('Are you sure are you sure to delete this status ?')) {
+            var StatusId = $("#stage_status input[name=Id]").val();
+            var status = $("#status option[value=" + StatusId + "]");
+            $.ajax({
+                method: "POST",
+                url: "/ticket_new/deleteStatus",
+                data: { Id: StatusId },
+                dataType: "json"
+            })
+                .done(function (data) {
+
+                    if (data.status == true) {
+                        $("#stage_status").modal("hide");
+                        success(data.message);
+                        status.remove();
+                    }
+                    else {
+                        error(data.message);
+                    }
+                })
+
+
+        }
+
+    }
+    //function selectmember() {
+    //    //console.log("load membervalue:" +  $("#load_member").val());
+
+    //    if ($("#load_member_group").val() == "1") {
+    //        var assignedSL = $("input[name=hdassigned]").val();
+    //        var arrAssigned = new Array();
+    //        var _arrAssigned = assignedSL.split(",");
+    //        for (var i = 0; i < _arrAssigned.length; i++) {
+    //            arrAssigned.push(_arrAssigned[i]);
+    //        }
+    //        $("select[name=assigned]").val(arrAssigned).trigger('change');
+    //        $("#load_member_group").val(2)
+
+    //        //console.log(arrAssigned);
+    //    }
+
+
+    //    //alert("b");
+    //    if ($("#load_member").val() == "1") {
+    //        var arrSubcribe = new Array();
+    //        var subcribeSL = $("input[name=hdsubcribe]").val();
+    //        var _arrSubcribe = subcribeSL.split(",");
+    //        for (var ii = 0; ii < _arrSubcribe.length; ii++) {
+    //            arrSubcribe.push(_arrSubcribe[ii]);
+    //        }
+    //        $("select[name=subcribe]").val(arrSubcribe).trigger('change');
+    //        $("#load_member").val(2);
+    //    }
+
+
+    //    //alert("d");
+
+    //    //alert($("#load_member").val());
+    //    if ($("#load_member").val() == "0" || $("#load_member_group").val() == "0") {
+    //        setTimeout(selectmember, 500);
+    //        //console.log("load member callback");
+    //    }
+    //}
+    //function change_subcribeMember() {
+    //    //alert($("select[name='subcribe']").val());
+    //    $("input[name='hdsubcribe']").val($("select[name='subcribe']").val());
+    //}
+
+    function merge_ticket_popup(ticket_id) {
+        $("#merge_ticket_popup_img").show();
+        $.ajax({
+            method: "POST",
+            url: "/Ticket_New/GetMergeTicket_S1",
+            data: { ticket_id, dev: true },
+            dataType: "html"
+        })
+            .done(function (data) {
+                $("#mt_s1").html(data);
+                $("#merge_ticket").modal('show');
+                $("#mt_s1").css("left", 0);
+                $("#mt_s2").css("left", 0);
+                $(".mt_s1_btn").show();
+                $(".mt_s2_btn").hide();
+            })
+            .fail(function () {
+                alert("Oops! Something went wrong. merge_ticket_popup() failure");
+            })
+            .always(function () {
+                $("#merge_ticket_popup_img").hide();
+            });
+    }
+    function mt_s1_submit(ticket_id) {
+        var select_tickets = [];
+        $("[name=selected_tickets]:checked").each(function () {
+            select_tickets.push($(this).val());
+        });
+        if (select_tickets.length <= 1) {
+            warning("Select at least two Tickets!");
+            return;
+        }
+        $("#mt_s1_img").show();
+        $.ajax({
+            method: "POST",
+            url: "/Ticket_New/GetMergeTicket_S2",
+            data: { ticket_id, select_tickets },
+            dataType: "html"
+        })
+            .done(function (data) {
+                $("#mt_s2").html(data);
+                $("#mt_s1").animate({ left: '-50%' });
+                $("#mt_s2").animate({ left: '-50%' });
+                $(".mt_s1_btn").hide();
+                $(".mt_s2_btn").show();
+                //$("#mt_s2").animate({left: '0'});
+            })
+            .fail(function () {
+                alert("Oops! Something went wrong. mt_s1_submit() failure");
+            })
+            .always(function () {
+                $("#mt_s1_img").hide();
+            });
+    }
+    function mt_s2_submit(cur_ticket) {
+        var select_tickets = [];
+        $("[name=selected_tickets]:checked").each(function () {
+            select_tickets.push($(this).val());
+        });
+        if (select_tickets.length <= 1) {
+            warning("Select at least two Tickets!");
+            return;
+        }
+        var main_ticket = $("[name=main_ticket]:checked").val();
+        if (!main_ticket) {
+            warning("Please select main Ticket!");
+            return;
+        }
+        $("#mt_s2_img").show();
+        $.ajax({
+            method: "POST",
+            url: "/Ticket_New/MergeTicket_submit",
+            data: { main_ticket, select_tickets, cur_ticket },
+            dataType: "json"
+        })
+            .done(function (data) {
+                //$("#mt_s2").animate({left: '0'});
+                if (data[0]) {
+                    success(data[1]);
+                    $("#merge_ticket").modal('hide');
+                    Gettimeline();
+                    for (var i in data[3]) {
+                        $("#tk_" + data[3][i]).css("text-decoration", "line-through");
+                    }
+                    if (data[4]) {
+                        $("#divStatus").find("span").addClass("label-danger").removeClass("label-primary").html("Complete");
+                    }
+                } else {
+                    error(data[1]);
+                }
+            })
+            .fail(function () {
+                alert("Oops! Something went wrong. mt_s2_submit() failure");
+            })
+            .always(function () {
+                $("#mt_s2_img").hide();
+            });
+    }
+    function prev_s1() {
+        $("#mt_s1").animate({ left: '0' });
+        $("#mt_s2").animate({ left: '0' });
+        $(".mt_s1_btn").show();
+        $(".mt_s2_btn").hide();
+    }
+
+    let firstLoad = true;
+    $('#merchant').on("select2:open", function (e) {
+        if (firstLoad) {
+            load_merchants();
+        }
+    });
+    function load_merchants() {
+        $('#loading_merchant').show();
+
+        $.ajax({
+            type: 'GET',
+            url: '/Ticket_New/GetMerchant',
+            success: function (response) {
+                let listMerchant = response;
+                if ($('#merchant').val() != '' && $('#merchant').val() != null) {
+                    listMerchant = response.filter(item => item.CustomerCode != $('#merchant').val());
+                }
+                $.each(listMerchant, function (i, item) {
+                 
+
+                    $('#merchant').append(`<option data-customerid="${item.Id}" data-partner="${(item.PartnerCode||"Mango")}" value="${item.CustomerCode}">${item.BusinessName + ' - ' + (item.BusinessAddressStreet || "") + ', ' + (item.BusinessCity || "") + ', ' + (item.BusinessState || "") + (item.BusinessZipCode || "") + ', ' + (item.BusinessCountry || "")}</option>`)
+                })
+                firstLoad = false;
+                $('#merchant').select2().select2('open');
+                $('#loading_merchant').hide();
+            },
+            error: function () {
+                alert("Oops! Something went wrong. Merchants loading failure");
+                $('#loading_merchant').hide();
+            }
+        });
+    }
+
+    $('#merchant').on("change", function (e) {
+        let Page = $("#Page").val();
+        if (Page == '@PageDeployment' || Page == '@PageSupportTicket') {
+            let CustomerCodeSelected = $("#merchant").val();
+            if (CustomerCodeSelected !== '') {
+                let PartnerCode = $("option[value='" + CustomerCodeSelected + "']", '#merchant').attr("data-partner");
+
+                let DepartmentSpecific = $("option[data-partner='" + PartnerCode + "']", '#department');
+                if (DepartmentSpecific.length) {
+                    $("#department").val(DepartmentSpecific.attr('value')).trigger("change");
+                }
+                else {
+                    let DepartmentAll = $("option[data-partner='All']", '#department');
+                    if (DepartmentAll.length) {
+                        $("#department").val(DepartmentAll.attr('value')).trigger("change");
+                    }
+                    else {
+                        $("#department").val("").trigger("change");
+                    }
+                }
+
+            }
+            loadAccountManagerTicket();
+
+        }
+        $('#redirect_to_merchant').attr("href", "/merchantman/detail/" + $("option[value='" + $("#merchant").val() + "']", '#merchant').attr("data-customerid"));
+    });
+
+    function loadAccountManagerTicket() {
+        let CustomerCodeSelected = $("#merchant").val();
+        if (CustomerCodeSelected !== '') {
+            $.ajax({
+                method: "POST",
+                url: "/Ticket_New/GetCustomerByCode",
+                data: {
+                    customerCode: CustomerCodeSelected,
+                },
+                dataType: "json"
+            })
+                .done(function (cus) {
+                    $('.account-manager-detail').html(`<i class="fa fa-user" aria-hidden="true"></i>&nbsp;${cus.FullName || "N/A"}`)
+                })
+                .fail(function () {
+                    alert("Oops! load type failure");
+                })
+                .always(function () {
+                    $("#loading_type").hide();
+                });
+        }
+        else {
+            $('.account-manager-detail').html('')
+        }
+    }
+
+    @if (!(Model.Id > 0)&&customer!=null)
+    {
+        <text>
+        $('#merchant').trigger('change');
+        </text>
+
+    }
+</script>
+
+
+<style type="text/css">
+    #table_forward_stage tr td {
+        padding: 3px;
+        vertical-align: middle;
+    }
+
+        #table_forward_stage tr td:last-child {
+            width: 70px;
+            text-align: center;
+        }
+
+        #table_forward_stage tr td:first-child {
+            width: 30%;
+            background-color: var(--main-color-1);
+            color: #fff;
+            font-weight: bold;
+            border-color: var(--main-color-2);
+            text-align: center;
+        }
+
+    .select2-container .select2-results__option.optInvisible {
+        display: none;
+    }
+</style>
+
+<script type="text/javascript">
+    function ChooseTags() {
+        event.stopPropagation();
+        //console.log("choose tags");
+
+        $("#choose_tags_loading").show();
+        let Page = $("#Page").val();
+        //let listTagsSelected = $("#listTagsSelected").val();
+
+        $.post("/Ticket_New/SelectTags", { /*lstTags: listTagsSelected,*/ Page }, function (data) {
+            //data: html_partial
+            $("#choose_tags_loading").hide();
+            $("#tags_popup_modal").html(data);
+
+            let error_msg = $("#tags_popup_error").val()
+            if (error_msg != "" && error_msg != null) {
+                let optionsErr = $.parseJSON('{"text":"Error: ' + error_msg + '","layout":"topRight","type":"warning"}');
+                noty(optionsErr);
+            }
+            else {
+                //$("#tags_popup").modal("show");
+                $("#tags_popup").modal({ backdrop: 'static', keyboard: false });
+            }
+
+        }).fail(function () {
+            alert("Oops! Something went wrong");
+            $("#choose_tags_loading").hide();
+        });
+    }
+    function AddTag() {
+        event.stopPropagation();
+        //console.log("choose tags");
+      
+        $("#choose_tags_loading").show();
+        let Page = $("#Page").val();
+        //let listTagsSelected = $("#listTagsSelected").val();
+
+        $.post("/Ticket_New/SelectTags", { /*lstTags: listTagsSelected,*/ Page, 'Action': 'Add' }, function (data) {
+            //data: html_partial
+            $("#choose_tags_loading").hide();
+            $("#tags_popup_modal").html(data);
+            $('#color').colorpicker()
+            let error_msg = $("#tags_popup_error").val()
+            if (error_msg != "" && error_msg != null) {
+                let optionsErr = $.parseJSON('{"text":"Error: ' + error_msg + '","layout":"topRight","type":"warning"}');
+                noty(optionsErr);
+            }
+            else {
+                //$("#tags_popup").modal("show");
+                $("#tags_popup").modal({ backdrop: 'static', keyboard: false });
+            }
+
+        }).fail(function () {
+            alert("Oops! Something went wrong");
+            $("#choose_tags_loading").hide();
+        });
+    }
+    $("#Deadline").datetimepicker({
+        sideBySide: true
+    });
+
+    $("#priority").change(function () {
+        var priority = $(this).val();
+        if (priority != '') {
+            debugger;
+            var deadlineofhours = $("#priority option[value=" + priority + "]").attr("data-deadlineofhours");
+            if (deadlineofhours != '') {
+                $('#Deadline').val(moment().add(parseInt(deadlineofhours), 'hours').format("MM/DD/YYYY HH:mm A"))
+            }
+            else {
+                $('#Deadline').val('')
+            }
+        }
+        else {
+                $('#Deadline').val('')
+        }
+        noty({ "text": "Deadline has been changed", "layout": "topRight", "type": "success" });
+    })
+
+    $(".input-has-remove-icon").mouseover(function () {
+        var input = $(this).children("input")[0];
+        var clearIcon = $(this).children(".input-icon-remove")[0];
+        if ($(input).val()) {
+            $(clearIcon).show();
+        }
+    });
+
+    $(".input-has-remove-icon").mouseout(function () {
+        var clearIcon = $(this).children(".input-icon-remove")[0];
+        $(clearIcon).hide();
+    });
+    $(".input-icon-remove").click(function () {
+        var input = $(this).parent(".input-has-remove-icon").children("input")[0];
+        $(input).val('').trigger("change");
+    });
+
+</script>

@@ -1,0 +1,53 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.CustomizeModel.ProductItemPriceView>
+@using EnrichcousBackOffice.Models
+@{
+}
+@if (Model.Count() > 0)
+{
+    <div class="custom-scroll" style="border: 1px solid royalblue; max-height: 300px; overflow-y:auto;margin:8px">
+        <table class="table table-bordered table-striped" style="margin:0">
+            <thead style="background-color: #aad3ea">
+                <tr>
+                    <th>License</th>
+                    <th>Value</th>
+                    @*<th>Period</th>
+                        <th>Enable</th>*@
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr id="@item.ID" class="hover _striped" style="cursor:pointer" onclick="$(this).find('[type=checkbox]').trigger('click')">
+                        <td>
+                            <label class="text-olive">@item.Name</label>
+                            <i>@item.Desc</i>
+                            <br />
+                        </td>
+                        <td>
+                            <b>
+                                @if (item.Type == "COUNT")
+                                {
+                                    @Html.Raw(item.Value)
+                                }
+                                else
+                                {
+                                    @Html.Raw(item.Value == 1 ? "Yes" : "No")
+                                }
+                            </b>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+    </div>
+
+    <style type="text/css">
+        ._striped > td {
+            border-left-width: 0 !important;
+            border-right-width: 0 !important;
+            border-bottom-color: lightblue !important;
+        }
+    </style>
+
+}

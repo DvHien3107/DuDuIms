@@ -1,0 +1,549 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.T_Project_Stage>
+
+<section id="select_stage" class="content">
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="box box-primary" style="">
+                <!-- /.box-header -->
+                <div class="box-header with-border">
+                    <div class="col-md-12" style="padding: 0;">
+                        <div class="form-inline" style="padding-left: 0;">
+                            <form action="/development/">
+                                <div class="group-item btn-group btn-group-md">
+                                    <label class="btn btn-info btn-flat for-filter-group-select" for="filter-group-select" style="border-color: unset; background-color: rgb(0, 192, 239);">
+                                        <i class="fa fa-bars" style="margin-right: 5px;"></i>
+                                        <span class="filter-group-value">All Group</span>
+                                    </label>
+                                    <input type="checkbox" style="display: none" class="filter-group-select" id="filter-group-select">
+                                    <div class="fill-over"></div>
+                                    <div class="filter-group">
+                                        <label class="btn btn-info btn-lg btn-flat filter-group-value" style="border-color: unset; background-color: #00c0ef">
+                                            <span class="filter-group-item" data-key="0">All Group</span>
+                                        </label>
+                                        <label class="btn btn-info btn-lg btn-flat filter-group-value" style="border-color: unset; background-color: #999">
+                                            <span class="filter-group-item" data-key="-1">No Assigned</span>
+                                        </label>
+                                        <label class="btn btn-info btn-lg btn-flat filter-group-value" style="border-color: unset; background-color: #ffc107 !important;">
+                                            <span class="filter-group-item" data-key="20033008">SIMPLY POS V1</span>
+                                        </label><label class="btn btn-info btn-lg btn-flat filter-group-value" style="border-color: unset; background-color: #007bff !important;">
+                                            <span class="filter-group-item" data-key="20033009">CHECKIN</span>
+                                        </label><label class="btn btn-info btn-lg btn-flat filter-group-value" style="border-color: unset; background-color: #ff851b !important;">
+                                            <span class="filter-group-item" data-key="20033010">IMS</span>
+                                        </label><label class="btn btn-info btn-lg btn-flat filter-group-value" style="border-color: unset; background-color: #17a2b8 !important;">
+                                            <span class="filter-group-item" data-key="20080002">SIMPLY POS V2</span>
+                                        </label><label class="btn btn-info btn-lg btn-flat filter-group-value" style="border-color: unset; background-color: #6610f2 !important;">
+                                            <span class="filter-group-item" data-key="20090003">V2.3</span>
+                                        </label>
+                                    </div>
+                                    <style type="text/css">
+                                        .filter-group {
+                                            position: absolute;
+                                            background-color: white;
+                                            top: 34px;
+                                            z-index: 100;
+                                            display: none;
+                                            height: fit-content;
+                                            width: 430px;
+                                            box-shadow: 5px 5px 5px 5px rgba(0, 0, 60, 0.2);
+                                            flex-flow: row wrap;
+                                            align-items: baseline;
+                                            padding: 10px 0 0 10px;
+                                        }
+
+                                        .fill-over {
+                                            position: fixed;
+                                            top: 0;
+                                            left: 0;
+                                            width: 100%;
+                                            height: 100%;
+                                            display: none;
+                                            z-index: 100;
+                                        }
+
+                                        .filter-group-value {
+                                            width: 200px;
+                                            white-space: nowrap;
+                                            overflow: hidden;
+                                            text-overflow: ellipsis;
+                                            /*border: 1px solid #999;*/
+                                            direction: rtl;
+                                        }
+
+                                        input[type="checkbox"].filter-group-select:checked ~ div.filter-group {
+                                            display: flex;
+                                        }
+
+                                        input[type="checkbox"].filter-group-select:checked ~ div.fill-over {
+                                            display: block !important;
+                                        }
+
+                                        label.filter-group-value {
+                                            margin-right: 10px;
+                                            margin-bottom: 10px;
+                                        }
+                                    </style>
+                                </div>
+                                <input type="hidden" name="t" value="closed">
+                                <input type="hidden" name="g" value="0">
+
+                                <div class="input-group col-sm-2 pull-right">
+                                    <input onkeyup="if (event.key == 'Enter' ) {overlayOn();$(this).closest('form').submit() }" onblur="overlayOn(); $(this).closest('form').submit()" type="text" name="s_content" placeholder="Search by ticket#, name" class="form-control" value="">
+                                </div>
+
+                                <div class="input-group col-sm-2  pull-right" style="display:none">
+                                    <select name="s_related" class="select2 form-control select2-hidden-accessible" onchange="overlayOn(); $(this).closest('form').submit()" tabindex="-1" aria-hidden="true">
+                                    </select><span class="select2 select2-container select2-container--default" dir="ltr" style="width: 1px;"><span class="selection"><span class="select2-selection select2-selection--single" role="combobox" aria-haspopup="true" aria-expanded="false" tabindex="-1" aria-labelledby="select2-s_related-nw-container"><span class="select2-selection__rendered" id="select2-s_related-nw-container"></span><span class="select2-selection__arrow" role="presentation"><b role="presentation"></b></span></span></span><span class="dropdown-wrapper" aria-hidden="true"></span></span><span class="select2 select2-container select2-container--default select2-hidden-accessible" dir="ltr" style="width: auto;" tabindex="-1" aria-hidden="true"><span class="selection"><span class="select2-selection select2-selection--single" role="combobox" aria-haspopup="true" aria-expanded="false" tabindex="0" aria-labelledby="select2-s_related-vj-container"><span class="select2-selection__rendered" id="select2-s_related-vj-container"></span><span class="select2-selection__arrow" role="presentation"><b role="presentation"></b></span></span></span><span class="dropdown-wrapper" aria-hidden="true"></span></span><span class="select2 select2-container select2-container--default" dir="ltr" style="width: auto;"><span class="selection"><span class="select2-selection select2-selection--single" role="combobox" aria-haspopup="true" aria-expanded="false" tabindex="0" aria-labelledby="select2-if27-container"><span class="select2-selection__rendered" id="select2-if27-container"></span><span class="select2-selection__arrow" role="presentation"><b role="presentation"></b></span></span></span><span class="dropdown-wrapper" aria-hidden="true"></span></span>
+                                </div>
+
+
+                                <div class="input-group col-sm-2 pull-right">
+                                    <div class="input-group-addon">
+                                        <i class="fa fa-filter"></i> Filters
+                                    </div>
+                                    <select style="width:120px" name="s_filter" onchange="if ($(this).val() != 'createby') { overlayOn(); $(this).closest('form').submit() }" class="form-control">
+                                        <option value="all">All</option>
+                                        <option value="assigned">Assigned to</option>
+                                        <option value="me">Your tickets</option>
+
+                                        <option value="salon">Salon</option>
+                                    </select>
+
+                                </div>
+
+                                <div class="input-group col-sm-2 pull-right">
+                                    <div class="input-group-addon">
+                                        <i class="fa fa-calendar"></i> To
+                                    </div>
+                                    <input onchange="overlayOn();$(this).closest('form').submit()" type="text" name="tdate" class="form-control datepicker hasDatepicker" value="10/06/2020" id="dp1601970651604">
+                                </div>
+
+                                <div class="input-group col-sm-2 pull-right">
+                                    <div class="input-group-addon">
+                                        <i class="fa fa-calendar"></i> From
+                                    </div>
+                                    <input onchange="overlayOn();$(this).closest('form').submit()" type="text" name="fdate" class="form-control datepicker hasDatepicker" value="8/1/2020" id="dp1601970651605">
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <!-- /.box-tools -->
+                </div>
+
+                <!-- .box-body -->
+                <div class="box-body">
+                    <!--Tab button-->
+                    <div class="box box-solid" style="border-bottom:1px solid gray;">
+                        <div class="box-header with-border">
+
+                        </div>
+                        <div id="ticket_type_select" class="box-body no-padding">
+
+                            <a href="/development/?t=open&amp;g=0" class="btn btn-app    ">
+                                <span class="badge bg-aqua"><span class="fill_count"></span><span id="open">172</span></span>
+                                <i class="fa fa-eye"></i> Open ticket
+                            </a>
+                            <a href="/development/?t=unassigned&amp;g=0" class="btn btn-app  ">
+                                <span class="badge bg-yellow "><span class="fill_count"></span><span id="unassigned">32</span></span>
+                                <i class="fa fa-bullhorn"></i> Unassigned
+                            </a>
+
+                            <a href="/development/?t=closed&amp;g=0" class="btn btn-app  btn-info  active ">
+                                <span class="badge bg-blue "><span class="fill_count">278/</span><span id="closed">278</span></span>
+                                <i class="fa  fa-check"></i> Closed ticket
+                            </a>
+
+                            <a href="/development/?t=all&amp;g=0" class="btn btn-app  ">
+                                <span class="badge bg-navy"><span class="fill_count"></span><span id="all">482</span></span>
+                                <i class="fa fa-envelope "></i> All Ticket
+                            </a>
+
+
+
+
+                            <a href="/development/?t=invisible&amp;g=0" class="btn btn-app   ">
+                                <span class="badge bg-red"><span class="fill_count"></span><span id="invisible">0</span></span>
+                                <i class="fa fa-trash-o"></i> Invisible
+                            </a>
+
+                            <a href="/development/update" class="btn btn-primary pull-right">
+                                <i class="fa fa-plus"></i> New ticket
+                            </a>
+                        </div>
+                        <!-- /.box-body -->
+                    </div>
+
+                    <div class="mailbox-messages">
+
+                        <div class="jumbotron" style="padding:10px;display:none" id="markas_div">
+                            <h4>4 select(s)</h4>
+                            <div style="font-size:13px">
+                                <div style="display:inline-block;padding-left:0;margin-right:15px">
+                                    <label>Mark as</label><br>
+                                    <select id="markas_status" class="form-control">
+                                        <option value="-1">NO CHANGES</option>
+                                        <option>Requested</option>
+                                        <option>Approved- Ready to work on</option>
+                                        <option>Ready for testing</option>
+                                        <option>Launched</option>
+                                        <option>Closed</option>
+                                        <option>Closed-NR</option>
+                                    </select>
+                                </div>
+
+                                <div style="display:inline-block;padding-left:0px;margin-right:15px">
+                                    <label>Label</label><br>
+                                    <div class="dropdown bootstrap-select show-tick form-control bs3">
+                                        <select id="maskas_label" class="selectpicker form-control" multiple="" tabindex="-98">
+                                        </select><button type="button" class="btn dropdown-toggle btn-default bs-placeholder" data-toggle="dropdown" role="combobox" aria-owns="bs-select-1" aria-haspopup="listbox" aria-expanded="false" data-id="maskas_label" title="Nothing selected"><div class="filter-option"><div class="filter-option-inner"><div class="filter-option-inner-inner">Nothing selected</div></div> </div><span class="bs-caret"><span class="caret"></span></span></button><div class="dropdown-menu open"><div class="inner open" role="listbox" id="bs-select-1" tabindex="-1" aria-multiselectable="true"><ul class="dropdown-menu inner " role="presentation"></ul></div></div>
+                                    </div>
+                                </div>
+
+                                <div style="display:inline-block;padding-left:0px;margin-right:15px">
+                                    <label>Category</label><br>
+                                    <select id="maskas_project" class="form-control" onchange="loadVersionByProject(this)">
+                                    </select>
+                                </div>
+
+                                <div style="display:inline-block;padding-left:0px;margin-right:15px">
+                                    <label>Version</label><br>
+                                    <select id="maskas_version" class="form-control">
+                                        <option value="-1">NO CHANGES</option>
+                                        <option value="0">NON SET</option>
+                                    </select>
+                                </div>
+
+                                <div style="display: inline-block; padding-left: 0; margin-right: 15px">
+                                    <label>Group</label><br>
+                                    <select id="maskas_group" class="form-control" onchange="loadMemberByGroup(this)">
+                                    </select>
+                                </div>
+
+                                <div style="display:inline-block;padding-left:0;margin-right:15px">
+                                    <label>Assign</label><br>
+                                    <div class="dropdown bootstrap-select show-tick form-control bs3">
+                                        <select id="maskas_assign" class="form-control selectpicker" multiple="" tabindex="-98">
+                                            <option value="-1">NO CHANGES</option>
+                                        </select><button type="button" class="btn dropdown-toggle btn-default bs-placeholder" data-toggle="dropdown" role="combobox" aria-owns="bs-select-2" aria-haspopup="listbox" aria-expanded="false" data-id="maskas_assign" title="Nothing selected"><div class="filter-option"><div class="filter-option-inner"><div class="filter-option-inner-inner">Nothing selected</div></div> </div><span class="bs-caret"><span class="caret"></span></span></button><div class="dropdown-menu open"><div class="inner open" role="listbox" id="bs-select-2" tabindex="-1" aria-multiselectable="true"><ul class="dropdown-menu inner " role="presentation"></ul></div></div>
+                                    </div>
+                                </div>
+
+
+                            </div>
+                            <div style="margin-top:10px">
+                                <button class="btn btn-default btn-sm" type="button">Cancel</button>
+                                <button id="markas_submit" style="margin-left:20px" class="btn btn-danger btn-sm" type="button">Apply</button>
+
+                            </div>
+                        </div>
+
+                        <!-- Latest compiled and minified CSS -->
+                        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/css/bootstrap-select.min.css">
+                        <!-- Latest compiled and minified JavaScript -->
+                        <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/js/bootstrap-select.min.js"></script>
+
+                        <div id="DataTables_Table_0_wrapper" class="dataTables_wrapper form-inline dt-bootstrap">
+                            <div class="row">
+                                <div class="col-sm-3"><div class="dataTables_length" id="DataTables_Table_0_length"><label>Show <select name="DataTables_Table_0_length" aria-controls="DataTables_Table_0" class="form-control input-sm"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select> entries</label></div><a id="btn_clear" data-toggle="tooltip" data-original-title="Click to clear filter" style="padding:10px; display:none;font-weight:bold"> &lt; Clear filter &gt; </a></div><div class="col-sm-9 filter_selectors">
+                                    <select style="max-width:150px" id="ticket_type_filter" class="form-control" onchange="ticketFilter(this, 0)">
+                                    </select><select style="max-width:150px" id="ticket_status_filter" class="form-control" onchange="ticketFilter(this, 1)">
+                                    </select><select style="max-width:150px" id="ticket_priority_filter" class="form-control" onchange="ticketFilter(this, 2)">
+                                    </select><select style="max-width:150px" id="ticket_severity_filter" class="form-control" onchange="ticketFilter(this, 3)">
+                                    </select><select style="max-width:150px" id="ticket_cate_filter" class="form-control" onchange="ticketFilter(this, 4)">
+                                    </select><select style="max-width:150px" id="ticket_tags_filter" class="form-control" onchange="ticketFilter(this, 5)">
+                                    </select>
+                                </div>
+                            </div><div class="row">
+                                <div class="col-sm-12">
+                                    <table class="table table-hover table-striped dataTable" data-order="[[7,&quot;desc&quot;]]" id="DataTables_Table_0" role="grid" style="width: 1623px;">
+                                        <thead>
+                                            <tr role="row"><th style="display: none; width: 0px;" class="sorting" tabindex="0" aria-controls="DataTables_Table_0" rowspan="1" colspan="1" aria-label="type: activate to sort column ascending">type</th><th style="display: none; width: 0px;" class="sorting" tabindex="0" aria-controls="DataTables_Table_0" rowspan="1" colspan="1" aria-label="status: activate to sort column ascending">status</th><th style="display: none; width: 0px;" class="sorting" tabindex="0" aria-controls="DataTables_Table_0" rowspan="1" colspan="1" aria-label="priority: activate to sort column ascending">priority</th><th style="display: none; width: 0px;" class="sorting" tabindex="0" aria-controls="DataTables_Table_0" rowspan="1" colspan="1" aria-label="severity: activate to sort column ascending">severity</th><th style="display: none; width: 0px;" class="sorting" tabindex="0" aria-controls="DataTables_Table_0" rowspan="1" colspan="1" aria-label="cate: activate to sort column ascending">cate</th><th style="display: none; width: 0px;" class="sorting" tabindex="0" aria-controls="DataTables_Table_0" rowspan="1" colspan="1" aria-label="tags: activate to sort column ascending">tags</th><th class="no-sort sorting_disabled" rowspan="1" colspan="1" aria-label="" style="width: 21px;"><input name="checkall" type="checkbox"></th><th class="sorting_desc" tabindex="0" aria-controls="DataTables_Table_0" rowspan="1" colspan="1" aria-label="#: activate to sort column ascending" style="width: 86px;" aria-sort="descending">#</th><th class="sorting" tabindex="0" aria-controls="DataTables_Table_0" rowspan="1" colspan="1" aria-label="Ticket name: activate to sort column ascending" style="width: 430px;">Ticket name</th><th class="sorting" tabindex="0" aria-controls="DataTables_Table_0" rowspan="1" colspan="1" aria-label="Status: activate to sort column ascending" style="width: 118px;">Status</th><th class="sorting" tabindex="0" aria-controls="DataTables_Table_0" rowspan="1" colspan="1" aria-label="Assigned: activate to sort column ascending" style="width: 448px;">Assigned</th><td class="sorting" tabindex="0" aria-controls="DataTables_Table_0" rowspan="1" colspan="1" aria-label="Open date: activate to sort column ascending" style="width: 89px;">Open date</td><th class="sorting" tabindex="0" aria-controls="DataTables_Table_0" rowspan="1" colspan="1" aria-label="Last updated: activate to sort column ascending" style="width: 187px;">Last updated</th></tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr class="strikeout odd" role="row">
+
+                                                <td style="display:none">2000</td>
+                                                <td style="display:none">closed</td>
+                                                <td style="display:none">Medium</td>
+                                                <td style="display:none">2000</td>
+                                                <td style="display:none">NULL</td>
+                                                <td style="display:none">[Done/Updated on Simply 2.1 Beta 5]::#d0d416|</td>
+
+
+                                                <td class="mailbox-star"><input name="checkticket" type="checkbox" value="2010035874"></td>
+                                                <td class="sorting_1">#2010.035874</td>
+                                                <td class="mailbox-name">
+                                                    <a href="/development/detail/2010035874?urlback=/development/?t=closed&amp;g=0" title="" data-toggle="tooltip" data-original-title="Click here to open ticket">Client: Server error in phone number verification link</a>
+                                                    <br>
+                                                    <i style="color:grey;font-size:0.85em">
+                                                        Opened 5 days ago by Thanh Hang
+                                                    </i>
+
+
+                                                    <br>
+                                                    <a data-toggle="tooltip" data-original-title="Click to filter">
+                                                        <span class="label" style="background-color:#00acd6">Medium</span>
+                                                    </a>
+                                                    <a data-toggle="tooltip" data-original-title="Click to filter">
+                                                        <span class="label" style="background-color: #cfcfcf">Minor</span>
+                                                    </a>
+                                                    <a data-toggle="tooltip" data-original-title="Click to filter"><span class="label" style="background-color:#d0d416">Done/Updated on Simply 2.1 Beta 5</span></a>
+                                                    &nbsp;
+                                                </td>
+                                                <td>Closed</td>
+                                                <td>
+                                                    <a class="label label-success" data-toggle="tooltip" data-original-title="Click to filter">Le Minh Tri</a>
+                                                    <a class="label label-success" data-toggle="tooltip" data-original-title="Click to filter">THINH TRUONG QUOC</a>
+                                                    <a class="label label-success" data-toggle="tooltip" data-original-title="Click to filter">TRáº¦N DUY PHONG</a>
+
+                                                    <br>
+                                                    <i style="color:grey;font-size:0.8em">- MANGO POS V2 Group</i>
+
+                                                </td>
+                                                <td>
+                                                    <span id="localtime-2010035874">
+                                                        2020-10-01
+                                                    </span>
+                                                </td>
+                                                <td>
+
+
+                                                    02 Oct 2020 03:59 AM                                                 <br> <span>-  by Thanh Hang</span>
+                                                </td>
+
+
+                                            </tr>
+                                            <tr class="strikeout even" role="row">
+
+                                                <td style="display:none">2000</td>
+                                                <td style="display:none">closed</td>
+                                                <td style="display:none">High</td>
+                                                <td style="display:none">2010</td>
+                                                <td style="display:none">NULL</td>
+                                                <td style="display:none">[Duplicate issue]::#25f56c|[Fix/Dev on Mango 2.1 Beta  5 U]::#993de0|</td>
+
+
+                                                <td class="mailbox-star"><input name="checkticket" type="checkbox" value="2010008984"></td>
+                                                <td class="sorting_1">#2010.008984</td>
+                                                <td class="mailbox-name">
+                                                    <a href="/development/detail/2010008984?urlback=/development/?t=closed&amp;g=0" title="" data-toggle="tooltip" data-original-title="Click here to open ticket">Client: Server error in link to verify phone number</a>
+                                                    <br>
+                                                    <i style="color:grey;font-size:0.85em">
+                                                        Opened 21 hours 13 minutes ago by Thanh Hang
+                                                    </i>
+
+
+                                                    <br>
+                                                    <a data-toggle="tooltip" data-original-title="Click to filter">
+                                                        <span class="label" style="background-color:#ff8616">High</span>
+                                                    </a>
+                                                    <a data-toggle="tooltip" data-original-title="Click to filter">
+                                                        <span class="label" style="background-color:#ff8616">Serious</span>
+                                                    </a>
+                                                    <a data-toggle="tooltip" data-original-title="Click to filter"><span class="label" style="background-color:#25f56c">Duplicate issue</span></a>
+                                                    &nbsp;                                                        <a data-toggle="tooltip" data-original-title="Click to filter"><span class="label" style="background-color:#993de0">Fix/Dev on Mango 2.1 Beta  5 U</span></a>
+                                                    &nbsp;
+                                                </td>
+                                                <td>Closed</td>
+                                                <td>
+                                                    <a class="label label-success" data-toggle="tooltip" data-original-title="Click to filter">Le Minh Tri</a>
+                                                    <a class="label label-success" data-toggle="tooltip" data-original-title="Click to filter">THINH TRUONG QUOC</a>
+
+                                                    <br>
+                                                    <i style="color:grey;font-size:0.8em">- MANGO POS V2 Group</i>
+
+                                                </td>
+                                                <td>
+                                                    <span id="localtime-2010008984">
+                                                        2020-10-05
+                                                    </span>
+                                                </td>
+                                                <td>
+
+
+                                                    06 Oct 2020 07:11 AM                                                 <br> <span>-  by Thanh Hang</span>
+                                                </td>
+
+
+                                            </tr>
+                                            <tr class="strikeout odd" role="row">
+
+                                                <td style="display:none">2010</td>
+                                                <td style="display:none">closed</td>
+                                                <td style="display:none">Low</td>
+                                                <td style="display:none">2000</td>
+                                                <td style="display:none">NULL</td>
+                                                <td style="display:none">[Done/Updated on Mango 2.1 Beta 5 U]::#0cd3e4|</td>
+
+
+                                                <td class="mailbox-star"><input name="checkticket" type="checkbox" value="2010007087"></td>
+                                                <td class="sorting_1">#2010.007087</td>
+                                                <td class="mailbox-name">
+                                                    <a href="/development/detail/2010007087?urlback=/development/?t=closed&amp;g=0" title="" data-toggle="tooltip" data-original-title="Click here to open ticket">Booking: Limit time</a>
+                                                    <br>
+                                                    <i style="color:grey;font-size:0.85em">
+                                                        Opened 1 days ago by DÆ°Æ¡ng ThiÃªn  Bá»&shy;u Trinh
+                                                    </i>
+
+
+                                                    <br>
+                                                    <a data-toggle="tooltip" data-original-title="Click to filter">
+                                                        <span class="label" style="background-color: #cfcfcf">Low</span>
+                                                    </a>
+                                                    <a data-toggle="tooltip" data-original-title="Click to filter">
+                                                        <span class="label" style="background-color: #cfcfcf">Minor</span>
+                                                    </a>
+                                                    <a data-toggle="tooltip" data-original-title="Click to filter"><span class="label" style="background-color:#0cd3e4">Done/Updated on Mango 2.1 Beta 5 U</span></a>
+                                                    &nbsp;
+                                                </td>
+                                                <td>Closed</td>
+                                                <td>
+                                                    <a class="label label-success" data-toggle="tooltip" data-original-title="Click to filter">Le Minh Tri</a>
+                                                    <a class="label label-success" data-toggle="tooltip" data-original-title="Click to filter">SEAN NGUYEN</a>
+                                                    <a class="label label-success" data-toggle="tooltip" data-original-title="Click to filter">THINH TRUONG QUOC</a>
+                                                    <a class="label label-success" data-toggle="tooltip" data-original-title="Click to filter">TRáº¦N DUY PHONG</a>
+
+                                                    <br>
+                                                    <i style="color:grey;font-size:0.8em">- MANGO POS V2 Group</i>
+
+                                                </td>
+                                                <td>
+                                                    <span id="localtime-2010007087">
+                                                        2020-10-05
+                                                    </span>
+                                                </td>
+                                                <td>
+
+
+                                                    06 Oct 2020 03:12 AM                                                 <br> <span>-  by DÆ°Æ¡ng ThiÃªn  Bá»&shy;u Trinh</span>
+                                                </td>
+
+
+                                            </tr>
+                                            <tr class="strikeout even" role="row">
+
+                                                <td style="display:none">2000</td>
+                                                <td style="display:none">closed</td>
+                                                <td style="display:none">Low</td>
+                                                <td style="display:none">NULL</td>
+                                                <td style="display:none">NULL</td>
+                                                <td style="display:none">[Fix/Dev on Mango 2.1 Beta  5 U]::#993de0|</td>
+
+
+                                                <td class="mailbox-star"><input name="checkticket" type="checkbox" value="2010006862"></td>
+                                                <td class="sorting_1">#2010.006862</td>
+                                                <td class="mailbox-name">
+                                                    <a href="/development/detail/2010006862?urlback=/development/?t=closed&amp;g=0" title="" data-toggle="tooltip" data-original-title="Click here to open ticket">Salon Exchange/Quick Peek : Serviced dose not show quantity</a>
+                                                    <br>
+                                                    <i style="color:grey;font-size:0.85em">
+                                                        Opened 1 days ago by Thanh Hang
+                                                    </i>
+
+
+                                                    <br>
+                                                    <a data-toggle="tooltip" data-original-title="Click to filter">
+                                                        <span class="label" style="background-color: #cfcfcf">Low</span>
+                                                    </a>
+                                                    <a data-toggle="tooltip" data-original-title="Click to filter">
+                                                    </a>
+                                                    <a data-toggle="tooltip" data-original-title="Click to filter"><span class="label" style="background-color:#993de0">Fix/Dev on Mango 2.1 Beta  5 U</span></a>
+                                                    &nbsp;
+                                                </td>
+                                                <td>Closed</td>
+                                                <td>
+                                                    <a class="label label-success" data-toggle="tooltip" data-original-title="Click to filter">Le Minh Tri</a>
+                                                    <a class="label label-success" data-toggle="tooltip" data-original-title="Click to filter">NGUYEN CONG LY</a>
+
+                                                    <br>
+                                                    <i style="color:grey;font-size:0.8em">- MANGO POS V2 Group</i>
+
+                                                </td>
+                                                <td>
+                                                    <span id="localtime-2010006862">
+                                                        2020-10-05
+                                                    </span>
+                                                </td>
+                                                <td>
+
+
+                                                    06 Oct 2020 06:28 AM                                                 <br> <span>-  by Thanh Hang</span>
+                                                </td>
+
+
+                                            </tr>
+                                            <tr class="strikeout even" role="row">
+
+                                                <td style="display:none">2000</td>
+                                                <td style="display:none">closed</td>
+                                                <td style="display:none">High</td>
+                                                <td style="display:none">2020</td>
+                                                <td style="display:none">Mango-_Ticket_Management</td>
+                                                <td style="display:none">[Done]::#808080|[Verified From UAT]::rgba(245,71,102,0.84)|</td>
+
+
+                                                <td class="mailbox-star"><input name="checkticket" type="checkbox" value="2010006520"></td>
+                                                <td class="sorting_1">#2010.006520</td>
+                                                <td class="mailbox-name">
+                                                    <a href="/development/detail/2010006520?urlback=/development/?t=closed&amp;g=0" title="" data-toggle="tooltip" data-original-title="Click here to open ticket">reopen ticket- all payment is missing</a>
+                                                    <br>
+                                                    <i style="color:grey;font-size:0.85em">
+                                                        Opened 1 days ago by Nancy Zagha
+                                                    </i>
+
+
+                                                    <br>
+                                                    <a data-toggle="tooltip" data-original-title="Click to filter">
+                                                        <span class="label" style="background-color:#ff8616">High</span>
+                                                    </a>
+                                                    <a data-toggle="tooltip" data-original-title="Click to filter">
+                                                        <span class="label" style="background-color:#ff1e16">Catastrophic</span>
+                                                    </a>
+                                                    <a data-toggle="tooltip" data-original-title="Click to filter"><span class="label" style="background-color:#808080">Done</span></a>
+                                                    &nbsp;                                                        <a data-toggle="tooltip" data-original-title="Click to filter"><span class="label" style="background-color:rgba(245,71,102,0.84)">Verified From UAT</span></a>
+                                                    &nbsp;
+                                                </td>
+                                                <td>Closed</td>
+                                                <td>
+                                                    <a class="label label-success" data-toggle="tooltip" data-original-title="Click to filter">HIEN DANG VINH</a>
+                                                    <a class="label label-success" data-toggle="tooltip" data-original-title="Click to filter">Le Minh Tri</a>
+                                                    <a class="label label-success" data-toggle="tooltip" data-original-title="Click to filter">Nhat  Nguyen</a>
+
+                                                    <br>
+                                                    <i style="color:grey;font-size:0.8em">- MANGO POS V1 Group</i>
+
+                                                </td>
+                                                <td>
+                                                    <span id="localtime-2010006520">
+                                                        2020-10-05
+                                                    </span>
+                                                </td>
+                                                <td>
+
+
+                                                    06 Oct 2020 02:23 AM                                                 <br> <span>-  by Nancy Zagha</span>
+                                                </td>
+
+
+                                            </tr>
+                                        </tbody>
+                                        <tfoot>
+                                            <tr><th style="display:none" rowspan="1" colspan="1">type</th><th style="display:none" rowspan="1" colspan="1">group</th><th style="display:none" rowspan="1" colspan="1">priority</th><th style="display:none" rowspan="1" colspan="1">severity</th><th style="display:none" rowspan="1" colspan="1">cate</th><th style="display:none" rowspan="1" colspan="1">tags</th><th rowspan="1" colspan="1"></th><th rowspan="1" colspan="1">#</th><th rowspan="1" colspan="1">Ticket name</th><th rowspan="1" colspan="1">Status</th><th rowspan="1" colspan="1">Assigned</th><td rowspan="1" colspan="1">Open date</td><th rowspan="1" colspan="1">Last updated</th></tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div><div class="row"><div class="col-sm-5"></div><div class="col-sm-7"><div class="dataTables_paginate paging_simple_numbers" id="DataTables_Table_0_paginate"><ul class="pagination"><li class="paginate_button previous disabled" id="DataTables_Table_0_previous"><a href="#" aria-controls="DataTables_Table_0" data-dt-idx="0" tabindex="0">Previous</a></li><li class="paginate_button active"><a href="#" aria-controls="DataTables_Table_0" data-dt-idx="1" tabindex="0">1</a></li><li class="paginate_button "><a href="#" aria-controls="DataTables_Table_0" data-dt-idx="2" tabindex="0">2</a></li><li class="paginate_button "><a href="#" aria-controls="DataTables_Table_0" data-dt-idx="3" tabindex="0">3</a></li><li class="paginate_button "><a href="#" aria-controls="DataTables_Table_0" data-dt-idx="4" tabindex="0">4</a></li><li class="paginate_button "><a href="#" aria-controls="DataTables_Table_0" data-dt-idx="5" tabindex="0">5</a></li><li class="paginate_button disabled" id="DataTables_Table_0_ellipsis"><a href="#" aria-controls="DataTables_Table_0" data-dt-idx="6" tabindex="0">â€¦</a></li><li class="paginate_button "><a href="#" aria-controls="DataTables_Table_0" data-dt-idx="7" tabindex="0">28</a></li><li class="paginate_button next" id="DataTables_Table_0_next"><a href="#" aria-controls="DataTables_Table_0" data-dt-idx="8" tabindex="0">Next</a></li></ul></div></div></div>
+                        </div>
+                        <!-- /.table -->
+                    </div>
+                    <!-- /.mail-box-messages -->
+                </div>
+                <!-- /.box-body -->
+            </div>
+            <!-- /. box -->
+        </div>
+        <!-- /.col -->
+    </div>
+    <!-- /.row -->
+
+</section>
+@Html.Partial("_Partial_SelectStage", Model)

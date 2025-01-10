@@ -1,0 +1,257 @@
+﻿@model List<EnrichcousBackOffice.Models.T_Project_Milestone>
+<style>
+    .input-error {
+        border: 1px solid red !important;
+    }
+</style>
+<div class="modal fade" id="version_list_modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" style="text-transform:uppercase">@ViewBag.ProjectName - @ViewBag.VersionName | Subversion List</h4>
+            </div>
+            <div class="modal-body">
+                <button class="btn btn-sm btn-success" onclick="addNewVersion()" style="position:absolute"><i class="fa fa-plus"></i> Add New</button>
+                <table id="version-list-table" class="table table-hover table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th data-searchable="true">Subversion Name</th>
+                       
+                            <th data-orderable="false"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var version in Model)
+                        {
+                            <tr data-id="@version.Id">
+                                <td data-column="Name" style="vertical-align:middle" data-text="@version.Name">@version.Name</td>
+                             
+                                <td class="text-center">
+                                    <button class="btn btn-edit btn-sm btn-warning" onclick="UpdateVersion(this)"><i class="fa fa-pencil"></i></button>
+                                    <button class="btn btn-save btn-sm btn-success" style="display:none;" onclick="SaveVersion(this)"><i class="fa fa-check"></i></button>
+                                    <button class="btn btn-cancel btn-sm btn-default" style="display:none;" onclick="CancelVersion(this)"><i class="fa fa-ban"></i></button>
+                                    <button class="btn btn-delete btn-sm btn-danger" onclick="DeleteVersion(this)"><i class="fa fa-trash"></i></button>
+                                </td>
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary pull-right" data-dismiss="modal">Done</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+
+<script>
+    function loadDatatable() {
+        $("#version-list-table").DataTable({
+            "language": {
+                "processing": '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>',
+                "paginate": {
+                    "first": '<i class="fa fa-angle-double-left" aria-hidden="true"></i>',
+                    "last": '<i class="fa fa-angle-double-right" aria-hidden="true"></i>',
+                    "next": '<i class="fa fa-angle-right" aria-hidden="true"></i>',
+                    "previous": '<i class="fa fa-angle-left" aria-hidden="true"></i>'
+                },
+            },
+            "pageLength": 100,
+            'lengthChange': false,
+            'searching': true,
+            "stateSave": true,
+            'paging': false,
+            'order': [],
+            'info': false,
+            'ordering': true,
+        })
+    }
+    loadDatatable();
+    function UpdateVersion(el) {
+        let trTable = $(el).parents('tr');
+        let tdNameTable = $(trTable).find('td[data-column="Name"]');
+    
+        let currentNameVal = $(tdNameTable).text();
+    
+        $(tdNameTable).html(`<input value="${currentNameVal}" class="form-control" style="width:100%" name="Name" />`);
+    
+        $(trTable).find(".btn-edit").hide();
+        $(trTable).find(".btn-delete").hide();
+        $(trTable).find(".btn-save").show();
+        $(trTable).find(".btn-cancel").show();
+    }
+
+    function CancelVersion(el) {
+        let trTable = $(el).parents('tr');
+        let tdNameTable = $(trTable).find('td[data-column="Name"]');
+        let currentNameVal = $(tdNameTable).attr("data-text");
+
+    
+
+        $(tdNameTable).html(currentNameVal);
+    
+        $(trTable).find(".btn-edit").show();
+        $(trTable).find(".btn-delete").show();
+        $(trTable).find(".btn-save").hide();
+        $(trTable).find(".btn-cancel").hide();
+    }
+
+    function DeleteVersion(el) {
+        if (confirm('Are you sure are you sure to delete this version ?')) {
+            let trTable = $(el).parents('tr');
+            var VersionId = $(trTable).attr("data-id");
+
+            $.ajax({
+                method: "POST",
+                url: "/ticket_new/DeleteSubversion",
+                data: { 'Id':VersionId },
+                dataType: "json"
+            }).done(function (data) {
+                if (data.status == true) {
+                    var options = $.parseJSON('{"text":"' + data.message + '","layout":"topRight","type":"success"}');
+                    noty(options);
+
+
+                    $("#version-list-table").DataTable().destroy();
+                    trTable.remove();
+                    loadDatatable();
+                  //  refeshVersionTicketInfo();
+                }
+                else {
+                    var options = $.parseJSON('{"text":"' + data.message + '","layout":"topRight","type":"error"}');
+                    noty(options);
+
+                }
+            })
+        }
+    }
+
+    function SaveVersion(el) {
+        let trTable = $(el).parents('tr');
+
+        let tdNameTable = $(trTable).find('td[data-column="Name"]');
+      
+
+        let projectVerId = $("#project_versions").val();
+        let Id = $(trTable).attr('data-id');
+        let Name = $(trTable).find('[name="Name"]').val();
+        if (Name == '') {
+            var options = $.parseJSON('{"text":"please enter type name","layout":"topRight","type":"error"}');
+            noty(options);
+            $(trTable).find('[name="Name"]').addClass('input-error');
+            $(trTable).find('[name="Name"]').focus();
+            $(trTable).find('[name="Name"]').keyup(function () {
+                $(trTable).find('[name="Name"]').removeClass('input-error');
+            })
+            return;
+        }
+      
+   
+
+        $.ajax({
+            method: "POST",
+            url: "/ticket_new/SaveSubversion",
+            data: { Id, Name, projectVerId },
+            dataType: "json"
+        }).done(function (data) {
+            if (data.status == true) {
+                var options = $.parseJSON('{"text":"' + data.message + '","layout":"topRight","type":"success"}');
+                noty(options);
+                if (Id) {
+                    $(trTable).find(".btn-edit").show();
+                    $(trTable).find(".btn-delete").show();
+                    $(trTable).find(".btn-save").hide();
+                    $(trTable).find(".btn-cancel").hide();
+
+                    $(tdNameTable).html(Name);
+                    $(tdNameTable).attr('data-text', Name);
+
+             
+                    $("#version-list-table").DataTable().destroy();
+                    loadDatatable();
+                    $("#available_versions option[value=" + data.version.Id + "]").html(data.version.Name);
+                    $("#fixed_versions option[value=" + data.version.Id + "]").html(data.version.Name);
+                }
+                else
+                {
+                    $(trTable).remove();
+                    $("#version-list-table").DataTable().destroy();
+                    $("#version-list-table").find('tbody').append(`<tr data-id="${data.VersionId}">
+                                    <td data-column="Name" style="vertical-align:middle" data-text="${Name}">${Name}</td>
+
+                                
+                                    <td class="text-center">
+                                        <button class="btn btn-edit btn-sm btn-warning" onclick="UpdateVersion(this)"><i class="fa fa-pencil"></i></button>
+                                        <button class="btn btn-save btn-sm btn-success" style="display:none;" onclick="SaveVersion(this)"><i class="fa fa-check"></i></button>
+                                        <button class="btn btn-cancel btn-sm btn-default" style="display:none;" onclick="CancelVersion(this)"><i class="fa fa-ban"></i></button>
+                                        <button class="btn btn-delete btn-sm btn-danger" onclick="DeleteVersion(this)"><i class="fa fa-trash"></i></button>
+                                    </td>
+                                </tr>`);
+                    loadDatatable();
+                    $("#available_versions,#fixed_versions").append($('<option/>')
+                        .val(data.version.Id)
+                        .text(data.version.Name)
+                        .attr("data-p_ver", data.version.ParentId)
+                    );
+                }
+                $("#available_versions,#fixed_versions").select2("destroy");
+                $("#available_versions,#fixed_versions").select2();
+          
+               // refeshVersionTicketInfo();
+            }
+            else {
+                var options = $.parseJSON('{"text":"' + data.message + '","layout":"topRight","type":"error"}');
+                noty(options);
+
+            }
+        })
+
+    }
+    function addNewVersion() {
+
+        if ($(".addNewRowVersion").length) {
+            $(".addNewRowVersion").find('[name="Name"]').focus();
+            return;
+        }
+        $("#version-list-table").find('tbody').append(`<tr class="addNewRowVersion">
+                                    <td data-column="Name" style="vertical-align:middle">
+                                        <input  class="form-control"  style="width:100%" name="Name" />
+                                      </td>
+
+                                
+                                    <td class="text-center">
+                                        <button class="btn btn-save btn-sm btn-success" onclick="SaveVersion(this)"><i class="fa fa-check"></i></button>
+                                        <button class="btn btn-cancel btn-sm btn-default" onclick="$(this).parents('tr').remove()"><i class="fa fa-ban"></i></button>
+                                    </td>
+                                </tr>`);
+    }
+    //function refeshVersionTicketInfo() {
+    //    let projectVerId = $("#project_versions").val();
+    //    $.ajax({
+    //        method: "POST",
+    //        url: "/ticket_new/LoadSubVersion",
+    //        data: { projectVerId },
+    //        dataType: "json"
+    //    }).done(function (data) {
+    //        var VersionTicketInfo = $("#fixed_versions");
+    //        var VersionSelected = $(VersionTicketInfo).val();
+    //        $(VersionTicketInfo).html('');
+    //        $.each(data, function (i, item) {
+    //            $(VersionTicketInfo).append($('<option>', {
+    //                value: item.Value,
+    //                text: item.Text,
+    //            }));
+    //        });
+    //        $(VersionTicketInfo).val(VersionSelected);
+    //    })
+    //}
+
+</script>

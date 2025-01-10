@@ -1,0 +1,42 @@
+﻿
+@model EnrichcousBackOffice.Models.C_Customer
+@using EnrichcousBackOffice.Models;
+@{
+    Dictionary<string, bool> p = ViewBag.p;
+    List<C_CustomerAdditionalInfo> AdditionalInfo = ViewBag.AdditionalInfo;
+    List<C_CustomerContact> AddContact = ViewBag.AddContact;
+}
+<div class="col-lg-12" style="padding:0">
+    <ul class="nav nav-pills" id="subtab">
+        <li id="Overview" class="active"><a href="#" onclick="ChangeSubTab('Overview','@Model.Id')">Support Overview</a></li>
+        <li id="OwnerInfo"><a href="#" onclick="ChangeSubTab('OwnerInfo','@Model.Id')">Profile</a></li>
+        @if (p.Any(k => k.Key.Equals("customer_view_mangopos")) == true && p["customer_view_mangopos"] == true)
+        {
+            <li id="MangoPOS"><a href="#" onclick="ChangeSubTab('MangoPOS','@Model.Id')">SIMPLY POS</a></li>
+        }
+        @*<li id="TimeLine"><a href="#" onclick="ChangeSubTab('TimeLine','@Model.Id')">Support Log</a></li>
+        <li id="TicketInfo"><a href="#" onclick="ChangeSubTab('TicketInfo','@Model.Id')">Tickets</a></li>
+        <li id="SupportingInfo"><a href="#" onclick="ChangeSubTab('SupportingInfo','@Model.Id')">Support Info</a></li>*@
+        @*@if (p.Any(k => k.Key.Equals("customer_view_merchantaccount")) == true && p["customer_view_merchantaccount"] == true)
+        {
+            <li id="MerchantProcessing"><a href="#" onclick="ChangeSubTab('MerchantProcessing','@Model.Id')">Merchant processing</a></li>
+        }
+        @if (p.Any(k => k.Key.Equals("customer_view_mangopos")) == true && p["customer_view_mangopos"] == true)
+        {
+            <li id="MangoPOS"><a href="#" onclick="ChangeSubTab('MangoPOS','@Model.Id')">Mango POS</a></li>
+        }
+        <li id="StoreBoss"><a href="#" onclick="ChangeSubTab('StoreBoss','@Model.Id')">Store BOSS</a></li>*@
+        @*<li id="CreditCardStore"><a href="#" onclick="ChangeSubTab('CreditCardStore','@Model.Id')">Credit card store</a></li>*@
+    </ul>
+    <hr style="margin-top:0px" />
+    <div id="subtab_info">
+        @*@Html.Partial("_SubPartial_Overview")*@
+    </div>
+</div>
+
+<!--/End box recent ticket history-->
+<!--Box Update History-->
+<!--/.End box update history-->
+<script type="text/javascript">
+    ChangeSubTab('Overview', '@Model.Id');
+</script>

@@ -1,0 +1,95 @@
+﻿@model List<IGrouping<int?, EnrichcousBackOffice.Models.T_TicketUpdateLog>>
+@if (Model.Count > 0)
+{
+    <div class="active tab-pane " id="timeline-detail-update-@ViewBag.TicketId" style="z-index:999;">
+        <!-- The timeline -->
+        <h5 style="text-align:center;display:block;width:100%;font-weight:700;margin:5px 0px;"> Ticket #@(ViewBag.TicketId) - Nearest 3 Updates @*#@(ViewBag.TicketId)*@</h5>
+        <ul class="timeline timeline-inverse timeline-update-ticket-detail-wrapper" style="margin:0px;">
+            @foreach (var item in Model.GroupBy(x => x.FirstOrDefault().CreateAt.Value.Date))
+            {
+                <!-- timeline time label -->
+                <li class="time-label">
+                    <span style="background:#222d32" class="time-line-moment-label">@item.Key</span>
+                </li>
+                <!-- /.timeline-label -->
+                foreach (var itemd in item.OrderByDescending(f => f.Key))
+                {
+                    <!-- timeline item -->
+                    <li style="margin-bottom:5px;">
+                        <i class="fa fa-comments bg-yellow"></i>
+                        <div class="timeline-item">
+                            <div class="timeline-header" style="padding:0 1px;">
+                                <table style="width:100%">
+                                    <tr>
+                                        <td><h5 style="margin:5px"><a>@itemd.FirstOrDefault().CreateBy</a></h5></td>
+                                        @*<td style="text-align:right">
+                                            <span style="color: #999;font-size:12px"><i class="fa fa-clock-o"></i>@itemd.FirstOrDefault().CreateAt</span>
+
+                                        </td>*@
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="timeline-body log-histoty-detail-content" style="max-width:100%;">
+                                @foreach (var detail in itemd.OrderByDescending(x=>x.CreateAt))
+                                {
+                                    if (detail.Name == "EstimatedCompletionTimeTo" || detail.Name == "EstimatedCompletionTimeFrom"|| detail.Name == "Deadline")
+                                    {
+                                        <section>
+                                            @detail.Name:
+                                            <span class="detail-timeline-update-estimated">@Html.Raw(detail.NewValue)</span>
+                                        </section>
+                                    }
+                                    else
+                                    {
+                                        <section>
+                                            @detail.Name:
+                                            @Html.Raw(detail.NewValue)
+                                        </section>
+                                    }
+                                }
+                            </div>
+                            <div class="timeline-footer" style="padding-top:0px;">
+                                <table class="table-responsive" style="width:100%">
+                                    <tr>
+                                        <td>
+                                            <i>                                            
+                                                <span class="detail-timeline-update-time">
+                                                  @itemd.FirstOrDefault().CreateAt
+                                                </span>
+                                            </i>
+                                        </td>
+                                    </tr>
+                                </table>
+
+                            </div>
+                        </div>
+                    </li>
+                }
+            }
+
+            <li style="margin-bottom:5px;">
+                <i style="top:-29px;" class="fa fa-clock-o bg-gray"></i>
+            </li>
+        </ul>
+    </div>
+}
+else
+{
+    <div>
+        no data 
+    </div>
+}
+<script>
+    $("#timeline-detail-update-@ViewBag.TicketId .time-line-moment-label").html(function (index, value) {
+        let result = moment(value).format('ll');
+        return result;
+    });
+    $("#timeline-detail-update-@ViewBag.TicketId .detail-timeline-update-time").html(function (index, value) {
+        let result = moment.utc(value).format('lll');
+        return result;
+    });
+    $("#timeline-detail-update-@ViewBag.TicketId .detail-timeline-update-estimated").html(function (index, value) {
+        let result = moment(value + ' +00').format('lll');
+        return result;
+    });
+</script>

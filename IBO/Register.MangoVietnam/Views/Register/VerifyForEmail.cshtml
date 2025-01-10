@@ -1,0 +1,344 @@
+﻿@model IEnumerable<EnrichcousBackOffice.Models.License_Product>
+@using Register.MangoVietnam.Models.CustomizeModel
+@{
+    ViewBag.title = "Xác thực đăng ký dùng thử";
+    var key = ViewBag.Key;
+}
+@section css{
+    <style>
+        *,
+        .row,
+        div,
+        p {
+            margin: 0;
+            padding: 0;
+        }
+
+        body,
+        html {
+            width: 100%;
+            height: 100vh;
+            position: relative;
+            background-color: #03bed5;
+            font-family: "Montserrat";
+            font-weight: 400;
+        }
+
+        .master-wrapper-page {
+            width: 100%;
+            min-height: 100vh;
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: -moz-box;
+            display: -ms-flexbox;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            background-size: cover;
+            background-attachment: fixed;
+            height: 100%;
+            background-position: center;
+        }
+
+        .form-register-wrapper {
+            width: 33.33%;
+            -webkit-box-shadow: 10px 6px 25px -13px rgba(0,0,0,0.75);
+            -moz-box-shadow: 10px 6px 25px -13px rgba(0,0,0,0.75);
+            box-shadow: 10px 6px 25px -13px rgba(0,0,0,0.75);
+            position: relative;
+            border-radius: 6px;
+            border-left: 1px solid #69d8e6;
+            border-top: 1px solid white;
+        }
+
+        .logo img {
+            width: 60%;
+        }
+
+        .list-icon {
+            list-style: none;
+            margin-bottom: 0;
+        }
+
+        .header {
+            justify-content: space-between;
+            align-items: center;
+            background-image: linear-gradient(to right, #03bed5, #04d4ec);
+            padding: 15px 30px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .list-icon li {
+            width: 8px;
+            margin-bottom: 6px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: white;
+        }
+
+        .form-content {
+            background-color: white;
+            border-radius: 0px 0px 8px 8px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .form-group {
+            margin-bottom: 0px;
+            padding-bottom: 15px;
+        }
+
+        .title {
+            font-size: 30px;
+            border-bottom: 2px solid #bcbcbd;
+            padding: 30px 0px 4px;
+            font-weight: 600;
+            color: #606161;
+        }
+
+        .title,
+        .content {
+            text-transform: uppercase;
+            padding-bottom: 1rem;
+            margin: 0px 30px 0px 30px;
+            font-size: 19px;
+        }
+
+        .button-submit {
+            background-color: #F99D20;
+            color: white;
+            cursor: pointer;
+            border: none;
+            outline: none;
+            padding: 8px 40px;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            border-radius: 20px;
+            bottom: 0;
+        }
+
+            .button-submit span {
+                transform: translateY(2px);
+                display: inline-block;
+            }
+
+            .button-submit:focus, input, label {
+                outline: none;
+            }
+
+        .circle-1 {
+            position: absolute;
+            width: 20%;
+            padding-bottom: 20%;
+            top: -7%;
+            right: -9%;
+            z-index: 1;
+            -webkit-filter: blur(3px);
+            background-color: #b2e1e65c;
+            border-radius: 50%;
+        }
+
+
+
+        .circle-2 {
+            position: absolute;
+            border-radius: 50%;
+            width: 30%;
+            padding-bottom: 30%;
+            bottom: -20%;
+            left: -12%;
+            overflow: hidden;
+            z-index: 1;
+            -webkit-filter: blur(3px);
+            background-color: #b2e1e65c;
+            border-radius: 50%;
+        }
+
+        @@media all and (max-width: 769px) {
+            .form-register-wrapper {
+                margin: 1rem 0px;
+                min-width: 400px;
+            }
+        }
+
+        @@media all and (max-width: 481px) {
+            .circle-2 {
+                display: none;
+            }
+
+            .form-register-wrapper {
+                margin: 1rem 0px;
+                min-width: 300px;
+            }
+        }
+
+        @@keyframes spinner {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .spinner {
+            animation: spinner 2s linear infinite;
+            background-color: transparent;
+        }
+
+
+        /*.text-loading:after {
+            overflow: hidden;
+            display: inline-block;
+            vertical-align: bottom;
+            -webkit-animation: ellipsis steps(4,end) 900ms infinite;
+            animation: ellipsis steps(4,end) 900ms infinite;
+            content: "\2026";*/ /* ascii code for the ellipsis character */
+        /*width: 0px;
+        }
+
+        @@keyframes ellipsis {
+            to {
+                width: 1.25em;
+            }
+        }
+
+        @@-webkit-keyframes ellipsis {
+            to {
+                width: 1.25em;
+            }
+        }*/
+        a:hover {
+            text-decoration: none;
+        }
+
+        .button-back a:hover {
+            opacity: 0.8;
+        }
+    </style>
+}
+<div class="master-wrapper-page">
+    <div class="form-register-wrapper">
+
+        @Html.AntiForgeryToken()
+        <div class="header d-flex">
+            <div class="logo">
+                <img src="/images/logo.png" />
+            </div>
+            <div class="icon-bar">
+                <ul class="list-icon">
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                </ul>
+            </div>
+        </div>
+        <div class="form-content">
+            @if (ViewBag.MessageError != null)
+            {
+                if (ViewBag.MessageError == "1")
+                {
+                    <div class="title text-center">Tài khoản của bạn đã được xác thực và khởi tạo</div>
+                    <div class="content">
+                        <div style="text-align: center; font-size: 15px;text-transform: initial;color: #606161; padding: 1rem;">
+                            Cảm ơn bạn đã lựa chọn Mangoforsalon !
+                        </div>
+                        <div class="contact" style="text-align: center;">
+                            <span style="text-transform: initial;font-size: 15px;display: block; margin-bottom: 17px;color: #606161;">
+                                Nếu bạn cần hỗ trợ , vui lòng liên hệ hotline <b style="white-space:nowrap">0283.535.1827 - nhấn phím 2</b>
+                            </span>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="title text-center">Đã có lỗi xảy ra</div>
+                    <div class="content">
+                        <div style="text-align: center; font-size: 15px;text-transform: initial;color: #606161; padding: 1rem;">
+                            Không tìm thấy thông tin đăng ký, hãy thử đăng ký lại
+                        </div>
+                        <div class="button-back" style="text-align: center;">
+                            <a href="/" style="background: #f99d20;color: white;font-size: 14px;text-transform: initial; padding: 5px 10px;border-radius: 20px;"><i class="fa fa-angle-double-left" aria-hidden="true"></i> Trở về trang chủ </a>
+                        </div>
+                    </div>
+                }
+
+            }
+            else
+            {
+                <div class="title text-center">Xác thực đăng ký dùng thử</div>
+                <div class="content">
+                    <div id="loading" class="row">
+                        <div class="col-md-12" style="padding: 20px 0; text-align: center; display: block;">
+                            <img class="spinner" width="80" src="~/Content/Img/Dual Ring-2.2s-197px.svg" />
+                            <h3 class="text-loading" style="color: #00b7ce;font-size: 17px; padding-top: 1rem;text-transform: initial;">Cửa hàng của bạn đang được khởi tạo<br />Vui lòng đợi giây lát và đừng đóng trình duyệt</h3>
+                        </div>
+                    </div>
+                    <div id="alert_success" class="row" style="display: none">
+                        <div class="col-md-12" style="padding: 20px 0; text-align: center; display: block;">
+                            <div class="alert alert-success" role="alert" style="text-align:center;font-size:16px;line-height: 1.6;max-width: 600px;margin: auto;margin: 1rem 0px;font-size: 14px;color: #606161;font-weight: 500;">
+                                <span class="fa fa-check"></span> Xin chào <b id="name"></b>! Chúc mừng bạn đã hoàn tất đăng ký dùng thử Mango for Salon. Thông tin tài khoản của bạn đã được gửi đến email <b id="email_send"></b>, hãy kiểm tra hộp thư của bạn.
+                            </div>
+                           
+                        </div>
+                    </div>
+                    <div id="alert_fail" class="row" style="display: none">
+                        <div class="col-md-12" style="padding: 20px 0; text-align: center; display: block;">
+                            <div class="alert alert-danger" role="alert" style="text-align:center; font-size:16px; line-height: 1.6; max-width: 600px; margin: auto;">
+                                <span class="fa fa-warning"></span> <span id="alert_fail_message"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+        </div>
+
+        <div class="circle-1">
+
+        </div>
+        <div class="circle-2">
+
+        </div>
+    </div>
+
+</div>
+
+@section scripts{
+    @if (ViewBag.MessageError == null)
+    {
+        <script>
+                            $(function () {
+
+                                $.ajax({
+                                    method: "POST",
+                                    url: "/register/Verify_submit",
+                                    data: { "key": "@key", "salesPerson":true },
+                                    dataType: "json"
+                                })
+                                    .done(function (data) {
+                                        if (data[0]) {
+                                            $("#alert_success").show();
+                                            $("#email_send").html(data[1]);
+                                            $("#name").html(data[2]);
+                                            //$("#salon_link").data("href", data[2]);
+                                        } else {
+                                            $("#alert_fail_message").html(data[1]);
+                                            $("#alert_fail").show();
+                                            console.log(data);
+                                        }
+                                    })
+                                    .fail(function () {
+                                        alert("Oops! Something went wrong");
+                                    })
+                                    .always(function () {
+                                        $("#loading").hide();
+                                    });
+
+
+                            })
+        </script>
+
+    }
+
+}

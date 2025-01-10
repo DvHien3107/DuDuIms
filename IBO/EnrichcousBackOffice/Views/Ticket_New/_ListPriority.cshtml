@@ -1,0 +1,311 @@
+﻿@model List<EnrichcousBackOffice.Models.T_Priority>
+<style>
+    .input-error {
+        border: 1px solid red !important;
+    }
+</style>
+<div class="modal fade" id="priority_list_modal">
+
+    <div class="modal-dialog" style="width:700px">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" style="text-transform:uppercase"> Priority List</h4>
+            </div>
+            <div class="modal-body">
+                <button class="btn btn-sm btn-success" onclick="addNewPriority()" style="position:absolute"><i class="fa fa-plus"></i> Add New</button>
+                <table id="priority-list-table" class="table table-hover table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th data-searchable="true">Name</th>
+                            <th data-orderable="false" data-searchable="false">Deadline of hours</th>
+                            <th data-searchable="false" >Color</th>
+                            <th data-searchable="false">Order</th>
+                            <th data-orderable="false"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var priority in Model)
+                        {
+                        <tr data-id="@priority.Id">
+                            <td data-column="Name" style="vertical-align:middle" data-text="@priority.Name">@priority.Name</td>
+                            <td data-column="DeadLineOfHours" style="vertical-align:middle" data-text="@(priority.DeadLineOfHours)">@priority.DeadLineOfHours</td>
+                            <td data-column="Color" class="input-group" style="vertical-align:middle" data-text="@(priority.Color)">
+                                <span style="width:34px;height:34px;display:block; background-color:@(priority.Color ?? "grey")">
+                                </span>
+                            </td>
+                            <td data-column="Order" style="vertical-align:middle" data-text="@(priority.DisplayOrder)">@(priority.DisplayOrder)</td>
+                            <td class="text-center">
+                                <button class="btn btn-edit btn-sm btn-warning" onclick="UpdatePriority(this)"><i class="fa fa-pencil"></i></button>
+                                <button class="btn btn-save btn-sm btn-success" style="display:none;" onclick="SavePriority(this)"><i class="fa fa-check"></i></button>
+                                <button class="btn btn-cancel btn-sm btn-default" style="display:none;" onclick="CancelPriority(this)"><i class="fa fa-ban"></i></button>
+                                <button class="btn btn-delete btn-sm btn-danger" onclick="DeletePriority(this)"><i class="fa fa-trash"></i></button>
+                            </td>
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary pull-right" data-dismiss="modal">Done</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+
+<script>
+    function loadDatatable() {
+        $("#priority-list-table").DataTable({
+            "language": {
+                "processing": '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>',
+                "paginate": {
+                    "first": '<i class="fa fa-angle-double-left" aria-hidden="true"></i>',
+                    "last": '<i class="fa fa-angle-double-right" aria-hidden="true"></i>',
+                    "next": '<i class="fa fa-angle-right" aria-hidden="true"></i>',
+                    "previous": '<i class="fa fa-angle-left" aria-hidden="true"></i>'
+                },
+            },
+            "pageLength": 100,
+            'lengthChange': false,
+            'searching': true,
+            "stateSave": true,
+            'paging': false,
+            'order': [],
+            'info': false,
+            'ordering': true,
+        })
+    }
+    loadDatatable();
+    function UpdatePriority(el) {
+
+        let trTable = $(el).parents('tr');
+        let tdNameTable = $(trTable).find('td[data-column="Name"]');
+        let tdDeadLineOfHoursTable = $(trTable).find('td[data-column="DeadLineOfHours"]');
+        let tdColorTable = $(trTable).find('td[data-column="Color"]');
+        let tdOrderTable = $(trTable).find('td[data-column="Order"]');
+
+        let currentDeadLineOfHoursVal = $(tdDeadLineOfHoursTable).text();
+        let currentNameVal = $(tdNameTable).text();
+        let currentColorVal = $(tdColorTable).attr('data-text');
+        let currentOrderVal = $(tdOrderTable).text();
+
+        $(tdNameTable).html(`<input value="${currentNameVal}" class="form-control" style="width:100%" name="Name" />`);
+        $(tdDeadLineOfHoursTable).html(`<input value="${currentDeadLineOfHoursVal}" class="form-control" style="width:100%" name="DeadLineOfHours" />`);
+
+        $(tdColorTable).html(`<div id="show-color" class="input-group-addon" style="width:34px;background-color:${currentColorVal}"></div>
+                              <input type="text" id="color" name="Color" class="form-control" value="${currentColorVal}" onchange="ChangeColor()" autocomplete="off" />`);
+
+        $(tdOrderTable).html(`<input value="${currentOrderVal}" class="form-control" style="width:60px" type="number" name="Order" />`);
+
+        $(trTable).find(".btn-edit").hide();
+        $(trTable).find(".btn-delete").hide();
+        $(trTable).find(".btn-save").show();
+        $(trTable).find(".btn-cancel").show();
+        $('#color').colorpicker();
+    }
+
+    function CancelPriority(el) {
+        let trTable = $(el).parents('tr');
+        let tdNameTable = $(trTable).find('td[data-column="Name"]');
+        let currentNameVal = $(tdNameTable).attr("data-text");
+
+        let tdDeadLineOfHoursTable = $(trTable).find('td[data-column="DeadLineOfHours"]');
+        let currentDeadLineOfHoursVal = $(tdDeadLineOfHoursTable).attr("data-text");
+
+        let tdColorTable = $(trTable).find('td[data-column="Color"]');
+        let currentColorVal = $(tdColorTable).attr("data-text");
+
+        let tdOrderTable = $(trTable).find('td[data-column="Order"]');
+        let currentOrderVal = $(tdOrderTable).attr("data-text");
+
+        $(tdNameTable).html(currentNameVal);
+        $(tdDeadLineOfHoursTable).html(currentDeadLineOfHoursVal);
+        $(tdColorTable).html(`<span style="width:34px;height:34px;display:block; background-color:${currentColorVal}">
+                                </span>`);
+        $(tdOrderTable).html(currentOrderVal);
+
+        $(trTable).find(".btn-edit").show();
+        $(trTable).find(".btn-delete").show();
+        $(trTable).find(".btn-save").hide();
+        $(trTable).find(".btn-cancel").hide();
+    }
+
+    function DeletePriority(el) {
+        if (confirm('Are you sure are you sure to delete this priority ?')) {
+            let trTable = $(el).parents('tr');
+            var PriorityId = $(trTable).attr("data-id");
+
+            $.ajax({
+                method: "POST",
+                url: "/ticket_new/DeletePriority",
+                data: { Id: PriorityId },
+                dataType: "json"
+            }).done(function (data) {
+                if (data.status == true) {
+                    var options = $.parseJSON('{"text":"' + data.message + '","layout":"topRight","type":"success"}');
+                        noty(options);
+
+
+                    $("#priority-list-table").DataTable().destroy();
+                    trTable.remove();
+                    loadDatatable();
+                    refeshPriorityTicketInfo();
+                    }
+                else {
+                    var options = $.parseJSON('{"text":"' + data.message + '","layout":"topRight","type":"error"}');
+                       noty(options);
+
+                    }
+                })
+        }
+    }
+    function SavePriority(el) {
+        let trTable = $(el).parents('tr');
+        let tdNameTable = $(trTable).find('td[data-column="Name"]');
+        let tdOrderTable = $(trTable).find('td[data-column="Order"]');
+        let tdDeadLineOfHoursTable = $(trTable).find('td[data-column="DeadLineOfHours"]');
+        let tdColorTable = $(trTable).find('td[data-column="Color"]');
+        let Id = $(trTable).attr('data-id');
+        let Name = $(trTable).find('[name="Name"]').val();
+
+        if (Name == '') {
+            var options = $.parseJSON('{"text":"please enter priority name","layout":"topRight","type":"error"}');
+            noty(options);
+            $(trTable).find('[name="Name"]').addClass('input-error');
+            $(trTable).find('[name="Name"]').focus();
+            $(trTable).find('[name="Name"]').keyup(function () {
+                $(trTable).find('[name="Name"]').removeClass('input-error');
+            })
+            return;
+        }
+
+        let DeadLineOfHours = $(trTable).find('[name="DeadLineOfHours"]').val();
+        let Color = $(trTable).find('[name="Color"]').val();
+        let Order = $(trTable).find('[name="Order"]').val();
+
+
+        $.ajax({
+            method: "POST",
+            url: "/ticket_new/SavePriority",
+            data: { Id, Name, DeadLineOfHours, 'DisplayOrder': Order, Color },
+            dataType: "json"
+        }).done(function (data) {
+            if (data.status == true)
+            {
+                var options = $.parseJSON('{"text":"' + data.message + '","layout":"topRight","type":"success"}');
+                noty(options);
+
+                if (Id) {
+                    $(trTable).find(".btn-edit").show();
+                    $(trTable).find(".btn-delete").show();
+                    $(trTable).find(".btn-save").hide();
+                    $(trTable).find(".btn-cancel").hide();
+
+                    $(tdNameTable).html(Name);
+                    $(tdNameTable).attr('data-text', Name);
+
+                    $(tdDeadLineOfHoursTable).html(DeadLineOfHours);
+                    $(tdDeadLineOfHoursTable).attr('data-text', DeadLineOfHours);
+
+                    $(tdColorTable).html(`<span style="width:34px;height:34px;display:block; background-color:${Color}">
+                                </span>`);
+                    $(tdColorTable).attr('data-text', Color);
+
+                    $(tdOrderTable).html(Order);
+                    $(tdOrderTable).attr('data-text', Order);
+                    $("#priority-list-table").DataTable().destroy();
+                    loadDatatable();
+                }
+                else {
+                    $(trTable).remove();
+                    //$(trTable).attr("data-id", data.StatusId);
+                    $("#priority-list-table").DataTable().destroy();
+                    $("#priority-list-table").find('tbody').append(`
+                                <tr data-id="${data.priority.Id}">
+                                    <td data-column="Name" style="vertical-align:middle" data-text="${Name}">${Name}</td>
+
+                                    <td data-column="DeadLineOfHours" data-text="${DeadLineOfHours}" style="vertical-align:middle">
+                                       ${DeadLineOfHours}
+                                    </td>
+
+                                    <td data-column="Color"  data-text="${Color}"  class="input-group" >
+                                          <span style="width:34px;height:34px;display:block; background-color:${Color}">
+                                         </span>
+                                    </td>
+                                    <td data-column="Order" style="vertical-align:middle" data-text="${Order||0}">${Order||0}</td>
+                                    <td class="text-center">
+                                        <button class="btn btn-edit btn-sm btn-warning" onclick="UpdatePriority(this)"><i class="fa fa-pencil"></i></button>
+                                        <button class="btn btn-save btn-sm btn-success" style="display:none;" onclick="SavePriority(this)"><i class="fa fa-check"></i></button>
+                                        <button class="btn btn-cancel btn-sm btn-default" style="display:none;" onclick="CancelPriority(this)"><i class="fa fa-ban"></i></button>
+                                        <button class="btn btn-delete btn-sm btn-danger" onclick="DeletePriority(this)"><i class="fa fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                                `);
+
+                    loadDatatable();
+                }
+                refeshPriorityTicketInfo();
+            }
+            else {
+                var options = $.parseJSON('{"text":"' + data.message + '","layout":"topRight","type":"error"}');
+                noty(options);
+            }
+        })
+
+    }
+    function addNewPriority() {
+        if ($(".addNewRowPriority").length) {
+            $(".addNewRowPriority").find('[name="Name"]').focus();
+            return;
+        }
+        $("#priority-list-table").find('tbody').append(`<tr class="addNewRowPriority">
+                                    <td data-column="Name" style="vertical-align:middle">
+                                        <input  class="form-control"  style="width:100%" name="Name" />
+                                    </td>
+
+                                    <td data-column="DeadLineOfHours" style="vertical-align:middle">
+                                        <input type="number" class="form-control"  style="width:100%" name="DeadLineOfHours" />
+                                    </td>
+                                    <td data-column="Color" class="input-group" style="padding: 22px 5px;">
+                                        <div id="show-color" class="input-group-addon" style="width:34px"></div>
+                                        <input type="text" id="color" name="Color"  class="form-control" onchange="ChangeColor()" autocomplete="off" />
+                                    </td>
+                                    <td data-column="Order" style="vertical-align:middle"><input class="form-control" value="0" style="width:60px" type="number" name="Order" /></td>
+                                    <td class="text-center" style="padding: 22px 0px;">
+                                        <button class="btn btn-save btn-sm btn-success" onclick="SavePriority(this)"><i class="fa fa-check"></i></button>
+                                        <button class="btn btn-cancel btn-sm btn-default" onclick="$(this).parents('tr').remove()"><i class="fa fa-ban"></i></button>
+                                    </td>
+                                </tr>`);
+        $('#color').colorpicker({});
+    }
+    function refeshPriorityTicketInfo() {
+        let projectId = $("#Project_select").val();
+        $.ajax({
+            method: "POST",
+            url: "/ticket_new/LoadPriority",
+            data: { projectId},
+            dataType: "json"
+        }).done(function (data) {
+            var priorityTicketInfo = $("#priority");
+            var prioritySelected = $(priorityTicketInfo).val();
+            $(priorityTicketInfo).html('');
+            $(priorityTicketInfo).append(`<option value="">Unassigned</option>`);
+            $.each(data, function (i, item) {
+                $(priorityTicketInfo).append(`<option style="font-weight:bold; color:${item.Color}" data-DeadLineOfHours="${item.DeadLineOfHours}" value="${item.Id}">${item.Name} ${item.DeadLineOfHours != null ? (" (" + item.DeadLineOfHours+" hours) "):""}</option>`);
+            });
+            $(priorityTicketInfo).val(prioritySelected);
+        })
+    }
+    function ChangeColor() {
+        let color = $("#color").val();
+        $("#show-color").css("background-color", color);
+        $("#show-color").css("border-color", color);
+    }
+    //colorpicker bootstrap
+
+</script>

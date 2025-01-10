@@ -1,0 +1,214 @@
+﻿@model EnrichcousBackOffice.Models.O_Device
+@using EnrichcousBackOffice.Models
+
+@{ 
+    var list_DeviceType = ViewBag.DeviceType as List<O_Product>;
+}
+
+<div class="form-group">
+    <label class="col-sm-3 control-label">Device type <span style="color:red">*</span></label>
+    <div class="col-sm-9">
+        <select name="Type" class="form-control" required>
+            <option value="">-- Select device type --</option>
+
+            @if (list_DeviceType != null && list_DeviceType.Count() > 0)
+            {
+                foreach (var item in list_DeviceType)
+                {
+                    <option @if (Model?.ProductCode?.Equals(item.Code) == true) { @Html.Raw("selected") } value="@item.Code">@item.Name</option>
+                }
+            }
+        </select>
+
+        <p class="help-block">
+            <button type="button" class="btn btn-sm" onclick="add_edit_type('add')"><i class="fa fa-plus"></i> Add type</button>
+            <button type="button" class="btn btn-sm" onclick="add_edit_type('edit')"><i class="fa fa-edit"></i> Edit </button>
+            <button type="button" class="btn btn-sm" onclick="delete_type()"><i class="fa fa-trash"></i> Delete </button>
+        </p>
+    </div>
+</div>
+
+
+<script>
+
+    //Check code - khong nhap nhap ky tu dat biet cho TypeCode (tru ky tu '_')
+        function check_code() {
+            var typeCode = $("input[name='type_code']").val();
+            var character_code = typeCode.split("");
+
+            for (var i = 0; i < character_code.length; i++) {
+
+                var re = new RegExp("[0-9]|[a-z]|_", "gi");
+                var check = re.test(character_code[i]);
+
+                if (check == false) {
+                    typeCode = typeCode.replace(character_code[i], "");
+                }
+            }
+
+            $("input[name='type_code']").val(typeCode);
+        }
+
+        //Click button add new type or edit type
+        function add_edit_type(key) {
+            if (key == "add") {
+                $("input[name='hd_type_code']").val("");
+                $("#modal-type-title").html("Add device type");
+                $("input[name='type_code']").val("");
+                $("input[name='type_name']").val("");
+
+                $("input[name='type_code']").prop("disabled", false);
+                $("#modal-type").modal("show");
+            }
+
+            if (key == "edit") {
+                var typeCode = $("select[name='Type']").val();
+
+                if (typeCode == "") {
+                    var optionsErr = $.parseJSON('{"text":"Please choose device type!","layout":"topRight","type":"error"}');
+                    noty(optionsErr);
+                }
+                else {
+
+                    $.ajax({
+                        url: "/device/gettypeinfo",
+                        method: "GET",
+                        data: { TypeCode: typeCode },
+                        dataType: "json"
+                    })
+                        .done(function (data) {
+                            //data = object[] {true/false, type/message}
+
+                            if (data[0] == true) {
+                                $("input[name='hd_type_code']").val(data[1].TypeCode);
+                                $("#modal-type-title").html("Edit device type: " + data[1].Name);
+                                $("input[name='type_code']").val(data[1].TypeCode);
+                                $("input[name='type_name']").val(data[1].Name);
+
+                                $("input[name='type_code']").prop("disabled", true);
+                                $("#modal-type").modal("show");
+                            }
+                            else {
+                                var optionsErr = $.parseJSON('{"text":"' + data[1] + '","layout":"topRight","type":"error"}');
+                                noty(optionsErr);
+                            }
+                        })
+                        .fail(function (jqXHR, textStatus, errorThrown) {
+                            var optionsErr = $.parseJSON('{"text":"There was a problem, please try again later. ' + errorThrown + '","layout":"topRight","type":"error"}');
+                            noty(optionsErr);
+                        });
+
+                }
+            }
+        }
+
+        //Save type
+        function save_type() {
+            var hd_type_code = $("input[name='hd_type_code']").val();
+            var typeCode = $("input[name='type_code']").val();
+            var typeName = $("input[name='type_name']").val();
+
+            if (typeCode == "" || typeName == "") {
+                var optionsErr = $.parseJSON('{"text":"Type code and type name is required.","layout":"topRight","type":"error"}');
+                noty(optionsErr);
+            }
+            else {
+
+                $.ajax({
+                    url: "/device/savetype",
+                    method: "POST",
+                    data: { hd_TypeCode: hd_type_code, TypeCode: typeCode, TypeName: typeName },
+                    dataType: "json"
+                })
+                    .done(function (data) {
+                        //data = object[] {true/false, list_Type/message, TypeCode/null}
+
+                        if (data[0] == true) {
+
+                            $("select[name='Type']").empty();
+                            var _option = "<option value=''>-- Select device type --</option>";
+
+                            for (var i = 0; i < data[1].length; i++) {
+                                if (data[1][i].TypeCode == data[2]) {
+                                    _option = _option + "<option selected value='" + data[1][i].TypeCode + "'>" + data[1][i].Name + "</option>";
+                                }
+                                else {
+                                    _option = _option + "<option value='" + data[1][i].TypeCode + "'>" + data[1][i].Name + "</option>";
+                                }
+                            }
+                            $("select[name='Type']").append(_option);
+
+                            if (hd_type_code == "") {
+                                var optionsSuccess = $.parseJSON('{"text":"Add new type success!","layout":"topRight","type":"success"}');
+                                noty(optionsSuccess);
+                            }
+                            else {
+                                var optionsSuccess = $.parseJSON('{"text":"Edit type success!","layout":"topRight","type":"success"}');
+                                noty(optionsSuccess);
+                            }
+
+                            $("#modal-type").modal("hide");
+                        }
+                        else {
+                            var optionsErr = $.parseJSON('{"text":"' + data[1] + '","layout":"topRight","type":"error"}');
+                            noty(optionsErr);
+                        }
+                    })
+                    .fail(function (jqXHR, textStatus, errorThrown) {
+                        var optionsErr = $.parseJSON('{"text":"There was a problem, please try again later. ' + errorThrown + '","layout":"topRight","type":"error"}');
+                        noty(optionsErr);
+                    });
+
+            }
+        }
+
+        //Delete device type
+        function delete_type() {
+            var typeCode = $("select[name='Type']").val();
+
+            if (typeCode == "") {
+                var optionsErr = $.parseJSON('{"text":"Please choose device type!","layout":"topRight","type":"error"}');
+                noty(optionsErr);
+            }
+            else {
+
+                if (confirm("You want to delete this device type?") == true) {
+
+                    $.ajax({
+                        url: "/device/deletetype",
+                        method: "POST",
+                        data: { TypeCode: typeCode },
+                        dataType: "json"
+                    })
+                        .done(function (data) {
+                            //data = object[] {true/false, list_Type/message}
+
+                            if (data[0] == true) {
+
+                                $("select[name='Type']").empty();
+                                var _option = "<option value=''>--Select device type--</option>";
+
+                                for (var i = 0; i < data[1].length; i++) {
+                                    _option = _option + "<option value='" + data[1][i].TypeCode + "'>" + data[1][i].Name + "</option>";
+                                }
+                                $("select[name='Type']").append(_option);
+
+
+                                var optionsSuccess = $.parseJSON('{"text":"Delete type success!","layout":"topRight","type":"success"}');
+                                noty(optionsSuccess);
+                            }
+                            else {
+                                var optionsErr = $.parseJSON('{"text":"' + data[1] + '","layout":"topRight","type":"error"}');
+                                noty(optionsErr);
+                            }
+                        })
+                        .fail(function (jqXHR, textStatus, errorThrown) {
+                            var optionsErr = $.parseJSON('{"text":"There was a problem, please try again later. ' + errorThrown + '","layout":"topRight","type":"error"}');
+                            noty(optionsErr);
+                        });
+                }
+
+            }
+        }
+
+</script>

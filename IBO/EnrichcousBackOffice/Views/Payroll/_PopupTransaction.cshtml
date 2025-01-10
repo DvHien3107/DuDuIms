@@ -1,0 +1,53 @@
+﻿@model List<EnrichcousBackOffice.Models.C_CustomerTransaction>
+<div class="modal fade" id="view-transaction" role="dialog" style="display: none;">
+    <div class="modal-dialog modal-content modal-lg">
+        <div class="modal-header">
+            <div class="modal-title pull-left"><h4 style="margin:0">Detail Transaction</h4></div>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">×</span>
+            </button>
+        </div>
+        <div class="modal-body" style="padding:1rem">
+            <table class="table dataTable table-bordered table-striped" id="tabel-transaction">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Orders</th>
+                        <th>Type</th>
+                        <th>Amount</th>
+                        <th>Bank Name</th>
+                        <th>Card Number(4 last digits)</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="list_his">
+                    @foreach (var t in Model)
+                    {
+                        <tr>
+
+                            <td>@t.CreateAt.Value.ToString("yyyy-MM-dd hh:mm:ss tt")</td>
+                            <td><b>#@t.OrdersCode</b></td>
+                            <td>@t.PaymentStatus</td>
+                            <td>$@t.Amount</td>
+                            <td>@t.BankName</td>
+                            <td>@t.CardNumber</td>
+                            <td>
+                                @if (t.PaymentStatus == "Success")
+                                {
+                                    <label class="label label-success">Success</label>
+                                }
+                                else
+                                {
+                                    <label class="label label-warning">Fail</label>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="modal-footer">
+            <span class="btn btn-default pull-right margin-r-5" data-dismiss="modal">Close</span>
+        </div>
+    </div>
+</div>
