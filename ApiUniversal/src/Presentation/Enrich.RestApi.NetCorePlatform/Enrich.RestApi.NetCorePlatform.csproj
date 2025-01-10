@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="6.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="6.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="6.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="6.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="6.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Domain\Enrich.Core\Enrich.Core.csproj" />
+    <ProjectReference Include="..\..\Domain\Enrich.Dto.Base\Enrich.Dto.Base.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Enrich.IMS.Infrastructure.Data.Implement\Enrich.IMS.Infrastructure.Data.Implement.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Enrich.IMS.Infrastructure.Data.Interface\Enrich.IMS.Infrastructure.Data.Interface.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Enrich.Infrastructure.Cache\Enrich.Infrastructure.Cache.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Enrich.Infrastructure.Email\Enrich.Infrastructure.Email.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Enrich.Infrastructure.IoC\Enrich.Infrastructure.IoC.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Enrich.Infrastructure.JiraConnector\Enrich.Infrastructure.JiraConnector.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Enrich.Infrastructure.Log\Enrich.Infrastructure.Log.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Enrich.Infrastructure.MondayConnector\Enrich.Infrastructure.MondayConnector.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Enrich.Infrastructure.PostBug\Enrich.Infrastructure.PostBug.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Enrich.Infrastructure.SMS\Enrich.Infrastructure.SMS.csproj" />
+    <ProjectReference Include="..\..\Services\Enrich.IMS.Services.Implement\Enrich.IMS.Services.Implement.csproj" />
+  </ItemGroup>
+
+</Project>

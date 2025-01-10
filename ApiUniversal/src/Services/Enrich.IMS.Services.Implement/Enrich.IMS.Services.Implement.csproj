@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Helper\**" />
+    <EmbeddedResource Remove="Helper\**" />
+    <None Remove="Helper\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" Version="11.1.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="6.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="6.0.0" />
+    <PackageReference Include="NPOI" Version="2.5.6" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.17.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Domain\Enrich.IMS.Dto\Enrich.IMS.Dto.csproj" />
+    <ProjectReference Include="..\..\Domain\Enrich.IMS.Entities\Enrich.IMS.Entities.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Enrich.IMS.Infrastructure.Data.Implement\Enrich.IMS.Infrastructure.Data.Implement.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Enrich.IMS.Infrastructure.Data.Interface\Enrich.IMS.Infrastructure.Data.Interface.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Enrich.Payment.MxMerchant\Enrich.Payment.MxMerchant.csproj" />
+    <ProjectReference Include="..\Enrich.IMS.Services.Interface\Enrich.IMS.Services.Interface.csproj" />
+    <ProjectReference Include="..\Enrich.Services.Implement\Enrich.Services.Implement.csproj" />
+  </ItemGroup>
+
+</Project>

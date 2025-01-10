@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="6.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="6.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="6.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="6.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="6.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Domain\Enrich.Core\Enrich.Core.csproj" />
+    <ProjectReference Include="..\..\Domain\Enrich.Dto.Base\Enrich.Dto.Base.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Enrich.IMS.Infrastructure.Data.Implement\Enrich.IMS.Infrastructure.Data.Implement.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Enrich.Infrastructure.Cache\Enrich.Infrastructure.Cache.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Enrich.Infrastructure.Data.Dapper\Enrich.Infrastructure.Data.Dapper.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Enrich.Infrastructure.Data\Enrich.Infrastructure.Data.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Enrich.Infrastructure.Email\Enrich.Infrastructure.Email.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Enrich.Infrastructure.IoC\Enrich.Infrastructure.IoC.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Enrich.Infrastructure.Log\Enrich.Infrastructure.Log.csproj" />
+    <ProjectReference Include="..\..\Services\Enrich.IMS.Services.Implement\Enrich.IMS.Services.Implement.csproj" />
+  </ItemGroup>
+
+</Project>

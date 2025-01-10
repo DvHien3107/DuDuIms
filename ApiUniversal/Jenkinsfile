@@ -1,0 +1,103 @@
+pipeline {
+    agent any
+	environment {
+        CURRENT_BRANCH = 'dev/10.1.1'
+    }
+    stages {
+        stage('Build') {
+            steps {
+                echo 'Just for test kick build'
+            }
+        }
+        stage('for branch dev') {
+            when {
+                expression {
+                    return env.BRANCH_NAME.equals(env.CURRENT_BRANCH)
+                }
+            }
+            stages {
+                stage ('alert branch name') {
+                    steps {
+                        slackSend botUser: true,
+                        channel: '#ims-universal-service-deploy',
+                        color: '#00ff00',
+                        message: '[START] ' + env.BRANCH_NAME + " ${env.JOB_NAME} ${env.BUILD_NUMBER} ",
+                        tokenCredentialId: 'slack-ims-token'
+                    }
+                }
+                stage ('Clean workspace') {
+                    steps {
+						script {
+							try {
+								cleanWs()
+							} catch(all) {
+								
+							} 
+						}		
+                    }
+                }
+                stage ('Git Checkout CodeShare') {
+                    steps {
+                        git branch: 'master', credentialsId: 'quocdoduy', url: 'https://quocdoduy@bitbucket.org/enrich-ims/enrich-code-share.git'
+                    }
+                }
+                stage ('Git Checkout Universal') {
+                    steps {
+                        git branch: "${CURRENT_BRANCH}", credentialsId: 'quocdoduy', url: 'https://quocdoduy@bitbucket.org/enrich-ims/universal-service.git'
+                    }
+                }
+                stage('Restore packages') {
+                    steps {
+                        bat "\"${tool 'msbuild2022'}\" ${workspace}\\src\\Enrich.Services.UniversalService.sln /t:restore"
+                    }
+                }
+                stage('stop iis') {
+                    steps {
+						script {
+							try {
+								bat "\"C:\\Windows\\System32\\inetsrv\\appcmd.exe\" stop apppool /apppool.name:\"dev-universal-service\""
+							} catch(all) {
+								
+							} 
+						}	                        
+                    }
+                }
+                stage('deploy') {
+                    steps {
+                        bat "\"${tool 'msbuild2022'}\" ${workspace}\\src\\Presentation\\Enrich.IMS.RestApi\\Enrich.IMS.RestApi.csproj /p:DeployOnBuild=true /p:DeployDefaultTarget=WebPublish /p:WebPublishMethod=FileSystem /p:SkipInvalidConfigurations=true /t:build /p:Configuration=Release /p:DeleteExistingFiles=True /p:publishUrl=c:\\inetpub\\wwwroot\\dev-universal-service"
+                    }
+                }
+                stage('start iis') {
+                    steps {
+						script {
+							try {
+								bat "\"C:\\Windows\\System32\\inetsrv\\appcmd.exe\" start apppool /apppool.name:\"dev-universal-service\""
+							} catch(all) {
+								
+							} 
+						}
+                    }
+                }
+            }
+        }
+    }
+    post {
+        always {
+            echo 'Just for test kick build'
+        }
+        success {
+            slackSend botUser: true,
+            channel: '#ims-universal-service-deploy',
+            color: '#00ff00',
+            message: '[SUCCESS] ' + env.BRANCH_NAME + " ${env.JOB_NAME} ${env.BUILD_NUMBER} after ${env.BUILD_DURATION} (<${env.BUILD_URL}|View detail>",
+            tokenCredentialId: 'slack-ims-token'
+        }
+        failure {
+            slackSend botUser: true,
+            channel: '#ims-universal-service-deploy',
+            color: '#00ff00',
+            message: '[FAIL] ' + env.BRANCH_NAME + " ${env.JOB_NAME} ${env.BUILD_NUMBER} after ${env.BUILD_DURATION} (<${env.BUILD_URL}|View detail>",
+            tokenCredentialId: 'slack-ims-token'
+        }
+    }
+}

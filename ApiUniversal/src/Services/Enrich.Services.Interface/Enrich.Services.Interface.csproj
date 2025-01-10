@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Domain\Enrich.Dto.Base\Enrich.Dto.Base.csproj" />
+    <ProjectReference Include="..\..\Domain\Enrich.IMS.Dto\Enrich.IMS.Dto.csproj" />
+  </ItemGroup>
+
+</Project>

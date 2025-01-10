@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Common\Enrich.Common\Enrich.Common.csproj" />
+    <!--<ProjectReference Include="..\Enrich.IMS.Dto\Enrich.IMS.Dto.csproj" />-->
+    <ProjectReference Include="..\Enrich.IMS.Entities\Enrich.IMS.Entities.csproj" />
+  </ItemGroup>
+
+</Project>

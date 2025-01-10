@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Campaign\**" />
+    <Compile Remove="Merchant\**" />
+    <Compile Remove="Product\**" />
+    <Compile Remove="Sale\**" />
+    <Compile Remove="System\**" />
+    <Compile Remove="Ticket\**" />
+    <EmbeddedResource Remove="Campaign\**" />
+    <EmbeddedResource Remove="Merchant\**" />
+    <EmbeddedResource Remove="Product\**" />
+    <EmbeddedResource Remove="Sale\**" />
+    <EmbeddedResource Remove="System\**" />
+    <EmbeddedResource Remove="Ticket\**" />
+    <None Remove="Campaign\**" />
+    <None Remove="Merchant\**" />
+    <None Remove="Product\**" />
+    <None Remove="Sale\**" />
+    <None Remove="System\**" />
+    <None Remove="Ticket\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Enrich.Entities.Base\Enrich.Entities.Base.csproj" />
+  </ItemGroup>
+
+</Project>

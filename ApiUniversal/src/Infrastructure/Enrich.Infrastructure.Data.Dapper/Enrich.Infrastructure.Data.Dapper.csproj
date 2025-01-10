@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Dapper" Version="2.0.123" />
+    <PackageReference Include="Dapper.FluentMap.Dommel" Version="2.0.0" />
+    <PackageReference Include="Dommel" Version="3.0.0" />
+    <PackageReference Include="FastMember" Version="1.5.0" />
+    <PackageReference Include="SqlKata" Version="2.3.7" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Domain\Enrich.Core\Enrich.Core.csproj" />
+    <ProjectReference Include="..\..\Domain\Enrich.IMS.Dto\Enrich.IMS.Dto.csproj" />
+    <ProjectReference Include="..\Enrich.Infrastructure.Data\Enrich.Infrastructure.Data.csproj" />
+  </ItemGroup>
+
+</Project>

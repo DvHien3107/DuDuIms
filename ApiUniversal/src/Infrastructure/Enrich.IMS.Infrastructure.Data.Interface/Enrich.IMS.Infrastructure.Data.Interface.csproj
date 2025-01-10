@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Domain\Enrich.IMS.Entities\Enrich.IMS.Entities.csproj" />
+    <ProjectReference Include="..\Enrich.Infrastructure.Data.Dapper\Enrich.Infrastructure.Data.Dapper.csproj" />
+  </ItemGroup>
+
+</Project>

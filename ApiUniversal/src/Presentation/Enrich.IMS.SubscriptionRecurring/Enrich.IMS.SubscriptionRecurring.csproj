@@ -1,0 +1,21 @@
+ <Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <UserSecretsId>dotnet-Enrich.IMS.SubscriptionRecurring-931B32A0-0130-4A90-8B5A-C6E9C75BD4A1</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="6.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="6.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Domain\Enrich.Core\Enrich.Core.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Enrich.Infrastructure.Log\Enrich.Infrastructure.Log.csproj" />
+    <ProjectReference Include="..\..\Services\Enrich.IMS.Services.Interface\Enrich.IMS.Services.Interface.csproj" />
+    <ProjectReference Include="..\Enrich.RestApi.NetCorePlatform\Enrich.RestApi.NetCorePlatform.csproj" />
+  </ItemGroup>
+</Project>

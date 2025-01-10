@@ -1,0 +1,60 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\.editorconfig" Link=".editorconfig" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Http.Extensions" Version="2.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\..\..\enrich.code-share\Enrich.Common\Enums\AuthMode.cs" Link="Enums\AuthMode.cs" />
+    <Compile Include="..\..\..\..\enrich.code-share\Enrich.Common\Enums\AuthStatus.cs" Link="Enums\AuthStatus.cs" />
+    <Compile Include="..\..\..\..\enrich.code-share\Enrich.Common\Enums\DataType.cs" Link="Enums\DataType.cs" />
+    <Compile Include="..\..\..\..\enrich.code-share\Enrich.Common\Enums\EnrichCors.cs" Link="Enums\EnrichCors.cs" />
+    <Compile Include="..\..\..\..\enrich.code-share\Enrich.Common\Enums\FilterType.cs" Link="Enums\FilterType.cs" />
+    <Compile Include="..\..\..\..\enrich.code-share\Enrich.Common\Enums\GridConfig.cs" Link="Enums\GridConfig.cs" />
+    <Compile Include="..\..\..\..\enrich.code-share\Enrich.Common\Enums\ItemStateType.cs" Link="Enums\ItemStateType.cs" />
+    <Compile Include="..\..\..\..\enrich.code-share\Enrich.Common\Enums\Language.cs" Link="Enums\Language.cs" />
+    <Compile Include="..\..\..\..\enrich.code-share\Enrich.Common\Enums\ListViewMode.cs" Link="Enums\ListViewMode.cs" />
+    <Compile Include="..\..\..\..\enrich.code-share\Enrich.Common\Enums\SortDirectionEnum.cs" Link="Enums\SortDirectionEnum.cs" />
+    <Compile Include="..\..\..\..\enrich.code-share\Enrich.Common\Enums\ValidationMessages.cs" Link="Enums\ValidationMessages.cs" />
+
+    <Compile Include="..\..\..\..\enrich.code-share\Enrich.Common\Helpers\ConvertHelper.cs" Link="Helpers\ConvertHelper.cs" />
+    <Compile Include="..\..\..\..\enrich.code-share\Enrich.Common\Helpers\EnumHelper.cs" Link="Helpers\EnumHelper.cs" />
+    <Compile Include="..\..\..\..\enrich.code-share\Enrich.Common\Helpers\LanguageHelper.cs" Link="Helpers\LanguageHelper.cs" />
+    <Compile Include="..\..\..\..\enrich.code-share\Enrich.Common\Helpers\ObjectHelper.cs" Link="Helpers\ObjectHelper.cs" />
+    <Compile Include="..\..\..\..\enrich.code-share\Enrich.Common\Helpers\SecurityHelper.cs" Link="Helpers\SecurityHelper.cs" />
+    <Compile Include="..\..\..\..\enrich.code-share\Enrich.Common\Helpers\SqlHelper.cs" Link="Helpers\SqlHelper.cs" />
+    <Compile Include="..\..\..\..\enrich.code-share\Enrich.Common\Helpers\StringHelper.cs" Link="Helpers\StringHelper.cs" />
+    <Compile Include="..\..\..\..\enrich.code-share\Enrich.Common\Helpers\TimeHelper.cs" Link="Helpers\TimeHelper.cs" />
+    <Compile Include="..\..\..\..\enrich.code-share\Enrich.Common\Helpers\UrlHelper.cs" Link="Helpers\UrlHelper.cs" />
+
+    <Compile Include="..\..\..\..\enrich.code-share\Enrich.Common\CommonExtensions.cs" Link="CommonExtensions.cs" />
+    <Compile Include="..\..\..\..\enrich.code-share\Enrich.Common\CommonHelper.cs" Link="CommonHelper.cs" />
+    <Compile Include="..\..\..\..\enrich.code-share\Enrich.Common\Constants.cs" Link="Constants.cs" />
+    <Compile Include="..\..\..\..\enrich.code-share\Enrich.Common\HttpResponseException.cs" Link="HttpResponseException.cs" />
+    <Compile Include="..\..\..\..\enrich.code-share\Enrich.Common\MultipleTasks.cs" Link="MultipleTasks.cs" />
+
+    <Compile Include="..\..\..\..\enrich.code-share\Enrich.Common\Enums\IMSModes\BaseServiceEnum.cs" Link="Enums\IMSModes\BaseServiceEnum.cs" />
+    <Compile Include="..\..\..\..\enrich.code-share\Enrich.Common\Enums\IMSModes\BusinessEventEnum.cs" Link="Enums\IMSModes\BusinessEventEnum.cs" />
+    <Compile Include="..\..\..\..\enrich.code-share\Enrich.Common\Enums\IMSModes\ConfigEnum.cs" Link="Enums\IMSModes\ConfigEnum.cs" />
+    <Compile Include="..\..\..\..\enrich.code-share\Enrich.Common\Enums\IMSModes\CustomerEnum.cs" Link="Enums\IMSModes\CustomerEnum.cs" />
+    <Compile Include="..\..\..\..\enrich.code-share\Enrich.Common\Enums\IMSModes\DepartmentEnum.cs" Link="Enums\IMSModes\DepartmentEnum.cs" />
+    <Compile Include="..\..\..\..\enrich.code-share\Enrich.Common\Enums\IMSModes\OrderEnum.cs" Link="Enums\IMSModes\OrderEnum.cs" />
+    <Compile Include="..\..\..\..\enrich.code-share\Enrich.Common\Enums\IMSModes\PaymentEnum.cs" Link="Enums\IMSModes\PaymentEnum.cs" />
+    <Compile Include="..\..\..\..\enrich.code-share\Enrich.Common\Enums\IMSModes\RecurringEnum.cs" Link="Enums\IMSModes\RecurringEnum.cs" />
+    <Compile Include="..\..\..\..\enrich.code-share\Enrich.Common\Enums\IMSModes\SalesLeadEnum.cs" Link="Enums\IMSModes\SalesLeadEnum.cs" />
+    <Compile Include="..\..\..\..\enrich.code-share\Enrich.Common\Enums\IMSModes\SendGridTemplate.cs" Link="Enums\IMSModes\SendGridTemplate.cs" />
+    <Compile Include="..\..\..\..\enrich.code-share\Enrich.Common\Enums\IMSModes\SubscriptionEnum.cs" Link="Enums\IMSModes\SubscriptionEnum.cs" />
+    <Compile Include="..\..\..\..\enrich.code-share\Enrich.Common\Enums\IMSModes\TimeZone.cs" Link="Enums\IMSModes\TimeZone.cs" />
+    <Compile Include="..\..\..\..\enrich.code-share\Enrich.Common\Enums\IMSModes\TicketEnum.cs" Link="Enums\IMSModes\TicketEnum.cs" />
+
+    <Compile Include="..\..\..\..\enrich.code-share\Enrich.Common\Enums\EnrichSMSService\EnrichSMSEnum.cs" Link="Enums\EnrichSMSService\EnrichSMSEnum.cs" />
+  </ItemGroup>
+</Project>

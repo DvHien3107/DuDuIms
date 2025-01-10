@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Domain\Enrich.IMS.Dto\Enrich.IMS.Dto.csproj" />
+    <ProjectReference Include="..\..\Domain\Enrich.IMS.Entities\Enrich.IMS.Entities.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Enrich.Payment.MxMerchant\Enrich.Payment.MxMerchant.csproj" />
+    <ProjectReference Include="..\Enrich.Services.Interface\Enrich.Services.Interface.csproj" />
+  </ItemGroup>
+
+</Project>

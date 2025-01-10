@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>dotnet-Enrich.IMS.PaymentLaterNotification-25C78F9C-CEF9-4DD8-9551-3CF368805DA6</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="6.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Infrastructure\Enrich.Infrastructure.Log\Enrich.Infrastructure.Log.csproj" />
+    <ProjectReference Include="..\Enrich.RestApi.NetCorePlatform\Enrich.RestApi.NetCorePlatform.csproj" />
+  </ItemGroup>
+
+</Project>

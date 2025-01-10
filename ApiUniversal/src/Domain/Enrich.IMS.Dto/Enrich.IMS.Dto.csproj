@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SlackAPI" Version="1.1.13" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Common\Enrich.Common\Enrich.Common.csproj" />
+    <ProjectReference Include="..\Enrich.Dto.Base\Enrich.Dto.Base.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Ticket\Commands\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\..\..\enrich.code-share\Enrich.BusinessEvents\Enrich.IMS\Order\OrderPaymentEvent.cs" Link="BusinessEvent\Order\OrderPaymentEvent.cs" />
+    <Compile Include="..\..\..\..\enrich.code-share\Enrich.BusinessEvents\Enrich.IMS\Order\OrderPaymentEvent.Fail.cs" Link="BusinessEvent\Order\OrderPaymentEvent.Fail.cs" />
+    <Compile Include="..\..\..\..\enrich.code-share\Enrich.BusinessEvents\Enrich.IMS\Order\OrderPaymentEvent.Latter.cs" Link="BusinessEvent\Order\OrderPaymentEvent.Latter.cs" />
+  </ItemGroup>
+</Project>
