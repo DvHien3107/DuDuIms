@@ -1,0 +1,100 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{DB1917E3-CFB9-4603-A85C-F7EE57CEEA49}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Enrich.DataTransfer</RootNamespace>
+    <AssemblyName>Enrich.DataTransfer</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Base\Request\BaseFilterConditionRequest.cs" />
+    <Compile Include="Base\Request\BaseSearchRequest.cs" />
+    <Compile Include="Base\Request\BaseSearchWithFilterRequest.cs" />
+    <Compile Include="Base\Request\PatchUpdateRequestBase.cs" />
+    <Compile Include="Base\Response\PaginationDto.cs" />
+    <Compile Include="Base\Response\PagingResponseDto.cs" />
+    <Compile Include="ClickUpConnector\ClickUpFieldDto.cs" />
+    <Compile Include="ClickUpConnector\ClickUpTaskDetailDto.cs" />
+    <Compile Include="ConnectorJiraAuthRequest.cs" />
+    <Compile Include="EmailTemplateModel.cs" />
+    <Compile Include="EnrichContext.cs" />
+    <Compile Include="EnrichOAuth\MemberContext.cs" />
+    <Compile Include="EnrichSMS\History\Request\HistoryFilterCondition.cs" />
+    <Compile Include="EnrichSMS\History\Request\HistorySearchCondition.cs" />
+    <Compile Include="EnrichSMS\History\Request\HistoryTimeLineRequest.cs" />
+    <Compile Include="EnrichSMS\History\Response\HistoryListItemDto.cs" />
+    <Compile Include="EnrichSMS\History\Response\HistoryTimeLineResponse.cs" />
+    <Compile Include="EnrichUniversal\Lookup\LookupResponse.cs" />
+    <Compile Include="EnrichUniversal\MerchantReport\CustomerChartReportRequest.cs" />
+    <Compile Include="EnrichUniversal\MerchantReport\CustomerChartReportResponse.cs" />
+    <Compile Include="EnrichUniversal\MerchantReport\CustomerReportRequest.cs" />
+    <Compile Include="EnrichUniversal\MerchantReport\CustomerReportResponse.cs" />
+    <Compile Include="EnrichUniversal\MerchantSearch\CustomerDto.cs" />
+    <Compile Include="EnrichUniversal\MerchantSearch\CustomerSearchCondition.cs" />
+    <Compile Include="EnrichUniversal\MerchantSearch\CustomerSearchFilterCondition.cs" />
+    <Compile Include="EnrichUniversal\MerchantSearch\CustomerSearchRequest.cs" />
+    <Compile Include="EnrichUniversal\MerchantSearch\CustomerSearchResponse.cs" />
+    <Compile Include="EnrichSMS\SMSHistoryRemaining.cs" />
+    <Compile Include="EnrichUniversal\NewCustomerGoal\NewCustomerGoalDto.cs" />
+    <Compile Include="EnrichUniversal\NewCustomerGoal\NewCustomerGoalFilterConditionDto.cs" />
+    <Compile Include="EnrichUniversal\NewCustomerGoal\NewCustomerGoalRequestDto.cs" />
+    <Compile Include="EnrichUniversal\NewCustomerGoal\NewCustomerGoalSearchConditionDto.cs" />
+    <Compile Include="EnrichUniversal\NewCustomerGoal\NewCustomerGoalResponseDto.cs" />
+    <Compile Include="EnrichUniversal\NewCustomerGoal\NewCustomerGoalUpdateRequest.cs" />
+    <Compile Include="ExceptionRespone.cs" />
+    <Compile Include="JiraConnector\JiraStatusDto.cs" />
+    <Compile Include="EnrichUniversal\Ticket\ProjectMilestoneDto.cs" />
+    <Compile Include="EnrichUniversal\Ticket\TicketStatusDto.cs" />
+    <Compile Include="EnrichUniversal\Ticket\TicketTypeDto.cs" />
+    <Compile Include="JiraConnector\JiraProjectDto.cs" />
+    <Compile Include="JiraConnector\ProjectMappingDto.cs" />
+    <Compile Include="JiraConnector\StatusMappingDto.cs" />
+    <Compile Include="MemberDto.cs" />
+    <Compile Include="NotificationSMSModel.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Twilio\PosUpdateTwilioPhoneNumberRequest.cs" />
+    <Compile Include="Twilio\TollfreeVerificationRequest.cs" />
+    <Compile Include="Twilio\TollfreeVerificationResponse.cs" />
+    <Compile Include="Twilio\TollfreeVerificationWithCustomerProfileSIdRequest.cs" />
+    <Compile Include="Twilio\TwilioTollFreeVerificationWebhookRequest.cs" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

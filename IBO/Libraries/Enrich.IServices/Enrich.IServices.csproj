@@ -1,0 +1,87 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{033F1887-9761-4C05-8799-C9BAA2571EC6}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Enrich.IServices</RootNamespace>
+    <AssemblyName>Enrich.IServices</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Net" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+    <Reference Include="Twilio, Version=5.75.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Twilio.5.75.0\lib\net451\Twilio.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Access\IPermissionService.cs" />
+    <Compile Include="IEmailTemplateService.cs" />
+    <Compile Include="IMerchantService.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Utils\ClickUpConnector\IClickUpConnectorService.cs" />
+    <Compile Include="Utils\EnrichOAuth\IEnrichOAuth.cs" />
+    <Compile Include="Utils\EnrichUniversal\IEnrichUniversalService.cs" />
+    <Compile Include="Utils\EnrichUniversal\INewCustomerGoalService.cs" />
+    <Compile Include="Utils\EnrichUniversal\ITicketUniversalService.cs" />
+    <Compile Include="Utils\GoHighLevelConnector\IGoHighLevelConnectorService.cs" />
+    <Compile Include="Utils\JiraConnector\IConnectorJiraService.cs" />
+    <Compile Include="Utils\JiraConnector\IJiraConnectorAuthService.cs" />
+    <Compile Include="Utils\LogService\ILogService.cs" />
+    <Compile Include="Utils\Mailing\IEnrichEmailService.cs" />
+    <Compile Include="Utils\Mailing\IMailingService.cs" />
+    <Compile Include="Utils\SMS\IEnrichSMSService.cs" />
+    <Compile Include="Utils\SMS\ISMSService.cs" />
+    <Compile Include="Utils\Twilio\IPosSyncTwilioApiService.cs" />
+    <Compile Include="Utils\Twilio\ITwilioRestApiService.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Utils\Notification\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Enrich.DataTransfer\Enrich.DataTransfer.csproj">
+      <Project>{DB1917E3-CFB9-4603-A85C-F7EE57CEEA49}</Project>
+      <Name>Enrich.DataTransfer</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Enrich.Entities\Enrich.Entities.csproj">
+      <Project>{8ec11fc7-b8e0-4034-a93a-66e48dc8d2b0}</Project>
+      <Name>Enrich.Entities</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
