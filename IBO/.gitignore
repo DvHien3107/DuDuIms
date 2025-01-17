@@ -67,7 +67,7 @@ artifacts/
 *.pidb
 *.svclog
 *.scc
-*.config
+
 *.sql
 *.pubxml
 
