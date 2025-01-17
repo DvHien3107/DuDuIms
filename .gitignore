@@ -61,7 +61,8 @@ BenchmarkDotNet.Artifacts/
 project.lock.json
 project.fragment.lock.json
 artifacts/
-
+*/IBO/*
+*/NextGen/*
 # ASP.NET Scaffolding
 ScaffoldingReadMe.txt
 
